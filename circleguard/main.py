@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 import sys
-from circleguard import Circleguard, set_options, ReplayPath, ReplayMap, Check
+from circleguard import Circleguard, set_options, ReplayPath, ReplayMap, Check, Replay
 
 ROOT_PATH = Path(__file__).parent
 if(not (ROOT_PATH / "secret.py").is_file()):
@@ -12,17 +12,27 @@ if(not (ROOT_PATH / "secret.py").is_file()):
 from secret import API_KEY
 from argparser import argparser
 
+
+class IdentifiableReplay(ReplayPath):
+
+    def __init__(self, id, path):
+        self.id = id
+        ReplayPath.__init__(self, path)
+
+
 # set_options(cache=True)
 set_options(failfast=False)
 args = argparser.parse_args()
 circleguard = Circleguard(API_KEY, ROOT_PATH / "replays", ROOT_PATH / "db" / "cache.db")
-# replays = [ReplayPath("/Users/tybug/Desktop/Coding/osu/circleguard/circleguard/replays/woey.osr"), ReplayPath("/Users/tybug/Desktop/Coding/osu/circleguard/circleguard/replays/cheater.osr")]
+replays = [IdentifiableReplay(1, "/Users/tybug/Desktop/Coding/osu/circleguard/circleguard/replays/woey.osr"), IdentifiableReplay(2, "/Users/tybug/Desktop/Coding/osu/circleguard/circleguard/replays/cheater.osr")]
 # check = Check(replays)
-# circleguard.run(check)
-iterator = circleguard.map_check(221777, u=12092800, num=3)
+iterator = circleguard.run(Check(replays))
+# iterator = circleguard.map_check(221777, num=3)
 # iterator = circleguard.local_check()
 for result in iterator:
     print(result.similiarity)
+    print(result.replay1.id)
+    print(result.replay2.id)
 # circleguard.verify(1699366, 12092800, 7477458, False)
 
 
