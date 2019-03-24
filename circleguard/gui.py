@@ -1,123 +1,82 @@
-import tkinter
-from tkinter import ttk, Tk, N, W, E, S, StringVar, TclError
-from types import SimpleNamespace
-import threading
-from pathlib import Path
-
-from circleguard import Circleguard
-from config import VERSION
-from secret import API_KEY
-
-def run():
-    """
-    Runs the circleguard with the options given in the gui.
-    """
-
-    _map_id = map_id.get()
-    _user_id = user_id.get()
-    _local = local.get()
-    _threshold = threshold.get()
-
-    _stddevs = stddevs.get() if auto.get() else None
-
-    _number = num.get()
-    _cache = cache.get()
-    _silent = True # Visualizations do very very bad things when not called from the main thread, so when using gui, we just...force ignore them
-    _verify = verify.get()
-
-    def run_circleguard():
-        circleguard = Circleguard(SimpleNamespace(map_id=_map_id, user_id=_user_id, mods="", local=_local, threshold=_threshold, stddevs=_stddevs,
-                                              number=_number, cache=_cache, silent=_silent, verify=_verify), API_KEY, Path(__file__).parent)
-        circleguard.run()
-
-    thread = threading.Thread(target=run_circleguard)
-    thread.start()
+from PyQt5.QtWidgets import *
+from circleguard import __version__
 
 
-# Root and Frames configuration
-root = Tk()
-root.title("Circleguard v{}".format(VERSION))
-root.columnconfigure(0, weight=1)
-root.rowconfigure(0, weight=1)
-# houses boolean inputs passed to circleguard
-s = ttk.Style()
-s.configure("TFrame", foreground="#ccc")
+# Pycharm doesn't (and probably other IDEs too) like this code so ignore the errors lel
 
-main = ttk.Frame(root)
-main.grid(row=0, column=0)
-# houses options - what type of search, whether to use local, etc.
-options = ttk.Frame(root)
-options.grid(row=0, column=2)
-sep = ttk.Separator(root, orient="vertical")
-sep.grid(row=0, column=1)
 
-# Global vars
-map_id = tkinter.StringVar()
-user_id = tkinter.StringVar()
-local = tkinter.BooleanVar(value=False)
-threshold = tkinter.IntVar(value=20)
-auto = tkinter.BooleanVar(value=False)
-stddevs = tkinter.DoubleVar(value=2.0)
-compare_to_map = tkinter.BooleanVar(value=False)
-num = tkinter.IntVar(value=50)
-cache = tkinter.BooleanVar(value=False)
+class Window(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.state = QComboBox()
+        self.modes = [
+            'Screen User',
+            'Check Map',
+            'Check User on Map',
+            'Check Local Replays'
+        ]
 
-# unimplemented
-verify = tkinter.BooleanVar(value=False)
+        self.state.addItems(self.modes)
+        self.state.activated.connect(self.circleguard_print_mode)
+        self.state.setToolTip('Choose the mode to run Circleguard in')
 
-# Make visual elements for main frame
-map_label = ttk.Label(main, text="Map id:")
-map_label.grid(row=0, column=0)
+        self.left = QPushButton('print version')
+        self.left.clicked.connect(self.circleguard_print_version)
+        self.left.setToolTip('This will print the version of circleguard')
 
-map_entry = ttk.Entry(main, width=14, textvariable=map_id)
-map_entry.grid(row=0, column=1)
+        self.right = QPushButton('run')
+        self.right.clicked.connect(self.circleguard_run)
+        self.right.setToolTip('This will run circleguard with the selected settings')
 
-user_label = ttk.Label(main, text="User id:")
-user_label.grid(row=1, column=0)
+        self.user_id_label = QLabel(self)
+        self.user_id_label.setText('User Id:')
+        self.user_id_label.setToolTip('This can be found in the profile url and only consists of numbers')
+        self.user_id_line = QLineEdit(self)
+        self.user_id_line.setToolTip('This can be found in the profile url and only consists of numbers')
 
-user_entry = ttk.Entry(main, width=14, textvariable=user_id)
-user_entry.grid(row=1, column=1)
+        self.map_id_label = QLabel(self)
+        self.map_id_label.setText('Map Id:')
+        self.map_id_label.setToolTip('This is the beatmap id, not the beatmapset id!')
+        self.map_id_line = QLineEdit(self)
+        self.map_id_line.setToolTip('This is the beatmap id, not the beatmapset id!')
 
-run_button = ttk.Button(main, text="Run", command=run)
-run_button.grid(row=2, column=1)
+        self.grid = QGridLayout()
+        self.grid.addWidget(self.state, 1, 1, 1, 4)
+        self.grid.addWidget(self.user_id_label, 2, 1, 2, 1)
+        self.grid.addWidget(self.user_id_line, 2, 2, 2, 3)
+        self.grid.addWidget(self.map_id_label, 4, 1, 4, 1)
+        self.grid.addWidget(self.map_id_line, 4, 2, 4, 3)
 
-# Make visual elements for options frame
-should_cache = ttk.Frame(options)
-should_cache.grid(row=0, column=0)
-cache_check = ttk.Checkbutton(should_cache, variable=cache)
-cache_check.grid(row=0, column=0)
-cache_label = ttk.Label(should_cache, text="Cache downloaded replays?")
-cache_label.grid(row=0, column=1)
+        self.setLayout(self.grid)
+        self.setWindowTitle(f'Circleguard gui !!WIP!! (backend version {__version__})')
 
-should_local_compare = ttk.Frame(options)
-should_local_compare.grid(row=1, column=0)
-local_compare_check = ttk.Checkbutton(should_local_compare, variable=local)
-local_compare_check.grid(row=0, column=0)
-local_compare_label = ttk.Label(should_local_compare, text="Compare to local replays?")
-local_compare_label.grid(row=0, column=1)
+        # final setup
+        self.circleguard_print_mode(0)
 
-top_x_plays = ttk.Frame(options)
-top_x_plays.grid(row=2, column=0)
-top_plays_check = ttk.Checkbutton(top_x_plays, variable=compare_to_map)
-top_plays_check.grid(row=0, column=0)
-top_plays_label1 = ttk.Label(top_x_plays, text="Compare to top")
-top_plays_label1.grid(row=0, column=1)
-top_plays_entry = ttk.Entry(top_x_plays, width=4, textvariable=num)
-top_plays_entry.grid(row=0, column=2)
-top_plays_label2 = ttk.Label(top_x_plays, text="leaderboard plays?\n(Between 2 and 100 inclusive)")
-top_plays_label2.grid(row=0, column=3)
+        return
 
-auto_threshold = ttk.Frame(options)
-auto_threshold.grid(row=3, column=0)
-auto_check = ttk.Checkbutton(auto_threshold, variable=auto)
-auto_check.grid(row=0, column=0)
-auto_label1 = ttk.Label(auto_threshold, text="Automatically determine threshold?")
-auto_label1.grid(row=0, column=1)
-auto_entry = ttk.Entry(auto_threshold, width=3, textvariable=stddevs)
-auto_entry.grid(row=0, column=2)
-auto_label2 = ttk.Label(auto_threshold, text="Stddevs below average threshold to print for\n(typically between 1.5 and 2.5. The higher, the less results you will get)")
-auto_label2.grid(row=0, column=3)
+    def circleguard_print_version(self):
+        print(f'Using Version {__version__} from circleguard ')
+        return
 
-for child in main.winfo_children(): child.grid_configure(padx=5, pady=5)
+    def circleguard_run(self):
+        print(f'You are a cheater, Harry!')
+        return
 
-root.mainloop()
+    def circleguard_print_mode(self, i):
+        print(f'current mode is {i}. This corresponds to {self.modes[i]}')
+        # user, map
+        modes = [(True, False), (False, True), (True, True), (False, False)]
+        self.user_id_line.setEnabled(modes[i][0])
+        self.user_id_label.setEnabled(modes[i][0])
+        self.map_id_line.setEnabled(modes[i][1])
+        self.map_id_label.setEnabled(modes[i][1])
+        return
+
+
+if __name__ == '__main__':
+    app = QApplication([])
+    app.setStyle('Fusion')
+    test_window = Window()
+    test_window.show()
+    app.exec_()
