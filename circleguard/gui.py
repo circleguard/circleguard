@@ -1,7 +1,5 @@
 from PyQt5.QtWidgets import *
 from circleguard import __version__
-
-
 # Pycharm doesn't (and probably other IDEs too) like this code so ignore the errors lel
 
 
