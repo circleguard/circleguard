@@ -8,14 +8,19 @@ class Main_Window(QWidget):
         super(Main_Window, self).__init__()
 
         tabWidget = QTabWidget()
-        tabWidget.addTab(MapTab(), "Check Map")
-        tabWidget.addTab(UserTab(), "Screen User")
-        tabWidget.addTab(UserOnMapTab(), "Check User on Map")
-        tabWidget.addTab(LocalTab(), "Check Local Replays")
-        tabWidget.addTab(VerifyTab(), "Verify")
+        tabWidget.addTab(MapTab(), 'Check Map')
+        tabWidget.addTab(UserTab(), 'Screen User')
+        tabWidget.addTab(UserOnMapTab(), 'Check User on Map')
+        tabWidget.addTab(LocalTab(), 'Check Local Replays')
+        tabWidget.addTab(VerifyTab(), 'Verify')
+
+        edit = QTextEdit()
+        edit.setReadOnly(True)
+        edit.append('print("test")\ntest\necho this is fake lel\n'*20)
 
         mainLayout = QVBoxLayout()
         mainLayout.addWidget(tabWidget)
+        mainLayout.addWidget(edit)
         self.setLayout(mainLayout)
         self.setWindowTitle(f'Circleguard gui !!WIP!! (backend version {__version__})')
         return
