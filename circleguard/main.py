@@ -23,8 +23,8 @@ class IdentifiableReplay(ReplayPath):
 # set_options(cache=True)
 set_options(failfast=False)
 args = argparser.parse_args()
-circleguard = Circleguard(API_KEY, ROOT_PATH / "replays", ROOT_PATH / "db" / "cache.db")
-replays = [IdentifiableReplay(1, "/Users/tybug/Desktop/Coding/osu/circleguard/circleguard/replays/woey.osr"), IdentifiableReplay(2, "/Users/tybug/Desktop/Coding/osu/circleguard/circleguard/replays/cheater.osr")]
+circleguard = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
+replays = [IdentifiableReplay(1, ROOT_PATH / "replays" / "woey.osr"), IdentifiableReplay(2, ROOT_PATH / "replays" / "cheater.osr")]
 # check = Check(replays)
 iterator = circleguard.run(Check(replays))
 # iterator = circleguard.map_check(221777, num=3)
