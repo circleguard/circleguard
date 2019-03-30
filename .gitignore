@@ -273,4 +273,3 @@ __pycache__/
 
 # pip nonsense
 src/*
-circleguard/gui_v2.py
