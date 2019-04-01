@@ -247,7 +247,7 @@ if __name__ == '__main__':
     app.setStyle('Fusion')
 
     try:
-        if sys.argv[1] == "--dark":  # temporary for now, later add an switch in the interface
+        if sys.argv[1] == "--dark":  # temporary for now, later add a switch in the interface
             dark_palette = QPalette()
 
             dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
