@@ -1,11 +1,17 @@
 import sys
 from functools import partial
 from pathlib import Path
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
 from circleguard import *
 from circleguard import __version__ as cg_version
+
+# pylint: disable=no-name-in-module
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QMessageBox, QLabel,
+                             QSpinBox, QVBoxLayout, QSlider, QDoubleSpinBox, QLineEdit,
+                             QCheckBox, QGridLayout, QApplication)
+from PyQt5.QtGui import QPalette, QColor
+# pylint: enable=no-name-in-module
+
 
 
 ROOT_PATH = Path(__file__).parent
