@@ -26,9 +26,9 @@ __version__ = "0.1d"
 print(f"backend {cg_version}, frontend {__version__}")
 
 
-class Main_Window(QWidget):
+class MainWindow(QWidget):
     def __init__(self):
-        super(Main_Window, self).__init__()
+        super(MainWindow, self).__init__()
 
         self.tabWidget = QTabWidget()
         self.tabWidget.addTab(MapTab(), 'Check Map')
@@ -278,6 +278,6 @@ if __name__ == '__main__':
 
         app.setPalette(updated_palette)
 
-    window = Main_Window()
+    window = MainWindow()
     window.show()
     app.exec_()
