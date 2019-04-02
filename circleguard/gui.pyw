@@ -31,7 +31,8 @@ class MainWindow(QWidget):
         super(MainWindow, self).__init__()
 
         self.tabWidget = QTabWidget()
-        self.tabWidget.addTab(MapTab(), 'Check Map')
+        self.map_tab = MapTab()
+        self.tabWidget.addTab(self.map_tab, 'Check Map')
         self.tabWidget.addTab(UserTab(), 'Screen User')
         self.tabWidget.addTab(UserOnMapTab(), 'Check User on Map')
         self.tabWidget.addTab(LocalTab(), 'Check Local Replays')
@@ -39,11 +40,10 @@ class MainWindow(QWidget):
 
         self.terminal = QTextEdit()
         self.terminal.setReadOnly(True)
-        self.terminal.append(('example terminal output\n' * 1024).rstrip())
 
         self.run_button = QPushButton()
         self.run_button.setText("Run")
-        self.run_button.clicked.connect(partial(QMessageBox.critical, self, "ERROR", "THIS FUNCTION HAS NOT BEEN IMPLEMENTED YET."))
+        self.run_button.clicked.connect(self.run_circleguard)
 
         self.mainLayout = QVBoxLayout()
         self.mainLayout.addWidget(self.tabWidget)
@@ -57,8 +57,18 @@ class MainWindow(QWidget):
 
         return
 
+    def write(self, text):
+        self.terminal.append(str(text))
+
     def reset_scrollbar(self):
         self.terminal.verticalScrollBar().setValue(self.terminal.verticalScrollBar().maximum())
+
+    def run_circleguard(self):
+        cg = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
+        map_id = int(self.map_tab.map_id_field.text())
+        num = self.map_tab.top_slider.value()
+        for result in cg.map_check(map_id, num=num):
+            self.write(result.similiarity)
 
 
 class MapTab(QWidget):
