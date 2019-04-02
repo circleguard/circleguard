@@ -5,11 +5,11 @@ from circleguard import *
 from circleguard import __version__ as cg_version
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QRegExp
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QMessageBox, QLabel,
                              QSpinBox, QVBoxLayout, QSlider, QDoubleSpinBox, QLineEdit,
                              QCheckBox, QGridLayout, QApplication)
-from PyQt5.QtGui import QPalette, QColor
+from PyQt5.QtGui import QPalette, QColor, QRegExpValidator
 # pylint: enable=no-name-in-module
 
 
@@ -71,6 +71,13 @@ class MainWindow(QWidget):
             self.write(result.similiarity)
 
 
+class IDLineEdit(QLineEdit):
+    def __init__(self, parent):
+        super(IDLineEdit, self).__init__(parent)
+        # r prefix isn't necessary but pylint was annoying
+        validator = QRegExpValidator(QRegExp(r"\d*"))
+        self.setValidator(validator)
+
 class MapTab(QWidget):
     def __init__(self):
         super(MapTab, self).__init__()
@@ -82,7 +89,7 @@ class MapTab(QWidget):
         self.map_id_label.setText('Map Id:')
         self.map_id_label.setToolTip('This is the beatmap id, not the beatmapset id!')
 
-        self.map_id_field = QLineEdit(self)
+        self.map_id_field = IDLineEdit(self)
         self.map_id_field.setToolTip('This is the beatmap id, not the beatmapset id!')
         self.thresh_label = QLabel(self)
         self.thresh_label.setText('Threshold:')
