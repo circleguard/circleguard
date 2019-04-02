@@ -97,9 +97,7 @@ class MapTab(QWidget):
             "This is a cutoff for the positives, the higher the value is the more results you will get")
 
         self.thresh_slider = QSlider(Qt.Horizontal)
-        self.thresh_slider.setMinimum(0)
-        self.thresh_slider.setMaximum(30)
-        self.thresh_slider.setMaximum(30)
+        self.thresh_slider.setRange(0, 30)
         self.thresh_slider.setValue(18)
         self.thresh_slider.valueChanged.connect(self.update_thresh_value)
         self.thresh_slider.setToolTip(
@@ -119,8 +117,7 @@ class MapTab(QWidget):
         self.auto_thresh_label.setToolTip("This will automatically adjust the Threshold")
 
         self.auto_thresh_slider = QSlider(Qt.Horizontal)
-        self.auto_thresh_slider.setMinimum(10)
-        self.auto_thresh_slider.setMaximum(30)
+        self.auto_thresh_slider.setRange(10, 30)
         self.auto_thresh_slider.setValue(20)
         self.auto_thresh_slider.valueChanged.connect(self.update_auto_thresh_value)
         self.auto_thresh_slider.setToolTip("tmp")
