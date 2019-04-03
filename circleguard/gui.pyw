@@ -1,10 +1,12 @@
 import sys
 from pathlib import Path
+from multiprocessing.pool import ThreadPool
+from multiprocessing.context import TimeoutError
 from circleguard import *
 from circleguard import __version__ as cg_version
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QRegExp
+from PyQt5.QtCore import Qt, QRegExp, QTimer
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QSpinBox, QVBoxLayout, QSlider, QDoubleSpinBox, QLineEdit,
                              QCheckBox, QGridLayout, QApplication)
@@ -45,6 +47,8 @@ class MainWindow(QWidget):
 class MainTab(QWidget):
     def __init__(self):
         super(MainTab, self).__init__()
+        self.cg_thread = None
+        self.timer = QTimer(self)
 
         self.tabWidget = QTabWidget()
         self.map_tab = MapTab()
@@ -59,26 +63,46 @@ class MainTab(QWidget):
 
         self.run_button = QPushButton()
         self.run_button.setText("Run")
-        self.run_button.clicked.connect(self.run_circleguard)
+        self.run_button.clicked.connect(self.run)
 
         self.mainLayout = QVBoxLayout()
         self.mainLayout.addWidget(self.tabWidget)
         self.mainLayout.addWidget(self.terminal)
         self.mainLayout.addWidget(self.run_button)
         self.setLayout(self.mainLayout)
+        return None
 
     def write(self, text):
         self.terminal.append(str(text))
+        return None
 
     def reset_scrollbar(self):
         self.terminal.verticalScrollBar().setValue(self.terminal.verticalScrollBar().maximum())
+        return None
 
-    def run_circleguard(self):
+    def run(self):
+        pool = ThreadPool(processes=1)
+        self.cg_thread = pool.apply_async(self.run_circleguard, (self, ))
+        self.timer.timeout.connect(self.print_results)
+        self.timer.start(100)
+        return None
+
+    def run_circleguard(self, *args):
         cg = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
         map_id = int(self.map_tab.map_id_field.text())
         num = self.map_tab.top_slider.value()
-        for result in cg.map_check(map_id, num=num):
-            self.write(result.similiarity)
+        cg_map = cg.map_check(map_id, num=num)
+        return [i for i in cg_map]
+
+    def print_results(self,):
+        try:
+            results = self.cg_thread.get(timeout=1 / 100)
+        except TimeoutError:
+            return 1
+        for result in results:
+            self.write(f"similiarity : {result.similiarity}")
+        self.timer.stop()
+        return None
 
 
 class IDLineEdit(QLineEdit):
@@ -305,7 +329,9 @@ def switch_theme(i):
         dark_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
 
         app.setPalette(dark_palette)
-        app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a2a2a; border: 1px solid white; }")
+        app.setStyleSheet("QToolTip { color: #ffffff; "
+                          "background-color: #2a2a2a; "
+                          "border: 1px solid white; }")
     else:
         app.setPalette(app.style().standardPalette())
         updated_palette = QPalette()
@@ -314,7 +340,9 @@ def switch_theme(i):
         updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
         updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, QColor(240, 240, 240))  # taken from standard
         app.setPalette(updated_palette)
-        app.setStyleSheet("QToolTip { color: #000000; background-color: #D5D5D5; border: 1px solid white; }")
+        app.setStyleSheet("QToolTip { color: #000000; "
+                          "background-color: #D5D5D5; "
+                          "border: 1px solid white; }")
 
 
 if __name__ == "__main__":
