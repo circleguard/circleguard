@@ -1,4 +1,5 @@
 import sys
+from io import StringIO
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from multiprocessing.context import TimeoutError
@@ -49,6 +50,7 @@ class MainTab(QWidget):
         super(MainTab, self).__init__()
         self.cg_thread = None
         self.timer = QTimer(self)
+        sys.stdout = self.mystdout = StringIO()
 
         self.tabWidget = QTabWidget()
         self.map_tab = MapTab()
@@ -70,10 +72,10 @@ class MainTab(QWidget):
         self.mainLayout.addWidget(self.terminal)
         self.mainLayout.addWidget(self.run_button)
         self.setLayout(self.mainLayout)
-        return None
 
     def write(self, text):
-        self.terminal.append(str(text))
+        if text != "":
+            self.terminal.append(str(text).rstrip().lstrip())
         return None
 
     def reset_scrollbar(self):
@@ -83,8 +85,9 @@ class MainTab(QWidget):
     def run(self):
         pool = ThreadPool(processes=1)
         self.cg_thread = pool.apply_async(self.run_circleguard, (self, ))
+        self.timer = QTimer(self)
         self.timer.timeout.connect(self.print_results)
-        self.timer.start(100)
+        self.timer.start(250)
         return None
 
     def run_circleguard(self, *args):
@@ -95,6 +98,8 @@ class MainTab(QWidget):
         return [i for i in cg_map]
 
     def print_results(self,):
+        self.write(self.mystdout.getvalue())
+        sys.stdout = self.mystdout = StringIO()
         try:
             results = self.cg_thread.get(timeout=1 / 100)
         except TimeoutError:
@@ -338,7 +343,7 @@ def switch_theme(i):
         # fixes inactive items not being greyed out
         updated_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
         updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
-        updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, QColor(240, 240, 240))  # taken from standard
+        updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, QColor(240, 240, 240))
         app.setPalette(updated_palette)
         app.setStyleSheet("QToolTip { color: #000000; "
                           "background-color: #D5D5D5; "
