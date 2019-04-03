@@ -1,21 +1,19 @@
 import sys
-from functools import partial
 from pathlib import Path
 from circleguard import *
 from circleguard import __version__ as cg_version
 
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QRegExp
-from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QMessageBox, QLabel,
+from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QSpinBox, QVBoxLayout, QSlider, QDoubleSpinBox, QLineEdit,
                              QCheckBox, QGridLayout, QApplication)
 from PyQt5.QtGui import QPalette, QColor, QRegExpValidator
 # pylint: enable=no-name-in-module
 
 
-
 ROOT_PATH = Path(__file__).parent
-if (not (ROOT_PATH / "secret.py").is_file()):
+if not (ROOT_PATH / "secret.py").is_file():
     key = input("Please enter your api key below - you can get it from https://osu.ppy.sh/p/api. "
                 "This will only ever be stored locally, and is necessary to retrieve replay data.\n")
     with open(ROOT_PATH / "secret.py", mode="x") as secret:
@@ -29,6 +27,24 @@ print(f"backend {cg_version}, frontend {__version__}")
 class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
+
+        self.tabWidget = QTabWidget()
+        self.tabWidget.addTab(MainTab(), "Main Tab")
+        self.tabWidget.addTab(SettingsWindow(), "Settings Tab")
+
+        self.mainLayout = QVBoxLayout()
+        self.mainLayout.addWidget(self.tabWidget)
+        self.setLayout(self.mainLayout)
+
+        self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
+
+        # use this if we have an icon for the program
+        # self.setWindowIcon(QIcon(os.path.join(ROOT_PATH, "resources", "icon.png")))
+
+
+class MainTab(QWidget):
+    def __init__(self):
+        super(MainTab, self).__init__()
 
         self.tabWidget = QTabWidget()
         self.map_tab = MapTab()
@@ -50,12 +66,6 @@ class MainWindow(QWidget):
         self.mainLayout.addWidget(self.terminal)
         self.mainLayout.addWidget(self.run_button)
         self.setLayout(self.mainLayout)
-        self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
-
-        # use this if we have an icon for the program
-        # self.setWindowIcon(QIcon(os.path.join(ROOT_PATH, "resources", "icon.png")))
-
-        return
 
     def write(self, text):
         self.terminal.append(str(text))
@@ -77,6 +87,7 @@ class IDLineEdit(QLineEdit):
         # r prefix isn't necessary but pylint was annoying
         validator = QRegExpValidator(QRegExp(r"\d*"))
         self.setValidator(validator)
+
 
 class MapTab(QWidget):
     def __init__(self):
@@ -254,44 +265,63 @@ class VerifyTab(QWidget):
         self.setLayout(self.grid)
 
 
+class SettingsWindow(QWidget):
+    def __init__(self):
+        super(SettingsWindow, self).__init__()
+        self.cache_label = QLabel(self)
+        self.cache_label.setText("Dark mode:")
+        self.cache_label.setToolTip("tmp")
+
+        self.cache_box = QCheckBox(self)
+        self.cache_box.setToolTip("tmp")
+        self.cache_box.stateChanged.connect(switch_theme)
+
+        self.grid = QGridLayout()
+        self.grid.addWidget(self.cache_label, 0, 0, 1, 1)
+        self.grid.addWidget(self.cache_box, 0, 1, 1, 1)
+        self.setLayout(self.grid)
+
+
+def switch_theme(i):
+    if i:
+        dark_palette = QPalette()
+
+        dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.WindowText, Qt.white)
+        dark_palette.setColor(QPalette.Base, QColor(25, 25, 25))
+        dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.ToolTipBase, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.ToolTipText, Qt.white)
+        dark_palette.setColor(QPalette.Text, Qt.white)
+        dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
+        dark_palette.setColor(QPalette.ButtonText, Qt.white)
+        dark_palette.setColor(QPalette.BrightText, Qt.red)
+        dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
+        dark_palette.setColor(QPalette.Highlight, QColor(218, 130, 42))
+        dark_palette.setColor(QPalette.Inactive, QPalette.Highlight, Qt.lightGray)
+        dark_palette.setColor(QPalette.HighlightedText, Qt.black)
+        dark_palette.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
+        dark_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
+        dark_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
+
+        app.setPalette(dark_palette)
+        app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a2a2a; border: 1px solid white; }")
+    else:
+        app.setPalette(app.style().standardPalette())
+        updated_palette = QPalette()
+        # fixes inactive items not being greyed out
+        updated_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
+        updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
+        updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, QColor(240, 240, 240))  # taken from standard
+        app.setPalette(updated_palette)
+        app.setStyleSheet("QToolTip { color: #000000; background-color: #D5D5D5; border: 1px solid white; }")
+
+
 if __name__ == "__main__":
     circleguard = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
     # create and open window
     app = QApplication([])
     app.setStyle("Fusion")
-
-    try:
-        if sys.argv[1] == "--dark":  # temporary for now, later add a switch in the interface
-            dark_palette = QPalette()
-
-            dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
-            dark_palette.setColor(QPalette.WindowText, Qt.white)
-            dark_palette.setColor(QPalette.Base, QColor(25, 25, 25))
-            dark_palette.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-            dark_palette.setColor(QPalette.ToolTipBase, QColor(53, 53, 53))
-            dark_palette.setColor(QPalette.ToolTipText, Qt.white)
-            dark_palette.setColor(QPalette.Text, Qt.white)
-            dark_palette.setColor(QPalette.Button, QColor(53, 53, 53))
-            dark_palette.setColor(QPalette.ButtonText, Qt.white)
-            dark_palette.setColor(QPalette.BrightText, Qt.red)
-            dark_palette.setColor(QPalette.Link, QColor(42, 130, 218))
-            dark_palette.setColor(QPalette.Highlight, QColor(218, 130, 42))
-            dark_palette.setColor(QPalette.Inactive, QPalette.Highlight, Qt.lightGray)
-            dark_palette.setColor(QPalette.HighlightedText, Qt.black)
-            dark_palette.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
-            dark_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
-            dark_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
-
-            app.setPalette(dark_palette)
-            app.setStyleSheet("QToolTip { color: #ffffff; background-color: #2a2a2a; border: 1px solid white; }")
-    except IndexError:
-        updated_palette = QPalette()
-        # fixes inactive items not being greyed out
-        updated_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
-        updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
-
-        app.setPalette(updated_palette)
-
     window = MainWindow()
     window.show()
     app.exec_()

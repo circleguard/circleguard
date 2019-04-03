@@ -273,3 +273,4 @@ __pycache__/
 
 # pip nonsense
 src/*
+venv/*
