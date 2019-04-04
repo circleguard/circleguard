@@ -103,7 +103,7 @@ class MainTab(QWidget):
         try:
             while(True):
                 result = self.q.get(block=False)
-                self.write(f"similiarity : {result.similiarity}")
+                self.write(f"similiarity: {result.similiarity}")
         except Empty:
             return 1
 
@@ -294,22 +294,22 @@ class VerifyTab(QWidget):
 class SettingsWindow(QWidget):
     def __init__(self):
         super(SettingsWindow, self).__init__()
-        self.cache_label = QLabel(self)
-        self.cache_label.setText("Dark mode:")
-        self.cache_label.setToolTip("tmp")
+        self.darkmode_label = QLabel(self)
+        self.darkmode_label.setText("Dark mode:")
+        self.darkmode_label.setToolTip("tmp")
 
-        self.cache_box = QCheckBox(self)
-        self.cache_box.setToolTip("tmp")
-        self.cache_box.stateChanged.connect(switch_theme)
+        self.darkmode_box = QCheckBox(self)
+        self.darkmode_box.setToolTip("tmp")
+        self.darkmode_box.stateChanged.connect(switch_theme)
 
         self.grid = QGridLayout()
-        self.grid.addWidget(self.cache_label, 0, 0, 1, 1)
-        self.grid.addWidget(self.cache_box, 0, 1, 1, 1)
+        self.grid.addWidget(self.darkmode_label, 0, 0, 1, 1)
+        self.grid.addWidget(self.darkmode_box, 0, 1, 1, 1)
         self.setLayout(self.grid)
 
 
-def switch_theme(i):
-    if i:
+def switch_theme(dark):
+    if dark:
         dark_palette = QPalette()
 
         dark_palette.setColor(QPalette.Window, QColor(53, 53, 53))
@@ -348,7 +348,6 @@ def switch_theme(i):
 
 
 if __name__ == "__main__":
-    circleguard = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
     # create and open window
     app = QApplication([])
     app.setStyle("Fusion")
