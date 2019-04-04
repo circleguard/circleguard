@@ -25,7 +25,7 @@ def reset_defaults():
     settings.setValue("ran", True)
     settings.setValue("threshold", 18)
     settings.setValue("api_key", "")
-    settings.setValue("dark_theme", False)
+    settings.setValue("dark_theme", 0)
 
 settings = QSettings("Circleguard", "Circleguard")
 RAN_BEFORE = settings.value("ran")
@@ -304,7 +304,7 @@ class SettingsWindow(QWidget):
         self.darkmode_box = QCheckBox(self)
         self.darkmode_box.setToolTip("tmp")
         self.darkmode_box.stateChanged.connect(switch_theme)
-        self.darkmode_box.setChecked(True if DARK_THEME == 2 else False)
+        self.darkmode_box.setChecked(DARK_THEME)
 
         self.thresh_label = QLabel(self)
         self.thresh_label.setText("Default Threshold:")
@@ -340,7 +340,7 @@ def update_default(name, value):
 
 
 def switch_theme(dark):
-    update_default("dark_theme", dark)
+    update_default("dark_theme", 1 if dark else 0)
     if dark:
         dark_palette = QPalette()
 
