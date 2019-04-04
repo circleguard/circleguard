@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
@@ -11,7 +10,7 @@ from circleguard import __version__ as cg_version
 from PyQt5.QtCore import Qt, QRegExp, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QSpinBox, QVBoxLayout, QSlider, QDoubleSpinBox, QLineEdit,
-                             QCheckBox, QGridLayout, QApplication)
+                             QCheckBox, QGridLayout, QApplication, QSpacerItem, QSizePolicy)
 from PyQt5.QtGui import QPalette, QColor, QRegExpValidator
 # pylint: enable=no-name-in-module
 
@@ -25,6 +24,8 @@ def reset_defaults():
     settings.setValue("threshold", 18)
     settings.setValue("api_key", "")
     settings.setValue("dark_theme", 0)
+    settings.setValue("caching", 0)
+
 
 settings = QSettings("Circleguard", "Circleguard")
 RAN_BEFORE = settings.value("ran")
@@ -34,6 +35,7 @@ if not RAN_BEFORE:
 THRESHOLD = settings.value("threshold")
 API_KEY = settings.value("api_key")
 DARK_THEME = settings.value("dark_theme")
+CACHING = settings.value("caching")
 
 
 class MainWindow(QWidget):
@@ -105,8 +107,10 @@ class MainTab(QWidget):
         map_id = int(self.map_tab.map_id_field.text())
         num = self.map_tab.top_slider.value()
         cg_map = cg.map_check(map_id, num=num, thresh=self.map_tab.thresh_value.value())
+        self.write(f"Getting replays of map {map_id}")
         for result in cg_map:
             self.q.put(result)
+        self.write(f"Finished getting replays of map {map_id}")
 
     def print_results(self):
         try:
@@ -116,6 +120,7 @@ class MainTab(QWidget):
                     self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
         except Empty:
             return 1
+
 
 class IDLineEdit(QLineEdit):
     def __init__(self, parent):
@@ -195,33 +200,29 @@ class MapTab(QWidget):
         self.top_value.setSingleStep(1)
         self.top_value.valueChanged.connect(self.update_top_slider)
 
-        self.cache_label = QLabel(self)
-        self.cache_label.setText("Caching:")
-        self.cache_label.setToolTip("Downloaded replays will be cached locally")
-
-        self.cache_box = QCheckBox(self)
-
+        self.spacer = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
         self.grid = QGridLayout()
-        self.grid.addWidget(self.info, 1, 0, 1, 1)
+        self.grid.addWidget(self.info, 1, 0, 1, 4)
 
         self.grid.addWidget(self.map_id_label, 2, 0, 1, 1)
-        self.grid.addWidget(self.map_id_field, 2, 1, 1, 3)
+        self.grid.addItem(self.spacer, 2, 1, 1, 1)
+        self.grid.addWidget(self.map_id_field, 2, 2, 1, 3)
 
         self.grid.addWidget(self.top_label, 3, 0, 1, 1)
-        self.grid.addWidget(self.top_slider, 3, 1, 1, 2)
-        self.grid.addWidget(self.top_value, 3, 3, 1, 1)
+        self.grid.addItem(self.spacer, 2, 1, 1, 1)
+        self.grid.addWidget(self.top_slider, 3, 2, 1, 2)
+        self.grid.addWidget(self.top_value, 3, 4, 1, 1)
 
         self.grid.addWidget(self.thresh_label, 4, 0, 1, 1)
-        self.grid.addWidget(self.thresh_slider, 4, 1, 1, 2)
-        self.grid.addWidget(self.thresh_value, 4, 3, 1, 1)
+        self.grid.addItem(self.spacer, 2, 1, 1, 1)
+        self.grid.addWidget(self.thresh_slider, 4, 2, 1, 2)
+        self.grid.addWidget(self.thresh_value, 4, 4, 1, 1)
 
         self.grid.addWidget(self.auto_thresh_label, 5, 0, 1, 1)
-        self.grid.addWidget(self.auto_thresh_box, 5, 1, 1, 1)
-        self.grid.addWidget(self.auto_thresh_slider, 5, 2, 1, 1)
-        self.grid.addWidget(self.auto_thresh_value, 5, 3, 1, 1)
-
-        self.grid.addWidget(self.cache_label, 6, 0, 1, 1)
-        self.grid.addWidget(self.cache_box, 6, 1, 1, 3)
+        self.grid.addItem(self.spacer, 2, 1, 1, 1)
+        self.grid.addWidget(self.auto_thresh_box, 5, 2, 1, 1)
+        self.grid.addWidget(self.auto_thresh_slider, 5, 3, 1, 1)
+        self.grid.addWidget(self.auto_thresh_value, 5, 4, 1, 1)
 
         self.setLayout(self.grid)
 
@@ -324,6 +325,14 @@ class SettingsWindow(QWidget):
         self.apikey_field.setText(API_KEY)
         self.apikey_field.textChanged.connect(partial(update_default, "api_key"))
 
+        self.cache_label = QLabel(self)
+        self.cache_label.setText("Caching:")
+        self.cache_label.setToolTip("Downloaded replays will be cached locally")
+
+        self.cache_box = QCheckBox(self)
+        self.cache_box.stateChanged.connect(partial(update_default, "caching"))
+        self.cache_box.setChecked(CACHING)
+
         self.grid = QGridLayout()
         self.grid.addWidget(self.apikey_label, 0, 0, 1, 1)
         self.grid.addWidget(self.apikey_field, 0, 1, 1, 1)
@@ -331,6 +340,8 @@ class SettingsWindow(QWidget):
         self.grid.addWidget(self.thresh_value, 1, 1, 1, 1)
         self.grid.addWidget(self.darkmode_label, 2, 0, 1, 1)
         self.grid.addWidget(self.darkmode_box, 2, 1, 1, 1)
+        self.grid.addWidget(self.cache_label, 3, 0, 1, 1)
+        self.grid.addWidget(self.cache_box, 3, 1, 1, 1)
         self.setLayout(self.grid)
 
 
