@@ -109,10 +109,10 @@ class MainTab(QWidget):
         map_id = int(self.map_tab.map_id_field.text())
         num = self.map_tab.top_slider.value()
         cg_map = cg.map_check(map_id, num=num, thresh=self.map_tab.thresh_value.value())
-        self.write("Getting replays of map ")
+        self.write(f"Getting replays of map {map_id}")
         for result in cg_map:
             self.q.put(result)
-        self.write("Finished getting replays")
+        self.write(f"Finished getting replays of map {map_id}")
 
     def print_results(self):
         try:
