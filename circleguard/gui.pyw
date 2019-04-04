@@ -142,25 +142,22 @@ class MapTab(QWidget):
         super(MapTab, self).__init__()
 
         self.info = QLabel(self)
-        self.info.setText("This will compare the n Top plays of a Map")
+        self.info.setText("Compare the top n plays of a Map's leaderboard")
 
         self.map_id_label = QLabel(self)
         self.map_id_label.setText("Map Id:")
-        self.map_id_label.setToolTip("This is the beatmap id, not the beatmapset id!")
+        self.map_id_label.setToolTip("Beatmap id, not the mapset id!")
 
         self.map_id_field = IDLineEdit(self)
-        self.map_id_field.setToolTip("This is the beatmap id, not the beatmapset id!")
         self.thresh_label = QLabel(self)
         self.thresh_label.setText("Threshold:")
         self.thresh_label.setToolTip(
-            "This is a cutoff for the positives, the higher the value is the more results you will get")
+            "Cutoff for how similar two replays must be to be printed")
 
         self.thresh_slider = QSlider(Qt.Horizontal)
         self.thresh_slider.setRange(0, 30)
         self.thresh_slider.setValue(THRESHOLD)
         self.thresh_slider.valueChanged.connect(self.update_thresh_value)
-        self.thresh_slider.setToolTip(
-            "This is a cutoff for the positives, the higher the value is the more results you will get")
 
         self.thresh_value = QSpinBox()
         self.thresh_value.setValue(THRESHOLD)
@@ -168,8 +165,6 @@ class MapTab(QWidget):
         self.thresh_value.setRange(0, 30)
         self.thresh_value.setSingleStep(1)
         self.thresh_value.valueChanged.connect(self.update_thresh_slider)
-        self.thresh_value.setToolTip(
-            "This is a cutoff for the positives, the higher the value is the more results you will get")
 
         self.auto_thresh_label = QLabel(self)
         self.auto_thresh_label.setText("Automatic Threshold:")
@@ -197,14 +192,13 @@ class MapTab(QWidget):
 
         self.top_label = QLabel(self)
         self.top_label.setText("Compare Top:")
-        self.top_label.setToolTip("tmp")
+        self.top_label.setToolTip("Compare this many plays from the leaderboard")
 
         self.top_slider = QSlider(Qt.Horizontal)
         self.top_slider.setMinimum(2)
         self.top_slider.setMaximum(100)
         self.top_slider.setValue(50)
         self.top_slider.valueChanged.connect(self.update_top_value)
-        self.top_slider.setToolTip("tmp")
 
         self.top_value = QSpinBox()
         self.top_value.setValue(50)
@@ -212,14 +206,12 @@ class MapTab(QWidget):
         self.top_value.setRange(2, 100)
         self.top_value.setSingleStep(1)
         self.top_value.valueChanged.connect(self.update_top_slider)
-        self.top_value.setToolTip("tmp")
 
         self.cache_label = QLabel(self)
         self.cache_label.setText("Caching:")
-        self.cache_label.setToolTip("This will store downloaded replays in a Database")
+        self.cache_label.setToolTip("Downloaded replays will be cached locally")
 
         self.cache_box = QCheckBox(self)
-        self.cache_box.setToolTip("This will store downloaded replays in a Database")
 
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 1, 0, 1, 1)
