@@ -24,29 +24,21 @@ if not (ROOT_PATH / "secret.py").is_file():
         secret.write("API_KEY = \"{}\"".format(key))
 from secret import API_KEY
 
-
-
-
-
-
 __version__ = "0.1d"
 print(f"backend {cg_version}, frontend {__version__}")
 
 
 def reset_defaults():
-    ...
+    settings.setValue("ran", True)
+    settings.setValue("threshold", 18)
 
 
 settings = QSettings("Circleguard", "Circleguard")
 RAN_BEFORE = settings.value("ran")
-if(not RAN_BEFORE):
+if not RAN_BEFORE:
     reset_defaults()
 
 THRESHOLD = settings.value("threshold")
-
-
-
-
 
 
 class MainWindow(QWidget):
