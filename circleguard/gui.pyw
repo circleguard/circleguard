@@ -3,12 +3,13 @@ from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from multiprocessing.context import TimeoutError
 from queue import Queue, Empty
+from functools import partial
 
 from circleguard import *
 from circleguard import __version__ as cg_version
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QRegExp, QTimer
+from PyQt5.QtCore import Qt, QRegExp, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QSpinBox, QVBoxLayout, QSlider, QDoubleSpinBox, QLineEdit,
                              QCheckBox, QGridLayout, QApplication)
@@ -23,8 +24,29 @@ if not (ROOT_PATH / "secret.py").is_file():
         secret.write("API_KEY = \"{}\"".format(key))
 from secret import API_KEY
 
+
+
+
+
+
 __version__ = "0.1d"
 print(f"backend {cg_version}, frontend {__version__}")
+
+
+def reset_defaults():
+    ...
+
+
+settings = QSettings("Circleguard", "Circleguard")
+RAN_BEFORE = settings.value("ran")
+if(not RAN_BEFORE):
+    reset_defaults()
+
+THRESHOLD = settings.value("threshold")
+
+
+
+
 
 
 class MainWindow(QWidget):
@@ -135,13 +157,13 @@ class MapTab(QWidget):
 
         self.thresh_slider = QSlider(Qt.Horizontal)
         self.thresh_slider.setRange(0, 30)
-        self.thresh_slider.setValue(18)
+        self.thresh_slider.setValue(THRESHOLD)
         self.thresh_slider.valueChanged.connect(self.update_thresh_value)
         self.thresh_slider.setToolTip(
             "This is a cutoff for the positives, the higher the value is the more results you will get")
 
         self.thresh_value = QSpinBox()
-        self.thresh_value.setValue(18.0)
+        self.thresh_value.setValue(THRESHOLD)
         self.thresh_value.setAlignment(Qt.AlignCenter)
         self.thresh_value.setRange(0, 30)
         self.thresh_value.setSingleStep(1)
@@ -302,10 +324,28 @@ class SettingsWindow(QWidget):
         self.darkmode_box.setToolTip("tmp")
         self.darkmode_box.stateChanged.connect(switch_theme)
 
+        self.thresh_label = QLabel(self)
+        self.thresh_label.setText("Default Threshold:")
+        self.thresh_label.setToolTip("tmp")
+
+        self.thresh_value = QSpinBox()
+        self.thresh_value.setValue(THRESHOLD)
+        self.thresh_value.setAlignment(Qt.AlignCenter)
+        self.thresh_value.setRange(2, 100)
+        self.thresh_value.setSingleStep(1)
+        self.thresh_value.valueChanged.connect(partial(update_default, "threshold"))
+        self.thresh_value.setToolTip("tmp")
+
         self.grid = QGridLayout()
-        self.grid.addWidget(self.darkmode_label, 0, 0, 1, 1)
-        self.grid.addWidget(self.darkmode_box, 0, 1, 1, 1)
+        self.grid.addWidget(self.thresh_label, 0, 0, 1, 1)
+        self.grid.addWidget(self.thresh_value, 0, 1, 1, 1)
+        self.grid.addWidget(self.darkmode_label, 1, 0, 1, 1)
+        self.grid.addWidget(self.darkmode_box, 1, 1, 1, 1)
         self.setLayout(self.grid)
+
+
+def update_default(name, value):
+    settings.setValue(name, value)
 
 
 def switch_theme(dark):
