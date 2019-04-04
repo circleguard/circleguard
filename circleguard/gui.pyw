@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
-from multiprocessing.context import TimeoutError
 from queue import Queue, Empty
 from functools import partial
 
