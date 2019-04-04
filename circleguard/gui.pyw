@@ -1,8 +1,9 @@
 import sys
-from io import StringIO
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from multiprocessing.context import TimeoutError
+from queue import Queue, Empty
+
 from circleguard import *
 from circleguard import __version__ as cg_version
 
@@ -13,7 +14,6 @@ from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel
                              QCheckBox, QGridLayout, QApplication)
 from PyQt5.QtGui import QPalette, QColor, QRegExpValidator
 # pylint: enable=no-name-in-module
-
 
 ROOT_PATH = Path(__file__).parent
 if not (ROOT_PATH / "secret.py").is_file():
@@ -48,9 +48,7 @@ class MainWindow(QWidget):
 class MainTab(QWidget):
     def __init__(self):
         super(MainTab, self).__init__()
-        self.cg_thread = None
-        self.timer = QTimer(self)
-        sys.stdout = self.mystdout = StringIO()
+        self.q = Queue()
 
         self.tabWidget = QTabWidget()
         self.map_tab = MapTab()
@@ -73,6 +71,13 @@ class MainTab(QWidget):
         self.mainLayout.addWidget(self.run_button)
         self.setLayout(self.mainLayout)
 
+        self.start_timer()
+
+    def start_timer(self):
+        timer = QTimer(self)
+        timer.timeout.connect(self.print_results)
+        timer.start(250)
+
     def write(self, text):
         if text != "":
             self.terminal.append(str(text).strip())
@@ -84,31 +89,23 @@ class MainTab(QWidget):
 
     def run(self):
         pool = ThreadPool(processes=1)
-        self.cg_thread = pool.apply_async(self.run_circleguard)
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.print_results)
-        self.timer.start(250)
-        return None
+        pool.apply_async(self.run_circleguard)
 
     def run_circleguard(self):
         cg = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
         map_id = int(self.map_tab.map_id_field.text())
         num = self.map_tab.top_slider.value()
         cg_map = cg.map_check(map_id, num=num)
-        return [i for i in cg_map]
+        for result in cg_map:
+            self.q.put(result)
 
     def print_results(self):
-        self.write(self.mystdout.getvalue())
-        sys.stdout = self.mystdout = StringIO()
         try:
-            results = self.cg_thread.get(timeout=1 / 100)
-        except TimeoutError:
+            while(True):
+                result = self.q.get(block=False)
+                self.write(f"similiarity : {result.similiarity}")
+        except Empty:
             return 1
-        for result in results:
-            self.write(f"similiarity : {result.similiarity}")
-        self.timer.stop()
-        return None
-
 
 class IDLineEdit(QLineEdit):
     def __init__(self, parent):
