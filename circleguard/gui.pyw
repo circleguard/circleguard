@@ -6,6 +6,8 @@ from functools import partial
 from circleguard import *
 from circleguard import __version__ as cg_version
 
+from widgets import *
+
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QRegExp, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
@@ -26,16 +28,11 @@ def reset_defaults():
     settings.setValue("dark_theme", 0)
     settings.setValue("caching", 0)
 
-
 settings = QSettings("Circleguard", "Circleguard")
 RAN_BEFORE = settings.value("ran")
+
 if not RAN_BEFORE:
     reset_defaults()
-
-THRESHOLD = settings.value("threshold")
-API_KEY = settings.value("api_key")
-DARK_THEME = settings.value("dark_theme")
-CACHING = settings.value("caching")
 
 
 class MainWindow(QWidget):
@@ -63,11 +60,13 @@ class MainTab(QWidget):
 
         self.tabWidget = QTabWidget()
         self.map_tab = MapTab()
+        self.user_tab = UserTab()
+        self.local_tab = LocalTab()
+        self.verify_tab = VerifyTab()
         self.tabWidget.addTab(self.map_tab, "Check Map")
-        self.tabWidget.addTab(UserTab(), "Screen User")
-        self.tabWidget.addTab(UserOnMapTab(), "Check User on Map")
-        self.tabWidget.addTab(LocalTab(), "Check Local Replays")
-        self.tabWidget.addTab(VerifyTab(), "Verify")
+        self.tabWidget.addTab(self.user_tab, "Screen User")
+        self.tabWidget.addTab(self.local_tab, "Check Local Replays")
+        self.tabWidget.addTab(self.verify_tab, "Verify")
 
         self.terminal = QTextEdit()
         self.terminal.setReadOnly(True)
@@ -90,13 +89,10 @@ class MainTab(QWidget):
         timer.start(250)
 
     def write(self, text):
-        if text != "":
-            self.terminal.append(str(text).strip())
-        return None
+        self.terminal.append(str(text).strip())
 
     def reset_scrollbar(self):
         self.terminal.verticalScrollBar().setValue(self.terminal.verticalScrollBar().maximum())
-        return None
 
     def run(self):
         pool = ThreadPool(processes=1)
@@ -119,15 +115,7 @@ class MainTab(QWidget):
                 if(result.ischeat):
                     self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
         except Empty:
-            return 1
-
-
-class IDLineEdit(QLineEdit):
-    def __init__(self, parent):
-        super(IDLineEdit, self).__init__(parent)
-        # r prefix isn't necessary but pylint was annoying
-        validator = QRegExpValidator(QRegExp(r"\d*"))
-        self.setValidator(validator)
+            pass
 
 
 class MapTab(QWidget):
@@ -137,121 +125,17 @@ class MapTab(QWidget):
         self.info = QLabel(self)
         self.info.setText("Compare the top n plays of a Map's leaderboard")
 
-        self.map_id_label = QLabel(self)
-        self.map_id_label.setText("Map Id:")
-        self.map_id_label.setToolTip("Beatmap id, not the mapset id!")
+        self.map_id = MapId()
+        self.compare_top = CompareTop()
+        self.threshold = Threshold()
 
-        self.map_id_field = IDLineEdit(self)
-        self.thresh_label = QLabel(self)
-        self.thresh_label.setText("Threshold:")
-        self.thresh_label.setToolTip(
-            "Cutoff for how similar two replays must be to be printed")
-
-        self.thresh_slider = QSlider(Qt.Horizontal)
-        self.thresh_slider.setRange(0, 30)
-        self.thresh_slider.setValue(THRESHOLD)
-        self.thresh_slider.valueChanged.connect(self.update_thresh_value)
-
-        self.thresh_value = QSpinBox()
-        self.thresh_value.setValue(THRESHOLD)
-        self.thresh_value.setAlignment(Qt.AlignCenter)
-        self.thresh_value.setRange(0, 30)
-        self.thresh_value.setSingleStep(1)
-        self.thresh_value.valueChanged.connect(self.update_thresh_slider)
-
-        self.auto_thresh_label = QLabel(self)
-        self.auto_thresh_label.setText("Automatic Threshold:")
-        self.auto_thresh_label.setToolTip("This will automatically adjust the Threshold")
-
-        self.auto_thresh_slider = QSlider(Qt.Horizontal)
-        self.auto_thresh_slider.setRange(10, 30)
-        self.auto_thresh_slider.setValue(20)
-        self.auto_thresh_slider.valueChanged.connect(self.update_auto_thresh_value)
-        self.auto_thresh_slider.setToolTip("tmp")
-
-        self.auto_thresh_value = QDoubleSpinBox()
-        self.auto_thresh_value.setValue(2.0)
-        self.auto_thresh_value.setAlignment(Qt.AlignCenter)
-        self.auto_thresh_value.setRange(1, 3)
-        self.auto_thresh_value.setSingleStep(0.1)
-        self.auto_thresh_value.valueChanged.connect(self.update_auto_thresh_slider)
-        self.auto_thresh_value.setToolTip("tmp")
-
-        self.auto_thresh_box = QCheckBox(self)
-        self.auto_thresh_box.setToolTip("tmp")
-        self.auto_thresh_box.stateChanged.connect(self.switch_auto_thresh)
-        self.auto_thresh_box.setChecked(1)
-        self.auto_thresh_box.setChecked(0)
-
-        self.top_label = QLabel(self)
-        self.top_label.setText("Compare Top:")
-        self.top_label.setToolTip("Compare this many plays from the leaderboard")
-
-        self.top_slider = QSlider(Qt.Horizontal)
-        self.top_slider.setMinimum(2)
-        self.top_slider.setMaximum(100)
-        self.top_slider.setValue(50)
-        self.top_slider.valueChanged.connect(self.update_top_value)
-
-        self.top_value = QSpinBox()
-        self.top_value.setValue(50)
-        self.top_value.setAlignment(Qt.AlignCenter)
-        self.top_value.setRange(2, 100)
-        self.top_value.setSingleStep(1)
-        self.top_value.valueChanged.connect(self.update_top_slider)
-
-        self.spacer = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
         self.grid = QGridLayout()
-        self.grid.addWidget(self.info, 1, 0, 1, 4)
-
-        self.grid.addWidget(self.map_id_label, 2, 0, 1, 1)
-        self.grid.addItem(self.spacer, 2, 1, 1, 1)
-        self.grid.addWidget(self.map_id_field, 2, 2, 1, 3)
-
-        self.grid.addWidget(self.top_label, 3, 0, 1, 1)
-        self.grid.addItem(self.spacer, 2, 1, 1, 1)
-        self.grid.addWidget(self.top_slider, 3, 2, 1, 2)
-        self.grid.addWidget(self.top_value, 3, 4, 1, 1)
-
-        self.grid.addWidget(self.thresh_label, 4, 0, 1, 1)
-        self.grid.addItem(self.spacer, 2, 1, 1, 1)
-        self.grid.addWidget(self.thresh_slider, 4, 2, 1, 2)
-        self.grid.addWidget(self.thresh_value, 4, 4, 1, 1)
-
-        self.grid.addWidget(self.auto_thresh_label, 5, 0, 1, 1)
-        self.grid.addItem(self.spacer, 2, 1, 1, 1)
-        self.grid.addWidget(self.auto_thresh_box, 5, 2, 1, 1)
-        self.grid.addWidget(self.auto_thresh_slider, 5, 3, 1, 1)
-        self.grid.addWidget(self.auto_thresh_value, 5, 4, 1, 1)
+        self.grid.addWidget(self.info, 0, 0, 1, -1)
+        self.grid.addWidget(self.map_id, 1, 0, 1, -1)
+        self.grid.addWidget(self.compare_top, 2, 0, 1, -1)
+        self.grid.addWidget(self.threshold, 3, 0, 1, -1)
 
         self.setLayout(self.grid)
-
-    # If somebody has a nicer way to solve this mess, sign me up!
-
-    def update_thresh_value(self):
-        self.thresh_value.setValue(self.thresh_slider.value())
-
-    def update_thresh_slider(self):
-        self.thresh_slider.setValue(self.thresh_value.value())
-
-    def update_auto_thresh_value(self):
-        self.auto_thresh_value.setValue(self.auto_thresh_slider.value() / 10)
-
-    def update_auto_thresh_slider(self):
-        self.auto_thresh_slider.setValue(self.auto_thresh_value.value() * 10)
-
-    def update_top_value(self):
-        self.top_value.setValue(self.top_slider.value())
-
-    def update_top_slider(self):
-        self.top_slider.setValue(self.top_value.value())
-
-    def switch_auto_thresh(self, i):
-        self.auto_thresh_slider.setEnabled(i)
-        self.auto_thresh_value.setEnabled(i)
-        self.thresh_label.setEnabled(not i)
-        self.thresh_slider.setEnabled(not i)
-        self.thresh_value.setEnabled(not i)
 
 
 class UserTab(QWidget):
