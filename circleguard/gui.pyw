@@ -17,13 +17,6 @@ from PyQt5.QtGui import QPalette, QColor, QRegExpValidator
 # pylint: enable=no-name-in-module
 
 ROOT_PATH = Path(__file__).parent
-if not (ROOT_PATH / "secret.py").is_file():
-    key = input("Please enter your api key below - you can get it from https://osu.ppy.sh/p/api. "
-                "This will only ever be stored locally, and is necessary to retrieve replay data.\n")
-    with open(ROOT_PATH / "secret.py", mode="x") as secret:
-        secret.write("API_KEY = \"{}\"".format(key))
-from secret import API_KEY
-
 __version__ = "0.1d"
 print(f"backend {cg_version}, frontend {__version__}")
 
@@ -31,7 +24,8 @@ print(f"backend {cg_version}, frontend {__version__}")
 def reset_defaults():
     settings.setValue("ran", True)
     settings.setValue("threshold", 18)
-
+    settings.setValue("api_key", "")
+    settings.setValue("dark_theme", False)
 
 settings = QSettings("Circleguard", "Circleguard")
 RAN_BEFORE = settings.value("ran")
@@ -39,6 +33,8 @@ if not RAN_BEFORE:
     reset_defaults()
 
 THRESHOLD = settings.value("threshold")
+API_KEY = settings.value("api_key")
+DARK_THEME = settings.value("dark_theme")
 
 
 class MainWindow(QWidget):
@@ -308,6 +304,7 @@ class SettingsWindow(QWidget):
         self.darkmode_box = QCheckBox(self)
         self.darkmode_box.setToolTip("tmp")
         self.darkmode_box.stateChanged.connect(switch_theme)
+        self.darkmode_box.setChecked(True if DARK_THEME == 2 else False)
 
         self.thresh_label = QLabel(self)
         self.thresh_label.setText("Default Threshold:")
@@ -321,11 +318,20 @@ class SettingsWindow(QWidget):
         self.thresh_value.valueChanged.connect(partial(update_default, "threshold"))
         self.thresh_value.setToolTip("tmp")
 
+        self.apikey_label = QLabel(self)
+        self.apikey_label.setText("API Key:")
+
+        self.apikey_field = QLineEdit(self)
+        self.apikey_field.setText(API_KEY)
+        self.apikey_field.textChanged.connect(partial(update_default, "api_key"))
+
         self.grid = QGridLayout()
-        self.grid.addWidget(self.thresh_label, 0, 0, 1, 1)
-        self.grid.addWidget(self.thresh_value, 0, 1, 1, 1)
-        self.grid.addWidget(self.darkmode_label, 1, 0, 1, 1)
-        self.grid.addWidget(self.darkmode_box, 1, 1, 1, 1)
+        self.grid.addWidget(self.apikey_label, 0, 0, 1, 1)
+        self.grid.addWidget(self.apikey_field, 0, 1, 1, 1)
+        self.grid.addWidget(self.thresh_label, 1, 0, 1, 1)
+        self.grid.addWidget(self.thresh_value, 1, 1, 1, 1)
+        self.grid.addWidget(self.darkmode_label, 2, 0, 1, 1)
+        self.grid.addWidget(self.darkmode_box, 2, 1, 1, 1)
         self.setLayout(self.grid)
 
 
@@ -334,6 +340,7 @@ def update_default(name, value):
 
 
 def switch_theme(dark):
+    update_default("dark_theme", dark)
     if dark:
         dark_palette = QPalette()
 
