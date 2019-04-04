@@ -109,7 +109,7 @@ class MainTab(QWidget):
         cg = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
         map_id = int(self.map_tab.map_id_field.text())
         num = self.map_tab.top_slider.value()
-        cg_map = cg.map_check(map_id, num=num)
+        cg_map = cg.map_check(map_id, num=num, thresh=self.map_tab.thresh_value.value())
         for result in cg_map:
             self.q.put(result)
 
@@ -117,7 +117,8 @@ class MainTab(QWidget):
         try:
             while(True):
                 result = self.q.get(block=False)
-                self.write(f"similiarity: {result.similiarity}")
+                if(result.ischeat):
+                    self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
         except Empty:
             return 1
 
