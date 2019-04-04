@@ -84,20 +84,20 @@ class MainTab(QWidget):
 
     def run(self):
         pool = ThreadPool(processes=1)
-        self.cg_thread = pool.apply_async(self.run_circleguard, (self, ))
+        self.cg_thread = pool.apply_async(self.run_circleguard)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.print_results)
         self.timer.start(250)
         return None
 
-    def run_circleguard(self, *args):
+    def run_circleguard(self):
         cg = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
         map_id = int(self.map_tab.map_id_field.text())
         num = self.map_tab.top_slider.value()
         cg_map = cg.map_check(map_id, num=num)
         return [i for i in cg_map]
 
-    def print_results(self,):
+    def print_results(self):
         self.write(self.mystdout.getvalue())
         sys.stdout = self.mystdout = StringIO()
         try:
