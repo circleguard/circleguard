@@ -106,8 +106,10 @@ class MainTab(QWidget):
         map_id = int(self.map_tab.map_id_field.text())
         num = self.map_tab.top_slider.value()
         cg_map = cg.map_check(map_id, num=num, thresh=self.map_tab.thresh_value.value())
+        self.write("Getting replays of map ")
         for result in cg_map:
             self.q.put(result)
+        self.write("Finished getting replays")
 
     def print_results(self):
         try:
@@ -117,6 +119,7 @@ class MainTab(QWidget):
                     self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
         except Empty:
             return 1
+
 
 class IDLineEdit(QLineEdit):
     def __init__(self, parent):
