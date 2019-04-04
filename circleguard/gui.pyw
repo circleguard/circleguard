@@ -75,7 +75,7 @@ class MainTab(QWidget):
 
     def write(self, text):
         if text != "":
-            self.terminal.append(str(text).rstrip().lstrip())
+            self.terminal.append(str(text).strip())
         return None
 
     def reset_scrollbar(self):
