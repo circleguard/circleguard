@@ -26,6 +26,8 @@ def reset_defaults():
     settings.setValue("threshold", 18)
     settings.setValue("api_key", "")
     settings.setValue("dark_theme", 0)
+    settings.setValue("caching", 0)
+
 
 settings = QSettings("Circleguard", "Circleguard")
 RAN_BEFORE = settings.value("ran")
@@ -35,6 +37,7 @@ if not RAN_BEFORE:
 THRESHOLD = settings.value("threshold")
 API_KEY = settings.value("api_key")
 DARK_THEME = settings.value("dark_theme")
+CACHING = settings.value("caching")
 
 
 class MainWindow(QWidget):
@@ -199,12 +202,6 @@ class MapTab(QWidget):
         self.top_value.setSingleStep(1)
         self.top_value.valueChanged.connect(self.update_top_slider)
 
-        self.cache_label = QLabel(self)
-        self.cache_label.setText("Caching:")
-        self.cache_label.setToolTip("Downloaded replays will be cached locally")
-
-        self.cache_box = QCheckBox(self)
-
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 1, 0, 1, 1)
 
@@ -223,9 +220,6 @@ class MapTab(QWidget):
         self.grid.addWidget(self.auto_thresh_box, 5, 1, 1, 1)
         self.grid.addWidget(self.auto_thresh_slider, 5, 2, 1, 1)
         self.grid.addWidget(self.auto_thresh_value, 5, 3, 1, 1)
-
-        self.grid.addWidget(self.cache_label, 6, 0, 1, 1)
-        self.grid.addWidget(self.cache_box, 6, 1, 1, 3)
 
         self.setLayout(self.grid)
 
@@ -328,6 +322,14 @@ class SettingsWindow(QWidget):
         self.apikey_field.setText(API_KEY)
         self.apikey_field.textChanged.connect(partial(update_default, "api_key"))
 
+        self.cache_label = QLabel(self)
+        self.cache_label.setText("Caching:")
+        self.cache_label.setToolTip("Downloaded replays will be cached locally")
+
+        self.cache_box = QCheckBox(self)
+        self.cache_box.stateChanged.connect(partial(update_default, "caching"))
+        self.cache_box.setChecked(CACHING)
+
         self.grid = QGridLayout()
         self.grid.addWidget(self.apikey_label, 0, 0, 1, 1)
         self.grid.addWidget(self.apikey_field, 0, 1, 1, 1)
@@ -335,6 +337,8 @@ class SettingsWindow(QWidget):
         self.grid.addWidget(self.thresh_value, 1, 1, 1, 1)
         self.grid.addWidget(self.darkmode_label, 2, 0, 1, 1)
         self.grid.addWidget(self.darkmode_box, 2, 1, 1, 1)
+        self.grid.addWidget(self.cache_label, 3, 0, 1, 1)
+        self.grid.addWidget(self.cache_box, 3, 1, 1, 1)
         self.setLayout(self.grid)
 
 
