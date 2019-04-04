@@ -1,7 +1,5 @@
-import sys
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
-from multiprocessing.context import TimeoutError
 from queue import Queue, Empty
 from functools import partial
 
@@ -12,7 +10,7 @@ from circleguard import __version__ as cg_version
 from PyQt5.QtCore import Qt, QRegExp, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QSpinBox, QVBoxLayout, QSlider, QDoubleSpinBox, QLineEdit,
-                             QCheckBox, QGridLayout, QApplication)
+                             QCheckBox, QGridLayout, QApplication, QSpacerItem, QSizePolicy)
 from PyQt5.QtGui import QPalette, QColor, QRegExpValidator
 # pylint: enable=no-name-in-module
 
@@ -202,24 +200,29 @@ class MapTab(QWidget):
         self.top_value.setSingleStep(1)
         self.top_value.valueChanged.connect(self.update_top_slider)
 
+        self.spacer = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
         self.grid = QGridLayout()
-        self.grid.addWidget(self.info, 1, 0, 1, 1)
+        self.grid.addWidget(self.info, 1, 0, 1, 4)
 
         self.grid.addWidget(self.map_id_label, 2, 0, 1, 1)
-        self.grid.addWidget(self.map_id_field, 2, 1, 1, 3)
+        self.grid.addItem(self.spacer, 2, 1, 1, 1)
+        self.grid.addWidget(self.map_id_field, 2, 2, 1, 3)
 
         self.grid.addWidget(self.top_label, 3, 0, 1, 1)
-        self.grid.addWidget(self.top_slider, 3, 1, 1, 2)
-        self.grid.addWidget(self.top_value, 3, 3, 1, 1)
+        self.grid.addItem(self.spacer, 2, 1, 1, 1)
+        self.grid.addWidget(self.top_slider, 3, 2, 1, 2)
+        self.grid.addWidget(self.top_value, 3, 4, 1, 1)
 
         self.grid.addWidget(self.thresh_label, 4, 0, 1, 1)
-        self.grid.addWidget(self.thresh_slider, 4, 1, 1, 2)
-        self.grid.addWidget(self.thresh_value, 4, 3, 1, 1)
+        self.grid.addItem(self.spacer, 2, 1, 1, 1)
+        self.grid.addWidget(self.thresh_slider, 4, 2, 1, 2)
+        self.grid.addWidget(self.thresh_value, 4, 4, 1, 1)
 
         self.grid.addWidget(self.auto_thresh_label, 5, 0, 1, 1)
-        self.grid.addWidget(self.auto_thresh_box, 5, 1, 1, 1)
-        self.grid.addWidget(self.auto_thresh_slider, 5, 2, 1, 1)
-        self.grid.addWidget(self.auto_thresh_value, 5, 3, 1, 1)
+        self.grid.addItem(self.spacer, 2, 1, 1, 1)
+        self.grid.addWidget(self.auto_thresh_box, 5, 2, 1, 1)
+        self.grid.addWidget(self.auto_thresh_slider, 5, 3, 1, 1)
+        self.grid.addWidget(self.auto_thresh_value, 5, 4, 1, 1)
 
         self.setLayout(self.grid)
 
