@@ -58,28 +58,30 @@ class MainTab(QWidget):
         super(MainTab, self).__init__()
         self.q = Queue()
 
-        self.tabWidget = QTabWidget()
+        tabs = QTabWidget()
         self.map_tab = MapTab()
         self.user_tab = UserTab()
         self.local_tab = LocalTab()
         self.verify_tab = VerifyTab()
-        self.tabWidget.addTab(self.map_tab, "Check Map")
-        self.tabWidget.addTab(self.user_tab, "Screen User")
-        self.tabWidget.addTab(self.local_tab, "Check Local Replays")
-        self.tabWidget.addTab(self.verify_tab, "Verify")
+        tabs.addTab(self.map_tab, "Check Map")
+        tabs.addTab(self.user_tab, "Screen User")
+        tabs.addTab(self.local_tab, "Check Local Replays")
+        tabs.addTab(self.verify_tab, "Verify")
 
-        self.terminal = QTextEdit()
-        self.terminal.setReadOnly(True)
+
+        terminal = QTextEdit()
+        terminal.setReadOnly(True)
+        self.terminal = terminal
 
         self.run_button = QPushButton()
         self.run_button.setText("Run")
         self.run_button.clicked.connect(self.run)
 
-        self.mainLayout = QVBoxLayout()
-        self.mainLayout.addWidget(self.tabWidget)
-        self.mainLayout.addWidget(self.terminal)
-        self.mainLayout.addWidget(self.run_button)
-        self.setLayout(self.mainLayout)
+        layout = QVBoxLayout()
+        layout.addWidget(tabs)
+        layout.addWidget(self.terminal)
+        layout.addWidget(self.run_button)
+        self.setLayout(layout)
 
         self.start_timer()
 
@@ -99,14 +101,14 @@ class MainTab(QWidget):
         pool.apply_async(self.run_circleguard)
 
     def run_circleguard(self):
+        print("running")
         cg = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
-        map_id = int(self.map_tab.map_id_field.text())
-        num = self.map_tab.top_slider.value()
-        cg_map = cg.map_check(map_id, num=num, thresh=self.map_tab.thresh_value.value())
-        self.write(f"Getting replays of map {map_id}")
+        map_id = int(self.map_tab.map_id.field.text())
+        num = self.map_tab.compare_top.slider.value()
+        thresh = self.self.map_tab.threshold.slider.value()
+        cg_map = cg.map_check(map_id, num=num, thresh=thresh)
         for result in cg_map:
             self.q.put(result)
-        self.write(f"Finished getting replays of map {map_id}")
 
     def print_results(self):
         try:
@@ -129,13 +131,13 @@ class MapTab(QWidget):
         self.compare_top = CompareTop()
         self.threshold = Threshold()
 
-        self.grid = QGridLayout()
-        self.grid.addWidget(self.info, 0, 0, 1, -1)
-        self.grid.addWidget(self.map_id, 1, 0, 1, -1)
-        self.grid.addWidget(self.compare_top, 2, 0, 1, -1)
-        self.grid.addWidget(self.threshold, 3, 0, 1, -1)
+        layout = QGridLayout()
+        layout.addWidget(self.info, 0, 0, 1, -1)
+        layout.addWidget(self.map_id, 1, 0, 1, -1)
+        layout.addWidget(self.compare_top, 2, 0, 1, -1)
+        layout.addWidget(self.threshold, 3, 0, 1, -1)
 
-        self.setLayout(self.grid)
+        self.setLayout(layout)
 
 
 class UserTab(QWidget):
