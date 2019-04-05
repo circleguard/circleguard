@@ -3,11 +3,6 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 
-from circleguard import *
-from circleguard import __version__ as cg_version
-
-from widgets import *
-
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QRegExp, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
@@ -15,6 +10,10 @@ from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel
                              QCheckBox, QGridLayout, QApplication, QSpacerItem, QSizePolicy)
 from PyQt5.QtGui import QPalette, QColor, QRegExpValidator, QIcon
 # pylint: enable=no-name-in-module
+
+from circleguard import *
+from circleguard import __version__ as cg_version
+from widgets import *
 
 ROOT_PATH = Path(__file__).parent
 __version__ = "0.1d"
@@ -33,6 +32,11 @@ RAN_BEFORE = settings.value("ran")
 
 if not RAN_BEFORE:
     reset_defaults()
+
+THRESHOLD = settings.value("threshold")
+API_KEY = settings.value("api_key")
+DARK_THEME = settings.value("dark_theme")
+CACHING = settings.value("caching")
 
 
 class MainWindow(QWidget):
@@ -105,16 +109,16 @@ class MainTab(QWidget):
         cg = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
         map_id = int(self.map_tab.map_id.field.text())
         num = self.map_tab.compare_top.slider.value()
-        thresh = self.self.map_tab.threshold.slider.value()
+        thresh = self.map_tab.threshold.slider.value()
         cg_map = cg.map_check(map_id, num=num, thresh=thresh)
         for result in cg_map:
             self.q.put(result)
 
     def print_results(self):
         try:
-            while(True):
+            while True:
                 result = self.q.get(block=False)
-                if(result.ischeat):
+                if result.ischeat:
                     self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
         except Empty:
             pass
