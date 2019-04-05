@@ -29,12 +29,12 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False )
+          console=False , icon='/Users/tybug/Desktop/Coding/osu/circleguard-script/circleguard/resources/logo.ico')
 app = BUNDLE(exe,
              name='gui.app',
-             icon=None,
+             icon='/Users/tybug/Desktop/Coding/osu/circleguard-script/circleguard/resources/logo.icns',
              bundle_identifier=None,
-	     info_plist={
+             info_plist={
               'NSHighResolutionCapable': 'True'
              }
-         )
+       )
