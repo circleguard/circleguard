@@ -6,7 +6,7 @@ os.path.expanduser
 a = Analysis(['circleguard/gui.pyw'],
              pathex=['.'],
              binaries=[('/System/Library/Frameworks/Tk.framework/Tk', 'tk'), ('/System/Library/Frameworks/Tcl.framework/Tcl', 'tcl')],
-             datas=[],
+             datas=[('circleguard/resources/','resources/'), ('circleguard/db/','db/')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],

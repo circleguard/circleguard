@@ -6,7 +6,7 @@ os.path.expanduser
 a = Analysis(['circleguard/gui.pyw'],
              pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x64', expanduser('~/AppData/Local/Programs/Python/Python37/')],
              binaries=[(expanduser('~/AppData/Local/Programs/Python/Python37/Lib/tkinter'), 'tk'), (expanduser('~/AppData/Local/Programs/Python/Python37/tcl'), 'tcl')],
-             datas=[],
+             datas=[('circleguard/resources/','resources/'), ('circleguard/db/','db/')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],

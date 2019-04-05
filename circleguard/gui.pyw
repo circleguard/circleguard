@@ -1,3 +1,5 @@
+import sys
+import os
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
@@ -15,9 +17,16 @@ from circleguard import *
 from circleguard import __version__ as cg_version
 from widgets import *
 
+
 ROOT_PATH = Path(__file__).parent
 __version__ = "0.1d"
 print(f"backend {cg_version}, frontend {__version__}")
+
+
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
 
 
 def reset_defaults():
@@ -26,6 +35,7 @@ def reset_defaults():
     settings.setValue("api_key", "")
     settings.setValue("dark_theme", 0)
     settings.setValue("caching", 0)
+
 
 settings = QSettings("Circleguard", "Circleguard")
 RAN_BEFORE = settings.value("ran")
@@ -54,7 +64,7 @@ class MainWindow(QWidget):
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
 
         # use this if we have an icon for the program
-        self.setWindowIcon(QIcon(str(ROOT_PATH / "resources" / "logo.png")))
+        self.setWindowIcon(QIcon(str(resource_path("resources/logo.png"))))
 
 
 class MainTab(QWidget):
@@ -120,7 +130,7 @@ class MainTab(QWidget):
 
     def run_circleguard(self):
         print("running")
-        cg = Circleguard(API_KEY, ROOT_PATH / "db" / "cache.db")
+        cg = Circleguard(API_KEY, str(resource_path("db/cache.db")))
         map_id = int(self.map_tab.map_id.field.text())
         num = self.map_tab.compare_top.slider.value()
         thresh = self.map_tab.threshold.slider.value()
