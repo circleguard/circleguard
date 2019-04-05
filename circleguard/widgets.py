@@ -32,6 +32,7 @@ class MapId(QWidget):
         self.field = IDLineEdit(self)
 
         layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(spacer, 0, 1, 1, 1)
         layout.addWidget(self.field, 0, 2, 1, 3)
@@ -60,6 +61,7 @@ class CompareTop(QWidget):
         self.spinbox = spinbox
 
         layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(spacer, 0, 1, 1, 1)
         layout.addWidget(slider, 0, 2, 1, 2)
@@ -97,6 +99,7 @@ class Threshold(QWidget):
         self.spinbox = spinbox
 
         layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(spacer, 0, 1, 1, 1)
         layout.addWidget(slider, 0, 2, 1, 2)
