@@ -13,7 +13,7 @@ from PyQt5.QtCore import Qt, QRegExp, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QSpinBox, QVBoxLayout, QSlider, QDoubleSpinBox, QLineEdit,
                              QCheckBox, QGridLayout, QApplication, QSpacerItem, QSizePolicy)
-from PyQt5.QtGui import QPalette, QColor, QRegExpValidator
+from PyQt5.QtGui import QPalette, QColor, QRegExpValidator, QIcon
 # pylint: enable=no-name-in-module
 
 ROOT_PATH = Path(__file__).parent
@@ -50,7 +50,7 @@ class MainWindow(QWidget):
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
 
         # use this if we have an icon for the program
-        # self.setWindowIcon(QIcon(os.path.join(ROOT_PATH, "resources", "icon.png")))
+        self.setWindowIcon(QIcon(str(ROOT_PATH / "resources" / "icon.png")))
 
 
 class MainTab(QWidget):
