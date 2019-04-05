@@ -90,12 +90,14 @@ class MainTab(QWidget):
         self.start_timer()
         self.installEventFilter(self)
 
+    # necessary to catch arrow key events for some reason
     def eventFilter(self, source, event):
         if event.type() == QKeyEvent:
             self.keyPressEvent(event)
         return super(MainTab, self).eventFilter(source, event)
 
     def keyPressEvent(self, event):
+        # switch between Map/User/Local/Verify tabs
         if event.key() == Qt.Key_Right:
             self.tabs.setCurrentIndex(self.tabs.currentIndex() + 1)
         if event.key() == Qt.Key_Left:
