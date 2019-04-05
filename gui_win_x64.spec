@@ -4,8 +4,8 @@ block_cipher = None
 from os.path import expanduser
 os.path.expanduser
 a = Analysis(['circleguard/gui.pyw'],
-             pathex=['.'],
-             binaries=[('/System/Library/Frameworks/Tk.framework/Tk', 'tk'), ('/System/Library/Frameworks/Tcl.framework/Tcl', 'tcl')],
+             pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x64', expanduser('~/AppData/Local/Programs/Python/Python37/')],
+             binaries=[(expanduser('~/AppData/Local/Programs/Python/Python37/Lib/tkinter'), 'tk'), (expanduser('~/AppData/Local/Programs/Python/Python37/tcl'), 'tcl')],
              datas=[],
              hiddenimports=[],
              hookspath=[],
@@ -23,18 +23,10 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='Circleguard',
+          name='Circleguard_x64',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
           console=False , icon='./circleguard/resources/logo.ico')
-app = BUNDLE(exe,
-             name='Circleguard.app',
-             icon='./circleguard/resources/logo.icns',
-             bundle_identifier=None,
-             info_plist={
-              'NSHighResolutionCapable': 'True'
-             }
-       )
