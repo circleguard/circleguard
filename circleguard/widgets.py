@@ -31,11 +31,11 @@ class MapId(QWidget):
         label.setToolTip("Beatmap id, not the mapset id!")
         self.field = IDLineEdit(self)
 
-        grid = QGridLayout()
-        grid.addWidget(label, 0, 0, 1, 1)
-        grid.addItem(spacer, 0, 1, 1, 1)
-        grid.addWidget(self.field, 0, 2, 1, 3)
-        self.setLayout(grid)
+        layout = QGridLayout()
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(spacer, 0, 1, 1, 1)
+        layout.addWidget(self.field, 0, 2, 1, 3)
+        self.setLayout(layout)
 
 class CompareTop(QWidget):
     def __init__(self):
@@ -59,12 +59,12 @@ class CompareTop(QWidget):
         spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
 
-        grid = QGridLayout()
-        grid.addWidget(label, 0, 0, 1, 1)
-        grid.addItem(spacer, 0, 1, 1, 1)
-        grid.addWidget(slider, 0, 2, 1, 2)
-        grid.addWidget(spinbox, 0, 4, 1, 1)
-        self.setLayout(grid)
+        layout = QGridLayout()
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(spacer, 0, 1, 1, 1)
+        layout.addWidget(slider, 0, 2, 1, 2)
+        layout.addWidget(spinbox, 0, 4, 1, 1)
+        self.setLayout(layout)
 
     # keep spinbox and slider in sync
     def update_spinbox(self, value):
@@ -96,12 +96,12 @@ class Threshold(QWidget):
         spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
 
-        grid = QGridLayout()
-        grid.addWidget(label, 0, 0, 1, 1)
-        grid.addItem(spacer, 0, 1, 1, 1)
-        grid.addWidget(slider, 0, 2, 1, 2)
-        grid.addWidget(spinbox, 0, 4, 1, 1)
-        self.setLayout(grid)
+        layout = QGridLayout()
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(spacer, 0, 1, 1, 1)
+        layout.addWidget(slider, 0, 2, 1, 2)
+        layout.addWidget(spinbox, 0, 4, 1, 1)
+        self.setLayout(layout)
 
     # keep spinbox and slider in sync
     def update_spinbox(self, value):
