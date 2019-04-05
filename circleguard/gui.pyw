@@ -228,6 +228,7 @@ class SettingsWindow(QWidget):
         self.apikey_field = QLineEdit(self)
         self.apikey_field.setText(API_KEY)
         self.apikey_field.textChanged.connect(partial(update_default, "api_key"))
+        self.apikey_field.textChanged.connect(set_api_key)
 
         self.cache_label = QLabel(self)
         self.cache_label.setText("Caching:")
@@ -252,6 +253,9 @@ class SettingsWindow(QWidget):
 def update_default(name, value):
     settings.setValue(name, value)
 
+def set_api_key():
+    global API_KEY
+    API_KEY = settings.value("api_key")
 
 def switch_theme(dark):
     update_default("dark_theme", 1 if dark else 0)
