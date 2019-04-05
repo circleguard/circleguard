@@ -50,7 +50,7 @@ class MainWindow(QWidget):
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
 
         # use this if we have an icon for the program
-        self.setWindowIcon(QIcon(str(ROOT_PATH / "resources" / "icon.png")))
+        self.setWindowIcon(QIcon(str(ROOT_PATH / "resources" / "logo.png")))
 
 
 class MainTab(QWidget):
