@@ -7,7 +7,6 @@ from PyQt5.QtCore import QRegExp, Qt, QSettings
 spacer = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
 
-
 settings = QSettings("Circleguard", "Circleguard")
 
 THRESHOLD = settings.value("threshold")
@@ -15,12 +14,14 @@ API_KEY = settings.value("api_key")
 DARK_THEME = settings.value("dark_theme")
 CACHING = settings.value("caching")
 
+
 class IDLineEdit(QLineEdit):
     def __init__(self, parent):
         super(IDLineEdit, self).__init__(parent)
         # r prefix isn't necessary but pylint was annoying
         validator = QRegExpValidator(QRegExp(r"\d*"))
         self.setValidator(validator)
+
 
 class MapId(QWidget):
     def __init__(self):
@@ -37,6 +38,7 @@ class MapId(QWidget):
         layout.addItem(spacer, 0, 1, 1, 1)
         layout.addWidget(self.field, 0, 2, 1, 3)
         self.setLayout(layout)
+
 
 class CompareTop(QWidget):
     def __init__(self):
@@ -75,9 +77,11 @@ class CompareTop(QWidget):
     def update_slider(self, value):
         self.slider.setValue(value)
 
+
 class Threshold(QWidget):
     def __init__(self):
         super(Threshold, self).__init__()
+        threshold = settings.value("threshold")
 
         label = QLabel(self)
         label.setText("Threshold:")
@@ -86,12 +90,12 @@ class Threshold(QWidget):
 
         slider = QSlider(Qt.Horizontal)
         slider.setRange(0, 30)
-        slider.setValue(THRESHOLD)
+        slider.setValue(threshold)
         slider.valueChanged.connect(self.update_spinbox)
         self.slider = slider
 
         spinbox = QSpinBox()
-        spinbox.setValue(THRESHOLD)
+        spinbox.setValue(threshold)
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(0, 30)
         spinbox.setSingleStep(1)
