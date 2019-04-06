@@ -227,7 +227,7 @@ class SettingsWindow(QWidget):
         self.thresh_value = QSpinBox()
         self.thresh_value.setValue(THRESHOLD)
         self.thresh_value.setAlignment(Qt.AlignCenter)
-        self.thresh_value.setRange(2, 100)
+        self.thresh_value.setRange(0, 30)
         self.thresh_value.setSingleStep(1)
         self.thresh_value.valueChanged.connect(partial(update_default, "threshold"))
         self.thresh_value.setToolTip("tmp")
