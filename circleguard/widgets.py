@@ -1,5 +1,5 @@
 # pylint: disable=no-name-in-module
-from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QSpacerItem, QSizePolicy, QSlider, QSpinBox
+from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QDoubleSpinBox
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QSettings
 # pylint: enable=no-name-in-module
@@ -116,3 +116,43 @@ class Threshold(QWidget):
 
     def update_slider(self, value):
         self.slider.setValue(value)
+
+
+class AutoThreshold(QWidget):
+    def __init__(self):
+        super(AutoThreshold, self).__init__()
+
+        label = QLabel(self)
+        label.setText("Auto Threshold:")
+        label.setToolTip("Stddevs below average threshold to print for"+
+                         "\n(typically between TLS and 2.5. The higher, the less results you will get)")
+        self.label = label
+
+        slider = QSlider(Qt.Horizontal)
+        slider.setRange(10, 30)
+        slider.setValue(THRESHOLD)
+        slider.valueChanged.connect(self.update_spinbox)
+        self.slider = slider
+
+        spinbox = QDoubleSpinBox()
+        spinbox.setValue(THRESHOLD)
+        spinbox.setAlignment(Qt.AlignCenter)
+        spinbox.setRange(1.0, 3.0)
+        spinbox.setSingleStep(0.1)
+        spinbox.valueChanged.connect(self.update_slider)
+        self.spinbox = spinbox
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(spacer, 0, 1, 1, 1)
+        layout.addWidget(slider, 0, 2, 1, 2)
+        layout.addWidget(spinbox, 0, 4, 1, 1)
+        self.setLayout(layout)
+
+    # keep spinbox and slider in sync
+    def update_spinbox(self, value):
+        self.spinbox.setValue(value/10)
+
+    def update_slider(self, value):
+        self.slider.setValue(value*10)
