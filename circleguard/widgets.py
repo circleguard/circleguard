@@ -1,7 +1,9 @@
 # pylint: disable=no-name-in-module
-from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QDoubleSpinBox
+from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QDoubleSpinBox, QFileDialog, QPushButton
 from PyQt5.QtGui import QRegExpValidator
-from PyQt5.QtCore import QRegExp, Qt, QSettings
+from PyQt5.QtCore import QRegExp, Qt, QSettings, QDir
+from functools import partial
+
 # pylint: enable=no-name-in-module
 
 spacer = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
@@ -30,6 +32,23 @@ class MapId(QWidget):
         label = QLabel(self)
         label.setText("Map Id:")
         label.setToolTip("Beatmap id, not the mapset id!")
+        self.field = IDLineEdit(self)
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(spacer, 0, 1, 1, 1)
+        layout.addWidget(self.field, 0, 2, 1, 3)
+        self.setLayout(layout)
+
+
+class UserId(QWidget):
+    def __init__(self):
+        super(UserId, self).__init__()
+
+        label = QLabel(self)
+        label.setText("User Id:")
+        label.setToolTip("User id, as seen in the profile url")
         self.field = IDLineEdit(self)
 
         layout = QGridLayout()
@@ -130,7 +149,7 @@ class AutoThreshold(QWidget):
 
         slider = QSlider(Qt.Horizontal)
         slider.setRange(10, 30)
-        slider.setValue(THRESHOLD)
+        slider.setValue(20)
         slider.valueChanged.connect(self.update_spinbox)
         self.slider = slider
 
@@ -139,6 +158,7 @@ class AutoThreshold(QWidget):
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(1.0, 3.0)
         spinbox.setSingleStep(0.1)
+        spinbox.setValue(2.0)
         spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
 
@@ -156,3 +176,27 @@ class AutoThreshold(QWidget):
 
     def update_slider(self, value):
         self.slider.setValue(value*10)
+
+
+class FolderChoose(QWidget):
+    def __init__(self):
+        super(FolderChoose, self).__init__()
+
+        label = QLabel(self)
+        label.setText("Choose Folder:")
+        label.setToolTip("tmp")
+
+        options = QFileDialog.Option()
+        options |= QFileDialog.ShowDirsOnly
+        options |= QFileDialog.HideNameFilterDetails
+        self.file_chooser = QPushButton(self)
+        self.file_chooser.setText("Choose Folder")
+        self.file_chooser.pressed.connect(
+            partial(QFileDialog.getExistingDirectory, caption="Select Output Folder", directory=QDir.currentPath(), options=options))
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(spacer, 0, 1, 1, 3)
+        layout.addWidget(self.file_chooser, 0, 4, 1, 1)
+        self.setLayout(layout)

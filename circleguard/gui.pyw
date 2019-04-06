@@ -6,11 +6,11 @@ from queue import Queue, Empty
 from functools import partial
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QRegExp, QTimer, QSettings
+from PyQt5.QtCore import Qt, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
-                             QSpinBox, QVBoxLayout, QSlider, QDoubleSpinBox, QLineEdit,
-                             QCheckBox, QGridLayout, QApplication, QSpacerItem, QSizePolicy)
-from PyQt5.QtGui import QPalette, QColor, QRegExpValidator, QIcon, QKeyEvent
+                             QSpinBox, QVBoxLayout, QLineEdit,
+                             QCheckBox, QGridLayout, QApplication)
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeyEvent
 # pylint: enable=no-name-in-module
 
 from circleguard import *
@@ -153,9 +153,11 @@ class MapTab(QWidget):
         super(MapTab, self).__init__()
 
         self.info = QLabel(self)
-        self.info.setText("Compare the top n plays of a Map's leaderboard")
+        self.info.setText("Compare the top n plays of a Map's leaderboard.\nIf a user is given, it will compare the "
+                          "user against the maps leaderboard.")
 
         self.map_id = MapId()
+        self.user_id = UserId()
         self.compare_top = CompareTop()
         self.threshold = Threshold()
         self.auto_threshold = AutoThreshold()
@@ -163,9 +165,10 @@ class MapTab(QWidget):
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.map_id, 1, 0, 1, 1)
-        layout.addWidget(self.compare_top, 2, 0, 1, 1)
-        layout.addWidget(self.threshold, 3, 0, 1, 1)
-        layout.addWidget(self.auto_threshold, 4, 0, 1, 1)
+        layout.addWidget(self.user_id, 2, 0, 1, 1)
+        layout.addWidget(self.compare_top, 3, 0, 1, 1)
+        layout.addWidget(self.threshold, 4, 0, 1, 1)
+        layout.addWidget(self.auto_threshold, 5, 0, 1, 1)
 
         self.setLayout(layout)
 
@@ -175,19 +178,20 @@ class UserTab(QWidget):
         super(UserTab, self).__init__()
         self.info = QLabel(self)
         self.info.setText("This will compare a user's n top plays with the n Top plays of the corresponding Map")
-        self.grid = QGridLayout()
-        self.grid.addWidget(self.info, 0, 0, 1, 1)
-        self.setLayout(self.grid)
 
+        self.user_id = UserId()
+        self.compare_top = CompareTop()
+        self.threshold = Threshold()
+        self.auto_threshold = AutoThreshold()
 
-class UserOnMapTab(QWidget):
-    def __init__(self):
-        super(UserOnMapTab, self).__init__()
-        self.info = QLabel(self)
-        self.info.setText("This will compare a user's score with the n Top plays of a Map")
-        self.grid = QGridLayout()
-        self.grid.addWidget(self.info, 0, 0, 1, 1)
-        self.setLayout(self.grid)
+        layout = QGridLayout()
+        layout.addWidget(self.info, 0, 0, 1, 1)
+        layout.addWidget(self.user_id, 1, 0, 1, 1)
+        layout.addWidget(self.compare_top, 2, 0, 1, 1)
+        layout.addWidget(self.threshold, 3, 0, 1, 1)
+        layout.addWidget(self.auto_threshold, 4, 0, 1, 1)
+
+        self.setLayout(layout)
 
 
 class LocalTab(QWidget):
@@ -195,8 +199,10 @@ class LocalTab(QWidget):
         super(LocalTab, self).__init__()
         self.info = QLabel(self)
         self.info.setText("This will verify replays")
+        self.file_chooser = FolderChoose()
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 0, 0, 1, 1)
+        self.grid.addWidget(self.file_chooser, 1, 0, 1, 1)
         self.setLayout(self.grid)
 
 
