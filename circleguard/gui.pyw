@@ -158,12 +158,14 @@ class MapTab(QWidget):
         self.map_id = MapId()
         self.compare_top = CompareTop()
         self.threshold = Threshold()
+        self.auto_threshold = AutoThreshold()
 
         layout = QGridLayout()
-        layout.addWidget(self.info, 0, 0, 1, -1)
-        layout.addWidget(self.map_id, 1, 0, 1, -1)
-        layout.addWidget(self.compare_top, 2, 0, 1, -1)
-        layout.addWidget(self.threshold, 3, 0, 1, -1)
+        layout.addWidget(self.info, 0, 0, 1, 1)
+        layout.addWidget(self.map_id, 1, 0, 1, 1)
+        layout.addWidget(self.compare_top, 2, 0, 1, 1)
+        layout.addWidget(self.threshold, 3, 0, 1, 1)
+        layout.addWidget(self.auto_threshold, 4, 0, 1, 1)
 
         self.setLayout(layout)
 
