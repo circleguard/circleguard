@@ -10,7 +10,7 @@ from PyQt5.QtCore import Qt, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QSpinBox, QVBoxLayout, QLineEdit,
                              QCheckBox, QGridLayout, QApplication)
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeyEvent
+from PyQt5.QtGui import QPalette, QColor, QIcon
 # pylint: enable=no-name-in-module
 
 from circleguard import *
@@ -81,7 +81,6 @@ class MainTab(QWidget):
         tabs.addTab(self.user_tab, "Screen User")
         tabs.addTab(self.local_tab, "Check Local Replays")
         tabs.addTab(self.verify_tab, "Verify")
-        self.tabs = tabs
 
         terminal = QTextEdit()
         terminal.setReadOnly(True)
@@ -98,20 +97,6 @@ class MainTab(QWidget):
         self.setLayout(layout)
 
         self.start_timer()
-        self.installEventFilter(self)
-
-    # necessary to catch arrow key events for some reason
-    def eventFilter(self, source, event):
-        if event.type() == QKeyEvent:
-            self.keyPressEvent(event)
-        return super(MainTab, self).eventFilter(source, event)
-
-    def keyPressEvent(self, event):
-        # switch between Map/User/Local/Verify tabs
-        if event.key() == Qt.Key_Right:
-            self.tabs.setCurrentIndex(self.tabs.currentIndex() + 1)
-        if event.key() == Qt.Key_Left:
-            self.tabs.setCurrentIndex(self.tabs.currentIndex() - 1)
 
     def start_timer(self):
         timer = QTimer(self)
