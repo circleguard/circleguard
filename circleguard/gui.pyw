@@ -4,13 +4,12 @@ from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
-
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
-                             QSpinBox, QVBoxLayout, QLineEdit,
-                             QCheckBox, QGridLayout, QApplication)
-from PyQt5.QtGui import QPalette, QColor, QIcon
+                             QSpinBox, QVBoxLayout, QLineEdit, QShortcut,
+                             QCheckBox, QGridLayout, QApplication, QMainWindow)
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence
 # pylint: enable=no-name-in-module
 
 from circleguard import *
@@ -38,15 +37,29 @@ def reset_defaults():
 
 
 settings = QSettings("Circleguard", "Circleguard")
-RAN_BEFORE = settings.value("ran")
 
-if not RAN_BEFORE:
+if not settings.contains("ran"):
     reset_defaults()
 
 THRESHOLD = settings.value("threshold")
 API_KEY = settings.value("api_key")
 DARK_THEME = settings.value("dark_theme")
 CACHING = settings.value("caching")
+
+
+class WindowWrapper(QMainWindow):
+    def __init__(self):
+        super(WindowWrapper, self).__init__()
+        self.setCentralWidget(MainWindow())
+        self.show()
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.right_tab)
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.left_tab)
+
+    def right_tab(self):
+        print("Right, but what now?")
+
+    def left_tab(self):
+        print("Left, but what now?")
 
 
 class MainWindow(QWidget):
@@ -304,7 +317,7 @@ if __name__ == "__main__":
     # create and open window
     app = QApplication([])
     app.setStyle("Fusion")
-    window = MainWindow()
+    window = WindowWrapper()
     window.resize(600, 500)
     window.show()
     app.exec_()
