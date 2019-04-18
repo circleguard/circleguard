@@ -4,6 +4,7 @@ from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
+
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
@@ -29,22 +30,23 @@ def resource_path(relative_path):
 
 
 def reset_defaults():
-    settings.setValue("ran", True)
-    settings.setValue("threshold", 18)
-    settings.setValue("api_key", "")
-    settings.setValue("dark_theme", 0)
-    settings.setValue("caching", 0)
+    SETTINGS.setValue("ran", True)
+    SETTINGS.setValue("threshold", 18)
+    SETTINGS.setValue("api_key", "")
+    SETTINGS.setValue("dark_theme", 0)
+    SETTINGS.setValue("caching", 0)
+    SETTINGS.sync()
 
 
-settings = QSettings("Circleguard", "Circleguard")
-
-if not settings.contains("ran"):
+SETTINGS = QSettings("Circleguard", "Circleguard")
+if not SETTINGS.contains("ran"):
     reset_defaults()
 
-THRESHOLD = settings.value("threshold")
-API_KEY = settings.value("api_key")
-DARK_THEME = settings.value("dark_theme")
-CACHING = settings.value("caching")
+Widgets.init()
+THRESHOLD = SETTINGS.value("threshold")
+API_KEY = SETTINGS.value("api_key")
+DARK_THEME = SETTINGS.value("dark_theme")
+CACHING = SETTINGS.value("caching")
 
 
 class WindowWrapper(QMainWindow):
@@ -267,11 +269,11 @@ class SettingsWindow(QWidget):
 
 
 def update_default(name, value):
-    settings.setValue(name, value)
+    SETTINGS.setValue(name, value)
 
 def set_api_key():
     global API_KEY
-    API_KEY = settings.value("api_key")
+    API_KEY = SETTINGS.value("api_key")
 
 def switch_theme(dark):
     update_default("dark_theme", 1 if dark else 0)

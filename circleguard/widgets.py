@@ -1,5 +1,7 @@
 # pylint: disable=no-name-in-module
-from PyQt5.QtWidgets import QWidget, QGridLayout, QLabel, QLineEdit, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QDoubleSpinBox, QFileDialog, QPushButton
+from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit,
+                             QSpacerItem, QSizePolicy, QSlider, QSpinBox,
+                             QDoubleSpinBox, QFileDialog, QPushButton)
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QSettings, QDir
 from functools import partial
@@ -9,12 +11,16 @@ from functools import partial
 spacer = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
 
-settings = QSettings("Circleguard", "Circleguard")
+class Widgets:
+    @staticmethod
+    def init():
+        global SETTINGS, THRESHOLD, API_KEY, DARK_THEME, CACHING
+        SETTINGS = QSettings("Circleguard", "Circleguard")
 
-THRESHOLD = settings.value("threshold")
-API_KEY = settings.value("api_key")
-DARK_THEME = settings.value("dark_theme")
-CACHING = settings.value("caching")
+        THRESHOLD = SETTINGS.value("threshold")
+        API_KEY = SETTINGS.value("api_key")
+        DARK_THEME = SETTINGS.value("dark_theme")
+        CACHING = SETTINGS.value("caching")
 
 
 class IDLineEdit(QLineEdit):
@@ -100,7 +106,7 @@ class CompareTop(QWidget):
 class Threshold(QWidget):
     def __init__(self):
         super(Threshold, self).__init__()
-        threshold = settings.value("threshold")
+        threshold = SETTINGS.value("threshold")
 
         label = QLabel(self)
         label.setText("Threshold:")
