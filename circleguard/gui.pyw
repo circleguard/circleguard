@@ -99,7 +99,6 @@ class MainTab(QWidget):
 
         terminal = QTextEdit()
         terminal.setReadOnly(True)
-        terminal.setFocusPolicy(Qt.NoFocus)
         self.terminal = terminal
 
         self.run_button = QPushButton()
