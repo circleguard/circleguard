@@ -25,7 +25,7 @@ print(f"backend {cg_version}, frontend {__version__}")
 
 def resource_path(relative_path):
     if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, relative_path)
+        return os.path.join(sys._MEIPASS, relative_path) # pylint: disable=no-member
     return os.path.join(os.path.abspath("."), relative_path)
 
 
@@ -80,6 +80,12 @@ class MainWindow(QWidget):
 
         # use this if we have an icon for the program
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
+
+    def mousePressEvent(self, event):
+        focused = self.focusWidget()
+        if(focused is not None):
+            focused.clearFocus()
+        super(MainWindow, self).mousePressEvent(event)
 
 
 class MainTab(QWidget):
