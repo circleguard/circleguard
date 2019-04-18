@@ -33,7 +33,7 @@ class IDLineEdit(QLineEdit):
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_Left or key == Qt.Key_Right:
-            QCoreApplication.postEvent(event)
+            QCoreApplication.postEvent("~insert-WindowWrapper-here~", event)
         else:
             QLineEdit.keyPressEvent(self, event)
 
