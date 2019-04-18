@@ -99,6 +99,7 @@ class MainTab(QWidget):
 
         terminal = QTextEdit()
         terminal.setReadOnly(True)
+        terminal.setFocusPolicy(Qt.NoFocus)
         self.terminal = terminal
 
         self.run_button = QPushButton()
@@ -219,14 +220,13 @@ class VerifyTab(QWidget):
 class SettingsWindow(QWidget):
     def __init__(self):
         super(SettingsWindow, self).__init__()
-        self.darkmode_label = QLabel(self)
-        self.darkmode_label.setText("Dark mode:")
-        self.darkmode_label.setToolTip("tmp")
+        self.apikey_label = QLabel(self)
+        self.apikey_label.setText("API Key:")
 
-        self.darkmode_box = QCheckBox(self)
-        self.darkmode_box.setToolTip("tmp")
-        self.darkmode_box.stateChanged.connect(switch_theme)
-        self.darkmode_box.setChecked(DARK_THEME)
+        self.apikey_field = QLineEdit(self)
+        self.apikey_field.setText(API_KEY)
+        self.apikey_field.textChanged.connect(partial(update_default, "api_key"))
+        self.apikey_field.textChanged.connect(set_api_key)
 
         self.thresh_label = QLabel(self)
         self.thresh_label.setText("Default Threshold:")
@@ -240,13 +240,14 @@ class SettingsWindow(QWidget):
         self.thresh_value.valueChanged.connect(partial(update_default, "threshold"))
         self.thresh_value.setToolTip("tmp")
 
-        self.apikey_label = QLabel(self)
-        self.apikey_label.setText("API Key:")
+        self.darkmode_label = QLabel(self)
+        self.darkmode_label.setText("Dark mode:")
+        self.darkmode_label.setToolTip("tmp")
 
-        self.apikey_field = QLineEdit(self)
-        self.apikey_field.setText(API_KEY)
-        self.apikey_field.textChanged.connect(partial(update_default, "api_key"))
-        self.apikey_field.textChanged.connect(set_api_key)
+        self.darkmode_box = QCheckBox(self)
+        self.darkmode_box.setToolTip("tmp")
+        self.darkmode_box.stateChanged.connect(switch_theme)
+        self.darkmode_box.setChecked(DARK_THEME)
 
         self.cache_label = QLabel(self)
         self.cache_label.setText("Caching:")
@@ -271,9 +272,11 @@ class SettingsWindow(QWidget):
 def update_default(name, value):
     SETTINGS.setValue(name, value)
 
+
 def set_api_key():
     global API_KEY
     API_KEY = SETTINGS.value("api_key")
+
 
 def switch_theme(dark):
     update_default("dark_theme", 1 if dark else 0)
