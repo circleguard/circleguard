@@ -8,9 +8,9 @@ from functools import partial
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
-                             QSpinBox, QVBoxLayout, QLineEdit,
-                             QCheckBox, QGridLayout, QApplication)
-from PyQt5.QtGui import QPalette, QColor, QIcon
+                             QSpinBox, QVBoxLayout, QLineEdit, QShortcut,
+                             QCheckBox, QGridLayout, QApplication, QMainWindow)
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence
 # pylint: enable=no-name-in-module
 
 from circleguard import *
@@ -30,23 +30,38 @@ def resource_path(relative_path):
 
 
 def reset_defaults():
-    settings.setValue("ran", True)
-    settings.setValue("threshold", 18)
-    settings.setValue("api_key", "")
-    settings.setValue("dark_theme", 0)
-    settings.setValue("caching", 0)
+    SETTINGS.setValue("ran", True)
+    SETTINGS.setValue("threshold", 18)
+    SETTINGS.setValue("api_key", "")
+    SETTINGS.setValue("dark_theme", 0)
+    SETTINGS.setValue("caching", 0)
+    SETTINGS.sync()
 
 
-settings = QSettings("Circleguard", "Circleguard")
-RAN_BEFORE = settings.value("ran")
-
-if not RAN_BEFORE:
+SETTINGS = QSettings("Circleguard", "Circleguard")
+if not SETTINGS.contains("ran"):
     reset_defaults()
 
-THRESHOLD = settings.value("threshold")
-API_KEY = settings.value("api_key")
-DARK_THEME = settings.value("dark_theme")
-CACHING = settings.value("caching")
+Widgets.init()
+THRESHOLD = SETTINGS.value("threshold")
+API_KEY = SETTINGS.value("api_key")
+DARK_THEME = SETTINGS.value("dark_theme")
+CACHING = SETTINGS.value("caching")
+
+
+class WindowWrapper(QMainWindow):
+    def __init__(self):
+        super(WindowWrapper, self).__init__()
+        self.setCentralWidget(MainWindow())
+        self.show()
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.right_tab)
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.left_tab)
+
+    def right_tab(self):
+        print("Right, but what now?")
+
+    def left_tab(self):
+        print("Left, but what now?")
 
 
 class MainWindow(QWidget):
@@ -254,11 +269,11 @@ class SettingsWindow(QWidget):
 
 
 def update_default(name, value):
-    settings.setValue(name, value)
+    SETTINGS.setValue(name, value)
 
 def set_api_key():
     global API_KEY
-    API_KEY = settings.value("api_key")
+    API_KEY = SETTINGS.value("api_key")
 
 def switch_theme(dark):
     update_default("dark_theme", 1 if dark else 0)
@@ -304,7 +319,7 @@ if __name__ == "__main__":
     # create and open window
     app = QApplication([])
     app.setStyle("Fusion")
-    window = MainWindow()
+    window = WindowWrapper()
     window.resize(600, 500)
     window.show()
     app.exec_()
