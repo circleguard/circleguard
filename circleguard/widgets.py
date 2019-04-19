@@ -4,9 +4,8 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit,
                              QDoubleSpinBox, QFileDialog, QPushButton)
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QSettings, QDir, QCoreApplication
-from functools import partial
-
 # pylint: enable=no-name-in-module
+from functools import partial
 
 spacer = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
@@ -39,9 +38,7 @@ class IDLineEdit(QLineEdit):
         key = event.key()
         if key == Qt.Key_Left or key == Qt.Key_Right:
             QCoreApplication.sendEvent(WINDOW, event)
-            QLineEdit.keyPressEvent(self, event)
-        else:
-            QLineEdit.keyPressEvent(self, event)
+        super().keyPressEvent(event)
 
 
 class SpinBox(QSpinBox):
@@ -52,9 +49,7 @@ class SpinBox(QSpinBox):
         key = event.key()
         if key == Qt.Key_Left or key == Qt.Key_Right:
             QCoreApplication.sendEvent(WINDOW, event)
-            QSpinBox.keyPressEvent(self, event)
-        else:
-            QSpinBox.keyPressEvent(self, event)
+        super().keyPressEvent(event)
 
 
 class MapId(QWidget):
