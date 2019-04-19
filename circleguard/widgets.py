@@ -22,6 +22,11 @@ class Widgets:
         DARK_THEME = SETTINGS.value("dark_theme")
         CACHING = SETTINGS.value("caching")
 
+    @staticmethod
+    def win_init(window):
+        global WINDOW
+        WINDOW = window
+
 
 class IDLineEdit(QLineEdit):
     def __init__(self, parent):
@@ -33,7 +38,8 @@ class IDLineEdit(QLineEdit):
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_Left or key == Qt.Key_Right:
-            QCoreApplication.postEvent("~insert-WindowWrapper-here~", event)
+            QCoreApplication.sendEvent(WINDOW, event)
+            QLineEdit.keyPressEvent(self, event)
         else:
             QLineEdit.keyPressEvent(self, event)
 
