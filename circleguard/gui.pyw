@@ -328,6 +328,7 @@ if __name__ == "__main__":
     app = QApplication([])
     app.setStyle("Fusion")
     window = WindowWrapper()
+    Widgets.win_init(window)
     window.resize(600, 500)
     window.show()
     app.exec_()

@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit,
                              QSpacerItem, QSizePolicy, QSlider, QSpinBox,
                              QDoubleSpinBox, QFileDialog, QPushButton)
 from PyQt5.QtGui import QRegExpValidator
-from PyQt5.QtCore import QRegExp, Qt, QSettings, QDir
+from PyQt5.QtCore import QRegExp, Qt, QSettings, QDir, QCoreApplication
 from functools import partial
 
 # pylint: enable=no-name-in-module
@@ -22,6 +22,11 @@ class Widgets:
         DARK_THEME = SETTINGS.value("dark_theme")
         CACHING = SETTINGS.value("caching")
 
+    @staticmethod
+    def win_init(window):
+        global WINDOW
+        WINDOW = window
+
 
 class IDLineEdit(QLineEdit):
     def __init__(self, parent):
@@ -29,6 +34,14 @@ class IDLineEdit(QLineEdit):
         # r prefix isn't necessary but pylint was annoying
         validator = QRegExpValidator(QRegExp(r"\d*"))
         self.setValidator(validator)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_Left or key == Qt.Key_Right:
+            QCoreApplication.sendEvent(WINDOW, event)
+            QLineEdit.keyPressEvent(self, event)
+        else:
+            QLineEdit.keyPressEvent(self, event)
 
 
 class MapId(QWidget):
