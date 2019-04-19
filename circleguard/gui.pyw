@@ -25,11 +25,16 @@ print(f"backend {cg_version}, frontend {__version__}")
 
 
 def resource_path(relative_path):
-    if hasattr(sys, '_MEIPASS'):
+    """
+    Returns a Path representing where to look for resource files for the program,
+    such as databases or images.
+
+    This location changes if the program is run from an application built with pyinstaller.
+    """
+
+    if hasattr(sys, '_MEIPASS'): # being run from a pyinstall'd app
         return os.path.join(sys._MEIPASS, relative_path) # pylint: disable=no-member
     return os.path.join(os.path.abspath("."), relative_path)
-
-
 
 
 class WindowWrapper(QMainWindow):

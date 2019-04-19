@@ -21,6 +21,14 @@ def set_event_window(window):
 
 
 class IDLineEdit(QLineEdit):
+    r"""
+    A LineEdit that does not allow anything but digits to be entered.
+    Specifically, anything not matched by the \d* regex is not registered.
+
+    This class also overrides the keyPressEvent to allow the left and right
+    keys to be sent to our window that controls shortcuts, instead of being used only by the LineEdit.
+    """
+
     def __init__(self, parent):
         super(IDLineEdit, self).__init__(parent)
         # r prefix isn't necessary but pylint was annoying
@@ -35,6 +43,11 @@ class IDLineEdit(QLineEdit):
 
 
 class SpinBox(QSpinBox):
+    """
+    A SpinBox that overrides the keyPressEvent to allow the left and right
+    keys to be sent to our window that controls shortcuts, instead of being used only by the SpinBox.
+    """
+
     def __init__(self, parent):
         super(SpinBox, self).__init__(parent)
 
@@ -46,6 +59,11 @@ class SpinBox(QSpinBox):
 
 
 class MapId(QWidget):
+    """
+    A container class of widgets that represents user input for a map id. This class
+    holds a Label and IDLineEdit.
+    """
+
     def __init__(self):
         super(MapId, self).__init__()
 
@@ -63,6 +81,11 @@ class MapId(QWidget):
 
 
 class UserId(QWidget):
+    """
+    A container class of widgets that represents user input for a user id. This class
+    holds a Label and IDLineEdit.
+    """
+
     def __init__(self):
         super(UserId, self).__init__()
 
@@ -80,6 +103,13 @@ class UserId(QWidget):
 
 
 class CompareTop(QWidget):
+    """
+    A container class of widgets that represents user input for how many plays of a map to compare.
+    This class holds a Label, Slider, and SpinBox.
+
+    The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
+    """
+
     def __init__(self):
         super(CompareTop, self).__init__()
         label = QLabel(self)
@@ -118,6 +148,13 @@ class CompareTop(QWidget):
 
 
 class Threshold(QWidget):
+    """
+    A container class of widgets that represents user input for the threshold to consider a comparison a cheat.
+    This class holds a Label, Slider, and SpinBox.
+
+    The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
+    """
+
     def __init__(self):
         super(Threshold, self).__init__()
 
