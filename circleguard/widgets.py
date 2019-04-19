@@ -44,6 +44,19 @@ class IDLineEdit(QLineEdit):
             QLineEdit.keyPressEvent(self, event)
 
 
+class SpinBox(QSpinBox):
+    def __init__(self, parent):
+        super(SpinBox, self).__init__(parent)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_Left or key == Qt.Key_Right:
+            QCoreApplication.sendEvent(WINDOW, event)
+            QSpinBox.keyPressEvent(self, event)
+        else:
+            QSpinBox.keyPressEvent(self, event)
+
+
 class MapId(QWidget):
     def __init__(self):
         super(MapId, self).__init__()
@@ -92,7 +105,7 @@ class CompareTop(QWidget):
         slider.valueChanged.connect(self.update_spinbox)
         self.slider = slider
 
-        spinbox = QSpinBox()
+        spinbox = SpinBox(self)
         spinbox.setValue(50)
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(2, 100)
@@ -132,7 +145,7 @@ class Threshold(QWidget):
         slider.valueChanged.connect(self.update_spinbox)
         self.slider = slider
 
-        spinbox = QSpinBox()
+        spinbox = SpinBox(self)
         spinbox.setValue(threshold)
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(0, 30)
