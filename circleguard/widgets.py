@@ -11,12 +11,13 @@ from settings import THRESHOLD
 spacer = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
 
-class Widgets:
-
-    @staticmethod
-    def win_init(window):
-        global WINDOW
-        WINDOW = window
+def set_event_window(window):
+    """
+    To emulate keypresses, we need a window to send the keypress to.
+    This main window is created in gui.pyw, so we need to set it here as well.
+    """
+    global WINDOW
+    WINDOW = window
 
 
 class IDLineEdit(QLineEdit):
