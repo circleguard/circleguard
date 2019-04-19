@@ -6,20 +6,12 @@ from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QSettings, QDir, QCoreApplication
 # pylint: enable=no-name-in-module
 from functools import partial
+from settings import THRESHOLD
 
 spacer = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
 
 class Widgets:
-    @staticmethod
-    def init():
-        global SETTINGS, THRESHOLD, API_KEY, DARK_THEME, CACHING
-        SETTINGS = QSettings("Circleguard", "Circleguard")
-
-        THRESHOLD = SETTINGS.value("threshold")
-        API_KEY = SETTINGS.value("api_key")
-        DARK_THEME = SETTINGS.value("dark_theme")
-        CACHING = SETTINGS.value("caching")
 
     @staticmethod
     def win_init(window):
@@ -127,7 +119,6 @@ class CompareTop(QWidget):
 class Threshold(QWidget):
     def __init__(self):
         super(Threshold, self).__init__()
-        threshold = SETTINGS.value("threshold")
 
         label = QLabel(self)
         label.setText("Threshold:")
@@ -136,12 +127,12 @@ class Threshold(QWidget):
 
         slider = QSlider(Qt.Horizontal)
         slider.setRange(0, 30)
-        slider.setValue(threshold)
+        slider.setValue(THRESHOLD)
         slider.valueChanged.connect(self.update_spinbox)
         self.slider = slider
 
         spinbox = SpinBox(self)
-        spinbox.setValue(threshold)
+        spinbox.setValue(THRESHOLD)
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(0, 30)
         spinbox.setSingleStep(1)

@@ -8,15 +8,16 @@ from functools import partial
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, QSettings
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
-                             QSpinBox, QVBoxLayout, QLineEdit, QShortcut,
+                             QVBoxLayout, QLineEdit, QShortcut,
                              QCheckBox, QGridLayout, QApplication, QMainWindow)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence
 # pylint: enable=no-name-in-module
 
 from circleguard import *
 from circleguard import __version__ as cg_version
-from widgets import *
 
+from widgets import *
+from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default
 
 ROOT_PATH = Path(__file__).parent
 __version__ = "0.1d"
@@ -29,24 +30,6 @@ def resource_path(relative_path):
     return os.path.join(os.path.abspath("."), relative_path)
 
 
-def reset_defaults():
-    SETTINGS.setValue("ran", True)
-    SETTINGS.setValue("threshold", 18)
-    SETTINGS.setValue("api_key", "")
-    SETTINGS.setValue("dark_theme", 0)
-    SETTINGS.setValue("caching", 0)
-    SETTINGS.sync()
-
-
-SETTINGS = QSettings("Circleguard", "Circleguard")
-if not SETTINGS.contains("ran"):
-    reset_defaults()
-
-Widgets.init()
-THRESHOLD = SETTINGS.value("threshold")
-API_KEY = SETTINGS.value("api_key")
-DARK_THEME = SETTINGS.value("dark_theme")
-CACHING = SETTINGS.value("caching")
 
 
 class WindowWrapper(QMainWindow):
@@ -237,7 +220,7 @@ class SettingsWindow(QWidget):
         self.thresh_label.setText("Default Threshold:")
         self.thresh_label.setToolTip("tmp")
 
-        self.thresh_value = QSpinBox()
+        self.thresh_value = SpinBox(self)
         self.thresh_value.setValue(THRESHOLD)
         self.thresh_value.setAlignment(Qt.AlignCenter)
         self.thresh_value.setRange(0, 30)
@@ -274,13 +257,9 @@ class SettingsWindow(QWidget):
         self.setLayout(self.grid)
 
 
-def update_default(name, value):
-    SETTINGS.setValue(name, value)
-
-
-def set_api_key():
+def set_api_key(key):
     global API_KEY
-    API_KEY = SETTINGS.value("api_key")
+    API_KEY = key
 
 
 def switch_theme(dark):
