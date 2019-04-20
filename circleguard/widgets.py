@@ -22,7 +22,7 @@ def set_event_window(window):
 
 class IDLineEdit(QLineEdit):
     r"""
-    A LineEdit that does not allow anything but digits to be entered.
+    A QLineEdit that does not allow anything but digits to be entered.
     Specifically, anything not matched by the \d* regex is not registered.
 
     This class also overrides the keyPressEvent to allow the left and right
@@ -44,12 +44,28 @@ class IDLineEdit(QLineEdit):
 
 class SpinBox(QSpinBox):
     """
-    A SpinBox that overrides the keyPressEvent to allow the left and right
+    A QSpinBox that overrides the keyPressEvent to allow the left and right
     keys to be sent to our window that controls shortcuts, instead of being used only by the SpinBox.
     """
 
     def __init__(self, parent):
         super(SpinBox, self).__init__(parent)
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_Left or key == Qt.Key_Right:
+            QCoreApplication.sendEvent(WINDOW, event)
+        super().keyPressEvent(event)
+
+
+class DoubleSpinBox(QDoubleSpinBox):
+    """
+    A QDoubleSpinBox that overrides the keyPressEvent to allow the left and right
+    keys to be sent to our window that controls shortcuts, instead of being used only by the SpinBox.
+    """
+
+    def __init__(self, parent):
+        super(DoubleSpinBox, self).__init__(parent)
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -209,7 +225,7 @@ class AutoThreshold(QWidget):
         slider.valueChanged.connect(self.update_spinbox)
         self.slider = slider
 
-        spinbox = QDoubleSpinBox()
+        spinbox = DoubleSpinBox()
         spinbox.setValue(THRESHOLD)
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(1.0, 3.0)

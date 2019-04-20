@@ -32,8 +32,8 @@ def resource_path(relative_path):
     This location changes if the program is run from an application built with pyinstaller.
     """
 
-    if hasattr(sys, '_MEIPASS'): # being run from a pyinstall'd app
-        return os.path.join(sys._MEIPASS, relative_path) # pylint: disable=no-member
+    if hasattr(sys, '_MEIPASS'):  # being run from a pyinstall'd app
+        return os.path.join(sys._MEIPASS, relative_path)  # pylint: disable=no-member
     return os.path.join(os.path.abspath("."), relative_path)
 
 
@@ -56,6 +56,7 @@ class WindowWrapper(QMainWindow):
         tabs = self.main_window.main_tab.tabs
         tabs.setCurrentIndex(tabs.currentIndex() - 1)
 
+
 class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -77,7 +78,7 @@ class MainWindow(QWidget):
 
     def mousePressEvent(self, event):
         focused = self.focusWidget()
-        if(focused is not None):
+        if focused is not None:
             focused.clearFocus()
         super(MainWindow, self).mousePressEvent(event)
 
