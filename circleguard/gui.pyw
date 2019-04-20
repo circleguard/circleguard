@@ -62,8 +62,9 @@ class MainWindow(QWidget):
 
         self.tabWidget = QTabWidget()
         self.main_tab = MainTab()
+        self.settings_tab = SettingsTab()
         self.tabWidget.addTab(self.main_tab, "Main Tab")
-        self.tabWidget.addTab(SettingsWindow(), "Settings Tab")
+        self.tabWidget.addTab(self.settings_tab, "Settings Tab")
 
         self.mainLayout = QVBoxLayout()
         self.mainLayout.addWidget(self.tabWidget)
@@ -216,9 +217,9 @@ class VerifyTab(QWidget):
         self.setLayout(self.grid)
 
 
-class SettingsWindow(QWidget):
+class SettingsTab(QWidget):
     def __init__(self):
-        super(SettingsWindow, self).__init__()
+        super(SettingsTab, self).__init__()
         self.apikey_label = QLabel(self)
         self.apikey_label.setText("API Key:")
 
