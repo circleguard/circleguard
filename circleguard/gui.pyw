@@ -40,24 +40,29 @@ def resource_path(relative_path):
 class WindowWrapper(QMainWindow):
     def __init__(self):
         super(WindowWrapper, self).__init__()
-        self.setCentralWidget(MainWindow())
+        self.main_window = MainWindow()
+        self.setCentralWidget(self.main_window)
         self.show()
-        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.right_tab)
-        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.left_tab)
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
 
-    def right_tab(self):
-        print("Right, but what now?")
+    # I know, I know...we have a stupid amount of layers.
+    # WindowWrapper -> MainWindow -> MainTab -> Tabs
+    def tab_right(self):
+        tabs = self.main_window.main_tab.tabs
+        tabs.setCurrentIndex(tabs.currentIndex() + 1)
 
-    def left_tab(self):
-        print("Left, but what now?")
-
+    def tab_left(self):
+        tabs = self.main_window.main_tab.tabs
+        tabs.setCurrentIndex(tabs.currentIndex() - 1)
 
 class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
 
         self.tabWidget = QTabWidget()
-        self.tabWidget.addTab(MainTab(), "Main Tab")
+        self.main_tab = MainTab()
+        self.tabWidget.addTab(self.main_tab, "Main Tab")
         self.tabWidget.addTab(SettingsWindow(), "Settings Tab")
 
         self.mainLayout = QVBoxLayout()
@@ -90,6 +95,7 @@ class MainTab(QWidget):
         tabs.addTab(self.user_tab, "Screen User")
         tabs.addTab(self.local_tab, "Check Local Replays")
         tabs.addTab(self.verify_tab, "Verify")
+        self.tabs = tabs
 
         terminal = QTextEdit()
         terminal.setReadOnly(True)
