@@ -165,7 +165,7 @@ class CompareTop(QWidget):
 
 class Threshold(QWidget):
     """
-    A container class of widgets that represents user input for the threshold to consider a comparison a cheat.
+    A container class of widgets that represents user input for the threshold/auto threshold to consider a comparison a cheat.
     This class holds a Label, Slider, and SpinBox.
 
     The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
@@ -174,80 +174,87 @@ class Threshold(QWidget):
     def __init__(self):
         super(Threshold, self).__init__()
 
-        label = QLabel(self)
-        label.setText("Threshold:")
-        label.setToolTip("Cutoff for how similar two replays must be to be printed")
-        self.label = label
+        thresh_label = QLabel(self)
+        thresh_label.setText("Threshold:")
+        thresh_label.setToolTip("Cutoff for how similar two replays must be to be printed")
+        self.thresh_label = thresh_label
 
-        slider = QSlider(Qt.Horizontal)
-        slider.setRange(0, 30)
-        slider.setValue(THRESHOLD)
-        slider.valueChanged.connect(self.update_spinbox)
-        self.slider = slider
+        thresh_slider = QSlider(Qt.Horizontal)
+        thresh_slider.setRange(0, 30)
+        thresh_slider.setValue(THRESHOLD)
+        thresh_slider.valueChanged.connect(self.update_thresh_spinbox)
+        self.thresh_slider = thresh_slider
 
-        spinbox = SpinBox(self)
-        spinbox.setValue(THRESHOLD)
-        spinbox.setAlignment(Qt.AlignCenter)
-        spinbox.setRange(0, 30)
-        spinbox.setSingleStep(1)
-        spinbox.valueChanged.connect(self.update_slider)
-        self.spinbox = spinbox
+        thresh_spinbox = SpinBox(self)
+        thresh_spinbox.setValue(THRESHOLD)
+        thresh_spinbox.setAlignment(Qt.AlignCenter)
+        thresh_spinbox.setRange(0, 30)
+        thresh_spinbox.setSingleStep(1)
+        thresh_spinbox.valueChanged.connect(self.update_thresh_slider)
+        self.thresh_spinbox = thresh_spinbox
+        self.thresh_spinbox.valueChanged.connect(partial(self.switch_thresh, 0))
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(spacer, 0, 1, 1, 1)
-        layout.addWidget(slider, 0, 2, 1, 2)
-        layout.addWidget(spinbox, 0, 4, 1, 1)
-        self.setLayout(layout)
+        autothresh_label = QLabel(self)
+        autothresh_label.setText("Auto Threshold:")
+        autothresh_label.setToolTip("Stddevs below average threshold to print for" +
+                                    "\n(typically between TLS and 2.5. The higher, the less results you will get)")
+        self.autothresh_label = autothresh_label
 
-    # keep spinbox and slider in sync
-    def update_spinbox(self, value):
-        self.spinbox.setValue(value)
+        autothresh_slider = QSlider(Qt.Horizontal)
+        autothresh_slider.setRange(10, 30)
+        autothresh_slider.setValue(20)
+        autothresh_slider.valueChanged.connect(self.update_autothresh_spinbox)
+        self.autothresh_slider = autothresh_slider
 
-    def update_slider(self, value):
-        self.slider.setValue(value)
+        autothresh_slider = QSlider(Qt.Horizontal)
+        autothresh_slider.setRange(10, 30)
+        autothresh_slider.setValue(20)
+        autothresh_slider.valueChanged.connect(self.update_autothresh_spinbox)
+        self.autothresh_slider = autothresh_slider
 
-
-class AutoThreshold(QWidget):
-    def __init__(self):
-        super(AutoThreshold, self).__init__()
-
-        label = QLabel(self)
-        label.setText("Auto Threshold:")
-        label.setToolTip("Stddevs below average threshold to print for"+
-                         "\n(typically between TLS and 2.5. The higher, the less results you will get)")
-        self.label = label
-
-        slider = QSlider(Qt.Horizontal)
-        slider.setRange(10, 30)
-        slider.setValue(20)
-        slider.valueChanged.connect(self.update_spinbox)
-        self.slider = slider
-
-        spinbox = DoubleSpinBox()
-        spinbox.setValue(THRESHOLD)
-        spinbox.setAlignment(Qt.AlignCenter)
-        spinbox.setRange(1.0, 3.0)
-        spinbox.setSingleStep(0.1)
-        spinbox.setValue(2.0)
-        spinbox.valueChanged.connect(self.update_slider)
-        self.spinbox = spinbox
+        autothresh_spinbox = DoubleSpinBox(self)
+        autothresh_spinbox.setValue(2.0)
+        autothresh_spinbox.setAlignment(Qt.AlignCenter)
+        autothresh_spinbox.setRange(1.0, 3.0)
+        autothresh_spinbox.setSingleStep(0.1)
+        autothresh_spinbox.valueChanged.connect(self.update_autothresh_slider)
+        self.autothresh_spinbox = autothresh_spinbox
+        self.autothresh_spinbox.valueChanged.connect(partial(self.switch_thresh, 1))
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
+
+        layout.addWidget(thresh_label, 0, 0, 1, 1)
         layout.addItem(spacer, 0, 1, 1, 1)
-        layout.addWidget(slider, 0, 2, 1, 2)
-        layout.addWidget(spinbox, 0, 4, 1, 1)
+        layout.addWidget(thresh_slider, 0, 2, 1, 2)
+        layout.addWidget(thresh_spinbox, 0, 4, 1, 1)
+
+        layout.addWidget(autothresh_label, 1, 0, 1, 1)
+        layout.addItem(spacer, 1, 1, 1, 1)
+        layout.addWidget(autothresh_slider, 1, 2, 1, 2)
+        layout.addWidget(autothresh_spinbox, 1, 4, 1, 1)
+
         self.setLayout(layout)
+        self.switch_thresh(0)
 
     # keep spinbox and slider in sync
-    def update_spinbox(self, value):
-        self.spinbox.setValue(value/10)
+    def update_thresh_spinbox(self, value):
+        self.thresh_spinbox.setValue(value)
 
-    def update_slider(self, value):
-        self.slider.setValue(value*10)
+    def update_thresh_slider(self, value):
+        self.thresh_slider.setValue(value)
+
+    def update_autothresh_spinbox(self, value):
+        self.autothresh_spinbox.setValue(value/10)
+
+    def update_autothresh_slider(self, value):
+        self.autothresh_slider.setValue(value*10)
+
+    def switch_thresh(self, state):
+        self.thresh_label.setStyleSheet("color: gray" if state else "")
+        self.thresh_spinbox.setStyleSheet("color: gray" if state else "")
+        self.autothresh_label.setStyleSheet("color: gray" if not state else "")
+        self.autothresh_spinbox.setStyleSheet("color: gray" if not state else "")
 
 
 class FolderChoose(QWidget):

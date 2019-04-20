@@ -162,7 +162,6 @@ class MapTab(QWidget):
         self.user_id = UserId()
         self.compare_top = CompareTop()
         self.threshold = Threshold()
-        self.auto_threshold = AutoThreshold()
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
@@ -170,7 +169,6 @@ class MapTab(QWidget):
         layout.addWidget(self.user_id, 2, 0, 1, 1)
         layout.addWidget(self.compare_top, 3, 0, 1, 1)
         layout.addWidget(self.threshold, 4, 0, 1, 1)
-        layout.addWidget(self.auto_threshold, 5, 0, 1, 1)
 
         self.setLayout(layout)
 
@@ -184,14 +182,12 @@ class UserTab(QWidget):
         self.user_id = UserId()
         self.compare_top = CompareTop()
         self.threshold = Threshold()
-        self.auto_threshold = AutoThreshold()
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.user_id, 1, 0, 1, 1)
         layout.addWidget(self.compare_top, 2, 0, 1, 1)
         layout.addWidget(self.threshold, 3, 0, 1, 1)
-        layout.addWidget(self.auto_threshold, 4, 0, 1, 1)
 
         self.setLayout(layout)
 
