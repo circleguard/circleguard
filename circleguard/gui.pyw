@@ -6,17 +6,17 @@ from queue import Queue, Empty
 from functools import partial
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QTimer, QSettings
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QVBoxLayout, QLineEdit, QShortcut,
                              QCheckBox, QGridLayout, QApplication, QMainWindow)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence
 # pylint: enable=no-name-in-module
 
-from circleguard import *
+from circleguard import Circleguard
 from circleguard import __version__ as cg_version
 
-from widgets import *
+from widgets import Threshold, set_event_window, UserId, MapId, CompareTop, FolderChoose, SpinBox
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default
 
 ROOT_PATH = Path(__file__).parent
@@ -61,15 +61,15 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.tabWidget = QTabWidget()
+        self.tabwidget = QTabWidget()
         self.main_tab = MainTab()
         self.settings_tab = SettingsTab()
-        self.tabWidget.addTab(self.main_tab, "Main Tab")
-        self.tabWidget.addTab(self.settings_tab, "Settings Tab")
+        self.tabwidget.addTab(self.main_tab, "Main Tab")
+        self.tabwidget.addTab(self.settings_tab, "Settings Tab")
 
-        self.mainLayout = QVBoxLayout()
-        self.mainLayout.addWidget(self.tabWidget)
-        self.setLayout(self.mainLayout)
+        self.mainlayout = QVBoxLayout()
+        self.mainlayout.addWidget(self.tabwidget)
+        self.setLayout(self.mainlayout)
 
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
 
@@ -86,7 +86,7 @@ class MainWindow(QWidget):
 class MainTab(QWidget):
     def __init__(self):
         super(MainTab, self).__init__()
-        self.q = Queue()
+        self.queue = Queue()
 
         tabs = QTabWidget()
         self.map_tab = MapTab()
@@ -132,18 +132,18 @@ class MainTab(QWidget):
 
     def run_circleguard(self):
         print("running")
-        cg = Circleguard(API_KEY, str(resource_path("db/cache.db")))
+        circleguard = Circleguard(API_KEY, str(resource_path("db/cache.db")))
         map_id = int(self.map_tab.map_id.field.text())
         num = self.map_tab.compare_top.slider.value()
         thresh = self.map_tab.threshold.slider.value()
-        cg_map = cg.map_check(map_id, num=num, thresh=thresh)
+        cg_map = circleguard.map_check(map_id, num=num, thresh=thresh)
         for result in cg_map:
-            self.q.put(result)
+            self.queue.put(result)
 
     def print_results(self):
         try:
             while True:
-                result = self.q.get(block=False)
+                result = self.queue.get(block=False)
                 if result.ischeat:
                     self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
         except Empty:
@@ -294,29 +294,29 @@ def switch_theme(dark):
         dark_p.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
         dark_p.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
 
-        app.setPalette(dark_p)
-        app.setStyleSheet("QToolTip { color: #ffffff; "
+        APP.setPalette(dark_p)
+        APP.setStyleSheet("QToolTip { color: #ffffff; "
                           "background-color: #2a2a2a; "
                           "border: 1px solid white; }")
     else:
-        app.setPalette(app.style().standardPalette())
+        APP.setPalette(APP.style().standardPalette())
         updated_palette = QPalette()
         # fixes inactive items not being greyed out
         updated_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
         updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
         updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, QColor(240, 240, 240))
-        app.setPalette(updated_palette)
-        app.setStyleSheet("QToolTip { color: #000000; "
+        APP.setPalette(updated_palette)
+        APP.setStyleSheet("QToolTip { color: #000000; "
                           "background-color: #D5D5D5; "
                           "border: 1px solid white; }")
 
 
 if __name__ == "__main__":
     # create and open window
-    app = QApplication([])
-    app.setStyle("Fusion")
-    window = WindowWrapper()
-    set_event_window(window)
-    window.resize(600, 500)
-    window.show()
-    app.exec_()
+    APP = QApplication([])
+    APP.setStyle("Fusion")
+    WINDOW = WindowWrapper()
+    set_event_window(WINDOW)
+    WINDOW.resize(600, 500)
+    WINDOW.show()
+    APP.exec_()
