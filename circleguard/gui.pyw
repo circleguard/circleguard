@@ -61,15 +61,15 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.tabWidget = QTabWidget()
+        self.tab_widget = QTabWidget()
         self.main_tab = MainTab()
         self.settings_tab = SettingsTab()
-        self.tabWidget.addTab(self.main_tab, "Main Tab")
-        self.tabWidget.addTab(self.settings_tab, "Settings Tab")
+        self.tab_widget.addTab(self.main_tab, "Main Tab")
+        self.tab_widget.addTab(self.settings_tab, "Settings Tab")
 
-        self.mainLayout = QVBoxLayout()
-        self.mainLayout.addWidget(self.tabWidget)
-        self.setLayout(self.mainLayout)
+        self.main_layout = QVBoxLayout()
+        self.main_layout.addWidget(self.tab_widget)
+        self.setLayout(self.main_layout)
 
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
 
