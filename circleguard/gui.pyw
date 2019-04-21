@@ -6,17 +6,17 @@ from queue import Queue, Empty
 from functools import partial
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QTimer, QSettings
+from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QVBoxLayout, QLineEdit, QShortcut,
                              QCheckBox, QGridLayout, QApplication, QMainWindow)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence
 # pylint: enable=no-name-in-module
 
-from circleguard import *
+from circleguard import Circleguard
 from circleguard import __version__ as cg_version
 
-from widgets import *
+from widgets import Threshold, set_event_window, UserId, MapId, CompareTop, FolderChoose, SpinBox
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default
 
 ROOT_PATH = Path(__file__).parent
@@ -61,15 +61,15 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.tabWidget = QTabWidget()
+        self.tab_widget = QTabWidget()
         self.main_tab = MainTab()
         self.settings_tab = SettingsTab()
-        self.tabWidget.addTab(self.main_tab, "Main Tab")
-        self.tabWidget.addTab(self.settings_tab, "Settings Tab")
+        self.tab_widget.addTab(self.main_tab, "Main Tab")
+        self.tab_widget.addTab(self.settings_tab, "Settings Tab")
 
-        self.mainLayout = QVBoxLayout()
-        self.mainLayout.addWidget(self.tabWidget)
-        self.setLayout(self.mainLayout)
+        self.main_layout = QVBoxLayout()
+        self.main_layout.addWidget(self.tab_widget)
+        self.setLayout(self.main_layout)
 
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
 
@@ -315,8 +315,8 @@ if __name__ == "__main__":
     # create and open window
     app = QApplication([])
     app.setStyle("Fusion")
-    window = WindowWrapper()
-    set_event_window(window)
-    window.resize(600, 500)
-    window.show()
+    WINDOW = WindowWrapper()
+    set_event_window(WINDOW)
+    WINDOW.resize(600, 500)
+    WINDOW.show()
     app.exec_()

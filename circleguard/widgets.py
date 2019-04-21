@@ -1,14 +1,15 @@
 # pylint: disable=no-name-in-module
+from functools import partial
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit,
                              QSpacerItem, QSizePolicy, QSlider, QSpinBox,
                              QDoubleSpinBox, QFileDialog, QPushButton)
 from PyQt5.QtGui import QRegExpValidator
-from PyQt5.QtCore import QRegExp, Qt, QSettings, QDir, QCoreApplication
+from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication
 # pylint: enable=no-name-in-module
-from functools import partial
 from settings import THRESHOLD
+# pylint: disable=no-name-in-module
 
-spacer = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
+SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
 
 def set_event_window(window):
@@ -48,9 +49,6 @@ class SpinBox(QSpinBox):
     keys to be sent to our window that controls shortcuts, instead of being used only by the SpinBox.
     """
 
-    def __init__(self, parent):
-        super(SpinBox, self).__init__(parent)
-
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_Left or key == Qt.Key_Right:
@@ -63,9 +61,6 @@ class DoubleSpinBox(QDoubleSpinBox):
     A QDoubleSpinBox that overrides the keyPressEvent to allow the left and right
     keys to be sent to our window that controls shortcuts, instead of being used only by the SpinBox.
     """
-
-    def __init__(self, parent):
-        super(DoubleSpinBox, self).__init__(parent)
 
     def keyPressEvent(self, event):
         key = event.key()
@@ -91,7 +86,7 @@ class MapId(QWidget):
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(spacer, 0, 1, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.field, 0, 2, 1, 3)
         self.setLayout(layout)
 
@@ -113,7 +108,7 @@ class UserId(QWidget):
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(spacer, 0, 1, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.field, 0, 2, 1, 3)
         self.setLayout(layout)
 
@@ -150,7 +145,7 @@ class CompareTop(QWidget):
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(spacer, 0, 1, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(slider, 0, 2, 1, 2)
         layout.addWidget(spinbox, 0, 4, 1, 1)
         self.setLayout(layout)
@@ -225,12 +220,12 @@ class Threshold(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
 
         layout.addWidget(thresh_label, 0, 0, 1, 1)
-        layout.addItem(spacer, 0, 1, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(thresh_slider, 0, 2, 1, 2)
         layout.addWidget(thresh_spinbox, 0, 4, 1, 1)
 
         layout.addWidget(autothresh_label, 1, 0, 1, 1)
-        layout.addItem(spacer, 1, 1, 1, 1)
+        layout.addItem(SPACER, 1, 1, 1, 1)
         layout.addWidget(autothresh_slider, 1, 2, 1, 2)
         layout.addWidget(autothresh_spinbox, 1, 4, 1, 1)
 
@@ -276,6 +271,6 @@ class FolderChoose(QWidget):
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(spacer, 0, 1, 1, 3)
+        layout.addItem(SPACER, 0, 1, 1, 3)
         layout.addWidget(self.file_chooser, 0, 4, 1, 1)
         self.setLayout(layout)
