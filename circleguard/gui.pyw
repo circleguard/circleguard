@@ -61,15 +61,15 @@ class MainWindow(QWidget):
     def __init__(self):
         super(MainWindow, self).__init__()
 
-        self.tabwidget = QTabWidget()
+        self.tabWidget = QTabWidget()
         self.main_tab = MainTab()
         self.settings_tab = SettingsTab()
-        self.tabwidget.addTab(self.main_tab, "Main Tab")
-        self.tabwidget.addTab(self.settings_tab, "Settings Tab")
+        self.tabWidget.addTab(self.main_tab, "Main Tab")
+        self.tabWidget.addTab(self.settings_tab, "Settings Tab")
 
-        self.mainlayout = QVBoxLayout()
-        self.mainlayout.addWidget(self.tabwidget)
-        self.setLayout(self.mainlayout)
+        self.mainLayout = QVBoxLayout()
+        self.mainLayout.addWidget(self.tabWidget)
+        self.setLayout(self.mainLayout)
 
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
 
@@ -86,7 +86,7 @@ class MainWindow(QWidget):
 class MainTab(QWidget):
     def __init__(self):
         super(MainTab, self).__init__()
-        self.queue = Queue()
+        self.q = Queue()
 
         tabs = QTabWidget()
         self.map_tab = MapTab()
@@ -132,18 +132,18 @@ class MainTab(QWidget):
 
     def run_circleguard(self):
         print("running")
-        circleguard = Circleguard(API_KEY, str(resource_path("db/cache.db")))
+        cg = Circleguard(API_KEY, str(resource_path("db/cache.db")))
         map_id = int(self.map_tab.map_id.field.text())
         num = self.map_tab.compare_top.slider.value()
         thresh = self.map_tab.threshold.slider.value()
-        cg_map = circleguard.map_check(map_id, num=num, thresh=thresh)
+        cg_map = cg.map_check(map_id, num=num, thresh=thresh)
         for result in cg_map:
-            self.queue.put(result)
+            self.q.put(result)
 
     def print_results(self):
         try:
             while True:
-                result = self.queue.get(block=False)
+                result = self.q.get(block=False)
                 if result.ischeat:
                     self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
         except Empty:
@@ -294,29 +294,29 @@ def switch_theme(dark):
         dark_p.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
         dark_p.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
 
-        APP.setPalette(dark_p)
-        APP.setStyleSheet("QToolTip { color: #ffffff; "
+        app.setPalette(dark_p)
+        app.setStyleSheet("QToolTip { color: #ffffff; "
                           "background-color: #2a2a2a; "
                           "border: 1px solid white; }")
     else:
-        APP.setPalette(APP.style().standardPalette())
+        app.setPalette(app.style().standardPalette())
         updated_palette = QPalette()
         # fixes inactive items not being greyed out
         updated_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
         updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
         updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, QColor(240, 240, 240))
-        APP.setPalette(updated_palette)
-        APP.setStyleSheet("QToolTip { color: #000000; "
+        app.setPalette(updated_palette)
+        app.setStyleSheet("QToolTip { color: #000000; "
                           "background-color: #D5D5D5; "
                           "border: 1px solid white; }")
 
 
 if __name__ == "__main__":
     # create and open window
-    APP = QApplication([])
-    APP.setStyle("Fusion")
+    app = QApplication([])
+    app.setStyle("Fusion")
     WINDOW = WindowWrapper()
     set_event_window(WINDOW)
     WINDOW.resize(600, 500)
     WINDOW.show()
-    APP.exec_()
+    app.exec_()

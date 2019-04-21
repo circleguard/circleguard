@@ -38,7 +38,7 @@ class IDLineEdit(QLineEdit):
 
     def keyPressEvent(self, event):
         key = event.key()
-        if key in (Qt.Key_Left, Qt.Key_Right):
+        if key == Qt.Key_Left or key == Qt.Key_Right:
             QCoreApplication.sendEvent(WINDOW, event)
         super().keyPressEvent(event)
 
@@ -51,7 +51,7 @@ class SpinBox(QSpinBox):
 
     def keyPressEvent(self, event):
         key = event.key()
-        if key in (Qt.Key_Left, Qt.Key_Right):
+        if key == Qt.Key_Left or key == Qt.Key_Right:
             QCoreApplication.sendEvent(WINDOW, event)
         super().keyPressEvent(event)
 
@@ -64,7 +64,7 @@ class DoubleSpinBox(QDoubleSpinBox):
 
     def keyPressEvent(self, event):
         key = event.key()
-        if key in (Qt.Key_Left, Qt.Key_Right):
+        if key == Qt.Key_Left or key == Qt.Key_Right:
             QCoreApplication.sendEvent(WINDOW, event)
         super().keyPressEvent(event)
 
