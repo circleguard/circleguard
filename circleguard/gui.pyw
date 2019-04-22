@@ -195,7 +195,7 @@ class LocalTab(QWidget):
         super(LocalTab, self).__init__()
         self.info = QLabel(self)
         self.info.setText("This will verify replays")
-        self.file_chooser = FolderChoose()
+        self.file_chooser = FolderChoose("Replay folder")
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 0, 0, 1, 1)
         self.grid.addWidget(self.file_chooser, 1, 0, 1, 1)

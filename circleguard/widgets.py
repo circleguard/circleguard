@@ -253,24 +253,31 @@ class Threshold(QWidget):
 
 
 class FolderChoose(QWidget):
-    def __init__(self):
+    def __init__(self, title):
         super(FolderChoose, self).__init__()
-
+        self.path = "."
         label = QLabel(self)
-        label.setText("Choose Folder:")
-        label.setToolTip("tmp")
+        label.setText(title+":")
 
-        options = QFileDialog.Option()
-        options |= QFileDialog.ShowDirsOnly
-        options |= QFileDialog.HideNameFilterDetails
         self.file_chooser = QPushButton(self)
         self.file_chooser.setText("Choose Folder")
-        self.file_chooser.pressed.connect(
-            partial(QFileDialog.getExistingDirectory, caption="Select Output Folder", directory=QDir.currentPath(), options=options))
+        self.file_chooser.pressed.connect(self.set_dir)
+
+        self.path_label = QLabel(self)
+        self.path_label.setText("")
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 3)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.path_label, 0, 2, 1, 2)
         layout.addWidget(self.file_chooser, 0, 4, 1, 1)
         self.setLayout(layout)
+
+    def set_dir(self):
+        options = QFileDialog.Option()
+        options |= QFileDialog.ShowDirsOnly
+        options |= QFileDialog.HideNameFilterDetails
+        tmp = QFileDialog.getExistingDirectory(caption="Select Output Folder", directory=QDir.currentPath(), options=options)
+        self.path = tmp if tmp != "" else self.path
+        self.path_label.setText(self.path)
