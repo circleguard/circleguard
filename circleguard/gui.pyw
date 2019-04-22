@@ -31,7 +31,6 @@ def resource_path(*args):
 
     This location changes if the program is run from an application built with pyinstaller.
     """
-    print(args)
     if hasattr(sys, '_MEIPASS'):  # being run from a pyinstall'd app
         return os.path.join(sys._MEIPASS, *args)  # pylint: disable=no-member
     return os.path.join(os.path.abspath("."), *args)
