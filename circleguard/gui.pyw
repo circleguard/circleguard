@@ -24,17 +24,17 @@ __version__ = "0.1d"
 print(f"backend {cg_version}, frontend {__version__}")
 
 
-def resource_path(relative_path):
+def resource_path(*args):
     """
     Returns a Path representing where to look for resource files for the program,
     such as databases or images.
 
     This location changes if the program is run from an application built with pyinstaller.
     """
-
+    print(args)
     if hasattr(sys, '_MEIPASS'):  # being run from a pyinstall'd app
-        return os.path.join(sys._MEIPASS, relative_path)  # pylint: disable=no-member
-    return os.path.join(os.path.abspath("."), relative_path)
+        return os.path.join(sys._MEIPASS, *args)  # pylint: disable=no-member
+    return os.path.join(os.path.abspath("."), *args)
 
 
 class WindowWrapper(QMainWindow):
@@ -45,6 +45,10 @@ class WindowWrapper(QMainWindow):
         self.show()
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
+
+        self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
+
+        self.setWindowIcon(QIcon(str(resource_path("resources", "logo.ico"))))
 
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
@@ -70,11 +74,6 @@ class MainWindow(QWidget):
         self.main_layout = QVBoxLayout()
         self.main_layout.addWidget(self.tab_widget)
         self.setLayout(self.main_layout)
-
-        self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
-
-        # use this if we have an icon for the program
-        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
 
     def mousePressEvent(self, event):
         focused = self.focusWidget()
