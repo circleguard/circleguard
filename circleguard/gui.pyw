@@ -8,16 +8,16 @@ from functools import partial
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
-                             QVBoxLayout, QLineEdit, QShortcut,
-                             QCheckBox, QGridLayout, QApplication, QMainWindow)
+                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence
 # pylint: enable=no-name-in-module
 
 from circleguard import Circleguard
 from circleguard import __version__ as cg_version
 
-from widgets import Threshold, set_event_window, UserId, MapId, CompareTop, FolderChoose, SpinBox
-from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default
+from widgets import (Threshold, set_event_window, IdWidget, CompareTop,
+                     FolderChoose, SpinBox, InputWidget, OptionWidget, ThresholdCombined)
+from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
 
 ROOT_PATH = Path(__file__).parent
 __version__ = "0.1d"
@@ -156,10 +156,10 @@ class MapTab(QWidget):
         self.info.setText("Compare the top n plays of a Map's leaderboard.\nIf a user is given, it will compare the "
                           "user against the maps leaderboard.")
 
-        self.map_id = MapId()
-        self.user_id = UserId()
+        self.map_id = IdWidget("Map Id", "Beatmap id, not the mapset id!")
+        self.user_id = IdWidget("User Id", "User id, as seen in the profile url")
         self.compare_top = CompareTop()
-        self.threshold = Threshold()
+        self.threshold = ThresholdCombined()
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
@@ -177,7 +177,7 @@ class UserTab(QWidget):
         self.info = QLabel(self)
         self.info.setText("This will compare a user's n top plays with the n Top plays of the corresponding Map")
 
-        self.user_id = UserId()
+        self.user_id = IdWidget("User Id", "User id, as seen in the profile url")
         self.compare_top = CompareTop()
         self.threshold = Threshold()
 
@@ -215,52 +215,41 @@ class VerifyTab(QWidget):
 class SettingsTab(QWidget):
     def __init__(self):
         super(SettingsTab, self).__init__()
-        self.apikey_label = QLabel(self)
-        self.apikey_label.setText("API Key:")
+        self.info = QLabel(self)
+        self.info.setText(f"Backend Version : {cg_version}<br/>"
+                          f"Frontend Version : {__version__}<br/>"
+                          f"Repository : <a href=\"https://github.com/circleguard/circleguard\">github.com/circleguard/circleguard</a>")
+        self.info.setTextFormat(Qt.RichText)
+        self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.info.setOpenExternalLinks(True)
+        self.info.setAlignment(Qt.AlignCenter)
 
-        self.apikey_field = QLineEdit(self)
-        self.apikey_field.setText(API_KEY)
-        self.apikey_field.textChanged.connect(partial(update_default, "api_key"))
-        self.apikey_field.textChanged.connect(set_api_key)
+        self.apikey_widget = InputWidget("Api Key", "")
+        self.apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
+        self.apikey_widget.field.textChanged.connect(set_api_key)
 
-        self.thresh_label = QLabel(self)
-        self.thresh_label.setText("Default Threshold:")
-        self.thresh_label.setToolTip("tmp")
+        self.thresh_widget = Threshold()
+        self.thresh_widget.thresh_spinbox.valueChanged.connect(partial(update_default, "threshold"))
 
-        self.thresh_value = SpinBox(self)
-        self.thresh_value.setValue(THRESHOLD)
-        self.thresh_value.setAlignment(Qt.AlignCenter)
-        self.thresh_value.setRange(0, 30)
-        self.thresh_value.setSingleStep(1)
-        self.thresh_value.valueChanged.connect(partial(update_default, "threshold"))
-        self.thresh_value.setToolTip("tmp")
+        self.darkmode = OptionWidget("Dark mode", "")
+        self.darkmode.box.stateChanged.connect(switch_theme)
+        self.darkmode.box.setChecked(DARK_THEME)
 
-        self.darkmode_label = QLabel(self)
-        self.darkmode_label.setText("Dark mode:")
-        self.darkmode_label.setToolTip("tmp")
+        self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
+        self.cache.box.stateChanged.connect(partial(update_default, "caching"))
+        self.cache.box.setChecked(CACHING)
 
-        self.darkmode_box = QCheckBox(self)
-        self.darkmode_box.setToolTip("tmp")
-        self.darkmode_box.stateChanged.connect(switch_theme)
-        self.darkmode_box.setChecked(DARK_THEME)
-
-        self.cache_label = QLabel(self)
-        self.cache_label.setText("Caching:")
-        self.cache_label.setToolTip("Downloaded replays will be cached locally")
-
-        self.cache_box = QCheckBox(self)
-        self.cache_box.stateChanged.connect(partial(update_default, "caching"))
-        self.cache_box.setChecked(CACHING)
+        self.cache_dir = FolderChoose("Cache Path")
+        self.cache_dir.path_signal.connect(partial(update_default, "cache_dir"))
+        self.cache_dir.update_dir(CACHE_DIR)
 
         self.grid = QGridLayout()
-        self.grid.addWidget(self.apikey_label, 0, 0, 1, 1)
-        self.grid.addWidget(self.apikey_field, 0, 1, 1, 1)
-        self.grid.addWidget(self.thresh_label, 1, 0, 1, 1)
-        self.grid.addWidget(self.thresh_value, 1, 1, 1, 1)
-        self.grid.addWidget(self.darkmode_label, 2, 0, 1, 1)
-        self.grid.addWidget(self.darkmode_box, 2, 1, 1, 1)
-        self.grid.addWidget(self.cache_label, 3, 0, 1, 1)
-        self.grid.addWidget(self.cache_box, 3, 1, 1, 1)
+        self.grid.addWidget(self.info, 0, 0, 1, 1)
+        self.grid.addWidget(self.apikey_widget, 1, 0, 1, 1)
+        self.grid.addWidget(self.thresh_widget, 2, 0, 1, 1)
+        self.grid.addWidget(self.cache_dir, 3, 0, 1, 1)
+        self.grid.addWidget(self.cache, 4, 0, 1, 1)
+        self.grid.addWidget(self.darkmode, 5, 0, 1, 1)
         self.setLayout(self.grid)
 
 
