@@ -180,8 +180,8 @@ class UserTab(QWidget):
         self.info.setText("This will compare a user's n top plays with the n Top plays of the corresponding Map")
 
         self.user_id = IdWidget("User Id", "User id, as seen in the profile url")
-        self.compare_top_user = CompareTopMaps()
-        self.compare_top_map = CompareTopUsers()
+        self.compare_top_user = CompareTopUsers()
+        self.compare_top_map = CompareTopMaps()
         self.threshold = ThresholdCombined()
 
         layout = QGridLayout()
