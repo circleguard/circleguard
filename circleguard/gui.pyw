@@ -15,8 +15,9 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence
 from circleguard import Circleguard
 from circleguard import __version__ as cg_version
 
-from widgets import (Threshold, set_event_window, IdWidget, CompareTop,
-                     FolderChoose, SpinBox, InputWidget, OptionWidget, ThresholdCombined)
+from widgets import (Threshold, set_event_window, IdWidget,
+                     FolderChoose, SpinBox, InputWidget,
+                     OptionWidget, CompareTopMaps, CompareTopUsers, ThresholdCombined)
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
 
 ROOT_PATH = Path(__file__).parent
@@ -158,7 +159,8 @@ class MapTab(QWidget):
 
         self.map_id = IdWidget("Map Id", "Beatmap id, not the mapset id!")
         self.user_id = IdWidget("User Id", "User id, as seen in the profile url")
-        self.compare_top = CompareTop()
+        self.compare_top = CompareTopUsers()
+
         self.threshold = ThresholdCombined()
 
         layout = QGridLayout()
@@ -178,14 +180,16 @@ class UserTab(QWidget):
         self.info.setText("This will compare a user's n top plays with the n Top plays of the corresponding Map")
 
         self.user_id = IdWidget("User Id", "User id, as seen in the profile url")
-        self.compare_top = CompareTop()
-        self.threshold = Threshold()
+        self.compare_top_user = CompareTopMaps()
+        self.compare_top_map = CompareTopUsers()
+        self.threshold = ThresholdCombined()
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.user_id, 1, 0, 1, 1)
-        layout.addWidget(self.compare_top, 2, 0, 1, 1)
-        layout.addWidget(self.threshold, 3, 0, 1, 1)
+        layout.addWidget(self.compare_top_map, 2, 0, 1, 1)
+        layout.addWidget(self.compare_top_user, 3, 0, 1, 1)
+        layout.addWidget(self.threshold, 4, 0, 1, 1)
 
         self.setLayout(layout)
 

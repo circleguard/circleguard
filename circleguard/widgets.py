@@ -170,24 +170,69 @@ class CacheWidget(QWidget):
         self.setLayout(layout)
 
 
-class CompareTop(QWidget):
+class CompareTopMaps(QWidget):
     """
-    A container class of widgets that represents user input for how many plays of a map to compare.
+    A container class of widgets that represents user input for how many user of a map to compare.
     This class holds a Label, Slider, and SpinBox.
 
     The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
     """
 
     def __init__(self):
-        super(CompareTop, self).__init__()
+        super(CompareTopMaps, self).__init__()
         label = QLabel(self)
-        label.setText("Compare Top:")
+        label.setText("Compare Top Users:")
         label.setToolTip("Compare this many plays from the leaderboard")
 
         slider = QSlider(Qt.Horizontal)
         slider.setMinimum(2)
         slider.setMaximum(100)
+        slider.setValue(20)
+        slider.valueChanged.connect(self.update_spinbox)
+        self.slider = slider
+
+        spinbox = SpinBox(self)
+        spinbox.setValue(20)
+        spinbox.setAlignment(Qt.AlignCenter)
+        spinbox.setRange(2, 100)
+        spinbox.setSingleStep(1)
+        spinbox.valueChanged.connect(self.update_slider)
+        self.spinbox = spinbox
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(slider, 0, 2, 1, 2)
+        layout.addWidget(spinbox, 0, 4, 1, 1)
+        self.setLayout(layout)
+
+    # keep spinbox and slider in sync
+    def update_spinbox(self, value):
+        self.spinbox.setValue(value)
+
+    def update_slider(self, value):
+        self.slider.setValue(value)
+
+
+class CompareTopUsers(QWidget):
+    """
+    A container class of widgets that represents user input for how many top play of a user to compare.
+    This class holds a Label, Slider, and SpinBox.
+
+    The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
+    """
+
+    def __init__(self):
+        super(CompareTopUsers, self).__init__()
+        label = QLabel(self)
+        label.setText("Compare Top Plays:")
+        label.setToolTip("Compare this many plays from the leaderboard")
+
+        slider = QSlider(Qt.Horizontal)
         slider.setValue(50)
+        slider.setMinimum(1)
+        slider.setMaximum(100)
         slider.valueChanged.connect(self.update_spinbox)
         self.slider = slider
 
