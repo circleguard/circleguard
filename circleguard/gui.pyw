@@ -16,7 +16,7 @@ from circleguard import Circleguard
 from circleguard import __version__ as cg_version
 
 from widgets import (Threshold, set_event_window, IdWidget,
-                     FolderChoose, SpinBox, InputWidget,
+                     FolderChoose, SpinBox, InputWidget, IdWidgetCombined,
                      OptionWidget, CompareTopMaps, CompareTopUsers, ThresholdCombined)
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
 
@@ -157,18 +157,16 @@ class MapTab(QWidget):
         self.info.setText("Compare the top n plays of a Map's leaderboard.\nIf a user is given, it will compare the "
                           "user against the maps leaderboard.")
 
-        self.map_id = IdWidget("Map Id", "Beatmap id, not the mapset id!")
-        self.user_id = IdWidget("User Id", "User id, as seen in the profile url")
+        self.id = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
 
         self.threshold = ThresholdCombined()
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
-        layout.addWidget(self.map_id, 1, 0, 1, 1)
-        layout.addWidget(self.user_id, 2, 0, 1, 1)
-        layout.addWidget(self.compare_top, 3, 0, 1, 1)
-        layout.addWidget(self.threshold, 4, 0, 1, 1)
+        layout.addWidget(self.id, 1, 0, 2, 1)
+        layout.addWidget(self.compare_top, 4, 0, 1, 1)
+        layout.addWidget(self.threshold, 5, 0, 2, 1)
 
         self.setLayout(layout)
 
@@ -189,7 +187,7 @@ class UserTab(QWidget):
         layout.addWidget(self.user_id, 1, 0, 1, 1)
         layout.addWidget(self.compare_top_map, 2, 0, 1, 1)
         layout.addWidget(self.compare_top_user, 3, 0, 1, 1)
-        layout.addWidget(self.threshold, 4, 0, 1, 1)
+        layout.addWidget(self.threshold, 4, 0, 2, 1)
 
         self.setLayout(layout)
 

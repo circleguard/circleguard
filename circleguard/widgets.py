@@ -104,6 +104,46 @@ class IdWidget(QWidget):
         self.setLayout(layout)
 
 
+class IdWidgetCombined(QWidget):
+    """
+    A container class of widgets that represents user input for a id. This class
+    holds a Label and IDLineEdit.
+    """
+
+    def __init__(self):
+        super(IdWidgetCombined, self).__init__()
+
+        map_label = QLabel(self)
+        map_label.setText("Map Id:")
+        map_label.setToolTip("Beatmap id, not the mapset id!")
+        self.map_label = map_label
+        self.map_field = IDLineEdit(self)
+        self.map_field.textChanged.connect(self.update_user)
+
+        user_label = QLabel(self)
+        user_label.setText("User Id:")
+        user_label.setToolTip("User id, as seen in the profile url")
+        self.user_label = user_label
+        self.user_field = IDLineEdit(self)
+
+        self.update_user()
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(map_label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.map_field, 0, 2, 1, 3)
+        layout.addWidget(user_label, 1, 0, 1, 1)
+        layout.addItem(SPACER, 1, 1, 1, 1)
+        layout.addWidget(self.user_field, 1, 2, 1, 3)
+        self.setLayout(layout)
+
+    def update_user(self):
+        self.user_label.setStyleSheet("color: gray" if self.map_field.text() == "" else "")
+        self.user_field.setStyleSheet("color: gray" if self.map_field.text() == "" else "")
+        self.user_field.setEnabled(False if self.map_field.text() == "" else True)
+
+
 class InputWidget(QWidget):
     """
     A container class of widgets that represents user input for a user id. This class
