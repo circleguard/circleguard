@@ -220,9 +220,9 @@ class SettingsTab(QWidget):
     def __init__(self):
         super(SettingsTab, self).__init__()
         self.info = QLabel(self)
-        self.info.setText(f"Backend Version : {cg_version}<br/>"
-                          f"Frontend Version : {__version__}<br/>"
-                          f"Repository : <a href=\"https://github.com/circleguard/circleguard\">github.com/circleguard/circleguard</a>")
+        self.info.setText(f"Backend Version: {cg_version}<br/>"
+                          f"Frontend Version: {__version__}<br/>"
+                          f"Repository: <a href=\"https://github.com/circleguard/circleguard\">github.com/circleguard/circleguard</a>")
         self.info.setTextFormat(Qt.RichText)
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
