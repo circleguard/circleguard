@@ -198,11 +198,12 @@ class LocalTab(QWidget):
     def __init__(self):
         super(LocalTab, self).__init__()
         self.info = QLabel(self)
-        self.info.setText("This will verify replays")
+        self.info.setText("This will compare scores under the directory")
         self.file_chooser = FolderChoose("Replay folder")
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 0, 0, 1, 1)
         self.grid.addWidget(self.file_chooser, 1, 0, 1, 1)
+
         self.setLayout(self.grid)
 
 
@@ -210,10 +211,22 @@ class VerifyTab(QWidget):
     def __init__(self):
         super(VerifyTab, self).__init__()
         self.info = QLabel(self)
-        self.info.setText("This will compare a user's score with the n Top plays of a Map")
-        self.grid = QGridLayout()
-        self.grid.addWidget(self.info, 0, 0, 1, 1)
-        self.setLayout(self.grid)
+        self.info.setText("Verifies that the scores are steals of each other")
+
+        self.map_id = IdWidget("Map Id", "Beatmap id, not the mapset id!")
+        self.user_1_id = IdWidget("User Id #1", "User id, as seen in the profile url")
+        self.user_2_id = IdWidget("User Id #2", "User id, as seen in the profile url")
+
+        self.threshold = ThresholdCombined()
+
+        layout = QGridLayout()
+        layout.addWidget(self.info, 0, 0, 1, 1)
+        layout.addWidget(self.map_id, 1, 0, 1, 1)
+        layout.addWidget(self.user_1_id, 2, 0, 1, 1)
+        layout.addWidget(self.user_2_id, 3, 0, 1, 1)
+        layout.addWidget(self.threshold, 4, 0, 1, 1)
+
+        self.setLayout(layout)
 
 
 class SettingsTab(QWidget):

@@ -278,4 +278,5 @@ src/*
 venv/*
 
 # personal stuff
-.todo
+todo.txt
+*.patch
