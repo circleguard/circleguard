@@ -141,7 +141,7 @@ class IdWidgetCombined(QWidget):
     def update_user(self):
         self.user_label.setStyleSheet("color: gray" if self.map_field.text() == "" else "")
         self.user_field.setStyleSheet("color: gray" if self.map_field.text() == "" else "")
-        self.user_field.setEnabled(False if self.map_field.text() == "" else True)
+        self.user_field.setEnabled(self.map_field.text() != "")
 
 
 class InputWidget(QWidget):
@@ -188,28 +188,6 @@ class OptionWidget(QWidget):
         self.setLayout(layout)
 
 
-class CacheWidget(QWidget):
-    """
-    A container class of widgets that represents user input for a user id. This class
-    holds a Label and .
-    """
-
-    def __init__(self, title, tooltip):
-        super(OptionWidget, self).__init__()
-
-        label = QLabel(self)
-        label.setText(title+":")
-        label.setToolTip(tooltip)
-        self.box = QCheckBox(self)
-
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.box, 0, 2, 1, 3)
-        self.setLayout(layout)
-
-
 class CompareTopUsers(QWidget):
     """
     A container class of widgets that represents user input for how many user of a map to compare.
@@ -220,9 +198,9 @@ class CompareTopUsers(QWidget):
 
     def __init__(self):
         super(CompareTopUsers, self).__init__()
-        label = QLabel(self)
-        label.setText("Compare Top Users:")
-        label.setToolTip("Compare this many plays from the leaderboard")
+        self.label = QLabel(self)
+        self.label.setText("Compare Top Users:")
+        self.label.setToolTip("Compare this many plays from the leaderboard")
 
         slider = QSlider(Qt.Horizontal)
         slider.setMinimum(2)
@@ -241,10 +219,10 @@ class CompareTopUsers(QWidget):
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addWidget(self.label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(slider, 0, 2, 1, 2)
-        layout.addWidget(spinbox, 0, 4, 1, 1)
+        layout.addWidget(self.slider, 0, 2, 1, 2)
+        layout.addWidget(self.spinbox, 0, 4, 1, 1)
         self.setLayout(layout)
 
     # keep spinbox and slider in sync
@@ -254,8 +232,13 @@ class CompareTopUsers(QWidget):
     def update_slider(self, value):
         self.slider.setValue(value)
 
+    def update_user(self, mode):
+        self.label.setStyleSheet("color: gray" if not mode else "")
+        self.spinbox.setStyleSheet("color: gray" if not mode else "")
+        self.slider.setEnabled(False if not mode else True)
 
-class CompareTopMaps(QWidget):
+
+class CompareTopPlays(QWidget):
     """
     A container class of widgets that represents user input for how many top play of a user to compare.
     This class holds a Label, Slider, and SpinBox.
@@ -264,7 +247,7 @@ class CompareTopMaps(QWidget):
     """
 
     def __init__(self):
-        super(CompareTopMaps, self).__init__()
+        super(CompareTopPlays, self).__init__()
         label = QLabel(self)
         label.setText("Compare Top Plays:")
         label.setToolTip("Compare this many plays from the leaderboard")

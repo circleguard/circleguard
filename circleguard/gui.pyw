@@ -17,7 +17,7 @@ from circleguard import __version__ as cg_version
 
 from widgets import (Threshold, set_event_window, IdWidget,
                      FolderChoose, SpinBox, InputWidget, IdWidgetCombined,
-                     OptionWidget, CompareTopMaps, CompareTopUsers, ThresholdCombined)
+                     OptionWidget, CompareTopPlays, CompareTopUsers, ThresholdCombined)
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
 
 ROOT_PATH = Path(__file__).parent
@@ -179,7 +179,7 @@ class UserTab(QWidget):
 
         self.user_id = IdWidget("User Id", "User id, as seen in the profile url")
         self.compare_top_user = CompareTopUsers()
-        self.compare_top_map = CompareTopMaps()
+        self.compare_top_map = CompareTopPlays()
         self.threshold = ThresholdCombined()
 
         layout = QGridLayout()
@@ -196,13 +196,28 @@ class LocalTab(QWidget):
     def __init__(self):
         super(LocalTab, self).__init__()
         self.info = QLabel(self)
-        self.info.setText("This will compare scores under the directory")
+        self.info.setText("This will check for steals between local replay files.\n"
+                          "If a Map is given it will compare the leaderboard in combination with the local replays.\n"
+                          "In addition, if a User is given, the score set by the user will be compared locally "
+                          "and with the leaderboard.")
         self.file_chooser = FolderChoose("Replay folder")
+        self.id = IdWidgetCombined()
+        self.compare_top = CompareTopUsers()
+        self.threshold = ThresholdCombined()
+        self.id.map_field.textChanged.connect(self.switch_compare)
+        self.switch_compare()
+
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 0, 0, 1, 1)
         self.grid.addWidget(self.file_chooser, 1, 0, 1, 1)
+        self.grid.addWidget(self.id, 2, 0, 2, 1)
+        self.grid.addWidget(self.compare_top, 4, 0, 1, 1)
+        self.grid.addWidget(self.threshold, 5, 0, 2, 1)
 
         self.setLayout(self.grid)
+
+    def switch_compare(self):
+        self.compare_top.update_user(self.id.map_field.text() != "")
 
 
 class VerifyTab(QWidget):
@@ -295,6 +310,7 @@ def switch_theme(dark):
         dark_p.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
         dark_p.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
         dark_p.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
+        dark_p.setColor(QPalette.Disabled, QPalette.Base, QColor(53, 53, 53))
 
         app.setPalette(dark_p)
         app.setStyleSheet("QToolTip { color: #ffffff; "
