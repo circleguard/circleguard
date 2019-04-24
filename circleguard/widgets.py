@@ -139,8 +139,6 @@ class IdWidgetCombined(QWidget):
         self.setLayout(layout)
 
     def update_user(self):
-        self.user_label.setStyleSheet("color: gray" if self.map_field.text() == "" else "")
-        self.user_field.setStyleSheet("color: gray" if self.map_field.text() == "" else "")
         self.user_field.setEnabled(self.map_field.text() != "")
 
 
@@ -233,8 +231,6 @@ class CompareTopUsers(QWidget):
         self.slider.setValue(value)
 
     def update_user(self, mode):
-        self.label.setStyleSheet("color: gray" if not mode else "")
-        self.spinbox.setStyleSheet("color: gray" if not mode else "")
         self.slider.setEnabled(False if not mode else True)
 
 

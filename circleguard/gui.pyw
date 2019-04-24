@@ -237,7 +237,7 @@ class VerifyTab(QWidget):
         layout.addWidget(self.map_id, 1, 0, 1, 1)
         layout.addWidget(self.user_1_id, 2, 0, 1, 1)
         layout.addWidget(self.user_2_id, 3, 0, 1, 1)
-        layout.addWidget(self.threshold, 4, 0, 1, 1)
+        layout.addWidget(self.threshold, 4, 0, 2, 1)
 
         self.setLayout(layout)
 
