@@ -138,16 +138,14 @@ class MainTab(QWidget):
         try:
             print("running")
             cg = Circleguard(API_KEY, resource_path("db/cache.db"))
-            map_id_str = self.map_tab.map_id.field.text()
+            map_id_str = self.map_tab.id.map_field.text()
             map_id = int(map_id_str) if len(map_id_str) > 0 else print("Map id field empty")
             # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
             # maybe fancy flashing red stars for required fields
             num = self.map_tab.compare_top.slider.value()
             thresh = self.map_tab.threshold.thresh_slider.value()
-
             cg_map = cg.map_check(map_id, num=num, thresh=thresh)
             for result in cg_map:
-                print(result)
                 self.q.put(result)
         except Exception:
             log.exception("ERROR!! while running cg:")
