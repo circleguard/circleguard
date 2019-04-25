@@ -4,6 +4,8 @@ from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
+import pathlib
+import logging
 
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer
@@ -20,21 +22,24 @@ from widgets import (Threshold, set_event_window, IdWidget,
                      OptionWidget, CompareTopPlays, CompareTopUsers, ThresholdCombined)
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
 
-ROOT_PATH = Path(__file__).parent
+ROOT_PATH = pathlib.Path(__file__).parent.absolute()
 __version__ = "0.1d"
 print(f"backend {cg_version}, frontend {__version__}")
 
 
-def resource_path(*args):
+log = logging.getLogger(__name__)
+
+def resource_path(str_path):
     """
     Returns a Path representing where to look for resource files for the program,
     such as databases or images.
 
     This location changes if the program is run from an application built with pyinstaller.
     """
+
     if hasattr(sys, '_MEIPASS'):  # being run from a pyinstall'd app
-        return os.path.join(sys._MEIPASS, *args)  # pylint: disable=no-member
-    return os.path.join(os.path.abspath("."), *args)
+        return Path(sys._MEIPASS) / Path(str_path)  # pylint: disable=no-member
+    return ROOT_PATH / Path(str_path)
 
 
 class WindowWrapper(QMainWindow):
@@ -48,7 +53,7 @@ class WindowWrapper(QMainWindow):
 
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
 
-        self.setWindowIcon(QIcon(str(resource_path("resources", "logo.ico"))))
+        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
 
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
