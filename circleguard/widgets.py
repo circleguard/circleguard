@@ -14,7 +14,7 @@ SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
 def set_event_window(window):
     """
-    To emulate keypresses, we need a window to send the keypress to.
+    To emulate key presses, we need a window to send the keypress to.
     This main window is created in gui.pyw, so we need to set it here as well.
     """
     global WINDOW
@@ -72,7 +72,7 @@ class SpinBox(QSpinBox):
 class DoubleSpinBox(QDoubleSpinBox):
     """
     A QDoubleSpinBox that overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being used only by the SpinBox.
+    keys to be sent to our window that controls shortcuts, instead of being used only by the DoubleSpinBox.
     """
 
     def keyPressEvent(self, event):
@@ -84,7 +84,7 @@ class DoubleSpinBox(QDoubleSpinBox):
 
 class IdWidget(QWidget):
     """
-    A container class of widgets that represents user input for a id. This class
+    A container class of widgets that represents user input for an id. This class
     holds a Label and IDLineEdit.
     """
 
@@ -106,8 +106,10 @@ class IdWidget(QWidget):
 
 class IdWidgetCombined(QWidget):
     """
-    A container class of widgets that represents user input for a id. This class
-    holds a Label and IDLineEdit.
+    A container class of widgets that represents user input for a map id and user id.
+    If no map id is given the user id field will be disabled.
+
+    This class holds 2 rows of a Label and IDLineEdit.
     """
 
     def __init__(self):
@@ -144,8 +146,8 @@ class IdWidgetCombined(QWidget):
 
 class InputWidget(QWidget):
     """
-    A container class of widgets that represents user input for a user id. This class
-    holds a Label and .
+    A container class of widgets that represents user input. This class
+    holds a Label and LineEdit.
     """
 
     def __init__(self, title, tooltip):
@@ -166,8 +168,8 @@ class InputWidget(QWidget):
 
 class OptionWidget(QWidget):
     """
-    A container class of widgets that represents user input for a user id. This class
-    holds a Label and .
+    A container class of widgets that represents an option with an disabled/enabled state.
+    This class holds a Label and CheckBox.
     """
 
     def __init__(self, title, tooltip):
@@ -188,9 +190,10 @@ class OptionWidget(QWidget):
 
 class CompareTopUsers(QWidget):
     """
-    A container class of widgets that represents user input for how many user of a map to compare.
+    A container class of widgets that represents user input for how many users of a map to compare.
     This class holds a Label, Slider, and SpinBox.
 
+    This class includes a function which is meant to disable/enable the Slider and SpinBox externally.
     The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
     """
 
@@ -232,11 +235,12 @@ class CompareTopUsers(QWidget):
 
     def update_user(self, mode):
         self.slider.setEnabled(False if not mode else True)
+        self.spinbox.setEnabled(False if not mode else True)
 
 
 class CompareTopPlays(QWidget):
     """
-    A container class of widgets that represents user input for how many top play of a user to compare.
+    A container class of widgets that represents user input for how many top plays of a user to compare.
     This class holds a Label, Slider, and SpinBox.
 
     The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
@@ -281,17 +285,19 @@ class CompareTopPlays(QWidget):
 
 class ThresholdCombined(QWidget):
     """
-    A container class of widgets that represents user input for the threshold/auto threshold to consider a comparison a cheat.
-    This class holds a Label, Slider, and SpinBox.
+    A container class of widgets that represents user input for the threshold/auto threshold
+    to consider a comparison a cheat.
+    This class holds 2 rows of a Label, Slider, and SpinBox.
 
-    The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
+    The SpinBox and Slider are linked internally by this class (once for the threshold and once for the auto threshold),
+    so when one changes, so does the other.
     """
 
-    def __init__(self, prefix=""):
+    def __init__(self):
         super(ThresholdCombined, self).__init__()
 
         thresh_label = QLabel(self)
-        thresh_label.setText(prefix + "Threshold:")
+        thresh_label.setText("Threshold:")
         thresh_label.setToolTip("Cutoff for how similar two replays must be to be printed")
         self.thresh_label = thresh_label
 
@@ -311,7 +317,7 @@ class ThresholdCombined(QWidget):
         self.thresh_spinbox.valueChanged.connect(partial(self.switch_thresh, 0))
 
         autothresh_label = QLabel(self)
-        autothresh_label.setText(prefix + "Auto Threshold:")
+        autothresh_label.setText("Auto Threshold:")
         autothresh_label.setToolTip("Stddevs below average threshold to print for" +
                                     "\n(typically between TLS and 2.5. The higher, the less results you will get)")
         self.autothresh_label = autothresh_label
