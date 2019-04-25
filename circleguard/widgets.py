@@ -14,7 +14,7 @@ SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
 def set_event_window(window):
     """
-    To emulate key presses, we need a window to send the keypress to.
+    To emulate keypresses, we need a window to send the keypress to.
     This main window is created in gui.pyw, so we need to set it here as well.
     """
     global WINDOW
@@ -149,6 +149,9 @@ class InputWidget(QWidget):
     A container class of widgets that represents user input. This class
     holds a Label and LineEdit.
     """
+    # TODO: combine this and IdWidget, only one class InputWidget which takes a bool of
+    # if the input field is an IDLineEdit or a normal LineEdit (the only difference between
+    # this class and IdWidget)
 
     def __init__(self, title, tooltip):
         super(InputWidget, self).__init__()
@@ -168,7 +171,7 @@ class InputWidget(QWidget):
 
 class OptionWidget(QWidget):
     """
-    A container class of widgets that represents an option with an disabled/enabled state.
+    A container class of widgets that represents an option with a boolean state.
     This class holds a Label and CheckBox.
     """
 
@@ -289,7 +292,7 @@ class ThresholdCombined(QWidget):
     to consider a comparison a cheat.
     This class holds 2 rows of a Label, Slider, and SpinBox.
 
-    The SpinBox and Slider are linked internally by this class (once for the threshold and once for the auto threshold),
+    The SpinBox and Slider of each row are linked internally by this class,
     so when one changes, so does the other.
     """
 
