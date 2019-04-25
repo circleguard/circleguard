@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence
 # pylint: enable=no-name-in-module
 
-from circleguard import Circleguard
+from circleguard import Circleguard, set_options
 from circleguard import __version__ as cg_version
 
 from widgets import (Threshold, set_event_window, IdWidget,
@@ -28,6 +28,7 @@ print(f"backend {cg_version}, frontend {__version__}")
 
 
 log = logging.getLogger(__name__)
+set_options(loglevel=5)
 
 def resource_path(str_path):
     """
