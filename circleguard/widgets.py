@@ -85,16 +85,16 @@ class DoubleSpinBox(QDoubleSpinBox):
 class IdWidget(QWidget):
     """
     A container class of widgets that represents user input for an id. This class
-    holds a Label and IDLineEdit.
+    holds a Label and either a IDLineEdit or a LineEdit, depending on the constructor call.
     """
 
-    def __init__(self, title, tooltip):
+    def __init__(self, title, tooltip, id_input):
         super(IdWidget, self).__init__()
 
         label = QLabel(self)
         label.setText(title+":")
         label.setToolTip(tooltip)
-        self.field = IDLineEdit(self)
+        self.field = IDLineEdit(self) if id_input else LineEdit(self)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -142,31 +142,6 @@ class IdWidgetCombined(QWidget):
 
     def update_user(self):
         self.user_field.setEnabled(self.map_field.text() != "")
-
-
-class InputWidget(QWidget):
-    """
-    A container class of widgets that represents user input. This class
-    holds a Label and LineEdit.
-    """
-    # TODO: combine this and IdWidget, only one class InputWidget which takes a bool of
-    # if the input field is an IDLineEdit or a normal LineEdit (the only difference between
-    # this class and IdWidget)
-
-    def __init__(self, title, tooltip):
-        super(InputWidget, self).__init__()
-
-        label = QLabel(self)
-        label.setText(title+":")
-        label.setToolTip(tooltip)
-        self.field = LineEdit(self)
-
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.field, 0, 2, 1, 3)
-        self.setLayout(layout)
 
 
 class OptionWidget(QWidget):

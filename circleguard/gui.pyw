@@ -18,14 +18,13 @@ from circleguard import Circleguard, set_options
 from circleguard import __version__ as cg_version
 
 from widgets import (Threshold, set_event_window, IdWidget,
-                     FolderChoose, SpinBox, InputWidget, IdWidgetCombined,
+                     FolderChoose, SpinBox, IdWidgetCombined,
                      OptionWidget, CompareTopPlays, CompareTopUsers, ThresholdCombined)
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
 
 ROOT_PATH = pathlib.Path(__file__).parent.absolute()
 __version__ = "0.1d"
 print(f"backend {cg_version}, frontend {__version__}")
-
 
 log = logging.getLogger(__name__)
 set_options(loglevel=5)
@@ -189,7 +188,7 @@ class UserTab(QWidget):
         self.info = QLabel(self)
         self.info.setText("This will compare a user's n top plays with the n Top plays of the corresponding Map")
 
-        self.user_id = IdWidget("User Id", "User id, as seen in the profile url")
+        self.user_id = IdWidget("User Id", "User id, as seen in the profile url", id_input=True)
         self.compare_top_user = CompareTopUsers()
         self.compare_top_map = CompareTopPlays()
         self.threshold = ThresholdCombined()
@@ -238,9 +237,9 @@ class VerifyTab(QWidget):
         self.info = QLabel(self)
         self.info.setText("Verifies that the scores are steals of each other")
 
-        self.map_id = IdWidget("Map Id", "Beatmap id, not the mapset id!")
-        self.user_1_id = IdWidget("User Id #1", "User id, as seen in the profile url")
-        self.user_2_id = IdWidget("User Id #2", "User id, as seen in the profile url")
+        self.map_id = IdWidget("Map Id", "Beatmap id, not the mapset id!", id_input=True)
+        self.user_1_id = IdWidget("User Id #1", "User id, as seen in the profile url", id_input=True)
+        self.user_2_id = IdWidget("User Id #2", "User id, as seen in the profile url", id_input=True)
 
         self.threshold = ThresholdCombined()
 
@@ -266,7 +265,7 @@ class SettingsTab(QWidget):
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
 
-        self.apikey_widget = InputWidget("Api Key", "")
+        self.apikey_widget = IdWidget("Api Key", "", id_input=False)
         self.apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
         self.apikey_widget.field.textChanged.connect(set_api_key)
 
