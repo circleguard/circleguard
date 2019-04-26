@@ -24,10 +24,9 @@ from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CA
 
 ROOT_PATH = pathlib.Path(__file__).parent.absolute()
 __version__ = "0.1d"
-print(f"backend {cg_version}, frontend {__version__}")
 
 log = logging.getLogger(__name__)
-set_options(loglevel=5)
+set_options(loglevel=logging.DEBUG)
 
 def resource_path(str_path):
     """
@@ -136,7 +135,6 @@ class MainTab(QWidget):
 
     def run_circleguard(self):
         try:
-            print("running")
             cg = Circleguard(API_KEY, resource_path("db/cache.db"))
             map_id_str = self.map_tab.id.map_field.text()
             map_id = int(map_id_str) if len(map_id_str) > 0 else print("Map id field empty")
