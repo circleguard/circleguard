@@ -11,7 +11,7 @@ import logging
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow)
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
 # pylint: enable=no-name-in-module
 
 from circleguard import Circleguard, set_options
@@ -27,6 +27,7 @@ __version__ = "0.1d"
 
 log = logging.getLogger(__name__)
 set_options(loglevel=logging.DEBUG)
+
 
 def resource_path(str_path):
     """
@@ -104,6 +105,7 @@ class MainTab(QWidget):
 
         terminal = QTextEdit()
         terminal.setReadOnly(True)
+        terminal.ensureCursorVisible()
         self.terminal = terminal
 
         self.run_button = QPushButton()
@@ -125,9 +127,12 @@ class MainTab(QWidget):
 
     def write(self, text):
         self.terminal.append(str(text).strip())
+        self.scroll_to_bottom()
 
-    def reset_scrollbar(self):
-        self.terminal.verticalScrollBar().setValue(self.terminal.verticalScrollBar().maximum())
+    def scroll_to_bottom(self):
+        cursor = QTextCursor(self.terminal.document())
+        cursor.movePosition(QTextCursor.End)
+        self.terminal.setTextCursor(cursor)
 
     def run(self):
         pool = ThreadPool(processes=1)
