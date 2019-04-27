@@ -171,7 +171,6 @@ class CompareTopUsers(QWidget):
     A container class of widgets that represents user input for how many users of a map to compare.
     This class holds a Label, Slider, and SpinBox.
 
-    This class includes a function which is meant to disable/enable the Slider and SpinBox externally.
     The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
     """
 
@@ -212,8 +211,14 @@ class CompareTopUsers(QWidget):
         self.slider.setValue(value)
 
     def update_user(self, mode):
-        self.slider.setEnabled(False if not mode else True)
-        self.spinbox.setEnabled(False if not mode else True)
+        """
+        This function is meant to be used to disable/enable the Slider and SpinBox externally.
+
+        Args:
+            Boolean mode: Declares if the widgets should be disabled or enabled
+        """
+        self.slider.setEnabled(mode)
+        self.spinbox.setEnabled(mode)
 
 
 class CompareTopPlays(QWidget):
