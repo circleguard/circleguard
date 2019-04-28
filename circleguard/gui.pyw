@@ -301,7 +301,7 @@ class SettingsTab(QWidget):
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
 
-        self.apikey_widget = IdWidget("Api Key", "", id_input=False)
+        self.apikey_widget = IdWidget("Api Key", "", id_input=False, password=True)
         self.apikey_widget.field.setText(API_KEY)
         self.apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
         self.apikey_widget.field.textChanged.connect(set_api_key)
