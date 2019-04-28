@@ -10,7 +10,7 @@ import logging
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
-                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow)
+                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QComboBox)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
 # pylint: enable=no-name-in-module
 
@@ -26,7 +26,6 @@ ROOT_PATH = pathlib.Path(__file__).parent.absolute()
 __version__ = "0.1d"
 
 log = logging.getLogger(__name__)
-set_options(loglevel=logging.DEBUG)
 
 
 def resource_path(str_path):
@@ -310,7 +309,7 @@ class SettingsTab(QWidget):
         self.thresh_widget = Threshold()
         self.thresh_widget.thresh_spinbox.valueChanged.connect(partial(update_default, "threshold"))
 
-        self.darkmode = OptionWidget("Dark mode", "")
+        self.darkmode = OptionWidget("Dark mode", "We wouldn't feel right shipping a product without darkmode")
         self.darkmode.box.stateChanged.connect(switch_theme)
         self.darkmode.box.setChecked(DARK_THEME)
 
@@ -322,6 +321,20 @@ class SettingsTab(QWidget):
         self.cache_dir.path_signal.connect(partial(update_default, "cache_dir"))
         self.cache_dir.update_dir(CACHE_DIR)
 
+        self.loglevel = QComboBox()
+        self.loglevel.addItem("CRITICAL", 50)
+        self.loglevel.addItem("ERROR", 40)
+        self.loglevel.addItem("WARNING", 30)
+        self.loglevel.addItem("INFO", 20)
+        self.loglevel.addItem("DEBUG", 10)
+        self.loglevel.addItem("TRACE", 5)
+        self.loglevel.setInsertPolicy(QComboBox.NoInsert)
+        self.loglevel.setCurrentIndex(3) #info by default
+        self.set_circleguard_loglevel() # set the default loglevel in cg, not just in gui
+
+        self.loglevel.currentIndexChanged.connect(self.set_circleguard_loglevel)
+
+
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 0, 0, 1, 1)
         self.grid.addWidget(self.apikey_widget, 1, 0, 1, 1)
@@ -329,7 +342,12 @@ class SettingsTab(QWidget):
         self.grid.addWidget(self.cache_dir, 3, 0, 1, 1)
         self.grid.addWidget(self.cache, 4, 0, 1, 1)
         self.grid.addWidget(self.darkmode, 5, 0, 1, 1)
+        self.grid.addWidget(self.loglevel, 6, 0, 1, 1)
+
         self.setLayout(self.grid)
+
+    def set_circleguard_loglevel(self):
+        set_options(loglevel=self.loglevel.currentData())
 
 
 def set_api_key(key):
