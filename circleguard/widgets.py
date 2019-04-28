@@ -105,24 +105,24 @@ class DoubleSpinBox(QDoubleSpinBox):
         super().keyPressEvent(event)
 
 
-class IdWidget(QWidget):
+class InputWidget(QWidget):
     """
     A container class of widgets that represents user input for an id. This class
-    holds a Label and either a IDLineEdit or a LineEdit, depending on the constructor call.
+    holds a Label and either a PasswordEdit, IDLineEdit, or LineEdit, depending on the constructor call.
     """
 
-    def __init__(self, title, tooltip, id_input, password=False):
-        super(IdWidget, self).__init__()
+    def __init__(self, title, tooltip, type_):
+        super(InputWidget, self).__init__()
 
         label = QLabel(self)
         label.setText(title+":")
         label.setToolTip(tooltip)
-        if password:
+        if type_ == "password":
             self.field = PaswordEdit(self)
             self.field.setEchoMode(QLineEdit.Password)  # todo: dirty, move to PasswordEdit()?
-        elif id_input:
+        if type_ == "id":
             self.field = IDLineEdit(self)
-        else:
+        if type_ == "normal":
             self.field = LineEdit(self)
 
         layout = QGridLayout()

@@ -17,7 +17,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
 from circleguard import Circleguard, set_options
 from circleguard import __version__ as cg_version
 
-from widgets import (Threshold, set_event_window, IdWidget,
+from widgets import (Threshold, set_event_window, InputWidget,
                      FolderChooser, SpinBox, IdWidgetCombined,
                      OptionWidget, CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
@@ -223,7 +223,7 @@ class UserTab(QWidget):
         self.info = QLabel(self)
         self.info.setText("Compare a user's top plays against the map's leaderboard.")
 
-        self.user_id = IdWidget("User Id", "User id, as seen in the profile url", id_input=True)
+        self.user_id = InputWidget("User Id", "User id, as seen in the profile url", type_="id")
         self.compare_top_user = CompareTopUsers()
         self.compare_top_map = CompareTopPlays()
         self.threshold = ThresholdCombined()
@@ -272,9 +272,9 @@ class VerifyTab(QWidget):
         self.info = QLabel(self)
         self.info.setText("Verifies that the scores are steals of each other.")
 
-        self.map_id = IdWidget("Map Id", "Beatmap id, not the mapset id!", id_input=True)
-        self.user_id_1 = IdWidget("User Id #1", "User id, as seen in the profile url", id_input=True)
-        self.user_id_2 = IdWidget("User Id #2", "User id, as seen in the profile url", id_input=True)
+        self.map_id = InputWidget("Map Id", "Beatmap id, not the mapset id!", type_="id")
+        self.user_id_1 = InputWidget("User Id #1", "User id, as seen in the profile url", type_="id")
+        self.user_id_2 = InputWidget("User Id #2", "User id, as seen in the profile url", type_="id")
 
         self.threshold = ThresholdCombined()
 
@@ -300,7 +300,7 @@ class SettingsTab(QWidget):
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
 
-        self.apikey_widget = IdWidget("Api Key", "", id_input=False, password=True)
+        self.apikey_widget = InputWidget("Api Key", "", type_="password")
         self.apikey_widget.field.setText(API_KEY)
         self.apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
         self.apikey_widget.field.textChanged.connect(set_api_key)
