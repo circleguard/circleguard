@@ -120,7 +120,7 @@ class IdWidgetCombined(QWidget):
         map_label.setToolTip("Beatmap id, not the mapset id!")
         self.map_label = map_label
         self.map_field = IDLineEdit(self)
-        self.map_field.textChanged.connect(self.update_user)
+        self.map_field.textChanged.connect(self.update_user_enabled)
 
         user_label = QLabel(self)
         user_label.setText("User Id:")
@@ -128,7 +128,7 @@ class IdWidgetCombined(QWidget):
         self.user_label = user_label
         self.user_field = IDLineEdit(self)
 
-        self.update_user()
+        self.update_user_enabled()
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -140,7 +140,10 @@ class IdWidgetCombined(QWidget):
         layout.addWidget(self.user_field, 1, 2, 1, 3)
         self.setLayout(layout)
 
-    def update_user(self):
+    def update_user_enabled(self):
+        """
+        Enables the user id field if the map field has any text in it. Otherwise, disables the user id field.
+        """
         self.user_field.setEnabled(self.map_field.text() != "")
 
 
