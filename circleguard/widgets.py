@@ -2,7 +2,7 @@
 from functools import partial
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit,
                              QSpacerItem, QSizePolicy, QSlider, QSpinBox,
-                             QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox)
+                             QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox)
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
@@ -166,6 +166,33 @@ class OptionWidget(QWidget):
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.box, 0, 2, 1, 3)
+        self.setLayout(layout)
+
+
+class LoglevelWidget(QWidget):
+    def __init__(self, tooltip):
+        super(LoglevelWidget, self).__init__()
+
+        label = QLabel(self)
+        label.setText("Debug mode:")
+        label.setToolTip(tooltip)
+
+        self.combobox = QComboBox(self)
+        self.combobox.setFixedWidth(85)
+        self.combobox.addItem("CRITICAL", 50)
+        self.combobox.addItem("ERROR", 40)
+        self.combobox.addItem("WARNING", 30)
+        self.combobox.addItem("INFO", 20)
+        self.combobox.addItem("DEBUG", 10)
+        self.combobox.addItem("TRACE", 5)
+        self.combobox.setInsertPolicy(QComboBox.NoInsert)
+        self.combobox.setCurrentIndex(3)  # info by default
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.combobox, 0, 2, 1, 3)
         self.setLayout(layout)
 
 

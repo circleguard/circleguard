@@ -10,7 +10,7 @@ import logging
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
-                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QComboBox)
+                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
 # pylint: enable=no-name-in-module
 
@@ -19,7 +19,7 @@ from circleguard import __version__ as cg_version
 
 from widgets import (Threshold, set_event_window, IdWidget,
                      FolderChooser, SpinBox, IdWidgetCombined,
-                     OptionWidget, CompareTopPlays, CompareTopUsers, ThresholdCombined)
+                     OptionWidget, CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
 
 ROOT_PATH = pathlib.Path(__file__).parent.absolute()
@@ -321,19 +321,9 @@ class SettingsTab(QWidget):
         self.cache_dir.path_signal.connect(partial(update_default, "cache_dir"))
         self.cache_dir.update_dir(CACHE_DIR)
 
-        self.loglevel = QComboBox()
-        self.loglevel.addItem("CRITICAL", 50)
-        self.loglevel.addItem("ERROR", 40)
-        self.loglevel.addItem("WARNING", 30)
-        self.loglevel.addItem("INFO", 20)
-        self.loglevel.addItem("DEBUG", 10)
-        self.loglevel.addItem("TRACE", 5)
-        self.loglevel.setInsertPolicy(QComboBox.NoInsert)
-        self.loglevel.setCurrentIndex(3) #info by default
-        self.set_circleguard_loglevel() # set the default loglevel in cg, not just in gui
-
-        self.loglevel.currentIndexChanged.connect(self.set_circleguard_loglevel)
-
+        self.loglevel = LoglevelWidget("")
+        self.loglevel.combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
+        self.set_circleguard_loglevel()  # set the default loglevel in cg, not just in gui
 
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 0, 0, 1, 1)
@@ -347,7 +337,7 @@ class SettingsTab(QWidget):
         self.setLayout(self.grid)
 
     def set_circleguard_loglevel(self):
-        set_options(loglevel=self.loglevel.currentData())
+        set_options(loglevel=self.loglevel.combobox.currentData())
 
 
 def set_api_key(key):
