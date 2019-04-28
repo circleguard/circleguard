@@ -414,18 +414,18 @@ class Threshold(QWidget):
         self.thresh_slider.setValue(value)
 
 
-class FolderChoose(QWidget):
+class FolderChooser(QWidget):
     path_signal = pyqtSignal(str)
 
     def __init__(self, title):
-        super(FolderChoose, self).__init__()
+        super(FolderChooser, self).__init__()
         self.path = ""
         label = QLabel(self)
         label.setText(title+":")
 
-        self.file_chooser = QPushButton(self)
-        self.file_chooser.setText("Choose Folder")
-        self.file_chooser.pressed.connect(self.set_dir)
+        self.file_chooser_button = QPushButton(self)
+        self.file_chooser_button.setText("Choose Folder")
+        self.file_chooser_button.pressed.connect(self.set_dir)
 
         self.path_label = QLabel(self)
         self.path_label.setText("")
@@ -435,7 +435,7 @@ class FolderChoose(QWidget):
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.path_label, 0, 2, 1, 2)
-        layout.addWidget(self.file_chooser, 0, 4, 1, 1)
+        layout.addWidget(self.file_chooser_button, 0, 4, 1, 1)
         self.setLayout(layout)
 
     def set_dir(self):

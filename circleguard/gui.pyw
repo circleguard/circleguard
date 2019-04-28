@@ -18,7 +18,7 @@ from circleguard import Circleguard, set_options
 from circleguard import __version__ as cg_version
 
 from widgets import (Threshold, set_event_window, IdWidget,
-                     FolderChoose, SpinBox, IdWidgetCombined,
+                     FolderChooser, SpinBox, IdWidgetCombined,
                      OptionWidget, CompareTopPlays, CompareTopUsers, ThresholdCombined)
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
 
@@ -88,6 +88,12 @@ class MainWindow(QWidget):
 
 
 class MainTab(QWidget):
+    # the index (order) of each subtab under the Main tab
+    MAP = 0
+    SCREEN = 1
+    LOCAL = 2
+    VERIFY = 3
+
     def __init__(self):
         super(MainTab, self).__init__()
         self.q = Queue()
@@ -141,17 +147,45 @@ class MainTab(QWidget):
     def run_circleguard(self):
         try:
             cg = Circleguard(API_KEY, resource_path("db/cache.db"))
-            map_id_str = self.map_tab.id.map_field.text()
-            map_id = int(map_id_str) if len(map_id_str) > 0 else print("Map id field empty")
-            # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
-            # maybe fancy flashing red stars for required fields
-            num = self.map_tab.compare_top.slider.value()
-            thresh = self.map_tab.threshold.thresh_slider.value()
-            cg_map = cg.map_check(map_id, num=num, thresh=thresh)
-            for result in cg_map:
+            current_tab = self.tabs.currentIndex()
+
+            if(current_tab == MainTab.MAP):
+                tab = self.map_tab
+                # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
+                # maybe fancy flashing red stars for required fields
+                map_id_str = tab.id.map_field.text()
+                map_id = int(map_id_str) if len(map_id_str) > 0 else print("Map id field empty")
+                num = tab.compare_top.slider.value()
+                thresh = tab.threshold.thresh_slider.value()
+                gen = cg.map_check(map_id, num=num, thresh=thresh)
+
+            if(current_tab == MainTab.SCREEN):
+                tab = self.user_tab
+                user_id = int(tab.user_id.field.text())
+                num = tab.compare_top_map.slider.value()
+                print(num)
+                thresh = tab.threshold.thresh_slider.value()
+                gen = cg.user_check(user_id, num)
+
+            if(current_tab == MainTab.LOCAL):
+                tab = self.local_tab
+                path = tab.folder_chooser.path
+                gen = cg.local_check(path)
+
+            if(current_tab == MainTab.VERIFY):
+                tab = self.verify_tab
+                map_id = int(tab.map_id.field.text())
+                user_id_1 = int(tab.user_id_1.field.text())
+                user_id_2 = int(tab.user_id_2.field.text())
+                gen = cg.verify(map_id, user_id_1, user_id_2)
+                pass
+
+            for result in gen:
                 self.q.put(result)
+
         except Exception:
             log.exception("ERROR!! while running cg:")
+
 
     def print_results(self):
         try:
@@ -214,7 +248,7 @@ class LocalTab(QWidget):
                           "If a Map is given it will compare the leaderboard in combination with the local replays.\n"
                           "In addition, if a User is given, the score set by the user will be compared locally "
                           "and with the leaderboard.")
-        self.file_chooser = FolderChoose("Replay folder")
+        self.folder_chooser = FolderChooser("Replay folder")
         self.id = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
         self.threshold = ThresholdCombined()
@@ -223,7 +257,7 @@ class LocalTab(QWidget):
 
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 0, 0, 1, 1)
-        self.grid.addWidget(self.file_chooser, 1, 0, 1, 1)
+        self.grid.addWidget(self.folder_chooser, 1, 0, 1, 1)
         self.grid.addWidget(self.id, 2, 0, 2, 1)
         self.grid.addWidget(self.compare_top, 4, 0, 1, 1)
         self.grid.addWidget(self.threshold, 5, 0, 2, 1)
@@ -241,16 +275,16 @@ class VerifyTab(QWidget):
         self.info.setText("Verifies that the scores are steals of each other")
 
         self.map_id = IdWidget("Map Id", "Beatmap id, not the mapset id!", id_input=True)
-        self.user_1_id = IdWidget("User Id #1", "User id, as seen in the profile url", id_input=True)
-        self.user_2_id = IdWidget("User Id #2", "User id, as seen in the profile url", id_input=True)
+        self.user_id_1 = IdWidget("User Id #1", "User id, as seen in the profile url", id_input=True)
+        self.user_id_2 = IdWidget("User Id #2", "User id, as seen in the profile url", id_input=True)
 
         self.threshold = ThresholdCombined()
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.map_id, 1, 0, 1, 1)
-        layout.addWidget(self.user_1_id, 2, 0, 1, 1)
-        layout.addWidget(self.user_2_id, 3, 0, 1, 1)
+        layout.addWidget(self.user_id_1, 2, 0, 1, 1)
+        layout.addWidget(self.user_id_2, 3, 0, 1, 1)
         layout.addWidget(self.threshold, 4, 0, 2, 1)
 
         self.setLayout(layout)
@@ -283,7 +317,7 @@ class SettingsTab(QWidget):
         self.cache.box.stateChanged.connect(partial(update_default, "caching"))
         self.cache.box.setChecked(CACHING)
 
-        self.cache_dir = FolderChoose("Cache Path")
+        self.cache_dir = FolderChooser("Cache Path")
         self.cache_dir.path_signal.connect(partial(update_default, "cache_dir"))
         self.cache_dir.update_dir(CACHE_DIR)
 
