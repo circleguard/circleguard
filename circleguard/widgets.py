@@ -144,36 +144,24 @@ class IdWidgetCombined(QWidget):
     def __init__(self):
         super(IdWidgetCombined, self).__init__()
 
-        map_label = QLabel(self)
-        map_label.setText("Map Id:")
-        map_label.setToolTip("Beatmap id, not the mapset id!")
-        self.map_label = map_label
-        self.map_field = IDLineEdit(self)
-        self.map_field.textChanged.connect(self.update_user_enabled)
+        self.map_id = InputWidget("Map Id", "Beatmap id, not the mapset id!", type_="id")
+        self.map_id.field.textChanged.connect(self.update_user_enabled)
 
-        user_label = QLabel(self)
-        user_label.setText("User Id:")
-        user_label.setToolTip("User id, as seen in the profile url")
-        self.user_label = user_label
-        self.user_field = IDLineEdit(self)
+        self.user_id = InputWidget("User Id", "User id, as seen in the profile url", type_="id")
 
         self.update_user_enabled()
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(map_label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.map_field, 0, 2, 1, 3)
-        layout.addWidget(user_label, 1, 0, 1, 1)
-        layout.addItem(SPACER, 1, 1, 1, 1)
-        layout.addWidget(self.user_field, 1, 2, 1, 3)
+        layout.addWidget(self.map_id, 0, 0, 1, 1)
+        layout.addWidget(self.user_id, 1, 0, 1, 1)
         self.setLayout(layout)
 
     def update_user_enabled(self):
         """
         Enables the user id field if the map field has any text in it. Otherwise, disables the user id field.
         """
-        self.user_field.setEnabled(self.map_field.text() != "")
+        self.user_id.setEnabled(self.map_id.field.text() != "")
 
 
 class OptionWidget(QWidget):

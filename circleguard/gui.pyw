@@ -152,7 +152,7 @@ class MainTab(QWidget):
                 tab = self.map_tab
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
                 # maybe fancy flashing red stars for required fields
-                map_id_str = tab.id.map_field.text()
+                map_id_str = tab.id_combined.map_id.field.text()
                 map_id = int(map_id_str) if len(map_id_str) > 0 else print("Map id field empty")
                 num = tab.compare_top.slider.value()
                 thresh = tab.threshold.thresh_slider.value()
@@ -203,14 +203,14 @@ class MapTab(QWidget):
         self.info.setText("Compare the top plays of a Map's leaderboard.\nIf a user is given, "
                           "it will compare that user's play on the map against the top plays.")
 
-        self.id = IdWidgetCombined()
+        self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
 
         self.threshold = ThresholdCombined()
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
-        layout.addWidget(self.id, 1, 0, 2, 1)
+        layout.addWidget(self.id_combined, 1, 0, 2, 1)
         layout.addWidget(self.compare_top, 4, 0, 1, 1)
         layout.addWidget(self.threshold, 5, 0, 2, 1)
 
@@ -247,23 +247,23 @@ class LocalTab(QWidget):
                           "If both a user and a map are given, it will compare the local replays against the user's "
                           "score on that map.")
         self.folder_chooser = FolderChooser("Replay folder")
-        self.id = IdWidgetCombined()
+        self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
         self.threshold = ThresholdCombined()
-        self.id.map_field.textChanged.connect(self.switch_compare)
+        self.id_combined.map_id.field.textChanged.connect(self.switch_compare)
         self.switch_compare()
 
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 0, 0, 1, 1)
         self.grid.addWidget(self.folder_chooser, 1, 0, 1, 1)
-        self.grid.addWidget(self.id, 2, 0, 2, 1)
+        self.grid.addWidget(self.id_combined, 2, 0, 2, 1)
         self.grid.addWidget(self.compare_top, 4, 0, 1, 1)
         self.grid.addWidget(self.threshold, 5, 0, 2, 1)
 
         self.setLayout(self.grid)
 
     def switch_compare(self):
-        self.compare_top.update_user(self.id.map_field.text() != "")
+        self.compare_top.update_user(self.id_combined.map_id.field.text() != "")
 
 
 class VerifyTab(QWidget):
