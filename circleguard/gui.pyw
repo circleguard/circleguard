@@ -162,7 +162,6 @@ class MainTab(QWidget):
                 tab = self.user_tab
                 user_id = int(tab.user_id.field.text())
                 num = tab.compare_top_map.slider.value()
-                print(num)
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.user_check(user_id, num)
 
