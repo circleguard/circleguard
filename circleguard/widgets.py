@@ -180,7 +180,7 @@ class CompareTopUsers(QWidget):
     def __init__(self):
         super(CompareTopUsers, self).__init__()
         self.label = QLabel(self)
-        self.label.setText("Compare Top Users:")
+        self.label.setText("Compare Top Plays:")
         self.label.setToolTip("Compare this many plays from the leaderboard")
 
         slider = QSlider(Qt.Horizontal)

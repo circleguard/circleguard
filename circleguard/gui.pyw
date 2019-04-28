@@ -202,8 +202,8 @@ class MapTab(QWidget):
         super(MapTab, self).__init__()
 
         self.info = QLabel(self)
-        self.info.setText("Compare the top n plays of a Map's leaderboard.\nIf a user is given, it will compare the "
-                          "user against the maps leaderboard.")
+        self.info.setText("Compare the top plays of a Map's leaderboard.\nIf a user is given, "
+                          "it will compare that user's play on the map against the top plays.")
 
         self.id = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
@@ -223,7 +223,7 @@ class UserTab(QWidget):
     def __init__(self):
         super(UserTab, self).__init__()
         self.info = QLabel(self)
-        self.info.setText("This will compare a user's n top plays with the n Top plays of the corresponding Map")
+        self.info.setText("Compare a user's top plays against the map's leaderboard.")
 
         self.user_id = IdWidget("User Id", "User id, as seen in the profile url", id_input=True)
         self.compare_top_user = CompareTopUsers()
@@ -244,10 +244,10 @@ class LocalTab(QWidget):
     def __init__(self):
         super(LocalTab, self).__init__()
         self.info = QLabel(self)
-        self.info.setText("This will check for steals between local replay files.\n"
-                          "If a Map is given it will compare the leaderboard in combination with the local replays.\n"
-                          "In addition, if a User is given, the score set by the user will be compared locally "
-                          "and with the leaderboard.")
+        self.info.setText("Compare local replays in a given folder.\n"
+                          "If a Map is given, it will compare the local replays against the leaderboard of the map.\n"
+                          "If both a user and a map are given, it will compare the local replays against the user's "
+                          "score on that map.")
         self.folder_chooser = FolderChooser("Replay folder")
         self.id = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
@@ -272,7 +272,7 @@ class VerifyTab(QWidget):
     def __init__(self):
         super(VerifyTab, self).__init__()
         self.info = QLabel(self)
-        self.info.setText("Verifies that the scores are steals of each other")
+        self.info.setText("Verifies that the scores are steals of each other.")
 
         self.map_id = IdWidget("Map Id", "Beatmap id, not the mapset id!", id_input=True)
         self.user_id_1 = IdWidget("User Id #1", "User id, as seen in the profile url", id_input=True)
