@@ -192,13 +192,14 @@ class MainTab(QWidget):
         except Exception:
             log.exception("ERROR!! while running cg:")
 
-
     def print_results(self):
         try:
             while True:
                 result = self.q.get(block=False)
                 # if result.ischeat:
                 self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
+                QApplication.beep()
+                QApplication.alert(self)
         except Empty:
             pass
 
