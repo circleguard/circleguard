@@ -87,11 +87,12 @@ class MainWindow(QWidget):
 
 
 class MainTab(QWidget):
-    # the index (order) of each subtab under the Main tab
-    MAP = 0
-    SCREEN = 1
-    LOCAL = 2
-    VERIFY = 3
+    TAB_REGISTER = [
+        {"name":  "MAP",   "requires_api": True},
+        {"name": "SCREEN", "requires_api": True},
+        {"name": "LOCAL",  "requires_api": False},
+        {"name": "VERIFY", "requires_api": True},
+    ]
 
     def __init__(self):
         super(MainTab, self).__init__()
@@ -148,7 +149,7 @@ class MainTab(QWidget):
             cg = Circleguard(API_KEY, resource_path("db/cache.db"))
             current_tab = self.tabs.currentIndex()
 
-            if(current_tab == MainTab.MAP):
+            if MainTab.TAB_REGISTER[current_tab]["name"] == "MAP":
                 tab = self.map_tab
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
                 # maybe fancy flashing red stars for required fields
@@ -158,19 +159,19 @@ class MainTab(QWidget):
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.map_check(map_id, num=num, thresh=thresh)
 
-            if(current_tab == MainTab.SCREEN):
+            if MainTab.TAB_REGISTER[current_tab]["name"] == "SCREEN":
                 tab = self.user_tab
                 user_id = int(tab.user_id.field.text())
                 num = tab.compare_top_map.slider.value()
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.user_check(user_id, num)
 
-            if(current_tab == MainTab.LOCAL):
+            if MainTab.TAB_REGISTER[current_tab]["name"] == "LOCAL":
                 tab = self.local_tab
                 path = tab.folder_chooser.path
                 gen = cg.local_check(path)
 
-            if(current_tab == MainTab.VERIFY):
+            if MainTab.TAB_REGISTER[current_tab]["name"] == "VERIFY":
                 tab = self.verify_tab
                 map_id = int(tab.map_id.field.text())
                 user_id_1 = int(tab.user_id_1.field.text())
