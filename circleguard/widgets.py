@@ -67,13 +67,13 @@ class PasswordEdit(QLineEdit):
         super(PasswordEdit, self).__init__(parent)
         self.setEchoMode(QLineEdit.Password)
 
-    def focusInEvent(self, temp):
+    def focusInEvent(self, event):
         self.setEchoMode(QLineEdit.Normal)
-        super().focusInEvent(temp)
+        super().focusInEvent(event)
 
-    def focusOutEvent(self, temp):
+    def focusOutEvent(self, event):
         self.setEchoMode(QLineEdit.Password)
-        super().focusInEvent(temp)
+        super().focusOutEvent(event)
 
     def keyPressEvent(self, event):
         key = event.key()
