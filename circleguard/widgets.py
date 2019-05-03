@@ -56,12 +56,16 @@ class LineEdit(QLineEdit):
         super().keyPressEvent(event)
 
 
-class PaswordEdit(QLineEdit):
+class PasswordEdit(QLineEdit):
     r"""
     A QLineEdit that overrides focusInEvent and focusOutEven to show/hide the password on focus.
     It also overrides the keyPressEvent to allow the left and right
     keys to be sent to our window that controls shortcuts, instead of being used only by the LineEdit.
     """
+
+    def __init__(self, parent):
+        super(PasswordEdit, self).__init__(parent)
+        self.setEchoMode(QLineEdit.Password)
 
     def focusInEvent(self, temp):
         self.setEchoMode(QLineEdit.Normal)
@@ -118,8 +122,7 @@ class InputWidget(QWidget):
         label.setText(title+":")
         label.setToolTip(tooltip)
         if type_ == "password":
-            self.field = PaswordEdit(self)
-            self.field.setEchoMode(QLineEdit.Password)  # todo: dirty, move to PasswordEdit()?
+            self.field = PasswordEdit(self)
         if type_ == "id":
             self.field = IDLineEdit(self)
         if type_ == "normal":
