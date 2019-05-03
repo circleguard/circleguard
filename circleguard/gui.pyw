@@ -185,7 +185,6 @@ class MainTab(QWidget):
                 user_id_1 = int(tab.user_id_1.field.text())
                 user_id_2 = int(tab.user_id_2.field.text())
                 gen = cg.verify(map_id, user_id_1, user_id_2)
-                pass
 
             for result in gen:
                 self.q.put(result)
