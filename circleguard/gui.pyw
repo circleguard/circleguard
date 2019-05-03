@@ -108,6 +108,7 @@ class MainTab(QWidget):
         tabs.addTab(self.local_tab, "Check Local Replays")
         tabs.addTab(self.verify_tab, "Verify")
         self.tabs = tabs
+        self.tabs.currentChanged.connect(self.switch_run_button)
 
         terminal = QTextEdit()
         terminal.setReadOnly(True)
@@ -124,6 +125,7 @@ class MainTab(QWidget):
         layout.addWidget(self.run_button)
         self.setLayout(layout)
 
+        self.switch_run_button(0)  # disable run button if there is no api key
         self.start_timer()
 
     def start_timer(self):
@@ -143,6 +145,9 @@ class MainTab(QWidget):
     def run(self):
         pool = ThreadPool(processes=1)
         pool.apply_async(self.run_circleguard)
+
+    def switch_run_button(self, index):
+        self.run_button.setEnabled(not MainTab.TAB_REGISTER[int(index)]["requires_api"] if API_KEY == "" else True)
 
     def run_circleguard(self):
         try:
