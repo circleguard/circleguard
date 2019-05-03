@@ -64,6 +64,12 @@ class WindowWrapper(QMainWindow):
         tabs = self.main_window.main_tab.tabs
         tabs.setCurrentIndex(tabs.currentIndex() - 1)
 
+    def mousePressEvent(self, event):
+        focused = self.focusWidget()
+        if focused is not None:
+            focused.clearFocus()
+        super(WindowWrapper, self).mousePressEvent(event)
+
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -82,11 +88,6 @@ class MainWindow(QWidget):
         self.main_layout.addWidget(self.tab_widget)
         self.setLayout(self.main_layout)
 
-    def mousePressEvent(self, event):
-        focused = self.focusWidget()
-        if focused is not None:
-            focused.clearFocus()
-        super(MainWindow, self).mousePressEvent(event)
 
 
 class MainTab(QWidget):
