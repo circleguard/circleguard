@@ -89,7 +89,6 @@ class MainWindow(QWidget):
         self.setLayout(self.main_layout)
 
 
-
 class MainTab(QWidget):
     TAB_REGISTER = [
         {"name":  "MAP",   "requires_api": True},
@@ -170,22 +169,27 @@ class MainTab(QWidget):
 
             if MainTab.TAB_REGISTER[current_tab]["name"] == "SCREEN":
                 tab = self.user_tab
-                user_id = int(tab.user_id.field.text())
+                user_id_str = tab.user_id.field.text()
+                user_id = int(user_id_str) if len(user_id_str) > 0 else 0
                 num = tab.compare_top_map.slider.value()
                 thresh = tab.threshold.thresh_slider.value()
-                gen = cg.user_check(user_id, num)
+                gen = cg.user_check(user_id, num, thresh=thresh)
 
             if MainTab.TAB_REGISTER[current_tab]["name"] == "LOCAL":
                 tab = self.local_tab
                 path = tab.folder_chooser.path
-                gen = cg.local_check(path)
+                thresh = tab.threshold.thresh_slider.value()
+                gen = cg.local_check(path, thresh=thresh)
 
             if MainTab.TAB_REGISTER[current_tab]["name"] == "VERIFY":
                 tab = self.verify_tab
-                map_id = int(tab.map_id.field.text())
-                user_id_1 = int(tab.user_id_1.field.text())
-                user_id_2 = int(tab.user_id_2.field.text())
-                gen = cg.verify(map_id, user_id_1, user_id_2)
+                map_id = int(map_id_str) if len(map_id_str) > 0 else 0
+                user_id_1_str = tab.user_id_1.field.text()
+                user_id_1 = int(user_id_1_str) if len(user_id_1_str) > 0 else 0
+                user_id_2_str = tab.user_id_2.field.text()
+                user_id_2 = int(user_id_2_str) if len(user_id_2_str) > 0 else 0
+                thresh = tab.threshold.thresh_slider.value()
+                gen = cg.verify(map_id, user_id_1, user_id_2, thresh=thresh)
 
             for result in gen:
                 self.q.put(result)
