@@ -183,6 +183,7 @@ class MainTab(QWidget):
 
             if MainTab.TAB_REGISTER[current_tab]["name"] == "VERIFY":
                 tab = self.verify_tab
+                map_id_str = tab.map_id.field.text()
                 map_id = int(map_id_str) if len(map_id_str) > 0 else 0
                 user_id_1_str = tab.user_id_1.field.text()
                 user_id_1 = int(user_id_1_str) if len(user_id_1_str) > 0 else 0
