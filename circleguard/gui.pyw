@@ -163,7 +163,7 @@ class MainTab(QWidget):
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
                 # maybe fancy flashing red stars for required fields
                 map_id_str = tab.id_combined.map_id.field.text()
-                map_id = int(map_id_str) if len(map_id_str) > 0 else print("Map id field empty")
+                map_id = int(map_id_str) if len(map_id_str) > 0 else 0
                 num = tab.compare_top.slider.value()
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.map_check(map_id, num=num, thresh=thresh)
