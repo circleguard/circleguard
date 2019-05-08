@@ -177,7 +177,7 @@ class MainTab(QWidget):
 
             if MainTab.TAB_REGISTER[current_tab]["name"] == "LOCAL":
                 tab = self.local_tab
-                path = tab.folder_chooser.path
+                path = Path(tab.folder_chooser.path)
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.local_check(path, thresh=thresh)
 
