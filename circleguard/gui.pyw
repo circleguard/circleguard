@@ -8,7 +8,7 @@ import pathlib
 import logging
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QTimer
+from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
                              QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
@@ -41,18 +41,35 @@ def resource_path(str_path):
     return ROOT_PATH / Path(str_path)
 
 
+# logging methodology heavily adapted from https://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
+class Handler(QObject, logging.Handler):
+    new_message = pyqtSignal(object)
+
+    def __init__(self, parent):
+        super().__init__()
+
+    def emit(self, record):
+        message = self.format(record)
+        self.new_message.emit(message)
+
 class WindowWrapper(QMainWindow):
     def __init__(self):
         super(WindowWrapper, self).__init__()
         self.main_window = MainWindow()
         self.setCentralWidget(self.main_window)
-        self.show()
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
 
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
-
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
+        self.start_timer()
+        self.debug_window = None
+
+        handler = Handler(self)
+        logging.getLogger("circleguard").addHandler(handler)
+        formatter = logging.Formatter("[%(threadName)s][%(name)s][%(levelname)s]  %(message)s  (%(filename)s:%(lineno)s)")
+        handler.setFormatter(formatter)
+        handler.new_message.connect(self.print_debug)
 
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
@@ -69,6 +86,49 @@ class WindowWrapper(QMainWindow):
         if focused is not None:
             focused.clearFocus()
         super(WindowWrapper, self).mousePressEvent(event)
+
+    def start_timer(self):
+        timer = QTimer(self)
+        timer.timeout.connect(self.run_timer)
+        timer.start(250)
+
+    def run_timer(self):
+        """
+        check for stderr messages (because logging prints to stderr not stdout, and
+        it's nice to have stdout reserved) and then print cg results
+        """
+        self.main_window.main_tab.print_results()
+
+    def print_debug(self, message):
+        """
+        Message is the string message sent to the io stream
+        """
+
+        if(self.debug_window):
+            self.debug_window.write(message)
+        else:
+            self.debug_window = DebugWindow()
+            self.debug_window.show()
+            self.debug_window.write(message)
+
+class DebugWindow(QMainWindow):
+    def __init__(self):
+        super(DebugWindow, self).__init__()
+        terminal = QTextEdit()
+        terminal.setReadOnly(True)
+        terminal.ensureCursorVisible()
+        self.terminal = terminal
+        self.setCentralWidget(self.terminal)
+
+    def write(self, message):
+        self.terminal.append(message)
+        self.scroll_to_bottom()
+
+    def scroll_to_bottom(self):
+        cursor = QTextCursor(self.terminal.document())
+        cursor.movePosition(QTextCursor.End)
+        self.terminal.setTextCursor(cursor)
+
 
 
 class MainWindow(QWidget):
@@ -129,15 +189,9 @@ class MainTab(QWidget):
         self.setLayout(layout)
 
         self.switch_run_button()  # disable run button if there is no api key
-        self.start_timer()
 
-    def start_timer(self):
-        timer = QTimer(self)
-        timer.timeout.connect(self.print_results)
-        timer.start(250)
-
-    def write(self, text):
-        self.terminal.append(str(text).strip())
+    def write(self, message):
+        self.terminal.append(str(message).strip())
         self.scroll_to_bottom()
 
     def scroll_to_bottom(self):
@@ -336,7 +390,7 @@ class SettingsTab(QWidget):
         self.cache_dir.update_dir(CACHE_DIR)
 
         self.loglevel = LoglevelWidget("")
-        self.loglevel.combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
+        self.loglevel.level_combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
         self.set_circleguard_loglevel()  # set the default loglevel in cg, not just in gui
 
         self.grid = QGridLayout()
@@ -351,7 +405,7 @@ class SettingsTab(QWidget):
         self.setLayout(self.grid)
 
     def set_circleguard_loglevel(self):
-        set_options(loglevel=self.loglevel.combobox.currentData())
+        set_options(loglevel=self.loglevel.level_combobox.currentData())
 
 
 def set_api_key(key):
@@ -401,7 +455,10 @@ def switch_theme(dark):
 
 
 if __name__ == "__main__":
+    def qt_message_handler(mode, context, message):
+        print(message)
     # create and open window
+    qInstallMessageHandler(qt_message_handler)
     app = QApplication([])
     app.setStyle("Fusion")
     WINDOW = WindowWrapper()

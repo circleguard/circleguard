@@ -193,26 +193,45 @@ class LoglevelWidget(QWidget):
     def __init__(self, tooltip):
         super(LoglevelWidget, self).__init__()
 
-        label = QLabel(self)
-        label.setText("Debug mode:")
-        label.setToolTip(tooltip)
+        level_label = QLabel(self)
+        level_label.setText("Debug mode:")
+        level_label.setToolTip(tooltip)
 
-        self.combobox = QComboBox(self)
-        self.combobox.setFixedWidth(85)
-        self.combobox.addItem("CRITICAL", 50)
-        self.combobox.addItem("ERROR", 40)
-        self.combobox.addItem("WARNING", 30)
-        self.combobox.addItem("INFO", 20)
-        self.combobox.addItem("DEBUG", 10)
-        self.combobox.addItem("TRACE", 5)
-        self.combobox.setInsertPolicy(QComboBox.NoInsert)
-        self.combobox.setCurrentIndex(3)  # info by default
+        output_label = QLabel(self)
+        output_label.setText("Output:")
+        output_label.setToolTip(tooltip)
+
+        level_combobox = QComboBox(self)
+        level_combobox.setFixedWidth(85)
+        level_combobox.addItem("CRITICAL", 50)
+        level_combobox.addItem("ERROR", 40)
+        level_combobox.addItem("WARNING", 30)
+        level_combobox.addItem("INFO", 20)
+        level_combobox.addItem("DEBUG", 10)
+        level_combobox.addItem("TRACE", 5)
+        level_combobox.setInsertPolicy(QComboBox.NoInsert)
+        level_combobox.setCurrentIndex(3)  # INFO by default
+        self.level_combobox = level_combobox
+
+        output_combobox = QComboBox(self)
+        output_combobox.setFixedWidth(120)
+        output_combobox.addItem("NONE")
+        output_combobox.addItem("TERMINAL")
+        output_combobox.addItem("NEW WINDOW")
+        output_combobox.addItem("BOTH")
+        output_combobox.setInsertPolicy(QComboBox.NoInsert)
+        output_combobox.setCurrentIndex(0)  # NONe by default
+        self.output_combobox = output_combobox
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.combobox, 0, 2, 1, 3)
+        layout.addWidget(level_label, 0, 0, 1, 1)
+        layout.addWidget(self.level_combobox, 0, 1, 1, 1)
+        layout.addItem(SPACER, 0, 2, 1, 1)
+        layout.addWidget(output_label, 0, 3, 1, 1)
+        layout.addWidget(self.output_combobox, 0, 4, 1, 2)
+
+        layout.addItem(SPACER, 0, 3, 1, 1)
         self.setLayout(layout)
 
 
