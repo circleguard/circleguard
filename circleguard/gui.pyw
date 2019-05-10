@@ -156,8 +156,8 @@ class MainTab(QWidget):
         try:
             cg = Circleguard(API_KEY, resource_path("db/cache.db"))
             current_tab = self.tabs.currentIndex()
-
-            if MainTab.TAB_REGISTER[current_tab]["name"] == "MAP":
+            current_tab_name = MainTab.TAB_REGISTER[current_tab]["name"]
+            if current_tab_name == "MAP":
                 tab = self.map_tab
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
                 # maybe fancy flashing red stars for required fields
@@ -167,7 +167,7 @@ class MainTab(QWidget):
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.map_check(map_id, num=num, thresh=thresh)
 
-            if MainTab.TAB_REGISTER[current_tab]["name"] == "SCREEN":
+            if current_tab_name == "SCREEN":
                 tab = self.user_tab
                 user_id_str = tab.user_id.field.text()
                 user_id = int(user_id_str) if len(user_id_str) > 0 else 0
@@ -175,13 +175,13 @@ class MainTab(QWidget):
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.user_check(user_id, num, thresh=thresh)
 
-            if MainTab.TAB_REGISTER[current_tab]["name"] == "LOCAL":
+            if current_tab_name == "LOCAL":
                 tab = self.local_tab
                 path = Path(tab.folder_chooser.path)
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.local_check(path, thresh=thresh)
 
-            if MainTab.TAB_REGISTER[current_tab]["name"] == "VERIFY":
+            if current_tab_name == "VERIFY":
                 tab = self.verify_tab
                 map_id_str = tab.map_id.field.text()
                 map_id = int(map_id_str) if len(map_id_str) > 0 else 0
