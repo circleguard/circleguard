@@ -363,7 +363,8 @@ class SettingsTab(QWidget):
         self.info = QLabel(self)
         self.info.setText(f"Backend Version: {cg_version}<br/>"
                           f"Frontend Version: {__version__}<br/>"
-                          f"Repository: <a href=\"https://github.com/circleguard/circleguard\">github.com/circleguard/circleguard</a>")
+                          f"Found a bug or want to request a feature? "
+                          f"Open an issue <a href=\"https://github.com/circleguard/circleguard\">here</a>!")
         self.info.setTextFormat(Qt.RichText)
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
