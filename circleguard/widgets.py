@@ -231,11 +231,11 @@ class LoglevelWidget(QWidget):
         level_label.setToolTip(tooltip)
 
         output_label = QLabel(self)
-        output_label.setText("Output:")
+        output_label.setText("Debug Output:")
         output_label.setToolTip(tooltip)
 
         level_combobox = QComboBox(self)
-        level_combobox.setFixedWidth(85)
+        level_combobox.setFixedWidth(100)
         level_combobox.addItem("CRITICAL", 50)
         level_combobox.addItem("ERROR", 40)
         level_combobox.addItem("WARNING", 30)
@@ -246,8 +246,12 @@ class LoglevelWidget(QWidget):
         level_combobox.setCurrentIndex(3)  # INFO by default
         self.level_combobox = level_combobox
 
+        save_option = OptionWidget("Save logs?", "")
+        save_option.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        save_option.box.stateChanged.connect(self.switch_save)
+
         output_combobox = QComboBox(self)
-        output_combobox.setFixedWidth(120)
+        output_combobox.setFixedWidth(100)
         output_combobox.addItem("NONE")
         output_combobox.addItem("TERMINAL")
         output_combobox.addItem("NEW WINDOW")
@@ -255,17 +259,31 @@ class LoglevelWidget(QWidget):
         output_combobox.setInsertPolicy(QComboBox.NoInsert)
         output_combobox.setCurrentIndex(0)  # NONe by default
         self.output_combobox = output_combobox
+        self.save_folder = FolderChooser("Log Folder")
+        self.save_folder.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(level_label, 0, 0, 1, 1)
-        layout.addWidget(self.level_combobox, 0, 1, 1, 1)
-        layout.addItem(SPACER, 0, 2, 1, 1)
-        layout.addWidget(output_label, 0, 3, 1, 1)
-        layout.addWidget(self.output_combobox, 0, 4, 1, 2)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.level_combobox, 0, 2, 1, 3)
+        layout.addWidget(output_label, 1, 0, 1, 1)
+        layout.addItem(SPACER, 1, 1, 1, 1)
+        layout.addWidget(self.output_combobox, 1, 2, 1, 3)
+        layout.addWidget(save_option, 2, 0, 1, 5)
+        layout.addWidget(self.save_folder, 3, 0, 1, 5)
 
-        layout.addItem(SPACER, 0, 3, 1, 1)
         self.setLayout(layout)
+
+    def switch_save(self, i):
+        if not i:
+            self.save_folder.setDisabled(True)
+            self.save_folder.path_label.setStyleSheet("color:#808080")
+            self.save_folder.label.setStyleSheet("color:#808080")
+        else:
+            self.save_folder.setDisabled(False)
+            self.save_folder.path_label.setStyleSheet("")
+            self.save_folder.label.setStyleSheet("")
 
 
 class CompareTopUsers(QWidget):
