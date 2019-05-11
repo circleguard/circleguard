@@ -131,7 +131,7 @@ class Separator(QWidget):
         super(Separator, self).__init__()
 
         label = QLabel(self)
-        label.setText(title+":")
+        label.setText(title)
         label.setAlignment(Qt.AlignCenter)
 
         layout = QGridLayout()
