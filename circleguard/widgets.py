@@ -124,7 +124,7 @@ class QVLine(QFrame):
 
 class Separator(QWidget):
     """
-    Breaks a line
+    Creates a line with text in the middle. Used to separate widgets.
     """
 
     def __init__(self, title):
