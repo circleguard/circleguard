@@ -417,6 +417,7 @@ def set_api_key(key):
 
 def switch_theme(dark):
     update_default("dark_theme", 1 if dark else 0)
+    accent = QColor(218, 130, 42)
     if dark:
         dark_p = QPalette()
 
@@ -430,14 +431,16 @@ def switch_theme(dark):
         dark_p.setColor(QPalette.Button, QColor(53, 53, 53))
         dark_p.setColor(QPalette.ButtonText, Qt.white)
         dark_p.setColor(QPalette.BrightText, Qt.red)
-        dark_p.setColor(QPalette.Link, QColor(42, 130, 218))
-        dark_p.setColor(QPalette.Highlight, QColor(218, 130, 42))
+        dark_p.setColor(QPalette.Link, accent)
+        dark_p.setColor(QPalette.Highlight, accent)
         dark_p.setColor(QPalette.Inactive, QPalette.Highlight, Qt.lightGray)
         dark_p.setColor(QPalette.HighlightedText, Qt.black)
         dark_p.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
         dark_p.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
         dark_p.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
         dark_p.setColor(QPalette.Disabled, QPalette.Base, QColor(53, 53, 53))
+        dark_p.setColor(QPalette.Link, accent)
+        dark_p.setColor(QPalette.LinkVisited, accent)
 
         app.setPalette(dark_p)
         app.setStyleSheet("QToolTip { color: #ffffff; "
@@ -450,6 +453,8 @@ def switch_theme(dark):
         updated_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
         updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
         updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, QColor(240, 240, 240))
+        updated_palette.setColor(QPalette.Link, accent)
+        updated_palette.setColor(QPalette.LinkVisited, accent)
         app.setPalette(updated_palette)
         app.setStyleSheet("QToolTip { color: #000000; "
                           "background-color: #D5D5D5; "
