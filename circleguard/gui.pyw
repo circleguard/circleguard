@@ -66,7 +66,7 @@ class WindowWrapper(QMainWindow):
 
         handler = Handler()
         logging.getLogger("circleguard").addHandler(handler)
-        formatter = logging.Formatter("[%(threadName)s][%(name)s][%(levelname)s]  %(message)s  (%(filename)s:%(lineno)s)")
+        formatter = logging.Formatter("[%(levelname)s] %(asctime)s  %(message)s ", datefmt="%Y/%m/%d %I:%M:%S %p")
         handler.setFormatter(formatter)
         handler.new_message.connect(self.print_debug)
 
