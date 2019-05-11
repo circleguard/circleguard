@@ -52,6 +52,7 @@ class Handler(QObject, logging.Handler):
         message = self.format(record)
         self.new_message.emit(message)
 
+
 class WindowWrapper(QMainWindow):
     def __init__(self):
         super(WindowWrapper, self).__init__()
@@ -400,8 +401,8 @@ class SettingsTab(QWidget):
         self.grid.addWidget(Separator("Circleguard settings"), 1, 0, 1, 1)
         self.grid.addWidget(self.apikey_widget, 2, 0, 1, 1)
         self.grid.addWidget(self.thresh_widget, 3, 0, 1, 1)
-        self.grid.addWidget(self.cache_dir, 4, 0, 1, 1)
-        self.grid.addWidget(self.cache, 5, 0, 1, 1)
+        self.grid.addWidget(self.cache, 4, 0, 1, 1)
+        self.grid.addWidget(self.cache_dir, 5, 0, 1, 1)
         self.grid.addWidget(Separator("GUI settings"), 6, 0, 1, 1)
         self.grid.addWidget(self.darkmode, 7, 0, 1, 1)
         self.grid.addWidget(Separator("Debug settings"), 8, 0, 1, 1)
