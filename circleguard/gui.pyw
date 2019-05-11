@@ -18,7 +18,7 @@ from circleguard import Circleguard, set_options
 from circleguard import __version__ as cg_version
 
 from widgets import (Threshold, set_event_window, InputWidget,
-                     FolderChooser, SpinBox, IdWidgetCombined,
+                     FolderChooser, SpinBox, IdWidgetCombined, Separator,
                      OptionWidget, CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
 from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
 
@@ -397,12 +397,15 @@ class SettingsTab(QWidget):
 
         self.grid = QGridLayout()
         self.grid.addWidget(self.info, 0, 0, 1, 1)
-        self.grid.addWidget(self.apikey_widget, 1, 0, 1, 1)
-        self.grid.addWidget(self.thresh_widget, 2, 0, 1, 1)
-        self.grid.addWidget(self.cache_dir, 3, 0, 1, 1)
-        self.grid.addWidget(self.cache, 4, 0, 1, 1)
-        self.grid.addWidget(self.darkmode, 5, 0, 1, 1)
-        self.grid.addWidget(self.loglevel, 6, 0, 1, 1)
+        self.grid.addWidget(Separator("Circleguard settings"), 1, 0, 1, 1)
+        self.grid.addWidget(self.apikey_widget, 2, 0, 1, 1)
+        self.grid.addWidget(self.thresh_widget, 3, 0, 1, 1)
+        self.grid.addWidget(self.cache_dir, 4, 0, 1, 1)
+        self.grid.addWidget(self.cache, 5, 0, 1, 1)
+        self.grid.addWidget(Separator("GUI settings"), 6, 0, 1, 1)
+        self.grid.addWidget(self.darkmode, 7, 0, 1, 1)
+        self.grid.addWidget(Separator("Debug settings"), 8, 0, 1, 1)
+        self.grid.addWidget(self.loglevel, 9, 0, 3, 1)
 
         self.setLayout(self.grid)
 

@@ -3,7 +3,6 @@ from PyQt5.QtCore import QSettings
 # pylint: enable=no-name-in-module
 
 
-
 def reset_defaults():
     SETTINGS.setValue("ran", True)
     SETTINGS.setValue("threshold", 18)

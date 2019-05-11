@@ -1,7 +1,7 @@
 # pylint: disable=no-name-in-module
 from functools import partial
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit,
-                             QSpacerItem, QSizePolicy, QSlider, QSpinBox,
+                             QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
                              QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox)
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
@@ -82,7 +82,6 @@ class PasswordEdit(QLineEdit):
         super().keyPressEvent(event)
 
 
-
 class SpinBox(QSpinBox):
     """
     A QSpinBox that overrides the keyPressEvent to allow the left and right
@@ -107,6 +106,40 @@ class DoubleSpinBox(QDoubleSpinBox):
         if key == Qt.Key_Left or key == Qt.Key_Right:
             QCoreApplication.sendEvent(WINDOW, event)
         super().keyPressEvent(event)
+
+
+class QHLine(QFrame):
+    def __init__(self):
+        super(QHLine, self).__init__()
+        self.setFrameShape(QFrame.HLine)
+        self.setFrameShadow(QFrame.Plain)
+
+
+class QVLine(QFrame):
+    def __init__(self):
+        super(QVLine, self).__init__()
+        self.setFrameShape(QFrame.VLine)
+        self.setFrameShadow(QFrame.Plain)
+
+
+class Separator(QWidget):
+    """
+    Breaks a line
+    """
+
+    def __init__(self, title):
+        super(Separator, self).__init__()
+
+        label = QLabel(self)
+        label.setText(title+":")
+        label.setAlignment(Qt.AlignCenter)
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(QHLine(), 0, 0, 1, 2)
+        layout.addWidget(label, 0, 2, 1, 1)
+        layout.addWidget(QHLine(), 0, 3, 1, 2)
+        self.setLayout(layout)
 
 
 class InputWidget(QWidget):
