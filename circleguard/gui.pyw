@@ -64,7 +64,7 @@ class WindowWrapper(QMainWindow):
         self.start_timer()
         self.debug_window = None
 
-        handler = Handler(self)
+        handler = Handler()
         logging.getLogger("circleguard").addHandler(handler)
         formatter = logging.Formatter("[%(threadName)s][%(name)s][%(levelname)s]  %(message)s  (%(filename)s:%(lineno)s)")
         handler.setFormatter(formatter)
