@@ -380,6 +380,7 @@ class SettingsTab(QWidget):
 
         self.darkmode = OptionWidget("Dark mode", "We wouldn't feel right shipping a product without darkmode")
         self.darkmode.box.stateChanged.connect(switch_theme)
+        self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
         self.darkmode.box.setChecked(DARK_THEME)
 
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
