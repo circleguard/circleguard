@@ -433,7 +433,6 @@ def switch_theme(dark):
         dark_p.setColor(QPalette.Button, QColor(53, 53, 53))
         dark_p.setColor(QPalette.ButtonText, Qt.white)
         dark_p.setColor(QPalette.BrightText, Qt.red)
-        dark_p.setColor(QPalette.Link, accent)
         dark_p.setColor(QPalette.Highlight, accent)
         dark_p.setColor(QPalette.Inactive, QPalette.Highlight, Qt.lightGray)
         dark_p.setColor(QPalette.HighlightedText, Qt.black)
