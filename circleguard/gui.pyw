@@ -217,7 +217,7 @@ class MainTab(QWidget):
                 map_id_str = tab.id_combined.map_id.field.text()
                 map_id = int(map_id_str) if map_id_str != "" else 0
                 num = tab.compare_top.slider.value()
-                thresh = tab.threshold.thresh_slider.value()
+                thresh = self.process_threshold(tab.threshold)
                 gen = cg.map_check(map_id, num=num, thresh=thresh)
 
             if current_tab_name == "SCREEN":
@@ -225,13 +225,13 @@ class MainTab(QWidget):
                 user_id_str = tab.user_id.field.text()
                 user_id = int(user_id_str) if user_id_str != "" else 0
                 num = tab.compare_top_map.slider.value()
-                thresh = tab.threshold.thresh_slider.value()
+                thresh = self.process_threshold(tab.threshold)
                 gen = cg.user_check(user_id, num, thresh=thresh)
 
             if current_tab_name == "LOCAL":
                 tab = self.local_tab
                 path = Path(tab.folder_chooser.path)
-                thresh = tab.threshold.thresh_slider.value()
+                thresh = self.process_threshold(tab.threshold)
                 gen = cg.local_check(path, thresh=thresh)
 
             if current_tab_name == "VERIFY":
@@ -242,7 +242,7 @@ class MainTab(QWidget):
                 user_id_1 = int(user_id_1_str) if user_id_1_str != "" else 0
                 user_id_2_str = tab.user_id_2.field.text()
                 user_id_2 = int(user_id_2_str) if user_id_2_str != "" else 0
-                thresh = tab.threshold.thresh_slider.value()
+                thresh = self.process_threshold(tab.threshold)
                 gen = cg.verify(map_id, user_id_1, user_id_2, thresh=thresh)
 
             for result in gen:
@@ -261,6 +261,12 @@ class MainTab(QWidget):
                 QApplication.alert(self)
         except Empty:
             pass
+
+    def process_threshold(self, widget):
+        if not widget.thresh_state:  # threshold is selected
+            return widget.thresh_slider.value()
+        else:  # auto_threshold is selected
+            return widget.autothresh_slider.value() / 10
 
 
 class MapTab(QWidget):

@@ -398,6 +398,7 @@ class ThresholdCombined(QWidget):
 
     def __init__(self):
         super(ThresholdCombined, self).__init__()
+        self.thresh_state = 0
 
         thresh_label = QLabel(self)
         thresh_label.setText("Threshold:")
@@ -476,6 +477,7 @@ class ThresholdCombined(QWidget):
         self.autothresh_slider.setValue(value*10)
 
     def switch_thresh(self, state):
+        self.thresh_state = state
         self.thresh_label.setStyleSheet("color: gray" if state else "")
         self.thresh_spinbox.setStyleSheet("color: gray" if state else "")
         self.autothresh_label.setStyleSheet("color: gray" if not state else "")
