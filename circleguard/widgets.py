@@ -206,11 +206,11 @@ class OptionWidget(QWidget):
     This class holds a Label and CheckBox.
     """
 
-    def __init__(self, title, tooltip):
+    def __init__(self, title, tooltip, end=":"):
         super(OptionWidget, self).__init__()
 
         label = QLabel(self)
-        label.setText(title+":")
+        label.setText(title + end)
         label.setToolTip(tooltip)
         self.box = QCheckBox(self)
 
@@ -246,7 +246,7 @@ class LoglevelWidget(QWidget):
         level_combobox.setCurrentIndex(3)  # INFO by default
         self.level_combobox = level_combobox
 
-        save_option = OptionWidget("Save logs?", "")
+        save_option = OptionWidget("Save logs?", "", end="")
         save_option.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         save_option.box.stateChanged.connect(self.switch_save)
 
