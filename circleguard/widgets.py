@@ -537,8 +537,8 @@ class FolderChooser(QWidget):
     def __init__(self, title):
         super(FolderChooser, self).__init__()
         self.path = "."
-        label = QLabel(self)
-        label.setText(title+":")
+        self.label = QLabel(self)
+        self.label.setText(title+":")
 
         self.file_chooser_button = QPushButton(self)
         self.file_chooser_button.setText("Choose Folder")
@@ -549,7 +549,7 @@ class FolderChooser(QWidget):
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addWidget(self.label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.path_label, 0, 2, 1, 2)
         layout.addWidget(self.file_chooser_button, 0, 4, 1, 1)
