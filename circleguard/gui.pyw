@@ -1,10 +1,8 @@
 import sys
-import os
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
-import pathlib
 import logging
 
 # pylint: disable=no-name-in-module
@@ -18,11 +16,11 @@ from circleguard import Circleguard, set_options
 from circleguard import __version__ as cg_version
 
 from widgets import (Threshold, set_event_window, InputWidget,
-                     FolderChooser, SpinBox, IdWidgetCombined, Separator,
-                     OptionWidget, CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
-from settings import THRESHOLD, API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
+                     FolderChooser, IdWidgetCombined, Separator, OptionWidget,
+                     CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
+from settings import API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR
 
-ROOT_PATH = pathlib.Path(__file__).parent.absolute()
+ROOT_PATH = Path(__file__).parent.absolute()
 __version__ = "0.1d"
 
 log = logging.getLogger(__name__)
@@ -45,7 +43,7 @@ def resource_path(str_path):
 class Handler(QObject, logging.Handler):
     new_message = pyqtSignal(object)
 
-    def __init__(self, parent):
+    def __init__(self):
         super().__init__()
 
     def emit(self, record):
@@ -105,12 +103,13 @@ class WindowWrapper(QMainWindow):
         Message is the string message sent to the io stream
         """
 
-        if(self.debug_window):
+        if self.debug_window:
             self.debug_window.write(message)
         else:
             self.debug_window = DebugWindow()
             self.debug_window.show()
             self.debug_window.write(message)
+
 
 class DebugWindow(QMainWindow):
     def __init__(self):
@@ -129,7 +128,6 @@ class DebugWindow(QMainWindow):
         cursor = QTextCursor(self.terminal.document())
         cursor.movePosition(QTextCursor.End)
         self.terminal.setTextCursor(cursor)
-
 
 
 class MainWindow(QWidget):
@@ -152,7 +150,7 @@ class MainWindow(QWidget):
 
 class MainTab(QWidget):
     TAB_REGISTER = [
-        {"name":  "MAP",   "requires_api": True},
+        {"name": "MAP",    "requires_api": True},
         {"name": "SCREEN", "requires_api": True},
         {"name": "LOCAL",  "requires_api": False},
         {"name": "VERIFY", "requires_api": True},
@@ -217,7 +215,7 @@ class MainTab(QWidget):
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
                 # maybe fancy flashing red stars for required fields
                 map_id_str = tab.id_combined.map_id.field.text()
-                map_id = int(map_id_str) if len(map_id_str) > 0 else 0
+                map_id = int(map_id_str) if map_id_str != "" else 0
                 num = tab.compare_top.slider.value()
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.map_check(map_id, num=num, thresh=thresh)
@@ -225,7 +223,7 @@ class MainTab(QWidget):
             if current_tab_name == "SCREEN":
                 tab = self.user_tab
                 user_id_str = tab.user_id.field.text()
-                user_id = int(user_id_str) if len(user_id_str) > 0 else 0
+                user_id = int(user_id_str) if user_id_str != "" else 0
                 num = tab.compare_top_map.slider.value()
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.user_check(user_id, num, thresh=thresh)
@@ -239,11 +237,11 @@ class MainTab(QWidget):
             if current_tab_name == "VERIFY":
                 tab = self.verify_tab
                 map_id_str = tab.map_id.field.text()
-                map_id = int(map_id_str) if len(map_id_str) > 0 else 0
+                map_id = int(map_id_str) if map_id_str != "" else 0
                 user_id_1_str = tab.user_id_1.field.text()
-                user_id_1 = int(user_id_1_str) if len(user_id_1_str) > 0 else 0
+                user_id_1 = int(user_id_1_str) if user_id_1_str != "" else 0
                 user_id_2_str = tab.user_id_2.field.text()
-                user_id_2 = int(user_id_2_str) if len(user_id_2_str) > 0 else 0
+                user_id_2 = int(user_id_2_str) if user_id_2_str != "" else 0
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.verify(map_id, user_id_1, user_id_2, thresh=thresh)
 
