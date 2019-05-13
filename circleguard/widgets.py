@@ -243,11 +243,11 @@ class LoglevelWidget(QWidget):
         level_combobox.addItem("DEBUG", 10)
         level_combobox.addItem("TRACE", 5)
         level_combobox.setInsertPolicy(QComboBox.NoInsert)
-        level_combobox.setCurrentIndex(3)  # INFO by default
         self.level_combobox = level_combobox
 
         save_option = OptionWidget("Save logs?", "", end="")
         save_option.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.save_option = save_option
 
         output_combobox = QComboBox(self)
         output_combobox.setFixedWidth(100)
