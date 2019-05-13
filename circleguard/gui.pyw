@@ -217,7 +217,7 @@ class MainTab(QWidget):
                 map_id_str = tab.id_combined.map_id.field.text()
                 map_id = int(map_id_str) if map_id_str != "" else 0
                 num = tab.compare_top.slider.value()
-                thresh = self.process_threshold(tab.threshold)
+                thresh = tab.threshold.thresh_slider.value()
                 gen = cg.map_check(map_id, num=num, thresh=thresh)
 
             if current_tab_name == "SCREEN":
@@ -225,13 +225,13 @@ class MainTab(QWidget):
                 user_id_str = tab.user_id.field.text()
                 user_id = int(user_id_str) if user_id_str != "" else 0
                 num = tab.compare_top_map.slider.value()
-                thresh = self.process_threshold(tab.threshold)
+                thresh = tab.threshold.thresh_slider.value()
                 gen = cg.user_check(user_id, num, thresh=thresh)
 
             if current_tab_name == "LOCAL":
                 tab = self.local_tab
                 path = Path(tab.folder_chooser.path)
-                thresh = self.process_threshold(tab.threshold)
+                thresh = tab.threshold.thresh_slider.value()
                 gen = cg.local_check(path, thresh=thresh)
 
             if current_tab_name == "VERIFY":
@@ -242,7 +242,7 @@ class MainTab(QWidget):
                 user_id_1 = int(user_id_1_str) if user_id_1_str != "" else 0
                 user_id_2_str = tab.user_id_2.field.text()
                 user_id_2 = int(user_id_2_str) if user_id_2_str != "" else 0
-                thresh = self.process_threshold(tab.threshold)
+                thresh = tab.threshold.thresh_slider.value()
                 gen = cg.verify(map_id, user_id_1, user_id_2, thresh=thresh)
 
             for result in gen:
@@ -280,13 +280,13 @@ class MapTab(QWidget):
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
 
-        self.threshold = ThresholdCombined()
+        self.threshold = Threshold()  # ThresholdCombined()
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.id_combined, 1, 0, 2, 1)
         layout.addWidget(self.compare_top, 4, 0, 1, 1)
-        layout.addWidget(self.threshold, 5, 0, 2, 1)
+        layout.addWidget(self.threshold, 5, 0, 1, 1)
 
         self.setLayout(layout)
 
@@ -300,14 +300,14 @@ class UserTab(QWidget):
         self.user_id = InputWidget("User Id", "User id, as seen in the profile url", type_="id")
         self.compare_top_user = CompareTopUsers()
         self.compare_top_map = CompareTopPlays()
-        self.threshold = ThresholdCombined()
+        self.threshold = Threshold()  # ThresholdCombined()
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.user_id, 1, 0, 1, 1)
         layout.addWidget(self.compare_top_map, 2, 0, 1, 1)
         layout.addWidget(self.compare_top_user, 3, 0, 1, 1)
-        layout.addWidget(self.threshold, 4, 0, 2, 1)
+        layout.addWidget(self.threshold, 4, 0, 1, 1)
 
         self.setLayout(layout)
 
@@ -323,7 +323,7 @@ class LocalTab(QWidget):
         self.folder_chooser = FolderChooser("Replay folder")
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
-        self.threshold = ThresholdCombined()
+        self.threshold = Threshold()  # ThresholdCombined()
         self.id_combined.map_id.field.textChanged.connect(self.switch_compare)
         self.switch_compare()
 
@@ -332,7 +332,7 @@ class LocalTab(QWidget):
         self.grid.addWidget(self.folder_chooser, 1, 0, 1, 1)
         self.grid.addWidget(self.id_combined, 2, 0, 2, 1)
         self.grid.addWidget(self.compare_top, 4, 0, 1, 1)
-        self.grid.addWidget(self.threshold, 5, 0, 2, 1)
+        self.grid.addWidget(self.threshold, 5, 0, 1, 1)
 
         self.setLayout(self.grid)
 
@@ -350,14 +350,14 @@ class VerifyTab(QWidget):
         self.user_id_1 = InputWidget("User Id #1", "User id, as seen in the profile url", type_="id")
         self.user_id_2 = InputWidget("User Id #2", "User id, as seen in the profile url", type_="id")
 
-        self.threshold = ThresholdCombined()
+        self.threshold = Threshold()  # ThresholdCombined()
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.map_id, 1, 0, 1, 1)
         layout.addWidget(self.user_id_1, 2, 0, 1, 1)
         layout.addWidget(self.user_id_2, 3, 0, 1, 1)
-        layout.addWidget(self.threshold, 4, 0, 2, 1)
+        layout.addWidget(self.threshold, 4, 0, 1, 1)
 
         self.setLayout(layout)
 
