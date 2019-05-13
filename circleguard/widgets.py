@@ -546,7 +546,7 @@ class FolderChooser(QWidget):
         layout.addWidget(self.path_label, 0, 2, 1, 2)
         layout.addWidget(self.file_chooser_button, 0, 4, 1, 1)
         self.setLayout(layout)
-        self.switch_enabled(False)
+        self.switch_enabled(True)
 
     def set_dir(self):
         options = QFileDialog.Option()

@@ -415,6 +415,7 @@ class SettingsTab(QWidget):
         self.darkmode.box.setChecked(DARK_THEME)
         self.cache.box.setChecked(CACHING)
         self.cache_dir.update_dir(CACHE_DIR)
+        self.cache_dir.switch_enabled(CACHING)
 
         # todo integrate code bellow in LoglevelWidget (@widgets.py)
         self.loglevel.level_combobox.setCurrentIndex(LOG_MODE)
@@ -427,6 +428,7 @@ class SettingsTab(QWidget):
         self.loglevel.output_combobox.currentIndexChanged.connect(partial(update_default, "LOG_OUTPUT"))
 
         self.loglevel.save_folder.update_dir(LOG_DIR)
+        self.loglevel.save_folder.switch_enabled(LOG_SAVE)
         self.loglevel.save_folder.path_signal.connect(partial(update_default, "LOG_DIR"))
 
     def set_circleguard_loglevel(self):
