@@ -248,7 +248,6 @@ class LoglevelWidget(QWidget):
 
         save_option = OptionWidget("Save logs?", "", end="")
         save_option.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
-        save_option.box.stateChanged.connect(self.switch_save)
 
         output_combobox = QComboBox(self)
         output_combobox.setFixedWidth(100)
@@ -260,6 +259,7 @@ class LoglevelWidget(QWidget):
         output_combobox.setCurrentIndex(0)  # NONe by default
         self.output_combobox = output_combobox
         self.save_folder = FolderChooser("Log Folder")
+        save_option.box.stateChanged.connect(self.save_folder.switch_enabled)
         self.save_folder.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
         layout = QGridLayout()
@@ -274,16 +274,6 @@ class LoglevelWidget(QWidget):
         layout.addWidget(self.save_folder, 3, 0, 1, 5)
 
         self.setLayout(layout)
-
-    def switch_save(self, i):
-        if not i:
-            self.save_folder.setDisabled(True)
-            self.save_folder.path_label.setStyleSheet("color:#808080")
-            self.save_folder.label.setStyleSheet("color:#808080")
-        else:
-            self.save_folder.setDisabled(False)
-            self.save_folder.path_label.setStyleSheet("")
-            self.save_folder.label.setStyleSheet("")
 
 
 class CompareTopUsers(QWidget):
@@ -556,6 +546,7 @@ class FolderChooser(QWidget):
         layout.addWidget(self.path_label, 0, 2, 1, 2)
         layout.addWidget(self.file_chooser_button, 0, 4, 1, 1)
         self.setLayout(layout)
+        self.switch_enabled(False)
 
     def set_dir(self):
         options = QFileDialog.Option()
@@ -571,3 +562,8 @@ class FolderChooser(QWidget):
 
     def dir_updated(self):
         self.path_signal.emit(self.path)
+
+    def switch_enabled(self, state):
+        self.label.setStyleSheet("color:grey" if not state else "")
+        self.path_label.setStyleSheet("color:grey" if not state else "")
+        self.file_chooser_button.setEnabled(state)

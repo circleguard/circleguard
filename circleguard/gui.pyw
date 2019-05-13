@@ -385,16 +385,14 @@ class SettingsTab(QWidget):
 
         self.darkmode = OptionWidget("Dark mode", "We wouldn't feel right shipping a product without darkmode")
         self.darkmode.box.stateChanged.connect(switch_theme)
-        self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
-        self.darkmode.box.setChecked(DARK_THEME)
 
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
         self.cache.box.stateChanged.connect(partial(update_default, "caching"))
-        self.cache.box.setChecked(CACHING)
 
         self.cache_dir = FolderChooser("Cache Path")
         self.cache_dir.path_signal.connect(partial(update_default, "cache_dir"))
         self.cache_dir.update_dir(CACHE_DIR)
+        self.cache.box.stateChanged.connect(self.cache_dir.switch_enabled)
 
         self.loglevel = LoglevelWidget("")
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
@@ -413,6 +411,10 @@ class SettingsTab(QWidget):
         self.grid.addWidget(self.loglevel, 9, 0, 3, 1)
 
         self.setLayout(self.grid)
+
+        self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
+        self.darkmode.box.setChecked(DARK_THEME)
+        self.cache.box.setChecked(CACHING)
 
     def set_circleguard_loglevel(self):
         set_options(loglevel=self.loglevel.level_combobox.currentData())
