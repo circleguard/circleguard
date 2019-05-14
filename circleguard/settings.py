@@ -4,6 +4,7 @@ from PyQt5.QtCore import QSettings
 
 
 def reset_defaults():
+    SETTINGS.clear()
     SETTINGS.setValue("ran", True)
     SETTINGS.setValue("threshold", 18)
     SETTINGS.setValue("api_key", "")

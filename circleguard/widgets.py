@@ -1,12 +1,13 @@
+import sys
 # pylint: disable=no-name-in-module
 from functools import partial
-from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit,
+from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBox,
                              QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
                              QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox)
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
-from settings import THRESHOLD
+from settings import THRESHOLD, reset_defaults
 # pylint: disable=no-name-in-module
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
@@ -535,6 +536,7 @@ class FolderChooser(QWidget):
         self.file_chooser_button = QPushButton(self)
         self.file_chooser_button.setText("Choose Folder")
         self.file_chooser_button.pressed.connect(self.set_dir)
+        self.file_chooser_button.setFixedWidth(100)
 
         self.path_label = QLabel(self)
         self.path_label.setText(self.path)
@@ -567,3 +569,32 @@ class FolderChooser(QWidget):
         self.label.setStyleSheet("color:grey" if not state else "")
         self.path_label.setStyleSheet("color:grey" if not state else "")
         self.file_chooser_button.setEnabled(state)
+
+
+class ResetSettings(QWidget):
+
+    def __init__(self):
+        super(ResetSettings, self).__init__()
+        self.label = QLabel(self)
+        self.label.setText("Reset settings:")
+
+        self.button = QPushButton(self)
+        self.button.setText("Reset")
+        self.button.pressed.connect(self.reset_settings)
+        self.button.setFixedWidth(100)
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.button, 0, 2, 1, 1)
+        self.setLayout(layout)
+
+    def reset_settings(self):
+        prompt = QMessageBox.question(self, "Reset settings",
+                                            "Are you sure you want to continue?\n"
+                                            "This step is irreversible and will force the gui to be closed.\n"
+                                            "Any running operations will be canceled!")
+        if prompt == QMessageBox.Yes:
+            reset_defaults()
+            sys.exit(0)

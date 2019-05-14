@@ -15,7 +15,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
 from circleguard import Circleguard, set_options
 from circleguard import __version__ as cg_version
 
-from widgets import (Threshold, set_event_window, InputWidget,
+from widgets import (Threshold, set_event_window, InputWidget, ResetSettings,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
 from settings import API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR, LOG_SAVE, LOG_DIR, LOG_MODE, LOG_OUTPUT
@@ -407,7 +407,8 @@ class SettingsTab(QWidget):
         self.grid.addWidget(Separator("GUI settings"), 6, 0, 1, 1)
         self.grid.addWidget(self.darkmode, 7, 0, 1, 1)
         self.grid.addWidget(Separator("Debug settings"), 8, 0, 1, 1)
-        self.grid.addWidget(self.loglevel, 9, 0, 3, 1)
+        self.grid.addWidget(self.loglevel, 9, 0, 4, 1)
+        self.grid.addWidget(ResetSettings(), 13, 0, 1, 1)
 
         self.setLayout(self.grid)
 
