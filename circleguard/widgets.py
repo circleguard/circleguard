@@ -521,14 +521,14 @@ class Threshold(QFrame):
         thresh_spinbox.valueChanged.connect(self.update_thresh_slider)
         self.thresh_spinbox = thresh_spinbox
         self.thresh_spinbox.setFixedWidth(100)
+        self.combined = WidgetCombiner(thresh_slider, thresh_spinbox)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
 
         layout.addWidget(thresh_label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(thresh_slider, 0, 2, 1, 2)
-        layout.addWidget(thresh_spinbox, 0, 4, 1, 1)
+        layout.addWidget(self.combined, 0, 2, 1, 3)
 
         self.setLayout(layout)
 
@@ -538,6 +538,16 @@ class Threshold(QFrame):
 
     def update_thresh_slider(self, value):
         self.thresh_slider.setValue(value)
+
+
+class WidgetCombiner(QFrame):
+    def __init__(self, widget1, widget2):
+        super(WidgetCombiner, self).__init__()
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(widget1, 0, 0, 1, 1)
+        layout.addWidget(widget2, 0, 1, 1, 1)
+        self.setLayout(layout)
 
 
 class FolderChooser(QFrame):
@@ -556,13 +566,13 @@ class FolderChooser(QFrame):
 
         self.path_label = QLabel(self)
         self.path_label.setText(self.path)
+        self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.path_label, 0, 2, 1, 2)
-        layout.addWidget(self.file_chooser_button, 0, 4, 1, 1)
+        layout.addWidget(self.combined, 0, 2, 1, 3)
         self.setLayout(layout)
         self.switch_enabled(True)
 
