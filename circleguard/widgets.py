@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBo
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
-from settings import THRESHOLD, reset_defaults
+from settings import THRESHOLD, LOG_MODE, LOG_SAVE, LOG_OUTPUT, LOG_OUTPUT, LOG_DIR, reset_defaults, update_default
 # pylint: disable=no-name-in-module
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
@@ -262,6 +262,19 @@ class LoglevelWidget(QWidget):
         self.save_folder = FolderChooser("Log Folder")
         save_option.box.stateChanged.connect(self.save_folder.switch_enabled)
         self.save_folder.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+
+        self.level_combobox.setCurrentIndex(LOG_MODE)
+        self.level_combobox.currentIndexChanged.connect(partial(update_default, "LOG_MODE"))
+
+        self.save_option.box.setChecked(LOG_SAVE)
+        self.save_option.box.stateChanged.connect(partial(update_default, "LOG_SAVE"))
+
+        self.output_combobox.setCurrentIndex(LOG_OUTPUT)
+        self.output_combobox.currentIndexChanged.connect(partial(update_default, "LOG_OUTPUT"))
+
+        self.save_folder.update_dir(LOG_DIR)
+        self.save_folder.switch_enabled(LOG_SAVE)
+        self.save_folder.path_signal.connect(partial(update_default, "LOG_DIR"))
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)

@@ -18,7 +18,7 @@ from circleguard import __version__ as cg_version
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
-from settings import API_KEY, DARK_THEME, CACHING, update_default, CACHE_DIR, LOG_SAVE, LOG_DIR, LOG_MODE, LOG_OUTPUT
+from settings import API_KEY, DARK_THEME, CACHING, CACHE_DIR, update_default
 
 ROOT_PATH = Path(__file__).parent.absolute()
 __version__ = "0.1d"
@@ -417,20 +417,6 @@ class SettingsTab(QWidget):
         self.cache.box.setChecked(CACHING)
         self.cache_dir.update_dir(CACHE_DIR)
         self.cache_dir.switch_enabled(CACHING)
-
-        # todo integrate code bellow in LoglevelWidget (@widgets.py)
-        self.loglevel.level_combobox.setCurrentIndex(LOG_MODE)
-        self.loglevel.level_combobox.currentIndexChanged.connect(partial(update_default, "LOG_MODE"))
-
-        self.loglevel.save_option.box.setChecked(LOG_SAVE)
-        self.loglevel.save_option.box.stateChanged.connect(partial(update_default, "LOG_SAVE"))
-
-        self.loglevel.output_combobox.setCurrentIndex(LOG_OUTPUT)
-        self.loglevel.output_combobox.currentIndexChanged.connect(partial(update_default, "LOG_OUTPUT"))
-
-        self.loglevel.save_folder.update_dir(LOG_DIR)
-        self.loglevel.save_folder.switch_enabled(LOG_SAVE)
-        self.loglevel.save_folder.path_signal.connect(partial(update_default, "LOG_DIR"))
 
     def set_circleguard_loglevel(self):
         set_options(loglevel=self.loglevel.level_combobox.currentData())
