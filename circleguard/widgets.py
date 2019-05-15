@@ -123,7 +123,7 @@ class QVLine(QFrame):
         self.setFrameShadow(QFrame.Plain)
 
 
-class Separator(QWidget):
+class Separator(QFrame):
     """
     Creates a line with text in the middle. Used to separate widgets.
     """
@@ -143,7 +143,7 @@ class Separator(QWidget):
         self.setLayout(layout)
 
 
-class InputWidget(QWidget):
+class InputWidget(QFrame):
     """
     A container class of widgets that represents user input for an id. This class
     holds a Label and either a PasswordEdit, IDLineEdit, or LineEdit, depending on the constructor call.
@@ -170,7 +170,7 @@ class InputWidget(QWidget):
         self.setLayout(layout)
 
 
-class IdWidgetCombined(QWidget):
+class IdWidgetCombined(QFrame):
     """
     A container class of widgets that represents user input for a map id and user id.
     If no map id is given the user id field will be disabled.
@@ -201,7 +201,7 @@ class IdWidgetCombined(QWidget):
         self.user_id.setEnabled(self.map_id.field.text() != "")
 
 
-class OptionWidget(QWidget):
+class OptionWidget(QFrame):
     """
     A container class of widgets that represents an option with a boolean state.
     This class holds a Label and CheckBox.
@@ -223,7 +223,7 @@ class OptionWidget(QWidget):
         self.setLayout(layout)
 
 
-class LoglevelWidget(QWidget):
+class LoglevelWidget(QFrame):
     def __init__(self, tooltip):
         super(LoglevelWidget, self).__init__()
 
@@ -290,7 +290,7 @@ class LoglevelWidget(QWidget):
         self.setLayout(layout)
 
 
-class CompareTopUsers(QWidget):
+class CompareTopUsers(QFrame):
     """
     A container class of widgets that represents user input for how many users of a map to compare.
     This class holds a Label, Slider, and SpinBox.
@@ -345,7 +345,7 @@ class CompareTopUsers(QWidget):
         self.spinbox.setEnabled(mode)
 
 
-class CompareTopPlays(QWidget):
+class CompareTopPlays(QFrame):
     """
     A container class of widgets that represents user input for how many top plays of a user to compare.
     This class holds a Label, Slider, and SpinBox.
@@ -390,7 +390,7 @@ class CompareTopPlays(QWidget):
         self.slider.setValue(value)
 
 
-class ThresholdCombined(QWidget):
+class ThresholdCombined(QFrame):
     """
     A container class of widgets that represents user input for the threshold/auto threshold
     to consider a comparison a cheat.
@@ -488,7 +488,7 @@ class ThresholdCombined(QWidget):
         self.autothresh_spinbox.setStyleSheet("color: gray" if not state else "")
 
 
-class Threshold(QWidget):
+class Threshold(QFrame):
     """
     A container class of widgets that represents user input for the threshold to consider a comparison a cheat.
     This widget is meant to be used in cases where Auto Threshold is not needed, else use ThresholdCombined.
@@ -537,7 +537,7 @@ class Threshold(QWidget):
         self.thresh_slider.setValue(value)
 
 
-class FolderChooser(QWidget):
+class FolderChooser(QFrame):
     path_signal = pyqtSignal(str)
 
     def __init__(self, title):
@@ -584,8 +584,7 @@ class FolderChooser(QWidget):
         self.file_chooser_button.setEnabled(state)
 
 
-class ResetSettings(QWidget):
-
+class ResetSettings(QFrame):
     def __init__(self):
         super(ResetSettings, self).__init__()
         self.label = QLabel(self)
