@@ -423,6 +423,7 @@ class ThresholdCombined(QFrame):
         thresh_spinbox.valueChanged.connect(self.update_thresh_slider)
         self.thresh_spinbox = thresh_spinbox
         self.thresh_spinbox.valueChanged.connect(partial(self.switch_thresh, 0))
+        self.thresh_spinbox.setFixedWidth(100)
 
         autothresh_label = QLabel(self)
         autothresh_label.setText("Auto Threshold:")
@@ -450,6 +451,7 @@ class ThresholdCombined(QFrame):
         autothresh_spinbox.valueChanged.connect(self.update_autothresh_slider)
         self.autothresh_spinbox = autothresh_spinbox
         self.autothresh_spinbox.valueChanged.connect(partial(self.switch_thresh, 1))
+        self.autothresh_spinbox.setFixedWidth(100)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -518,6 +520,7 @@ class Threshold(QFrame):
         thresh_spinbox.setSingleStep(1)
         thresh_spinbox.valueChanged.connect(self.update_thresh_slider)
         self.thresh_spinbox = thresh_spinbox
+        self.thresh_spinbox.setFixedWidth(100)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
