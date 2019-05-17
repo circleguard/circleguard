@@ -19,7 +19,7 @@ def reset_defaults():
 
 
 SETTINGS = QSettings("Circleguard", "Circleguard")
-if not SETTINGS.contains("ran"):
+if not SETTINGS.value("ran"):
     reset_defaults()
 
 THRESHOLD = SETTINGS.value("threshold")
