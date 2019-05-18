@@ -18,7 +18,7 @@ from circleguard import __version__ as cg_version
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
-from settings import API_KEY, DARK_THEME, CACHING, CACHE_DIR, update_default
+from settings import get_setting, update_default
 
 ROOT_PATH = Path(__file__).parent.absolute()
 __version__ = "0.1d"
@@ -205,7 +205,7 @@ class MainTab(QWidget):
 
     def switch_run_button(self):
         if not RUNNING_FLAG:
-            self.run_button.setEnabled(not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["requires_api"] if API_KEY == "" else True)
+            self.run_button.setEnabled(not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["requires_api"] if get_setting("api_key") == "" else True)
         else:
             self.run_button.setEnabled(False)
 
@@ -214,7 +214,7 @@ class MainTab(QWidget):
         RUNNING_FLAG = True
         self.switch_run_button()
         try:
-            cg = Circleguard(API_KEY, resource_path("db/cache.db"))
+            cg = Circleguard(get_setting("api_key"), resource_path("db/cache.db"))
             current_tab = self.tabs.currentIndex()
             current_tab_name = MainTab.TAB_REGISTER[current_tab]["name"]
             if current_tab_name == "MAP":
@@ -385,9 +385,8 @@ class SettingsTab(QWidget):
         self.info.setAlignment(Qt.AlignCenter)
 
         self.apikey_widget = InputWidget("Api Key", "", type_="password")
-        self.apikey_widget.field.setText(API_KEY)
+        self.apikey_widget.field.setText(get_setting("api_key"))
         self.apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
-        self.apikey_widget.field.textChanged.connect(set_api_key)
 
         self.thresh_widget = Threshold()
         self.thresh_widget.thresh_spinbox.valueChanged.connect(partial(update_default, "threshold"))
@@ -422,18 +421,13 @@ class SettingsTab(QWidget):
         self.setLayout(self.grid)
 
         self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
-        self.darkmode.box.setChecked(DARK_THEME)
-        self.cache.box.setChecked(CACHING)
-        self.cache_dir.update_dir(CACHE_DIR)
-        self.cache_dir.switch_enabled(CACHING)
+        self.darkmode.box.setChecked(get_setting("dark_theme"))
+        self.cache.box.setChecked(get_setting("caching"))
+        self.cache_dir.update_dir(get_setting("cache_dir"))
+        self.cache_dir.switch_enabled(get_setting("caching"))
 
     def set_circleguard_loglevel(self):
         set_options(loglevel=self.loglevel.level_combobox.currentData())
-
-
-def set_api_key(key):
-    global API_KEY
-    API_KEY = key
 
 
 def switch_theme(dark):

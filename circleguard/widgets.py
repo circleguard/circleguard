@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBo
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
-from settings import THRESHOLD, LOG_MODE, LOG_SAVE, LOG_OUTPUT, LOG_OUTPUT, LOG_DIR, reset_defaults, update_default
+from settings import get_setting, reset_defaults, update_default
 # pylint: disable=no-name-in-module
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
@@ -263,18 +263,18 @@ class LoglevelWidget(QFrame):
         save_option.box.stateChanged.connect(self.save_folder.switch_enabled)
         self.save_folder.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
-        self.level_combobox.setCurrentIndex(LOG_MODE)
-        self.level_combobox.currentIndexChanged.connect(partial(update_default, "LOG_MODE"))
+        self.level_combobox.setCurrentIndex(get_setting("log_mode"))
+        self.level_combobox.currentIndexChanged.connect(partial(update_default, "log_mode"))
 
-        self.save_option.box.setChecked(LOG_SAVE)
-        self.save_option.box.stateChanged.connect(partial(update_default, "LOG_SAVE"))
+        self.save_option.box.setChecked(get_setting("log_save"))
+        self.save_option.box.stateChanged.connect(partial(update_default, "log_save"))
 
-        self.output_combobox.setCurrentIndex(LOG_OUTPUT)
-        self.output_combobox.currentIndexChanged.connect(partial(update_default, "LOG_OUTPUT"))
+        self.output_combobox.setCurrentIndex(get_setting("log_output"))
+        self.output_combobox.currentIndexChanged.connect(partial(update_default, "log_output"))
 
-        self.save_folder.update_dir(LOG_DIR)
-        self.save_folder.switch_enabled(LOG_SAVE)
-        self.save_folder.path_signal.connect(partial(update_default, "LOG_DIR"))
+        self.save_folder.update_dir(get_setting("log_dir"))
+        self.save_folder.switch_enabled(get_setting("log_save"))
+        self.save_folder.path_signal.connect(partial(update_default, "log_dir"))
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -411,12 +411,12 @@ class ThresholdCombined(QFrame):
 
         thresh_slider = QSlider(Qt.Horizontal)
         thresh_slider.setRange(0, 30)
-        thresh_slider.setValue(THRESHOLD)
+        thresh_slider.setValue(get_setting("threshold"))
         thresh_slider.valueChanged.connect(self.update_thresh_spinbox)
         self.thresh_slider = thresh_slider
 
         thresh_spinbox = SpinBox(self)
-        thresh_spinbox.setValue(THRESHOLD)
+        thresh_spinbox.setValue(get_setting("threshold"))
         thresh_spinbox.setAlignment(Qt.AlignCenter)
         thresh_spinbox.setRange(0, 30)
         thresh_spinbox.setSingleStep(1)
@@ -509,12 +509,12 @@ class Threshold(QFrame):
 
         thresh_slider = QSlider(Qt.Horizontal)
         thresh_slider.setRange(0, 30)
-        thresh_slider.setValue(THRESHOLD)
+        thresh_slider.setValue(get_setting("threshold"))
         thresh_slider.valueChanged.connect(self.update_thresh_spinbox)
         self.thresh_slider = thresh_slider
 
         thresh_spinbox = SpinBox(self)
-        thresh_spinbox.setValue(THRESHOLD)
+        thresh_spinbox.setValue(get_setting("threshold"))
         thresh_spinbox.setAlignment(Qt.AlignCenter)
         thresh_spinbox.setRange(0, 30)
         thresh_spinbox.setSingleStep(1)

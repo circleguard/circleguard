@@ -22,15 +22,9 @@ SETTINGS = QSettings("Circleguard", "Circleguard")
 if not SETTINGS.value("ran"):
     reset_defaults()
 
-THRESHOLD = SETTINGS.value("threshold")
-API_KEY = SETTINGS.value("api_key")
-DARK_THEME = SETTINGS.value("dark_theme")
-CACHING = SETTINGS.value("caching")
-CACHE_DIR = SETTINGS.value("cache_dir")
-LOG_SAVE = SETTINGS.value("log_save")
-LOG_DIR = SETTINGS.value("log_dir")
-LOG_MODE = SETTINGS.value("log_mode")
-LOG_OUTPUT = SETTINGS.value("log_output")
+
+def get_setting(name):
+    return SETTINGS.value(name)
 
 
 def update_default(name, value):
