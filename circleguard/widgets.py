@@ -301,7 +301,7 @@ class CompareTopUsers(QFrame):
     def __init__(self):
         super(CompareTopUsers, self).__init__()
         self.label = QLabel(self)
-        self.label.setText("Compare Top Plays:")
+        self.label.setText("Compare Top Users:")
         self.label.setToolTip("Compare this many plays from the leaderboard")
 
         slider = QSlider(Qt.Horizontal)
@@ -357,7 +357,7 @@ class CompareTopPlays(QFrame):
         super(CompareTopPlays, self).__init__()
         label = QLabel(self)
         label.setText("Compare Top Plays:")
-        label.setToolTip("Compare this many plays from the leaderboard")
+        label.setToolTip("Compare this many plays from the user")
 
         slider = QSlider(Qt.Horizontal)
         slider.setValue(20)
