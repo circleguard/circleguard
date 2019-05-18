@@ -205,6 +205,7 @@ class MainTab(QWidget):
 
     def switch_run_button(self):
         if not RUNNING_FLAG:
+            self.run_button.setEnabled(not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["requires_api"] if API_KEY == "" else True)
         else:
             self.run_button.setEnabled(False)
 
