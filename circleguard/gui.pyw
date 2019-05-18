@@ -24,6 +24,7 @@ ROOT_PATH = Path(__file__).parent.absolute()
 __version__ = "0.1d"
 
 log = logging.getLogger(__name__)
+RUNNING_FLAG = False
 
 
 def resource_path(str_path):
@@ -203,9 +204,14 @@ class MainTab(QWidget):
         pool.apply_async(self.run_circleguard)
 
     def switch_run_button(self):
-        self.run_button.setEnabled(not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["requires_api"] if API_KEY == "" else True)
+        if not RUNNING_FLAG:
+        else:
+            self.run_button.setEnabled(False)
 
     def run_circleguard(self):
+        global RUNNING_FLAG
+        RUNNING_FLAG = True
+        self.switch_run_button()
         try:
             cg = Circleguard(API_KEY, resource_path("db/cache.db"))
             current_tab = self.tabs.currentIndex()
@@ -250,15 +256,17 @@ class MainTab(QWidget):
 
         except Exception:
             log.exception("ERROR!! while running cg:")
+        RUNNING_FLAG = False
+        self.switch_run_button()
 
     def print_results(self):
         try:
             while True:
                 result = self.q.get(block=False)
-                # if result.ischeat:
-                self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
-                QApplication.beep()
-                QApplication.alert(self)
+                if result.ischeat:
+                    self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
+                    QApplication.beep()
+                    QApplication.alert(self)
         except Empty:
             pass
 
