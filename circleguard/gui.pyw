@@ -234,7 +234,7 @@ class MainTab(QWidget):
         RUNNING_FLAG = True
         self.switch_run_button()
         try:
-            cg = Circleguard(get_setting("api_key"), resource_path("db/cache.db"))
+            cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"),"cache.db"))
             current_tab = self.tabs.currentIndex()
             current_tab_name = MainTab.TAB_REGISTER[current_tab]["name"]
             if current_tab_name == "MAP":
