@@ -1,4 +1,5 @@
 import sys
+import os
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
@@ -64,6 +65,7 @@ class WindowWrapper(QMainWindow):
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.start_timer()
         self.debug_window = None
+        self.terminal = self.main_window.main_tab.write
 
         handler = Handler()
         logging.getLogger("circleguard").addHandler(handler)
@@ -103,13 +105,30 @@ class WindowWrapper(QMainWindow):
         """
         Message is the string message sent to the io stream
         """
+        if get_setting("log_save"):
+            if not os.path.exists(get_setting('log_dir')):  # create dir if nonexistent
+                os.makedirs(get_setting('log_dir'))
+            directory = os.path.join(get_setting("log_dir"), "circleguard.log")
+            with open(directory, 'a+') as f:  # append so it creates a file if it doesn't exist
+                f.seek(0)
+                data = f.read().splitlines(True)
+            data.append(message+"\n")
+            with open(directory, 'w+') as f:
+                f.writelines(data[-10000:])  # keep file at 10000 lines
 
-        if self.debug_window:
-            self.debug_window.write(message)
-        else:
-            self.debug_window = DebugWindow()
-            self.debug_window.show()
-            self.debug_window.write(message)
+        if get_setting("log_output") == 0:
+            pass
+
+        if get_setting("log_output") == 1 or get_setting("log_output") == 3:
+            self.terminal(message)
+
+        if get_setting("log_output") == 2 or get_setting("log_output") == 3:
+            if self.debug_window and self.debug_window.isVisible():
+                self.debug_window.write(message)
+            else:
+                self.debug_window = DebugWindow()
+                self.debug_window.show()
+                self.debug_window.write(message)
 
 
 class DebugWindow(QMainWindow):
