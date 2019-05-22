@@ -349,7 +349,7 @@ class LocalTab(QWidget):
                           "If a Map is given, it will compare the local replays against the leaderboard of the map.\n"
                           "If both a user and a map are given, it will compare the local replays against the user's "
                           "score on that map.")
-        self.folder_chooser = FolderChooser("Replay folder")
+        self.folder_chooser = FolderChooser("Replay folder", ".")
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
         self.threshold = Threshold()  # ThresholdCombined()
@@ -417,7 +417,7 @@ class SettingsTab(QWidget):
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
         self.cache.box.stateChanged.connect(partial(update_default, "caching"))
 
-        self.cache_dir = FolderChooser("Cache Path")
+        self.cache_dir = FolderChooser("Cache Path", get_setting("cache_dir"))
         self.cache_dir.path_signal.connect(partial(update_default, "cache_dir"))
         self.cache.box.stateChanged.connect(self.cache_dir.switch_enabled)
 
@@ -443,7 +443,6 @@ class SettingsTab(QWidget):
         self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
         self.darkmode.box.setChecked(get_setting("dark_theme"))
         self.cache.box.setChecked(get_setting("caching"))
-        self.cache_dir.update_dir(get_setting("cache_dir"))
         self.cache_dir.switch_enabled(get_setting("caching"))
 
     def set_circleguard_loglevel(self):

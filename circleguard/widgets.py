@@ -259,7 +259,7 @@ class LoglevelWidget(QFrame):
         output_combobox.setInsertPolicy(QComboBox.NoInsert)
         output_combobox.setCurrentIndex(0)  # NONe by default
         self.output_combobox = output_combobox
-        self.save_folder = FolderChooser("Log Folder")
+        self.save_folder = FolderChooser("Log Folder", get_setting("log_dir"))
         save_option.box.stateChanged.connect(self.save_folder.switch_enabled)
         self.save_folder.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
@@ -272,7 +272,6 @@ class LoglevelWidget(QFrame):
         self.output_combobox.setCurrentIndex(get_setting("log_output"))
         self.output_combobox.currentIndexChanged.connect(partial(update_default, "log_output"))
 
-        self.save_folder.update_dir(get_setting("log_dir"))
         self.save_folder.switch_enabled(get_setting("log_save"))
         self.save_folder.path_signal.connect(partial(update_default, "log_dir"))
 
@@ -553,9 +552,9 @@ class WidgetCombiner(QFrame):
 class FolderChooser(QFrame):
     path_signal = pyqtSignal(str)
 
-    def __init__(self, title):
+    def __init__(self, title, path):
         super(FolderChooser, self).__init__()
-        self.path = "."
+        self.path = path
         self.label = QLabel(self)
         self.label.setText(title+":")
 
