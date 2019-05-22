@@ -65,7 +65,6 @@ class WindowWrapper(QMainWindow):
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.start_timer()
         self.debug_window = None
-        self.terminal = self.main_window.main_tab.write
 
         handler = Handler()
         logging.getLogger("circleguard").addHandler(handler)
@@ -120,7 +119,7 @@ class WindowWrapper(QMainWindow):
             pass
 
         if get_setting("log_output") == 1 or get_setting("log_output") == 3:
-            self.terminal(message)
+            self.main_window.main_tab.write(message)
 
         if get_setting("log_output") == 2 or get_setting("log_output") == 3:
             if self.debug_window and self.debug_window.isVisible():
@@ -227,6 +226,9 @@ class MainTab(QWidget):
         if not RUNNING_FLAG:
             self.run_button.setEnabled(not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["requires_api"] if get_setting("api_key") == "" else True)
         else:
+            # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
+            # statement even though no timer interaction is going on; not sure why it happens but it doesn't
+            # impact functionality. Still might be worth looking into
             self.run_button.setEnabled(False)
 
     def run_circleguard(self):
