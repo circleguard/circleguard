@@ -5,7 +5,7 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
-
+from visualizer import VisualizerWindow
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
@@ -286,6 +286,8 @@ class MainTab(QWidget):
         try:
             while True:
                 result = self.q.get(block=False)
+                self.tmp = VisualizerWindow(result.replay1.replay_data, result.replay2.replay_data)
+                self.tmp.show()
                 if result.ischeat:
                     self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
                     QApplication.beep()
