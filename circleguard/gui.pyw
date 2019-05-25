@@ -499,10 +499,7 @@ def switch_theme(dark):
 
 
 if __name__ == "__main__":
-    def qt_message_handler(mode, context, message):
-        print(message)
     # create and open window
-    qInstallMessageHandler(qt_message_handler)
     app = QApplication([])
     app.setStyle("Fusion")
     WINDOW = WindowWrapper()
