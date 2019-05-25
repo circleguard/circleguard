@@ -1,4 +1,7 @@
-from replay import Replay
+
+from circleguard import Replay
+from circleguard import utils
+
 import threading
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
@@ -24,11 +27,9 @@ class _Renderer(QWidget):
         # interpolate replays
         self.data1 = replay1.as_list_with_timestamps()
         self.data2 = replay2.as_list_with_timestamps()
-        self.data1, self.data2 = Replay.interpolate(self.data1, self.data2, unflip=False)
-        self.data1 = Replay.skip_breaks(self.data1)
-        self.data2 = Replay.skip_breaks(self.data2)
-        self.data1 = Replay.resample(self.data1, 60)
-        self.data2 = Replay.resample(self.data2, 60)
+        self.data1, self.data2 = utils.interpolate(self.data1, self.data2, unflip=False)
+        self.data1 = utils.resample(self.data1, 60)
+        self.data2 = utils.resample(self.data2, 60)
         self.data1 = [(512 - d[1], 384 - d[2]) for d in self.data1]
         self.data2 = [(512 - d[1], 384 - d[2]) for d in self.data2]
         self.replay_len = len(self.data1)
