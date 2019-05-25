@@ -22,18 +22,16 @@ class _Renderer(QWidget):
         self.path2 = QPainterPath()
         self.timer = QTimer(self)
         # interpolate replays
-        self.replay1 = Replay(replay1, "replay1", 0)
-        self.replay2 = Replay(replay2, "replay2", 0)  # todo pass mods/usernames
-        self.replay1 = self.replay1.as_list_with_timestamps()
-        self.replay2 = self.replay2.as_list_with_timestamps()
-        self.replay1, self.replay2 = Replay.interpolate(self.replay1, self.replay2, unflip=False)
-        self.replay1 = Replay.skip_breaks(self.replay1)
-        self.replay2 = Replay.skip_breaks(self.replay2)
-        self.replay1 = Replay.resample(self.replay1, 60)
-        self.replay2 = Replay.resample(self.replay2, 60)
-        self.replay1 = [(512 - d[1], 384 - d[2]) for d in self.replay1]
-        self.replay2 = [(512 - d[1], 384 - d[2]) for d in self.replay2]
-        self.replay_len = len(self.replay1)
+        self.data1 = replay1.as_list_with_timestamps()
+        self.data2 = replay2.as_list_with_timestamps()
+        self.data1, self.data2 = Replay.interpolate(self.data1, self.data2, unflip=False)
+        self.data1 = Replay.skip_breaks(self.data1)
+        self.data2 = Replay.skip_breaks(self.data2)
+        self.data1 = Replay.resample(self.data1, 60)
+        self.data2 = Replay.resample(self.data2, 60)
+        self.data1 = [(512 - d[1], 384 - d[2]) for d in self.data1]
+        self.data2 = [(512 - d[1], 384 - d[2]) for d in self.data2]
+        self.replay_len = len(self.data1)
         print(f"replay is {self.replay_len/60} seconds long")
 
         self.timer.timeout.connect(self.next_frame)
@@ -75,7 +73,7 @@ class _Renderer(QWidget):
         if self.counter >= self.replay_len-1:
             self.reset()
 
-        self.buffer1 = self.replay1[self.counter:self.counter+(int(10*self.old_multiplier))]
+        self.buffer1 = self.data1[self.counter:self.counter+(int(10*self.old_multiplier))]
         # generate path 1
         # I'm pretty sure you can't change the pen while drawing a path,
         # so we either have different colors or one combined path object.
@@ -84,7 +82,7 @@ class _Renderer(QWidget):
         for item in self.buffer1:
             self.path1.lineTo(item[0], item[1])
 
-        self.buffer2 = self.replay2[self.counter:self.counter+(int(10*self.old_multiplier))]
+        self.buffer2 = self.data2[self.counter:self.counter+(int(10*self.old_multiplier))]
         # generate path 2
         self.path2 = QPainterPath()
         self.path2.moveTo(self.buffer2[0][0], self.buffer2[0][1])

@@ -286,8 +286,8 @@ class MainTab(QWidget):
         try:
             while True:
                 result = self.q.get(block=False)
-                self.tmp = VisualizerWindow(result.replay1.replay_data, result.replay2.replay_data)
-                self.tmp.show()
+                self.visualizer_window = VisualizerWindow(result.replay1, result.replay2)
+                self.visualizer_window.show()
                 if result.ischeat:
                     self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
                     QApplication.beep()
