@@ -103,8 +103,8 @@ class _Renderer(QWidget):
             self.next_frame()
             self.paused = True
 
-    def pause(self, force=False):
-        if not force and self.paused:
+    def pause(self):
+        if self.paused:
             self.paused = False
         else:
             self.paused = True
@@ -121,7 +121,7 @@ class _Interface(QWidget):
         self.previous_button.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
         self.previous_button.setFixedWidth(20)
         self.previous_button.setToolTip("Move to previous Frame")
-        self.previous_button.clicked.connect(self.previousFrame)
+        self.previous_button.clicked.connect(self.previous_frame)
 
         self.next_button = QPushButton()
         self.next_button.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
@@ -150,16 +150,18 @@ class _Interface(QWidget):
     def update_slider(self, new):
         self.slider.setValue(new)
 
-    def previousFrame(self):
-        self.pause(force=True)
+    def previous_frame(self):
+        if not self.renderer.paused:
+            self.renderer.pause()
         self.slider.setValue(self.slider.value()-1)
 
     def next_frame(self):
-        self.pause(force=True)
+        if not self.renderer.paused:
+            self.renderer.pause()
         self.slider.setValue(self.slider.value()+1)
 
-    def pause(self, force=False):
-        self.renderer.pause(force=force)
+    def pause(self):
+        self.renderer.pause()
         self.run_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay if self.renderer.paused else QStyle.SP_MediaPause))
 
 
