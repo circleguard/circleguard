@@ -52,43 +52,30 @@ class _Renderer(QWidget):
         """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-
-        painter.setPen(QPen(QColor(63, 127, 255), 1))
-        painter.drawPath(self.path1)
-
-        painter.setPen(QPen(QColor(255, 127, 63), 1))
-        painter.drawPath(self.path2)
+        alpha_step = 255/len(self.buffer2)
+        for i in range(len(self.buffer1)-1):
+            painter.setPen(QPen(QColor(63, 127, 255, (i*alpha_step)), 1))
+            painter.drawLine(self.buffer1[i][0], self.buffer1[i][1], self.buffer1[i+1][0], self.buffer1[i+1][1])
+        for i in range(len(self.buffer2)-1):
+            painter.setPen(QPen(QColor(255, 127, 63, (i*alpha_step)), 1))
+            painter.drawLine(self.buffer2[i][0], self.buffer2[i][1], self.buffer2[i+1][0], self.buffer2[i+1][1])
 
         # todo this is next section is wrong, since we should draw the raw events and not the interpolated events
-        painter.setPen(QPen(QColor(255, 127, 63), 3))
-        for i in self.buffer1:
-            painter.drawPoint(int(i[0]), int(i[1]))
+        for i in range(len(self.buffer1)):
+            painter.setPen(QPen(QColor(255, 127, 63, (i*alpha_step)), 3))
+            painter.drawPoint(int(self.buffer1[i][0]), int(self.buffer1[i][1]))
 
-        painter.setPen(QPen(QColor(63, 127, 255), 3))
-        for i in self.buffer2:
-            painter.drawPoint(int(i[0]), int(i[1]))
+        for i in range(len(self.buffer2)):
+            painter.setPen(QPen(QColor(63, 127, 255, (i*alpha_step)), 3))
+            painter.drawPoint(int(self.buffer2[i][0]), int(self.buffer2[i][1]))
 
     def next_frame(self):  # finished
         if self.paused:
             return
         if self.counter >= self.replay_len-1:
             self.reset()
-
-        self.buffer1 = self.data1[self.counter:self.counter+(int(10*self.old_multiplier))]
-        # generate path 1
-        # I'm pretty sure you can't change the pen while drawing a path,
-        # so we either have different colors or one combined path object.
-        self.path1 = QPainterPath()
-        self.path1.moveTo(self.buffer1[0][0], self.buffer1[0][1])
-        for item in self.buffer1:
-            self.path1.lineTo(item[0], item[1])
-
-        self.buffer2 = self.data2[self.counter:self.counter+(int(10*self.old_multiplier))]
-        # generate path 2
-        self.path2 = QPainterPath()
-        self.path2.moveTo(self.buffer2[0][0], self.buffer2[0][1])
-        for item in self.buffer2:
-            self.path2.lineTo(item[0], item[1])
+        self.buffer1 = self.data1[self.counter:self.counter+(int(15*self.old_multiplier))]
+        self.buffer2 = self.data2[self.counter:self.counter+(int(15*self.old_multiplier))]
         self.update()
         self.update_signal.emit(self.counter)
         self.counter += 1
