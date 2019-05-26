@@ -25,7 +25,6 @@ ROOT_PATH = Path(__file__).parent.absolute()
 __version__ = "0.1d"
 
 log = logging.getLogger(__name__)
-RUNNING_FLAG = False
 
 
 def resource_path(str_path):
@@ -179,7 +178,7 @@ class MainTab(QWidget):
     def __init__(self):
         super(MainTab, self).__init__()
         self.q = Queue()
-
+        self.cg_running = False
         tabs = QTabWidget()
         self.map_tab = MapTab()
         self.user_tab = UserTab()
@@ -223,7 +222,7 @@ class MainTab(QWidget):
         pool.apply_async(self.run_circleguard)
 
     def switch_run_button(self):
-        if not RUNNING_FLAG:
+        if not self.cg_running:
             self.run_button.setEnabled(not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["requires_api"] if get_setting("api_key") == "" else True)
         else:
             # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
@@ -232,8 +231,7 @@ class MainTab(QWidget):
             self.run_button.setEnabled(False)
 
     def run_circleguard(self):
-        global RUNNING_FLAG
-        RUNNING_FLAG = True
+        self.cg_running = True
         self.switch_run_button()
         try:
             cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"), "cache.db"))
@@ -279,7 +277,7 @@ class MainTab(QWidget):
 
         except Exception:
             log.exception("ERROR!! while running cg:")
-        RUNNING_FLAG = False
+        self.cg_running = False
         self.switch_run_button()
 
     def print_results(self):
