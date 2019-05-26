@@ -5,7 +5,7 @@ from circleguard import utils
 import threading
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal
-from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton
+from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QStyle
 from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen
 # pylint: enable=no-name-in-module
 
@@ -103,8 +103,8 @@ class _Renderer(QWidget):
             self.next_frame()
             self.paused = True
 
-    def pause(self):
-        if self.paused:
+    def pause(self, force=False):
+        if not force and self.paused:
             self.paused = False
         else:
             self.paused = True
@@ -117,22 +117,50 @@ class _Interface(QWidget):
         self.layout = QGridLayout()
         self.slider = QSlider(Qt.Horizontal)
 
+        self.previous_button = QPushButton()
+        self.previous_button.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
+        self.previous_button.setFixedWidth(20)
+        self.previous_button.setToolTip("Move to previous Frame")
+        self.previous_button.clicked.connect(self.previousFrame)
+
+        self.next_button = QPushButton()
+        self.next_button.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
+        self.next_button.setFixedWidth(20)
+        self.next_button.setToolTip("Move to next Frame")
+        self.next_button.clicked.connect(self.next_frame)
+
+        self.run_button = QPushButton()
+        self.run_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
+        self.run_button.setToolTip("Play/Pause playback")
+        self.run_button.clicked.connect(self.pause)
+        self.run_button.setFixedWidth(20)
+
         self.slider.setRange(0, self.renderer.replay_len)
         self.slider.setValue(0)
         self.slider.valueChanged.connect(self.renderer.seek_to)
         self.renderer.update_signal.connect(self.update_slider)
 
-        self.run_button = QPushButton()
-        self.run_button.setText("Play/Pause")
-        self.run_button.clicked.connect(self.renderer.pause)
-
-        self.layout.addWidget(self.renderer)
-        self.layout.addWidget(self.slider)
-        self.layout.addWidget(self.run_button)
+        self.layout.addWidget(self.renderer, 0, 0, 1, 10)
+        self.layout.addWidget(self.previous_button, 1, 0, 1, 1)
+        self.layout.addWidget(self.run_button, 1, 1, 1, 1)
+        self.layout.addWidget(self.next_button, 1, 2, 1, 1)
+        self.layout.addWidget(self.slider, 1, 3, 1, 7)
         self.setLayout(self.layout)
 
     def update_slider(self, new):
         self.slider.setValue(new)
+
+    def previousFrame(self):
+        self.pause(force=True)
+        self.slider.setValue(self.slider.value()-1)
+
+    def next_frame(self):
+        self.pause(force=True)
+        self.slider.setValue(self.slider.value()+1)
+
+    def pause(self, force=False):
+        self.renderer.pause(force=force)
+        self.run_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay if self.renderer.paused else QStyle.SP_MediaPause))
 
 
 class VisualizerWindow(QMainWindow):

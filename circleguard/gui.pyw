@@ -236,13 +236,13 @@ class MainTab(QWidget):
         RUNNING_FLAG = True
         self.switch_run_button()
         try:
-            cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"),"cache.db"))
+            cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"), "cache.db"))
             current_tab = self.tabs.currentIndex()
             current_tab_name = MainTab.TAB_REGISTER[current_tab]["name"]
             if current_tab_name == "MAP":
                 tab = self.map_tab
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
-                # maybe fancy flashing red stars for required fields
+                #       maybe fancy flashing red stars for required fields
                 map_id_str = tab.id_combined.map_id.field.text()
                 map_id = int(map_id_str) if map_id_str != "" else 0
                 num = tab.compare_top.slider.value()
