@@ -15,6 +15,7 @@ def reset_defaults():
     SETTINGS.setValue("log_dir", "./logs/")
     SETTINGS.setValue("log_mode", 3)
     SETTINGS.setValue("log_output", 0)
+    SETTINGS.setValue("local_replay_dir", "./replays/")
     SETTINGS.sync()
 
 

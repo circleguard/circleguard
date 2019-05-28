@@ -579,11 +579,12 @@ class FolderChooser(QFrame):
         options = QFileDialog.Option()
         options |= QFileDialog.ShowDirsOnly
         options |= QFileDialog.HideNameFilterDetails
-        tmp = QFileDialog.getExistingDirectory(caption="Select Output Folder", directory=QDir.currentPath(), options=options)
-        self.update_dir(tmp)
+        path = QFileDialog.getExistingDirectory(caption="Select Output Folder", directory=QDir.currentPath(), options=options)
+        update_default("local_replay_dir", path)
+        self.update_dir(path)
 
-    def update_dir(self, tmp):
-        self.path = tmp if tmp != "" else self.path
+    def update_dir(self, path):
+        self.path = path if path != "" else self.path
         self.path_label.setText(self.path)
         self.dir_updated()
 

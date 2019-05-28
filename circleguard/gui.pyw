@@ -351,7 +351,7 @@ class LocalTab(QWidget):
                           "If a Map is given, it will compare the local replays against the leaderboard of the map.\n"
                           "If both a user and a map are given, it will compare the local replays against the user's "
                           "score on that map.")
-        self.folder_chooser = FolderChooser("Replay folder", "replays/")
+        self.folder_chooser = FolderChooser("Replay folder", get_setting("local_replay_dir"))
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
         self.threshold = Threshold()  # ThresholdCombined()
