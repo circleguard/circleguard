@@ -45,7 +45,7 @@ class _Renderer(QWidget):
 
         self.replay_len = len(self.data1)
         self.timer.timeout.connect(self.next_frame)
-        self.timer.start(1/60)  # next frame every 1/60sec
+        self.timer.start(1000/60)  # 60fps (1000ms/60frames)
         self.next_frame()
 
 
