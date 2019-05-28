@@ -218,8 +218,8 @@ class _Interface(QWidget):
         self.layout.addWidget(self.slider, 1, 3, 1, 7)
         self.setLayout(self.layout)
 
-    def update_slider(self, new):
-        self.slider.setValue(new)
+    def update_slider(self, value):
+        self.slider.setValue(value)
 
     def previous_frame(self):
         if not self.renderer.paused:
