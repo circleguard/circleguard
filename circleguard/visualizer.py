@@ -1,10 +1,18 @@
-from circleguard import enums
+from circleguard import utils
+from circleguard.enums import Mod
+
+
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal
+from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPoint
 from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QStyle
 from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen
 # pylint: enable=no-name-in-module
 
+WIDTH_LINE = 1
+WIDTH_POINT = 3
+
+PEN_BLUE = QPen(QColor(63, 127, 255))
+PEN_RED = QPen(QColor(255, 127, 63))
 
 class _Renderer(QWidget):
     update_signal = pyqtSignal(int)
@@ -27,30 +35,19 @@ class _Renderer(QWidget):
         self.data1 = replay1.as_list_with_timestamps()
         self.data2 = replay2.as_list_with_timestamps()
         # flip replay if one is with hr
-        bit_values_gen1 = self.bits(replay1.mods)
-        bit_values_gen2 = self.bits(replay2.mods)
-        self.enabled_mods_replay_1 = frozenset(enums.Mod(mod_val) for mod_val in bit_values_gen1)
-        self.enabled_mods_replay_2 = frozenset(enums.Mod(mod_val) for mod_val in bit_values_gen2)
-        flip1 = enums.Mod.HardRock.value in [mod.value for mod in self.enabled_mods_replay_1]
-        flip2 = enums.Mod.HardRock.value in [mod.value for mod in self.enabled_mods_replay_2]
-        if flip1 ^ flip2:
-            self.data1 = [(d[0], 512 - d[1], d[2]) for d in self.data1]
-        else:
-            self.data1 = [(d[0], 512 - d[1], 384 - d[2]) for d in self.data1]
-        self.data2 = [(d[0], 512 - d[1], 384 - d[2]) for d in self.data2]
+        mods1 = [Mod(mod_val) for mod_val in utils.bits(replay1.mods)]
+        mods2 = [Mod(mod_val) for mod_val in utils.bits(replay2.mods)]
+        flip1 = Mod.HardRock in mods1
+        flip2 = Mod.HardRock in mods2
+        if(flip1 ^ flip2): # xor, if one has hr but not the other
+            for d in self.data1:
+                d[1] = 384 - d[1]
+
         self.replay_len = len(self.data1)
         self.timer.timeout.connect(self.next_frame)
-        self.timer.start(1000/60)  # next frame every 1/60sec
+        self.timer.start(1/60)  # next frame every 1/60sec
         self.next_frame()
 
-    @staticmethod
-    def bits(n):
-        if n == 0:
-            yield 0
-        while n:
-            b = n & (~n + 1)
-            yield b
-            n ^= b
 
     def paintEvent(self, event):  # finished
         """
@@ -67,21 +64,58 @@ class _Renderer(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         alpha_step = 255/len(self.buffer2)
         for i in range(len(self.buffer1)-1):
-            painter.setPen(QPen(QColor(63, 127, 255, (i*alpha_step)), 1))
-            painter.drawLine(self.buffer1[i][1], self.buffer1[i][2], self.buffer1[i+1][1], self.buffer1[i+1][2])
+            p1 = QPoint(self.buffer1[i][1], self.buffer1[i][2])
+            p2 = QPoint(self.buffer1[i+1][1], self.buffer1[i+1][2])
+            self.draw_line(painter, PEN_BLUE, i*alpha_step, p1, p2)
+
         for i in range(len(self.buffer2)-1):
-            painter.setPen(QPen(QColor(255, 127, 63, (i*alpha_step)), 1))
-            painter.drawLine(self.buffer2[i][1], self.buffer2[i][2], self.buffer2[i+1][1], self.buffer2[i+1][2])
+            p1 = QPoint(self.buffer2[i][1], self.buffer2[i][2])
+            p2 = QPoint(self.buffer2[i+1][1], self.buffer2[i+1][2])
+            self.draw_line(painter, PEN_RED, i*alpha_step, p1, p2)
 
         for i in range(len(self.buffer1)):
-            painter.setPen(QPen(QColor(255, 127, 63, (i*alpha_step)), 3))
-            painter.drawPoint(int(self.buffer1[i][1]), int(self.buffer1[i][2]))
+            p = QPoint(self.buffer1[i][1], self.buffer1[i][2])
+            self.draw_point(painter, PEN_BLUE, i*alpha_step, p)
 
         for i in range(len(self.buffer2)):
-            painter.setPen(QPen(QColor(63, 127, 255, (i*alpha_step)), 3))
-            painter.drawPoint(int(self.buffer2[i][1]), int(self.buffer2[i][2]))
+            p = QPoint(self.buffer2[i][1], self.buffer2[i][2])
+            self.draw_point(painter, PEN_RED, i*alpha_step, p)
+
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawText(0, 25, f"frame: {self.current} | frame change : {str(self.frame_change).rjust(3,'0')} | step was at replay{self.chosen_replay}")
+
+    def draw_line(self, painter, pen, alpha, start, end):
+        """
+        Draws a line using the given painter, pen, and alpha level from Point start to Point end.
+
+        Arguments:
+            QPainter painter: The painter.
+            QPen pen: The pen, containing the color of the line.
+            Integer alpha: The alpha level from 0-255 to set the line to.
+                           https://doc.qt.io/qt-5/qcolor.html#alpha-blended-drawing
+            QPoint start: The start of the line.
+            QPoint end: The end of the line.
+        """
+        pen.setWidth(WIDTH_LINE)
+        pen.color().setAlpha(alpha)
+        painter.setPen(pen)
+        painter.drawLine(start, end)
+
+    def draw_point(self, painter, pen, alpha, point):
+        """
+        Draws a point using the given painter, pen, and alpha level at the given QPoint.
+
+        Arguments:
+            QPainter painter: The painter.
+            QPen pen: The pen, containing the color of the point.
+            Integer alpha: The alpha level from 0-255 to set the point to.
+            QPoint point: The QPoint representing the coordinates at which to draw the point.
+        """
+        pen.setWidth(WIDTH_POINT)
+        pen.color().setAlpha(alpha)
+        painter.setPen(pen)
+        painter.drawPoint(point)
+
 
     def next_frame(self):
         if self.paused:
@@ -113,8 +147,8 @@ class _Renderer(QWidget):
             self.frame_change = next_frame_2-self.current
             self.current = next_frame_2
             self.counter2 += 1
-        self.buffer1 = self.data1[self.counter1:self.counter1+(int(15))]
-        self.buffer2 = self.data2[self.counter2:self.counter2+(int(15))]
+        self.buffer1 = self.data1[self.counter1:self.counter1 + 15]
+        self.buffer2 = self.data2[self.counter2:self.counter2 + 15]
         self.update()
 
     def reset(self):
@@ -148,18 +182,18 @@ class _Interface(QWidget):
         self.previous_button = QPushButton()
         self.previous_button.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
         self.previous_button.setFixedWidth(20)
-        self.previous_button.setToolTip("Move to previous Frame")
+        self.previous_button.setToolTip("Retreat Frame")
         self.previous_button.clicked.connect(self.previous_frame)
 
         self.next_button = QPushButton()
         self.next_button.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
         self.next_button.setFixedWidth(20)
-        self.next_button.setToolTip("Move to next Frame")
+        self.next_button.setToolTip("Advance Frame")
         self.next_button.clicked.connect(self.next_frame)
 
         self.run_button = QPushButton()
         self.run_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPause))
-        self.run_button.setToolTip("Play/Pause playback")
+        self.run_button.setToolTip("Play/Pause")
         self.run_button.clicked.connect(self.pause)
         self.run_button.setFixedWidth(20)
 
