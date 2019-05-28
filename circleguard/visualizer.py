@@ -44,7 +44,7 @@ class _Renderer(QWidget):
                 d[1] = 384 - d[1]
 
         self.replay_len = len(self.data1)
-        self.timer.timeout.connect(self.next_frame)
+        self.timer.timeout.connect(self.next_frame_from_timer)
         self.timer.start(1/60)  # next frame every 1/60sec
         self.next_frame()
 
@@ -117,9 +117,17 @@ class _Renderer(QWidget):
         painter.drawPoint(point)
 
 
-    def next_frame(self):
+    def next_frame_from_timer(self):
+        """
+        Has the same effect as next_frame except if paused, where it returns. This is to allow
+        the back/forward buttons to advance frame by frame while still paused (as they connect directly to next
+        and previous frame), while still pausing the automatic timer advancement.
+        """
         if self.paused:
             return
+        self.next_frame()
+
+    def next_frame(self):
         self.current += int(1000/120)  # this is completely wrong but it kinda works, sooooo
         next_frame_1 = self.data1[self.counter1 + 1][0]
         next_frame_2 = self.data2[self.counter2 + 1][0]
@@ -157,15 +165,16 @@ class _Renderer(QWidget):
         self.current = 0
 
     def seek_to(self, position):
-        return position
         """
-        if self.paused:
-            self.paused = False
-            self.next_frame()
-            self.paused = True
+        TODO Doesn't actually seek to a position, just advances the frame.
+        This and previous_frame are both effectively broken right now
         """
+        self.next_frame()
 
     def pause(self):
+        """
+        Switches the current paused state of the visualizer.
+        """
         if self.paused:
             self.paused = False
         else:
