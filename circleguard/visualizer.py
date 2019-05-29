@@ -157,6 +157,7 @@ class _Renderer(QWidget):
             self.counter2 += 1
         self.buffer1 = self.data1[self.counter1:self.counter1 + 15]
         self.buffer2 = self.data2[self.counter2:self.counter2 + 15]
+        self.update_signal.emit(1)
         self.update()
 
     def reset(self):
@@ -208,7 +209,6 @@ class _Interface(QWidget):
 
         self.slider.setRange(0, self.renderer.replay_len)
         self.slider.setValue(0)
-        self.slider.valueChanged.connect(self.renderer.seek_to)
         self.renderer.update_signal.connect(self.update_slider)
 
         self.layout.addWidget(self.renderer, 0, 0, 1, 10)
@@ -218,18 +218,24 @@ class _Interface(QWidget):
         self.layout.addWidget(self.slider, 1, 3, 1, 7)
         self.setLayout(self.layout)
 
-    def update_slider(self, value):
-        self.slider.setValue(value)
+    def update_slider(self, delta_value):
+        """
+        Increases the slider's position by delta_value amount.
+
+        Arguments:
+            Integer delta_value: How much to increase the slider's value by
+        """
+        self.slider.setValue(self.slider.value() + delta_value)
 
     def previous_frame(self):
         if not self.renderer.paused:
             self.renderer.pause()
-        self.slider.setValue(self.slider.value()-1)
+        self.renderer.seek_to(self.slider.value() - 1)
 
     def next_frame(self):
         if not self.renderer.paused:
             self.renderer.pause()
-        self.slider.setValue(self.slider.value()+1)
+        self.renderer.seek_to(self.slider.value() + 1)
 
     def pause(self):
         self.renderer.pause()
