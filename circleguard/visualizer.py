@@ -14,6 +14,9 @@ FRAMES_ON_SCREEN = 15 # how many frames for each replay to draw on screen at a t
                       # (though some will have high alpha values and be semi transparent)
 PEN_BLUE = QPen(QColor(63, 127, 255))
 PEN_RED = QPen(QColor(255, 127, 63))
+DRAW_SIZE = 600 # 400 by 400, square area
+OSU_WINDOW_SIZE = 512 # a constant of the game
+POS_MULT = DRAW_SIZE / OSU_WINDOW_SIZE # multiply each point by this
 
 class _Renderer(QWidget):
     update_signal = pyqtSignal(int)
@@ -131,21 +134,21 @@ class _Renderer(QWidget):
 
         alpha_step = 255/FRAMES_ON_SCREEN
         for i in range(len(self.buffer1)-1):
-            p1 = QPoint(self.buffer1[i][1], self.buffer1[i][2])
-            p2 = QPoint(self.buffer1[i+1][1], self.buffer1[i+1][2])
+            p1 = QPoint(self.buffer1[i][1] * POS_MULT, self.buffer1[i][2] * POS_MULT)
+            p2 = QPoint(self.buffer1[i+1][1] * POS_MULT, self.buffer1[i+1][2] * POS_MULT)
             self.draw_line(painter, PEN_BLUE, i*alpha_step, p1, p2)
 
         for i in range(len(self.buffer2)-1):
-            p1 = QPoint(self.buffer2[i][1], self.buffer2[i][2])
-            p2 = QPoint(self.buffer2[i+1][1], self.buffer2[i+1][2])
+            p1 = QPoint(self.buffer2[i][1] * POS_MULT, self.buffer2[i][2] * POS_MULT)
+            p2 = QPoint(self.buffer2[i+1][1] * POS_MULT, self.buffer2[i+1][2] * POS_MULT)
             self.draw_line(painter, PEN_RED, i*alpha_step, p1, p2)
 
         for i in range(len(self.buffer1)):
-            p = QPoint(self.buffer1[i][1], self.buffer1[i][2])
+            p = QPoint(self.buffer1[i][1] * POS_MULT, self.buffer1[i][2] * POS_MULT)
             self.draw_point(painter, PEN_BLUE, i*alpha_step, p)
 
         for i in range(len(self.buffer2)):
-            p = QPoint(self.buffer2[i][1], self.buffer2[i][2])
+            p = QPoint(self.buffer2[i][1] * POS_MULT, self.buffer2[i][2] * POS_MULT)
             self.draw_point(painter, PEN_RED, i*alpha_step, p)
 
         painter.setPen(QPen(QColor(128, 128, 128), 1))
@@ -258,7 +261,7 @@ class _Interface(QWidget):
         Increases the slider's position by delta_value amount.
 
         Arguments:
-            Integer delta_value: How much to increase the slider's value by
+            Integer delta_value: How much to increase the slider's value by.
         """
         self.slider.setValue(self.slider.value() + delta_value)
 
@@ -286,7 +289,7 @@ class VisualizerWindow(QMainWindow):
         super(VisualizerWindow, self).__init__()
         self.interface = _Interface(replay1, replay2)
         self.setCentralWidget(self.interface)
-        self.setFixedSize(512, 512)
+        self.setFixedSize(DRAW_SIZE, DRAW_SIZE)
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
         QShortcut(QKeySequence(Qt.Key_Left), self, self.interface.previous_frame)
         QShortcut(QKeySequence(Qt.Key_Right), self, self.interface.next_frame)
