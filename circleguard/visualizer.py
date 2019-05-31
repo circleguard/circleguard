@@ -243,6 +243,7 @@ class _Interface(QWidget):
 
         self.slider.setRange(0, self.renderer.replay_len)
         self.slider.setValue(0)
+        self.slider.setStyleSheet("outline: none;")
         self.renderer.update_signal.connect(self.update_slider)
 
         self.layout.addWidget(self.renderer, 0, 0, 1, 10)
