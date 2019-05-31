@@ -1,7 +1,6 @@
 from circleguard import utils
 from circleguard.enums import Mod
 
-
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPoint
 from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QStyle, QShortcut
@@ -137,19 +136,14 @@ class _Renderer(QWidget):
             p1 = QPoint(self.buffer1[i][1] * POS_MULT, self.buffer1[i][2] * POS_MULT)
             p2 = QPoint(self.buffer1[i+1][1] * POS_MULT, self.buffer1[i+1][2] * POS_MULT)
             self.draw_line(painter, PEN_BLUE, i*alpha_step, p1, p2)
+            self.draw_point(painter, PEN_BLUE, i*alpha_step, p1)
 
         for i in range(len(self.buffer2)-1):
             p1 = QPoint(self.buffer2[i][1] * POS_MULT, self.buffer2[i][2] * POS_MULT)
             p2 = QPoint(self.buffer2[i+1][1] * POS_MULT, self.buffer2[i+1][2] * POS_MULT)
             self.draw_line(painter, PEN_RED, i*alpha_step, p1, p2)
+            self.draw_point(painter, PEN_RED, i*alpha_step, p1)
 
-        for i in range(len(self.buffer1)):
-            p = QPoint(self.buffer1[i][1] * POS_MULT, self.buffer1[i][2] * POS_MULT)
-            self.draw_point(painter, PEN_BLUE, i*alpha_step, p)
-
-        for i in range(len(self.buffer2)):
-            p = QPoint(self.buffer2[i][1] * POS_MULT, self.buffer2[i][2] * POS_MULT)
-            self.draw_point(painter, PEN_RED, i*alpha_step, p)
 
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawText(0, 25, f"pos1: {self.pos1} | pos2: {self.pos2}")
@@ -168,7 +162,6 @@ class _Renderer(QWidget):
             QPoint start: The start of the line.
             QPoint end: The end of the line.
         """
-
 
         # I had pen.color().setAlpha(alpha), but it wouldn't actually change the alpha.
         # doing pen.setColor(pen.color()) after that didn't work either so I've resorted to
