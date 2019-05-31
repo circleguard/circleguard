@@ -4,8 +4,8 @@ from circleguard.enums import Mod
 
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPoint
-from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QStyle
-from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen
+from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QStyle, QShortcut
+from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence
 # pylint: enable=no-name-in-module
 
 WIDTH_LINE = 1
@@ -261,14 +261,18 @@ class _Interface(QWidget):
         """
         self.slider.setValue(self.slider.value() + delta_value)
 
+    # messy repeated code, there's got to be a better way to work around interface.pause always switching states
+    # and the frame methods only ever pausing and never unpausing
     def previous_frame(self):
         if not self.renderer.paused:
-            self.renderer.pause()
+            self.pause()
+        self.run_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay if self.renderer.paused else QStyle.SP_MediaPause))
         self.renderer.seek_to(self.slider.value() - 1)
 
     def next_frame(self):
         if not self.renderer.paused:
-            self.renderer.pause()
+            self.pause()
+        self.run_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay if self.renderer.paused else QStyle.SP_MediaPause))
         self.renderer.seek_to(self.slider.value() + 1)
 
     def pause(self):
@@ -282,6 +286,10 @@ class VisualizerWindow(QMainWindow):
         self.interface = _Interface(replay1, replay2)
         self.setCentralWidget(self.interface)
         self.setFixedSize(512, 512)
+        QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
+        QShortcut(QKeySequence(Qt.Key_Left), self, self.interface.previous_frame)
+        QShortcut(QKeySequence(Qt.Key_Right), self, self.interface.next_frame)
+
 
     def closeEvent(self, event):
         super().closeEvent(event)
