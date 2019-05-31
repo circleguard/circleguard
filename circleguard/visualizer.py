@@ -14,7 +14,7 @@ FRAMES_ON_SCREEN = 15 # how many frames for each replay to draw on screen at a t
                       # (though some will have high alpha values and be semi transparent)
 PEN_BLUE = QPen(QColor(63, 127, 255))
 PEN_RED = QPen(QColor(255, 127, 63))
-DRAW_SIZE = 600 # 400 by 400, square area
+DRAW_SIZE = 600 # square area
 OSU_WINDOW_SIZE = 512 # a constant of the game
 POS_MULT = DRAW_SIZE / OSU_WINDOW_SIZE # multiply each point by this
 
