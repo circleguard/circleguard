@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayo
 
 from settings import get_setting, update_default
 from widgets import OptionWidget, InputWidget
-from gui import resource_path, switch_theme
+from gui import resource_path
 
 
 class WizardPage(QWizardPage):
@@ -24,9 +24,9 @@ class WizardPage(QWizardPage):
 class WelcomeWindow(QWizard):
     def __init__(self):
         super(WelcomeWindow, self).__init__()
-
+        self.DarkModePage = DarkModePage()
         self.addPage(IntroPage())
-        self.addPage(DarkModePage())
+        self.addPage(self.DarkModePage)
         self.addPage(ApiKeyPage())
         self.addPage(BeatmapUserIdPage())
         self.addPage(ConclusionPage())
@@ -71,12 +71,11 @@ class DarkModePage(WizardPage):
         label = QLabel("Choose the look and feel of the application")
         label.setWordWrap(True)
 
-        darkmode = OptionWidget("Dark mode", "")
-        darkmode.box.stateChanged.connect(switch_theme)
+        self.darkmode = OptionWidget("Dark mode", "")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
-        layout.addWidget(darkmode)
+        layout.addWidget(self.darkmode)
         self.setLayout(layout)
 
 

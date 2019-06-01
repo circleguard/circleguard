@@ -508,6 +508,7 @@ if __name__ == "__main__":
     WINDOW.show()
     if not get_setting("ran"):
         welcome = wizard.WelcomeWindow()
+        welcome.DarkModePage.darkmode.box.stateChanged.connect(switch_theme)
         welcome.show()
         update_default("ran", True)
     app.exec_()
