@@ -505,7 +505,7 @@ if __name__ == "__main__":
     set_event_window(WINDOW)
     WINDOW.resize(600, 500)
     WINDOW.show()
-    if not get_setting("ran"):
+    if not (str(get_setting("ran")).lower() == "true"):
         welcome = wizard.WelcomeWindow()
         welcome.DarkModePage.darkmode.box.stateChanged.connect(switch_theme)
         welcome.show()
