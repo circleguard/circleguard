@@ -56,7 +56,9 @@ class IntroPage(WizardPage):
                        "<li> samuelhklumpers </li>"
                        "</ul></p>"
                        "Thanks to <a href=\"https://accalixgfx.com/index.php\">Accalix</a> for creating our logo.")
-
+        label.setTextFormat(Qt.RichText)
+        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label.setOpenExternalLinks(True)
         label.setWordWrap(True)
 
         layout = QVBoxLayout()
@@ -145,6 +147,9 @@ class ConclusionPage(WizardPage):
                        "<li><a href=\"http://old.reddit.com/r/osureport\">report cheaters at r/osureport</a></li>"
                        "</ul>"
                        "<p>Thanks for helping to clean up osu!</p>")
+        label.setTextFormat(Qt.RichText)
+        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label.setOpenExternalLinks(True)
         label.setWordWrap(True)
         layout = QVBoxLayout()
         layout.addWidget(label)
