@@ -442,8 +442,9 @@ class SettingsTab(QWidget):
 
         self.setLayout(self.grid)
 
+        old_theme = get_setting("dark_theme")  # this is needed because switch_theme changes the setting
         self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
-        self.darkmode.box.setChecked(get_setting("dark_theme"))
+        self.darkmode.box.setChecked(old_theme)
         self.cache.box.setChecked(get_setting("caching"))
         self.cache_dir.switch_enabled(get_setting("caching"))
 
