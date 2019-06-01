@@ -26,7 +26,6 @@ ROOT_PATH = Path(__file__).parent.absolute()
 __version__ = "0.1d"
 
 log = logging.getLogger(__name__)
-update_default("ran", False)
 
 def resource_path(str_path):
     """
