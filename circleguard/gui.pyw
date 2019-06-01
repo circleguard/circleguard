@@ -5,19 +5,19 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
-from visualizer import VisualizerWindow
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
-from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
+from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QWizard,
                              QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
 # pylint: enable=no-name-in-module
 
 from circleguard import Circleguard, set_options
 from circleguard import __version__ as cg_version
+from visualizer import VisualizerWindow
 
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings,
-                     FolderChooser, IdWidgetCombined, Separator, OptionWidget,
+                     FolderChooser, IdWidgetCombined, Separator, OptionWidget, WizardPage,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
 from settings import get_setting, update_default
 
@@ -497,6 +497,120 @@ def switch_theme(dark):
                           "border: 1px solid white; }")
 
 
+class WelcomeWindow(QWizard):
+    def __init__(self):
+        super(WelcomeWindow, self).__init__()
+
+        self.addPage(IntroPage())
+        self.addPage(DarkModePage())
+        self.addPage(ApiKeyPage())
+        self.addPage(BeatmapUserIdPage())
+        self.addPage(ConclusionPage())
+        # disable help button
+        self.setWindowFlags(self.windowFlags() | Qt.CustomizeWindowHint)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setButtonText(QWizard.CancelButton, "Skip")
+
+        self.setWizardStyle(QWizard.ModernStyle)
+
+    def mousePressEvent(self, event):
+        focused = self.focusWidget()
+        if focused is not None:
+            focused.clearFocus()
+
+
+class IntroPage(WizardPage):
+    def __init__(self, parent=None):
+        super(IntroPage, self).__init__(parent)
+        self.setTitle("Introduction")
+        label = QLabel("This project ultimately aims to create a comprehensive, player-run cheat detection tool. "
+                       "A by no means complete list of cheats includes replay stealing, relax, replay editing, and timewarp.")
+        label.setWordWrap(True)
+
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        self.setLayout(layout)
+
+
+class DarkModePage(WizardPage):
+    def __init__(self, parent=None):
+        super(DarkModePage, self).__init__(parent)
+        self.setTitle("Let's change some colors")
+        label = QLabel("First off, Would you like to enable Dark mode?")
+        label.setWordWrap(True)
+
+        darkmode = OptionWidget("Dark mode", "We wouldn't feel right shipping a product without darkmode")
+        darkmode.box.stateChanged.connect(switch_theme)
+
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(darkmode)
+        self.setLayout(layout)
+
+
+class ApiKeyPage(WizardPage):
+    def __init__(self, parent=None):
+        super(ApiKeyPage, self).__init__(parent)
+        self.setTitle("Need a key for a lock")
+        label = QLabel(self)
+        # \/ this looks... complicated. needs some kind of better formatting
+        label.setText("Next we need your Api Key so we can throw requests at peppy (:<br/>"
+                      "Don't worry, it's really easy to do. First, go to this website: <a href=\"https://osu.ppy.sh/p/api\">https://osu.ppy.sh/p/api</a><br/><br/>"
+                      "As your Application Name, type <b>\"Circleguard\"</b>, <br/>"
+                      "and as your Application URL type <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a><br/> "
+                      "Copy the API Key and paste it into the field bellow. <br/>"
+                      "Your Api Key is stored locally and never send anywhere besides peppy's servers! <br/><br/>"
+                      "You can skip this step but Circleguard will only be able to process local replay files.")
+        label.setTextFormat(Qt.RichText)
+        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label.setOpenExternalLinks(True)
+        label.setWordWrap(True)
+
+        apikey_widget = InputWidget("Api Key", "", type_="normal")
+        apikey_widget.field.setText(get_setting("api_key"))
+        apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
+
+        layout = QGridLayout()
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addWidget(apikey_widget, 1, 0, 1, 1)
+        self.setLayout(layout)
+
+
+class BeatmapUserIdPage(WizardPage):
+    def __init__(self, parent=None):
+        super(BeatmapUserIdPage, self).__init__(parent)
+        self.setTitle("Words can be hard")
+        label = QLabel("Small introduction into getting the Beatmap and User Id"
+                       "<br/><br/><b>User Id:</b><br/>"
+                       "Go onto a Users profile and check out the URL.<br/>"
+                       "<a href=\"https://osu.ppy.sh/users/124493\">https://osu.ppy.sh/users/<b>124493</b></a><br/>"
+                       "In this example <b>124493</b> would be the User Id"
+                       "<br/><br/><b>Beatmap Id:</b><br/>"
+                       "Go onto a Beatmap and choose a difficulty. Look at the URL again.<br/>"
+                       "<a href=\"hhttps://osu.ppy.sh/beatmapsets/39804#osu/129891\">"
+                       "https://osu.ppy.sh/beatmapsets/39804#osu/<b>129891</b></a><br/>"
+                       "In this example <b>129891</b> would be the Beatmap Id (39804 would be the <b>Beatmapset</b> Id!)")
+        label.setTextFormat(Qt.RichText)
+        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label.setOpenExternalLinks(True)
+        label.setWordWrap(True)
+
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        self.setLayout(layout)
+
+
+class ConclusionPage(WizardPage):
+    def __init__(self, parent=None):
+        super(ConclusionPage, self).__init__(parent)
+        self.setTitle("<3")
+        label = QLabel("Thank you very much for helping us find cheaters (:")
+        label.setWordWrap(True)
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        self.setLayout(layout)
+
+
 if __name__ == "__main__":
     # create and open window
     app = QApplication([])
@@ -505,4 +619,8 @@ if __name__ == "__main__":
     set_event_window(WINDOW)
     WINDOW.resize(600, 500)
     WINDOW.show()
+    if not get_setting("ran") == "true":
+        welcome = WelcomeWindow()
+        welcome.show()
+        update_default("ran", True)
     app.exec_()

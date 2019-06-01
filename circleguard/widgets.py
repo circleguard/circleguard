@@ -1,11 +1,11 @@
 import sys
 # pylint: disable=no-name-in-module
 from functools import partial
-from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBox,
-                             QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
+from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBox, QWizard,
+                             QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame, QWizardPage,
                              QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox)
-from PyQt5.QtGui import QRegExpValidator
-from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
+from PyQt5.QtGui import QRegExpValidator, QPixmap
+from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QSize
 # pylint: enable=no-name-in-module
 from settings import get_setting, reset_defaults, update_default
 # pylint: disable=no-name-in-module
@@ -623,3 +623,13 @@ class ResetSettings(QFrame):
         if prompt == QMessageBox.Yes:
             reset_defaults()
             sys.exit(0)
+
+
+class WizardPage(QWizardPage):
+    def __init__(self, parent=None):
+        super(QWizardPage, self).__init__(parent)
+        self.setSubTitle(" ")
+        banner = QPixmap('resources/banner.png')
+        self.setPixmap(QWizard.BannerPixmap, banner)
+        image = QPixmap('resources/logo.png').scaled(QSize(banner.height()*0.85, banner.height()*0.85))
+        self.setPixmap(QWizard.LogoPixmap, image)
