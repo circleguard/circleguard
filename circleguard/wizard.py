@@ -86,7 +86,7 @@ class ApiKeyPage(WizardPage):
         self.setTitle("API Key")
         label = QLabel(self)
         # \/ this looks... complicated. needs some kind of better formatting
-        label.setText("<p>Next we need your api key to make requests and download replays. "
+        label.setText("<p>Circleguard needs your api key to make requests and download replays. "
                       "Don't worry, this takes less than a minute to complete. </p>"
                       "<p>Go to <a href=\"https://osu.ppy.sh/p/api\">https://osu.ppy.sh/p/api</a>, enter <b>Circleguard</b> "
                       "as your application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
