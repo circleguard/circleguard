@@ -30,11 +30,11 @@ class WelcomeWindow(QWizard):
         self.addPage(ApiKeyPage())
         self.addPage(BeatmapUserIdPage())
         self.addPage(ConclusionPage())
+
         # disable help button
         self.setWindowFlags(self.windowFlags() | Qt.CustomizeWindowHint)
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         self.setButtonText(QWizard.CancelButton, "Skip")
-
         self.setWizardStyle(QWizard.ModernStyle)
 
     def mousePressEvent(self, event):
@@ -47,15 +47,16 @@ class IntroPage(WizardPage):
     def __init__(self, parent=None):
         super(IntroPage, self).__init__(parent)
         self.setTitle("Introduction")
-        label = QLabel("<p>Circleguard is an all-in-one tool for catching cheaters. It is actively mantained at "
+        label = QLabel("<p>Circleguard is an all-in-one tool for catching cheaters. It is actively maintained at "
                        "<a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a>.</p>"
-                       "<p>Circleguard is developed by"
+                       "<p>Circleguard is developed by:"
                        "<ul>"
                        "<li> tybug </li>"
                        "<li> InvisibleSymbol </li>"
                        "<li> samuelhklumpers </li>"
                        "</ul></p>"
                        "Thanks to <a href=\"https://accalixgfx.com/index.php\">Accalix</a> for creating our logo.")
+
         label.setTextFormat(Qt.RichText)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
         label.setOpenExternalLinks(True)
@@ -86,7 +87,6 @@ class ApiKeyPage(WizardPage):
         super(ApiKeyPage, self).__init__(parent)
         self.setTitle("API Key")
         label = QLabel(self)
-        # \/ this looks... complicated. needs some kind of better formatting
         label.setText("<p>Circleguard needs your api key to make requests and download replays. "
                       "Don't worry, this takes less than a minute to complete. </p>"
                       "<p>Go to <a href=\"https://osu.ppy.sh/p/api\">https://osu.ppy.sh/p/api</a>, enter <b>Circleguard</b> "
@@ -94,6 +94,7 @@ class ApiKeyPage(WizardPage):
                       "as your application url. Paste the api key you receive into the box below.</p>"
                       "<p>Your api key will be stored locally, and is never sent to anyone.</p>"
                       "<p>You can skip this step, but Circleguard will only be able to process local replay files.</p>")
+
         label.setTextFormat(Qt.RichText)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
         label.setOpenExternalLinks(True)
@@ -115,8 +116,8 @@ class BeatmapUserIdPage(WizardPage):
         self.setTitle("Small tutorial")
         label = QLabel("<p>If you're an experienced reporter, you can skip this "
                        "step. If you're not, I hope you appreciate the following brief overview.</p>"
-                       "<p>When using circleguard, you will be asked to enter Beatmap Ids and User Ids. "
-                       "To find a user id, go to their profile page and copy the numbers that appear in the url. "
+                       "<p>When using Circleguard, you will be asked to enter Beatmap Ids and User Ids. "
+                       "To find a User Id, go to their profile page and copy the numbers that appear in the url. "
                        "For instance, cookiezi (<a href=\"https://osu.ppy.sh/users/124493\">https://osu.ppy.sh/users/124493</a>) "
                        "has a User Id of 124493.</p>"
                        "<p>Map Ids are slightly trickier - the url contains two ids. The first is the Beatmapset Id, and "
@@ -140,17 +141,19 @@ class ConclusionPage(WizardPage):
         super(ConclusionPage, self).__init__(parent)
         self.setTitle("<3")
         label = QLabel("<p>If you run into any problems with the gui, have suggestions, or want to contribute, join "
-                       " our discord or file an issue on the github! We don't bite, we promise :)</p>"
+                       " our discord or file an issue on the GitHub! We don't bite, we promise :)</p>"
                        "<ul>"
                        "<li><a href=\"https://discord.gg/e84qxkQ\">Discord</a></li>"
-                       "<li><a href=\"https://github.com/circleguard/circleguard\">Github</a></li>"
+                       "<li><a href=\"https://github.com/circleguard/circleguard\">GitHub</a></li>"
                        "<li><a href=\"http://old.reddit.com/r/osureport\">report cheaters at r/osureport</a></li>"
                        "</ul>"
                        "<p>Thanks for helping to clean up osu!</p>")
+
         label.setTextFormat(Qt.RichText)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
         label.setOpenExternalLinks(True)
         label.setWordWrap(True)
+
         layout = QVBoxLayout()
         layout.addWidget(label)
         self.setLayout(layout)
