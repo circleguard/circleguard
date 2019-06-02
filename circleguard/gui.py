@@ -5,7 +5,6 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
-from visualizer import VisualizerWindow
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
@@ -15,17 +14,18 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
 
 from circleguard import Circleguard, set_options
 from circleguard import __version__ as cg_version
+from visualizer import VisualizerWindow
 
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
 from settings import get_setting, update_default
+import wizard
 
 ROOT_PATH = Path(__file__).parent.absolute()
 __version__ = "0.1d"
 
 log = logging.getLogger(__name__)
-
 
 def resource_path(str_path):
     """
@@ -505,4 +505,9 @@ if __name__ == "__main__":
     set_event_window(WINDOW)
     WINDOW.resize(600, 500)
     WINDOW.show()
+    if not (str(get_setting("ran")).lower() == "true"):
+        welcome = wizard.WelcomeWindow()
+        welcome.DarkModePage.darkmode.box.stateChanged.connect(switch_theme)
+        welcome.show()
+        update_default("ran", True)
     app.exec_()

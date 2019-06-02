@@ -5,7 +5,7 @@ from PyQt5.QtCore import QSettings
 
 def reset_defaults():
     SETTINGS.clear()
-    SETTINGS.setValue("ran", True)
+    SETTINGS.setValue("ran", False)
     SETTINGS.setValue("threshold", 18)
     SETTINGS.setValue("api_key", "")
     SETTINGS.setValue("dark_theme", 0)
@@ -20,7 +20,7 @@ def reset_defaults():
 
 
 SETTINGS = QSettings("Circleguard", "Circleguard")
-if not SETTINGS.value("ran"):
+if not SETTINGS.contains("ran"):
     reset_defaults()
 
 

@@ -3,7 +3,7 @@
 block_cipher = None
 from os.path import expanduser
 os.path.expanduser
-a = Analysis(['circleguard/gui.pyw'],
+a = Analysis(['circleguard/gui.py'],
              pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x86', expanduser('~/AppData/Local/Programs/Python/Python37-32/')],
              binaries=[(expanduser('~/AppData/Local/Programs/Python/Python37-32/Lib/tkinter'), 'tk'), (expanduser('~/AppData/Local/Programs/Python/Python37-32/tcl'), 'tcl')],
              datas=[('circleguard/resources/','resources/'), ('circleguard/db/','db/')],
