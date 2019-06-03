@@ -137,13 +137,16 @@ class _Renderer(QWidget):
             p2 = QPoint(self.buffer1[i+1][1] * POS_MULT, self.buffer1[i+1][2] * POS_MULT)
             self.draw_line(painter, PEN_BLUE, i*alpha_step, p1, p2)
             self.draw_point(painter, PEN_BLUE, i*alpha_step, p1)
+            if i == len(self.buffer1)-2:
+                self.draw_point(painter, PEN_BLUE, (i+1)*alpha_step, p2)
 
         for i in range(len(self.buffer2)-1):
             p1 = QPoint(self.buffer2[i][1] * POS_MULT, self.buffer2[i][2] * POS_MULT)
             p2 = QPoint(self.buffer2[i+1][1] * POS_MULT, self.buffer2[i+1][2] * POS_MULT)
             self.draw_line(painter, PEN_RED, i*alpha_step, p1, p2)
             self.draw_point(painter, PEN_RED, i*alpha_step, p1)
-
+            if i == len(self.buffer2)-2:
+                self.draw_point(painter, PEN_RED, (i+1)*alpha_step, p2)
 
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawText(0, 25, f"pos1: {self.pos1} | pos2: {self.pos2}")
