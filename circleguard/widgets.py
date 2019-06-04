@@ -665,6 +665,7 @@ class BooleanPlay(QFrame):
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         self.checkbox = QCheckBox()
+        self.checkbox.setChecked(True)
         layout.addWidget(self.checkbox, 0, 0, 1, 1)
         layout.addWidget(QLabel(text), 0, 1, 1, 1)
 
