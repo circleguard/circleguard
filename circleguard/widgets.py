@@ -483,10 +483,11 @@ class ThresholdCombined(QFrame):
 
     def switch_thresh(self, state):
         self.thresh_state = state
-        self.thresh_label.setStyleSheet("color: gray" if state else "")
-        self.thresh_spinbox.setStyleSheet("color: gray" if state else "")
-        self.autothresh_label.setStyleSheet("color: gray" if not state else "")
-        self.autothresh_spinbox.setStyleSheet("color: gray" if not state else "")
+        style = "color: gray" if state else ""
+        self.thresh_label.setStyleSheet(style)
+        self.thresh_spinbox.setStyleSheet(style)
+        self.autothresh_label.setStyleSheet(style)
+        self.autothresh_spinbox.setStyleSheet(style)
 
 
 class Threshold(QFrame):
