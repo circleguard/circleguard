@@ -315,12 +315,6 @@ class MainTab(QWidget):
         except Empty:
             pass
 
-    def process_threshold(self, widget):
-        if not widget.thresh_state:  # threshold is selected
-            return widget.thresh_slider.value()
-        else:  # auto_threshold is selected
-            return widget.autothresh_slider.value() / 10
-
 
 class MapTab(QWidget):
     def __init__(self):
