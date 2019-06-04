@@ -5,6 +5,8 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
+
+from osuAPI import OsuAPI
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
@@ -12,13 +14,14 @@ from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
 # pylint: enable=no-name-in-module
 
+
 from circleguard import Circleguard, set_options
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
-
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
-                     CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
+                     CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
+                     TopPlays)
 from settings import get_setting, update_default
 import wizard
 
@@ -165,6 +168,25 @@ class MainWindow(QWidget):
         self.main_layout = QVBoxLayout()
         self.main_layout.addWidget(self.tab_widget)
         self.setLayout(self.main_layout)
+
+        # a bunch of signals for adding the user's plays to the layout as the id is inputted to the tab
+        self.main_tab.user_tab.user_id.field.textChanged.connect(self.user_id_changed)
+
+    def user_id_changed(self, user_id):
+        api_key = get_setting("api_key")
+        api = OsuAPI(api_key)
+        top_plays = api.get_user_best({"u": user_id})
+        top_plays_widget = TopPlays()
+        self.main_tab.user_tab.layout.addWidget(top_plays_widget, 2, 0, 1, 1)
+        for play in top_plays:
+            c0 = int(play["countmiss"])
+            c50 = int(play["count50"])
+            c100 = int(play["count100"])
+            c300 = int(play["count300"])
+
+            acc = (50*c50+ 100*c100 + 300*c300) / (300 * (c0 + c50 + c100 + c300))
+            text = "{} - {:.1%}".format(play["enabled_mods"], acc) # map name (truncated to 20) - mods - acc
+            top_plays_widget.add_play(text)
 
 
 class MainTab(QWidget):
@@ -336,11 +358,12 @@ class UserTab(QWidget):
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.user_id, 1, 0, 1, 1)
-        layout.addWidget(self.compare_top_map, 2, 0, 1, 1)
-        layout.addWidget(self.compare_top_user, 3, 0, 1, 1)
-        layout.addWidget(self.threshold, 4, 0, 1, 1)
-
-        self.setLayout(layout)
+        # leave space for inserting the user user top plays widget
+        layout.addWidget(self.compare_top_map, 3, 0, 1, 1)
+        layout.addWidget(self.compare_top_user, 4, 0, 1, 1)
+        layout.addWidget(self.threshold, 5, 0, 1, 1)
+        self.layout = layout
+        self.setLayout(self.layout)
 
 
 class LocalTab(QWidget):

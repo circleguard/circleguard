@@ -623,3 +623,49 @@ class ResetSettings(QFrame):
         if prompt == QMessageBox.Yes:
             reset_defaults()
             sys.exit(0)
+
+
+class TopPlays(QFrame):
+    """
+    Displays and gives checkboxes for the top plays of a user. Intended to let the user select which top
+    plays they want to have processed by circleguard.
+    """
+    MAX_HEIGHT = 5
+    def __init__(self):
+        super().__init__()
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.layout)
+        self.row = 0
+        self.col = 0
+
+    def add_play(self, text):
+        """
+        Adds a play (with the passed text, and a corresponding checkbox) to the layout.
+        If this means the layout surpasses MAX_HEIGHT in a single column, the new
+        play is moved to the next column instead.
+        """
+
+        self.row += 1
+
+        if(self.row > TopPlays.MAX_HEIGHT):
+            self.row = 1
+            self.col += 1
+
+        self.layout.addWidget(BooleanPlay(text), self.row, self.col, 1, 1)
+
+
+class BooleanPlay(QFrame):
+    """
+    Represents a single top play of a user. This class contains a label and a checkbox,
+    with the checkbox appearing first (as the leftmost widget).
+    """
+    def __init__(self, text):
+        super().__init__()
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.checkbox = QCheckBox()
+        layout.addWidget(self.checkbox, 0, 0, 1, 1)
+        layout.addWidget(QLabel(text), 0, 1, 1, 1)
+
+        self.setLayout(layout)
