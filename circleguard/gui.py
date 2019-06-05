@@ -198,6 +198,7 @@ class MainTab(QWidget):
         {"name": "VERIFY", "requires_api": True},
     ]
 
+
     def __init__(self):
         super(MainTab, self).__init__()
         self.q = Queue()
@@ -228,8 +229,9 @@ class MainTab(QWidget):
         layout.addWidget(self.terminal)
         layout.addWidget(self.run_button)
         self.setLayout(layout)
-
+        self.run_type = "NONE" # set after you click run, depending on your current tab
         self.switch_run_button()  # disable run button if there is no api key
+
 
     def write(self, message):
         self.terminal.append(str(message).strip())
@@ -259,8 +261,8 @@ class MainTab(QWidget):
         try:
             cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"), "cache.db"))
             current_tab = self.tabs.currentIndex()
-            current_tab_name = MainTab.TAB_REGISTER[current_tab]["name"]
-            if current_tab_name == "MAP":
+            self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
+            if self.run_type == "MAP":
                 tab = self.map_tab
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
                 #       maybe fancy flashing red stars for required fields
@@ -270,7 +272,7 @@ class MainTab(QWidget):
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.map_check(map_id, num=num, thresh=thresh)
 
-            if current_tab_name == "SCREEN":
+            if self.run_type == "SCREEN":
                 tab = self.user_tab
                 user_id_str = tab.user_id.field.text()
                 user_id = int(user_id_str) if user_id_str != "" else 0
@@ -278,13 +280,13 @@ class MainTab(QWidget):
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.user_check(user_id, num, thresh=thresh)
 
-            if current_tab_name == "LOCAL":
+            if self.run_type == "LOCAL":
                 tab = self.local_tab
                 path = Path(tab.folder_chooser.path)
                 thresh = tab.threshold.thresh_slider.value()
                 gen = cg.local_check(path, thresh=thresh)
 
-            if current_tab_name == "VERIFY":
+            if self.run_type == "VERIFY":
                 tab = self.verify_tab
                 map_id_str = tab.map_id.field.text()
                 map_id = int(map_id_str) if map_id_str != "" else 0
@@ -307,12 +309,28 @@ class MainTab(QWidget):
         try:
             while True:
                 result = self.q.get(block=False)
+                name1 = result.replay1.username
+                name2 = result.replay2.username
+                later = result.later_name
+                earlier = name1 if later == name2 else name2 # the other name
+                sim = result.similiarity
                 if result.ischeat:
-                    self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
+                    if self.run_type == "VERIFY":
+                        # special prints if it was ran as a verify call
+                        out = "{} stole his replay from {} ({:0.1f} sim)".format(later, earlier, sim)
+                    else:
+                        self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
+
                     QApplication.beep()
                     QApplication.alert(self)
-                    self.visualizer_window = VisualizerWindow(result.replay1, result.replay2)
-                    self.visualizer_window.show()
+                    visualizer_window = VisualizerWindow(result.replay1, result.replay2)
+                    visualizer_window.show()
+
+                else:
+                    if self.run_type == "VERIFY":
+                        out = "The replays by {} and {} are not copies. ({:0.1f} sim)".format(name1, name2, sim)
+
+                self.write(out)
 
         except Empty:
             pass
