@@ -169,24 +169,25 @@ class MainWindow(QWidget):
         self.main_layout.addWidget(self.tab_widget)
         self.setLayout(self.main_layout)
 
+        ## code below is an unimplemented feature to allow the user to tick exactly which replays they want compared
         # a bunch of signals for adding the user's plays to the layout as the id is inputted to the tab
-        self.main_tab.user_tab.user_id.field.textChanged.connect(self.user_id_changed)
+        # self.main_tab.user_tab.user_id.field.textChanged.connect(self.user_id_changed)
 
-    def user_id_changed(self, user_id):
-        api_key = get_setting("api_key")
-        api = OsuAPI(api_key)
-        top_plays = api.get_user_best({"u": user_id})
-        top_plays_widget = TopPlays()
-        self.main_tab.user_tab.layout.addWidget(top_plays_widget, 2, 0, 1, 1)
-        for play in top_plays:
-            c0 = int(play["countmiss"])
-            c50 = int(play["count50"])
-            c100 = int(play["count100"])
-            c300 = int(play["count300"])
+    # def user_id_changed(self, user_id):
+    #     api_key = get_setting("api_key")
+    #     api = OsuAPI(api_key)
+    #     top_plays = api.get_user_best({"u": user_id})
+    #     top_plays_widget = TopPlays()
+    #     self.main_tab.user_tab.layout.addWidget(top_plays_widget, 2, 0, 1, 1)
+    #     for play in top_plays:
+    #         c0 = int(play["countmiss"])
+    #         c50 = int(play["count50"])
+    #         c100 = int(play["count100"])
+    #         c300 = int(play["count300"])
 
-            acc = (50*c50+ 100*c100 + 300*c300) / (300 * (c0 + c50 + c100 + c300))
-            text = "{} - {:.1%}".format(play["enabled_mods"], acc) # map name (truncated to 20) - mods - acc
-            top_plays_widget.add_play(text)
+    #         acc = (50*c50+ 100*c100 + 300*c300) / (300 * (c0 + c50 + c100 + c300))
+    #         text = "{} - {:.1%}".format(play["enabled_mods"], acc) # map name (truncated to 20) - mods - acc
+    #         top_plays_widget.add_play(text)
 
 
 class MainTab(QWidget):
