@@ -7,20 +7,33 @@ from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushBut
 from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence
 # pylint: enable=no-name-in-module
 
+import osu_parser
+
 WIDTH_LINE = 1
 WIDTH_POINT = 3
+WIDTH_CIRCLE_BORDER = 3
 FRAMES_ON_SCREEN = 15 # how many frames for each replay to draw on screen at a time
                       # (though some will have high alpha values and be semi transparent)
 PEN_BLUE = QPen(QColor(63, 127, 255))
 PEN_RED = QPen(QColor(255, 127, 63))
+PEN_BLACK = QPen(QColor(25, 25, 25))
 DRAW_SIZE = 600 # square area
 OSU_WINDOW_SIZE = 512 # a constant of the game
 POS_MULT = DRAW_SIZE / OSU_WINDOW_SIZE # multiply each point by this
 
+class Point(QPoint):
+    """
+    A sublcass of QPoint that acts solely to remove the need to multiply x and y
+    by POS_MULT when creating a point.
+    """
+    def __init__(self, x, y):
+        super().__init__(x * POS_MULT, y * POS_MULT)
+
+
 class _Renderer(QWidget):
     update_signal = pyqtSignal(int)
 
-    def __init__(self, replay1, replay2, parent=None):
+    def __init__(self, replay1, replay2, beatmap_path, parent=None):
         super(_Renderer, self).__init__(parent)
         # initialize variables
         self.current_time = 0
@@ -30,7 +43,11 @@ class _Renderer(QWidget):
         self.buffer2 = []
         self.buffer_additions1 = []
         self.buffer_additions2 = []
+        self.hitobjs = []
         self.paused = False
+
+        print("parsing beatmap")
+        self.beatmap = osu_parser.from_path(beatmap_path)
 
         self.data1 = replay1.as_list_with_timestamps() #t,x,y
         self.data2 = replay2.as_list_with_timestamps() #t,x,y
@@ -74,6 +91,7 @@ class _Renderer(QWidget):
         if it has less than FRAMES_ON_SCREEN)
         """
 
+        print("next frame")
         #documentation assumes data arrays have time vals of
         # [3, 4, 6, 9] data1
         # [1, 2, 3.5, 7] data2
@@ -111,6 +129,12 @@ class _Renderer(QWidget):
 
         # if neither enter, both have the exact same next frame, so just draw both and call it a day
 
+        while max(next_time1, next_time2) > (self.beatmap.next_time - 300): # 0.3 seconds arbitrarily chosen
+            hitobj = self.beatmap.advance()
+            self.hitobjs.append(hitobj)
+            print("oop")
+
+
         self.update_signal.emit(1)
         self.update()
 
@@ -133,20 +157,24 @@ class _Renderer(QWidget):
 
         alpha_step = 255/FRAMES_ON_SCREEN
         for i in range(len(self.buffer1)-1):
-            p1 = QPoint(self.buffer1[i][1] * POS_MULT, self.buffer1[i][2] * POS_MULT)
-            p2 = QPoint(self.buffer1[i+1][1] * POS_MULT, self.buffer1[i+1][2] * POS_MULT)
+            p1 = Point(self.buffer1[i][1], self.buffer1[i][2])
+            p2 = Point(self.buffer1[i+1][1], self.buffer1[i+1][2])
             self.draw_line(painter, PEN_BLUE, i*alpha_step, p1, p2)
             self.draw_point(painter, PEN_BLUE, i*alpha_step, p1)
             if i == len(self.buffer1)-2:
                 self.draw_point(painter, PEN_BLUE, (i+1)*alpha_step, p2)
 
         for i in range(len(self.buffer2)-1):
-            p1 = QPoint(self.buffer2[i][1] * POS_MULT, self.buffer2[i][2] * POS_MULT)
-            p2 = QPoint(self.buffer2[i+1][1] * POS_MULT, self.buffer2[i+1][2] * POS_MULT)
+            p1 = Point(self.buffer2[i][1], self.buffer2[i][2])
+            p2 = Point(self.buffer2[i+1][1], self.buffer2[i+1][2])
             self.draw_line(painter, PEN_RED, i*alpha_step, p1, p2)
             self.draw_point(painter, PEN_RED, i*alpha_step, p1)
             if i == len(self.buffer2)-2:
                 self.draw_point(painter, PEN_RED, (i+1)*alpha_step, p2)
+
+        for hitobj in self.hitobjs:
+            p = Point(hitobj.x, hitobj.y)
+            self.draw_circle(painter, PEN_BLACK, 0, p, 10)
 
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawText(0, 25, f"pos1: {self.pos1} | pos2: {self.pos2}")
@@ -191,6 +219,23 @@ class _Renderer(QWidget):
         painter.setPen(pen_)
         painter.drawPoint(point)
 
+    def draw_circle(self, painter, pen, alpha, point, radius):
+        """
+        Draws an unfilled circle (the hit object in osu!) using the given painter, pen, and alpha level
+        at the given QPoint with the given radius.
+
+        Arguments:
+            QPainter painter: The painter.
+            QPen pen: The pen, containing the color of the circle border.
+            Integer alpha: The alpha level from 0-255 to set the circle border to.
+            QPoint point: The QPoint representing the coordinates at which to draw the circle.
+            Integer radius: How large to draw the circle, in pixels
+        """
+        c = pen.color()
+        pen_ = QPen(QColor(c.red(), c.green(), c.blue(), alpha))
+        pen_.setWidth(WIDTH_CIRCLE_BORDER)
+        painter.setPen(pen_)
+        painter.drawEllipse(point, radius, radius) # qt wants ry and rx for ellipse, it doesn't provide a circle function
 
 
     def reset(self):
@@ -216,9 +261,9 @@ class _Renderer(QWidget):
 
 
 class _Interface(QWidget):
-    def __init__(self, replay1, replay2):
+    def __init__(self, replay1, replay2, beatmap_path):
         super(_Interface, self).__init__()
-        self.renderer = _Renderer(replay1, replay2)
+        self.renderer = _Renderer(replay1, replay2, beatmap_path)
         self.layout = QGridLayout()
         self.slider = QSlider(Qt.Horizontal)
 
@@ -281,9 +326,9 @@ class _Interface(QWidget):
 
 
 class VisualizerWindow(QMainWindow):
-    def __init__(self, replay1, replay2):
+    def __init__(self, replay1, replay2, beatmap_path):
         super(VisualizerWindow, self).__init__()
-        self.interface = _Interface(replay1, replay2)
+        self.interface = _Interface(replay1, replay2, beatmap_path)
         self.setCentralWidget(self.interface)
         self.setFixedSize(DRAW_SIZE, DRAW_SIZE)
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)

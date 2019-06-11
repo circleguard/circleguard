@@ -314,17 +314,19 @@ class MainTab(QWidget):
                 later = result.later_name
                 earlier = name1 if later == name2 else name2 # the other name
                 sim = result.similiarity
+                out = f"{sim:0.1f} similarity. {name1} vs {name2}, {later} set later"
                 if result.ischeat:
                     if self.run_type == "VERIFY":
                         # special prints if it was ran as a verify call
                         out = "{} stole his replay from {} ({:0.1f} sim)".format(later, earlier, sim)
-                    else:
-                        self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
 
                     QApplication.beep()
                     QApplication.alert(self)
-                    visualizer_window = VisualizerWindow(result.replay1, result.replay2)
-                    visualizer_window.show()
+                    try:
+                        visualizer_window = VisualizerWindow(result.replay1, result.replay2, "/Users/tybug/Desktop/roses_epicurean/hollow.osu")
+                        visualizer_window.show()
+                    except Exception:
+                        self.log.exception("ASDASDADSAD")
 
                 else:
                     if self.run_type == "VERIFY":
