@@ -322,11 +322,9 @@ class MainTab(QWidget):
 
                     QApplication.beep()
                     QApplication.alert(self)
-                    try:
-                        visualizer_window = VisualizerWindow(result.replay1, result.replay2, "/Users/tybug/Desktop/roses_epicurean/hollow.osu")
-                        visualizer_window.show()
-                    except Exception:
-                        self.log.exception("ASDASDADSAD")
+                    # keeping a reference to the window is necessary or else it dissapears
+                    self.visualizer_window = VisualizerWindow(result.replay1, result.replay2, "/Users/tybug/Desktop/roses_epicurean/hollow.osu")
+                    self.visualizer_window.show()
 
                 else:
                     if self.run_type == "VERIFY":
