@@ -149,11 +149,12 @@ class _Renderer(QWidget):
         self.buffer2 += self.buffer_additions2
 
         # if less than FRAMES_ON_SCREEN, becomes 0. See https://math.stackexchange.com/a/3018840
-        extra1 = abs(len(self.buffer1) - FRAMES_ON_SCREEN) + (len(self.buffer1) - FRAMES_ON_SCREEN)
-        extra2 = abs(len(self.buffer2) - FRAMES_ON_SCREEN) + (len(self.buffer2) - FRAMES_ON_SCREEN)
+        extra1 = int((abs(len(self.buffer1) - FRAMES_ON_SCREEN) + (len(self.buffer1) - FRAMES_ON_SCREEN)) / 2)
+        extra2 = int((abs(len(self.buffer2) - FRAMES_ON_SCREEN) + (len(self.buffer2) - FRAMES_ON_SCREEN)) / 2)
 
-        del self.buffer1[:extra1] # delete oldest extra frames
-        del self.buffer2[:extra2]
+
+        del self.buffer1[0:extra1] # delete oldest extra frames
+        del self.buffer2[0:extra2]
 
         alpha_step = 255/FRAMES_ON_SCREEN
         for i in range(len(self.buffer1)-1):
