@@ -16,7 +16,7 @@ FRAMES_ON_SCREEN = 15 # how many frames for each replay to draw on screen at a t
                       # (though some will have high alpha values and be semi transparent)
 PEN_BLUE = QPen(QColor(63, 127, 255))
 PEN_RED = QPen(QColor(255, 127, 63))
-PEN_BLACK = QPen(QColor(25, 25, 25))
+PEN_BLACK = QPen(QColor(17, 17, 17))
 DRAW_SIZE = 600 # square area
 OSU_WINDOW_SIZE = 512 # a constant of the game
 POS_MULT = DRAW_SIZE / OSU_WINDOW_SIZE # multiply each point by this
@@ -91,7 +91,6 @@ class _Renderer(QWidget):
         if it has less than FRAMES_ON_SCREEN)
         """
 
-        print("next frame")
         #documentation assumes data arrays have time vals of
         # [3, 4, 6, 9] data1
         # [1, 2, 3.5, 7] data2
@@ -99,6 +98,7 @@ class _Renderer(QWidget):
         next_frame2 = self.data2[self.pos2 + 1]
         next_time1 = next_frame1[0] # 3
         next_time2 = next_frame2[0] # 1
+        print(next_time1)
         self.buffer_additions1.append(next_frame1)
         self.buffer_additions2.append(next_frame2)
         self.pos1 += 1
@@ -129,17 +129,23 @@ class _Renderer(QWidget):
 
         # if neither enter, both have the exact same next frame, so just draw both and call it a day
 
-        while max(next_time1, next_time2) > (self.beatmap.next_time - 300): # 0.3 seconds arbitrarily chosen
+        # something is very off about this - the map is getting drawn starting from a farther time (instead of t=0
+        # from the beamap's perspective), because the time in the replay and the time on the beatmap don't match up;
+        # we can't really compare them directly like I do here unless I'm missing something.
+        farthest_time = max(next_time1, next_time2)
+        while farthest_time > (self.beatmap.next_time - 1000): # 1 second arbitrarily chosen
             hitobj = self.beatmap.advance()
+            print(f"farthest time: {farthest_time}, hitobj time: {hitobj.time}")
             self.hitobjs.append(hitobj)
-            print("oop")
 
+        # remove old hitojbects
+        self.hitobjs = [hitobj for hitobj in self.hitobjs if hitobj.time > farthest_time - 1000]
 
         self.update_signal.emit(1)
         self.update()
 
 
-    def paintEvent(self, event):  # finished
+    def paintEvent(self, event):
         """
         Called whenever self.update() is called
         """
@@ -173,9 +179,10 @@ class _Renderer(QWidget):
             if i == len(self.buffer2)-2:
                 self.draw_point(painter, PEN_RED, (i+1)*alpha_step, p2)
 
+        # print(self.hitobjs)
         for hitobj in self.hitobjs:
             p = Point(hitobj.x, hitobj.y)
-            self.draw_circle(painter, PEN_BLACK, 0, p, 10)
+            self.draw_circle(painter, PEN_BLACK, 255, p, 10)
 
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawText(0, 25, f"pos1: {self.pos1} | pos2: {self.pos2}")
