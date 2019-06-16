@@ -21,6 +21,7 @@ DRAW_SIZE = 600 # square area
 OSU_WINDOW_SIZE = 512 # a constant of the game
 POS_MULT = DRAW_SIZE / OSU_WINDOW_SIZE # multiply each point by this
 
+
 class Point(QPoint):
     """
     A sublcass of QPoint that acts solely to remove the need to multiply x and y
@@ -67,7 +68,6 @@ class _Renderer(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_frame_from_timer)
         self.timer.start(1000/60)  # 60fps (1000ms/60frames)
-
 
     def next_frame_from_timer(self):
         """
@@ -144,50 +144,48 @@ class _Renderer(QWidget):
         self.update_signal.emit(1)
         self.update()
 
-
     def paintEvent(self, event):
         """
         Called whenever self.update() is called
         """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        self.buffer1 += self.buffer_additions1
-        self.buffer2 += self.buffer_additions2
+        self.paint_cursor(painter, self.buffer1, self.buffer_additions1)
+        self.paint_cursor(painter, self.buffer2, self.buffer_additions2)
+        self.paint_beatmap(painter)
+        self.paint_info(painter)
+
+    def paint_cursor(self, painter, buffer, buffer_additions):
+        """
+        Called whenever self.update() is called
+        """
+        buffer += buffer_additions
 
         # if less than FRAMES_ON_SCREEN, becomes 0. See https://math.stackexchange.com/a/3018840
-        extra1 = int((abs(len(self.buffer1) - FRAMES_ON_SCREEN) + (len(self.buffer1) - FRAMES_ON_SCREEN)) / 2)
-        extra2 = int((abs(len(self.buffer2) - FRAMES_ON_SCREEN) + (len(self.buffer2) - FRAMES_ON_SCREEN)) / 2)
+        extra1 = int((abs(len(buffer) - FRAMES_ON_SCREEN) + (len(buffer) - FRAMES_ON_SCREEN)) / 2)
 
-
-        del self.buffer1[0:extra1] # delete oldest extra frames
-        del self.buffer2[0:extra2]
+        del buffer[0:extra1]  # delete oldest extra frames
 
         alpha_step = 255/FRAMES_ON_SCREEN
-        for i in range(len(self.buffer1)-1):
-            p1 = Point(self.buffer1[i][1], self.buffer1[i][2])
-            p2 = Point(self.buffer1[i+1][1], self.buffer1[i+1][2])
+        for i in range(len(buffer)-1):
+            p1 = Point(buffer[i][1], buffer[i][2])
+            p2 = Point(buffer[i+1][1], buffer[i+1][2])
             self.draw_line(painter, PEN_BLUE, i*alpha_step, p1, p2)
             self.draw_point(painter, PEN_BLUE, i*alpha_step, p1)
-            if i == len(self.buffer1)-2:
+            if i == len(buffer)-2:
                 self.draw_point(painter, PEN_BLUE, (i+1)*alpha_step, p2)
 
-        for i in range(len(self.buffer2)-1):
-            p1 = Point(self.buffer2[i][1], self.buffer2[i][2])
-            p2 = Point(self.buffer2[i+1][1], self.buffer2[i+1][2])
-            self.draw_line(painter, PEN_RED, i*alpha_step, p1, p2)
-            self.draw_point(painter, PEN_RED, i*alpha_step, p1)
-            if i == len(self.buffer2)-2:
-                self.draw_point(painter, PEN_RED, (i+1)*alpha_step, p2)
+        buffer_additions.clear()
 
+    def paint_beatmap(self, painter):
         # print(self.hitobjs)
         for hitobj in self.hitobjs:
             p = Point(hitobj.x, hitobj.y)
             self.draw_circle(painter, PEN_BLACK, 255, p, 10)
 
+    def paint_info(self, painter):
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawText(0, 25, f"pos1: {self.pos1} | pos2: {self.pos2}")
-        self.buffer_additions1.clear()
-        self.buffer_additions2.clear()
 
     def draw_line(self, painter, pen, alpha, start, end):
         """
