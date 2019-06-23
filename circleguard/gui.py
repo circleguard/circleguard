@@ -7,9 +7,9 @@ from functools import partial
 import logging
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
-from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
-                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow)
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
+from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame,
+                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy)
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter
 # pylint: enable=no-name-in-module
 
 from circleguard import Circleguard, set_options
@@ -390,6 +390,13 @@ class VerifyTab(QWidget):
 class SettingsTab(QWidget):
     def __init__(self):
         super(SettingsTab, self).__init__()
+        self.qscrollarea = QScrollArea(self)
+        self.qscrollarea.setWidget(ScrollableSettingsWidget())
+        self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
+        self.qscrollarea.setWidgetResizable(True)
+        # \/ https://stackoverflow.com/a/16482646
+        self.qscrollarea.setStyleSheet("QScrollArea { background: transparent; } QScrollArea > QWidget > QWidget { background: transparent;} ")
+
         self.info = QLabel(self)
         self.info.setText(f"Backend Version: {cg_version}<br/>"
                           f"Frontend Version: {__version__}<br/>"
@@ -399,6 +406,20 @@ class SettingsTab(QWidget):
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.info)
+        layout.addWidget(self.qscrollarea)
+        self.setLayout(layout)
+
+
+class ScrollableSettingsWidget(QFrame):
+    """
+    This class contains all of the actual settings content - SettingsTab just has a
+    QScrollArea wrapped around this widget so that it can be scrolled down.
+    """
+    def __init__(self):
+        super().__init__()
 
         self.apikey_widget = InputWidget("Api Key", "", type_="password")
         self.apikey_widget.field.setText(get_setting("api_key"))
@@ -421,18 +442,17 @@ class SettingsTab(QWidget):
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
         self.set_circleguard_loglevel()  # set the default loglevel in cg, not just in gui
 
-        self.grid = QGridLayout()
-        self.grid.addWidget(self.info, 0, 0, 1, 1)
-        self.grid.addWidget(Separator("Circleguard settings"), 1, 0, 1, 1)
-        self.grid.addWidget(self.apikey_widget, 2, 0, 1, 1)
-        self.grid.addWidget(self.thresh_widget, 3, 0, 1, 1)
-        self.grid.addWidget(self.cache, 4, 0, 1, 1)
-        self.grid.addWidget(self.cache_dir, 5, 0, 1, 1)
-        self.grid.addWidget(Separator("GUI settings"), 6, 0, 1, 1)
-        self.grid.addWidget(self.darkmode, 7, 0, 1, 1)
-        self.grid.addWidget(Separator("Debug settings"), 8, 0, 1, 1)
-        self.grid.addWidget(self.loglevel, 9, 0, 4, 1)
-        self.grid.addWidget(ResetSettings(), 13, 0, 1, 1)
+        self.grid = QVBoxLayout()
+        self.grid.addWidget(Separator("Circleguard settings"))
+        self.grid.addWidget(self.apikey_widget)
+        self.grid.addWidget(self.thresh_widget)
+        self.grid.addWidget(self.cache)
+        self.grid.addWidget(self.cache_dir)
+        self.grid.addWidget(Separator("GUI settings"))
+        self.grid.addWidget(self.darkmode)
+        self.grid.addWidget(Separator("Debug settings"))
+        self.grid.addWidget(self.loglevel)
+        self.grid.addWidget(ResetSettings())
 
         self.setLayout(self.grid)
 
