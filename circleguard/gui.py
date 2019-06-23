@@ -392,21 +392,11 @@ class SettingsTab(QWidget):
         super(SettingsTab, self).__init__()
         self.qscrollarea = QScrollArea(self)
         self.qscrollarea.setWidget(ScrollableSettingsWidget())
-        self.qscrollarea.setAlignment(Qt.AlignCenter) # center in scroll area - maybe undesirable
-        layout = QVBoxLayout()
+        self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
+        self.qscrollarea.setWidgetResizable(True)
+        # \/ https://stackoverflow.com/a/16482646
+        self.qscrollarea.setStyleSheet("QScrollArea { background: transparent; } QScrollArea > QWidget > QWidget { background: transparent; } QScrollArea > QWidget > QScrollBar { background: palette(base));}")
 
-        layout.addWidget(self.qscrollarea)
-        self.setLayout(layout)
-
-
-
-class ScrollableSettingsWidget(QFrame):
-    """
-    This class contains all of the actual settings content - SettingsTab just has a
-    QScrollArea wrapped around this widget so that it can be scrolled down.
-    """
-    def __init__(self):
-        super().__init__()
         self.info = QLabel(self)
         self.info.setText(f"Backend Version: {cg_version}<br/>"
                           f"Frontend Version: {__version__}<br/>"
@@ -416,6 +406,20 @@ class ScrollableSettingsWidget(QFrame):
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.info)
+        layout.addWidget(self.qscrollarea)
+        self.setLayout(layout)
+
+
+class ScrollableSettingsWidget(QFrame):
+    """
+    This class contains all of the actual settings content - SettingsTab just has a
+    QScrollArea wrapped around this widget so that it can be scrolled down.
+    """
+    def __init__(self):
+        super().__init__()
 
         self.apikey_widget = InputWidget("Api Key", "", type_="password")
         self.apikey_widget.field.setText(get_setting("api_key"))
@@ -439,7 +443,6 @@ class ScrollableSettingsWidget(QFrame):
         self.set_circleguard_loglevel()  # set the default loglevel in cg, not just in gui
 
         self.grid = QVBoxLayout()
-        self.grid.addWidget(self.info)
         self.grid.addWidget(Separator("Circleguard settings"))
         self.grid.addWidget(self.apikey_widget)
         self.grid.addWidget(self.thresh_widget)
@@ -459,22 +462,9 @@ class ScrollableSettingsWidget(QFrame):
         self.cache.box.setChecked(get_setting("caching"))
         self.cache_dir.switch_enabled(get_setting("caching"))
 
-        ## I can't figure out why the content in the ScrollArea isn't expanding to the edges -
-        ## https://forum.qt.io/topic/87379/qlabel-size-won-t-expand-even-after-setting-sizepolicy-to-expanding/11
-        ## could have some insight with "The viewport of the scroll area is not a layout so it can't act like one.",
-        ## but it doesn't really offer any..solutions. I've tried everything below (setFramShape for visual debugging)
-        ## and especially hoped setSizePolicy would work, but it didn't (obviously, or I wouldn't be typing this).
-        # self.setFrameShape(QFrame.Box)
-        # self.resize(600, 400)
-        # print(self.sizeHint())
-        # self.adjustSize()
-        # self.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
-
-        # Incredibly harcoded hack (see above comments)
-        self.setMinimumSize(635, 0)
-
     def set_circleguard_loglevel(self):
         set_options(loglevel=self.loglevel.level_combobox.currentData())
+
 
 def switch_theme(dark):
     update_default("dark_theme", 1 if dark else 0)
