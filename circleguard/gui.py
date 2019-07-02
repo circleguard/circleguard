@@ -170,26 +170,6 @@ class MainWindow(QWidget):
         self.main_layout.addWidget(self.tab_widget)
         self.setLayout(self.main_layout)
 
-        ## code below is an unimplemented feature to allow the user to tick exactly which replays they want compared
-        # a bunch of signals for adding the user's plays to the layout as the id is inputted to the tab
-        # self.main_tab.user_tab.user_id.field.textChanged.connect(self.user_id_changed)
-
-    # def user_id_changed(self, user_id):
-    #     api_key = get_setting("api_key")
-    #     api = OsuAPI(api_key)
-    #     top_plays = api.get_user_best({"u": user_id})
-    #     top_plays_widget = TopPlays()
-    #     self.main_tab.user_tab.layout.addWidget(top_plays_widget, 2, 0, 1, 1)
-    #     for play in top_plays:
-    #         c0 = int(play["countmiss"])
-    #         c50 = int(play["count50"])
-    #         c100 = int(play["count100"])
-    #         c300 = int(play["count300"])
-
-    #         acc = (50*c50+ 100*c100 + 300*c300) / (300 * (c0 + c50 + c100 + c300))
-    #         text = "{} - {:.1%}".format(play["enabled_mods"], acc) # map name (truncated to 20) - mods - acc
-    #         top_plays_widget.add_play(text)
-
 
 class MainTab(QWidget):
     TAB_REGISTER = [
@@ -197,8 +177,8 @@ class MainTab(QWidget):
         {"name": "SCREEN", "requires_api": True},
         {"name": "LOCAL",  "requires_api": False},
         {"name": "VERIFY", "requires_api": True},
+        {"name": "BEATMAP", "requires_api": False},
     ]
-
 
     def __init__(self):
         super(MainTab, self).__init__()
@@ -209,10 +189,12 @@ class MainTab(QWidget):
         self.user_tab = UserTab()
         self.local_tab = LocalTab()
         self.verify_tab = VerifyTab()
+        self.beatmap_tab = BeatmapTab()
         tabs.addTab(self.map_tab, "Check Map")
         tabs.addTab(self.user_tab, "Screen User")
         tabs.addTab(self.local_tab, "Check Local Replays")
         tabs.addTab(self.verify_tab, "Verify")
+        tabs.addTab(self.beatmap_tab, "Beatmap Test")
         self.tabs = tabs
         self.tabs.currentChanged.connect(self.switch_run_button)
 
@@ -230,9 +212,8 @@ class MainTab(QWidget):
         layout.addWidget(self.terminal)
         layout.addWidget(self.run_button)
         self.setLayout(layout)
-        self.run_type = "NONE" # set after you click run, depending on your current tab
+        self.run_type = "NONE"  # set after you click run, depending on your current tab
         self.switch_run_button()  # disable run button if there is no api key
-
 
     def write(self, message):
         self.terminal.append(str(message).strip())
@@ -244,8 +225,18 @@ class MainTab(QWidget):
         self.terminal.setTextCursor(cursor)
 
     def run(self):
-        pool = ThreadPool(processes=1)
-        pool.apply_async(self.run_circleguard)
+        current_tab = self.tabs.currentIndex()
+        self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
+        if self.run_type == "BEATMAP":
+            try:
+                self.visualizer_window = VisualizerWindow(beatmap_path=self.beatmap_tab.file_chooser.path)
+                self.visualizer_window.show()
+            except Exception as e:
+                log.error(e)
+                log.error(f"Beatmap [{self.beatmap_tab.file_chooser.path}] was not successfully displayed or no map has been chosen")
+        else:
+            pool = ThreadPool(processes=1)
+            pool.apply_async(self.run_circleguard)
 
     def switch_run_button(self):
         if not self.cg_running:
@@ -261,8 +252,6 @@ class MainTab(QWidget):
         self.switch_run_button()
         try:
             cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"), "cache.db"))
-            current_tab = self.tabs.currentIndex()
-            self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
             if self.run_type == "MAP":
                 tab = self.map_tab
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
@@ -320,13 +309,11 @@ class MainTab(QWidget):
                     if self.run_type == "VERIFY":
                         # special prints if it was ran as a verify call
                         out = "{} stole his replay from {} ({:0.1f} sim)".format(later, earlier, sim)
-
                     QApplication.beep()
                     QApplication.alert(self)
-                    # keeping a reference to the window is necessary or else it dissapears
-                    self.visualizer_window = VisualizerWindow(result.replay1, result.replay2, "/Users/Master/Desktop/pog.osu")
+                    # keeping a reference to the window is necessary or else it disappears
+                    self.visualizer_window = VisualizerWindow(replays=(result.replay1,result.replay2))
                     self.visualizer_window.show()
-
                 else:
                     if self.run_type == "VERIFY":
                         out = "The replays by {} and {} are not copies. ({:0.1f} sim)".format(name1, name2, sim)
@@ -390,6 +377,7 @@ class LocalTab(QWidget):
                           "If both a user and a map are given, it will compare the local replays against the user's "
                           "score on that map.")
         self.folder_chooser = FolderChooser("Replay folder", get_setting("local_replay_dir"))
+        self.folder_chooser.path_signal.connect(self.update_dir)
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
         self.threshold = Threshold()  # ThresholdCombined()
@@ -407,6 +395,9 @@ class LocalTab(QWidget):
 
     def switch_compare(self):
         self.compare_top.update_user(self.id_combined.map_id.field.text() != "")
+
+    def update_dir(self, path):
+        update_default("local_replay_dir", path)
 
 
 class VerifyTab(QWidget):
@@ -427,6 +418,20 @@ class VerifyTab(QWidget):
         layout.addWidget(self.user_id_1, 2, 0, 1, 1)
         layout.addWidget(self.user_id_2, 3, 0, 1, 1)
         layout.addWidget(self.threshold, 4, 0, 1, 1)
+
+        self.setLayout(layout)
+
+
+class BeatmapTab(QWidget):
+    def __init__(self):
+        super(BeatmapTab, self).__init__()
+        self.info = QLabel(self)
+        self.info.setText("Testing beatmap rendering OwO.")
+        self.file_chooser = FolderChooser("Beatmap File", "", folder_mode=False)
+
+        layout = QGridLayout()
+        layout.addWidget(self.info, 0, 0, 1, 1)
+        layout.addWidget(self.file_chooser, 1, 0, 1, 1)
 
         self.setLayout(layout)
 

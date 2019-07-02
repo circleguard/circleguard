@@ -553,14 +553,15 @@ class WidgetCombiner(QFrame):
 class FolderChooser(QFrame):
     path_signal = pyqtSignal(str)
 
-    def __init__(self, title, path):
+    def __init__(self, title, path, folder_mode=True):
         super(FolderChooser, self).__init__()
         self.path = path
+        self.folder_mode = folder_mode
         self.label = QLabel(self)
         self.label.setText(title+":")
 
         self.file_chooser_button = QPushButton(self)
-        self.file_chooser_button.setText("Choose Folder")
+        self.file_chooser_button.setText("Choose "+("Folder" if self.folder_mode else "File"))
         self.file_chooser_button.pressed.connect(self.set_dir)
         self.file_chooser_button.setFixedWidth(100)
 
@@ -577,11 +578,13 @@ class FolderChooser(QFrame):
         self.switch_enabled(True)
 
     def set_dir(self):
-        options = QFileDialog.Option()
-        options |= QFileDialog.ShowDirsOnly
-        options |= QFileDialog.HideNameFilterDetails
-        path = QFileDialog.getExistingDirectory(caption="Select Output Folder", directory=QDir.currentPath(), options=options)
-        update_default("local_replay_dir", path)
+        if self.folder_mode:
+            options = QFileDialog.Option()
+            options |= QFileDialog.ShowDirsOnly
+            options |= QFileDialog.HideNameFilterDetails
+            path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=QDir.currentPath(), options=options)
+        else:
+            path = QFileDialog.getOpenFileName(caption="Select File", filter="osu files (*.osu)")[0]
         self.update_dir(path)
 
     def update_dir(self, path):
