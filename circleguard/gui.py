@@ -7,16 +7,16 @@ from functools import partial
 import logging
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
-from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame,
+from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
                              QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter
 # pylint: enable=no-name-in-module
 
-from circleguard import Circleguard, set_options
+from circleguard import Circleguard, set_options, loader
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
 
-from widgets import (Threshold, set_event_window, InputWidget, ResetSettings,
+from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
 from settings import get_setting, update_default
@@ -26,6 +26,7 @@ ROOT_PATH = Path(__file__).parent.absolute()
 __version__ = "0.1d"
 
 log = logging.getLogger(__name__)
+
 
 def resource_path(str_path):
     """
@@ -55,7 +56,17 @@ class Handler(QObject, logging.Handler):
 class WindowWrapper(QMainWindow):
     def __init__(self):
         super(WindowWrapper, self).__init__()
+        self.progressbar = QProgressBar()
+        self.progressbar.setFixedWidth(250)
+        self.current_state_label = QLabel("Idle")
+        self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label))
+        self.statusBar().setSizeGripEnabled(False)
+        self.statusBar().setContentsMargins(8, 2, 10, 3)
+
         self.main_window = MainWindow()
+        self.main_window.main_tab.initialize_progress_signal.connect(self.initialize_progressbar)
+        self.main_window.main_tab.update_progress_signal.connect(self.update_progressbar)
+        self.main_window.main_tab.update_text_signal.connect(self.update_label)
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
@@ -67,6 +78,7 @@ class WindowWrapper(QMainWindow):
 
         handler = Handler()
         logging.getLogger("circleguard").addHandler(handler)
+        logging.getLogger(__name__).addHandler(handler)
         formatter = logging.Formatter("[%(levelname)s] %(asctime)s  %(message)s ", datefmt="%Y/%m/%d %I:%M:%S %p")
         handler.setFormatter(formatter)
         handler.new_message.connect(self.print_debug)
@@ -128,6 +140,17 @@ class WindowWrapper(QMainWindow):
                 self.debug_window.show()
                 self.debug_window.write(message)
 
+    def update_label(self, text):
+        self.current_state_label.setText(text)
+
+    def update_progressbar(self):
+        self.progressbar.setValue(self.progressbar.value()+1)
+
+    def initialize_progressbar(self, min_value, max_value):
+        print(max_value)
+        self.progressbar.setValue(0)
+        self.progressbar.setRange(min_value, max_value)
+
 
 class DebugWindow(QMainWindow):
     def __init__(self):
@@ -158,16 +181,20 @@ class MainWindow(QWidget):
         self.settings_tab = SettingsTab()
         self.tab_widget.addTab(self.main_tab, "Main Tab")
         self.tab_widget.addTab(self.settings_tab, "Settings Tab")
-
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
         self.tab_widget.currentChanged.connect(self.main_tab.switch_run_button)
 
         self.main_layout = QVBoxLayout()
         self.main_layout.addWidget(self.tab_widget)
+        self.main_layout.setContentsMargins(10, 10, 10, 0)
         self.setLayout(self.main_layout)
 
 
 class MainTab(QWidget):
+    initialize_progress_signal = pyqtSignal(int, int)  # min,max
+    update_progress_signal = pyqtSignal()
+    update_text_signal = pyqtSignal(str)
+
     TAB_REGISTER = [
         {"name": "MAP",    "requires_api": True},
         {"name": "SCREEN", "requires_api": True},
@@ -233,6 +260,7 @@ class MainTab(QWidget):
     def run_circleguard(self):
         self.cg_running = True
         self.switch_run_button()
+        self.update_text_signal.emit("Loading Replays")
         try:
             cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"), "cache.db"))
             current_tab = self.tabs.currentIndex()
@@ -273,11 +301,13 @@ class MainTab(QWidget):
                 gen = cg.verify(map_id, user_id_1, user_id_2, thresh=thresh)
 
             for result in gen:
+                self.update_progress_signal.emit()  # not working
                 self.q.put(result)
 
         except Exception:
             log.exception("ERROR!! while running cg:")
         self.cg_running = False
+        self.update_text_signal.emit("Idle")
         self.switch_run_button()
 
     def print_results(self):
