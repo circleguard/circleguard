@@ -64,8 +64,8 @@ class WindowWrapper(QMainWindow):
         self.statusBar().setContentsMargins(8, 2, 10, 3)
 
         self.main_window = MainWindow()
-        self.main_window.main_tab.initialize_progress_signal.connect(self.initialize_progressbar)
-        self.main_window.main_tab.update_progress_signal.connect(self.update_progressbar)
+        self.main_window.main_tab.reset_progressbar_signal.connect(self.reset_progressbar)
+        self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
         self.main_window.main_tab.update_text_signal.connect(self.update_label)
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
@@ -143,13 +143,13 @@ class WindowWrapper(QMainWindow):
     def update_label(self, text):
         self.current_state_label.setText(text)
 
-    def update_progressbar(self):
-        self.progressbar.setValue(self.progressbar.value()+1)
+    def increment_progressbar(self, increment):
+        self.progressbar.setValue(self.progressbar.value() + increment)
 
-    def initialize_progressbar(self, min_value, max_value):
+    def reset_progressbar(self, max_value):
         print(max_value)
         self.progressbar.setValue(0)
-        self.progressbar.setRange(min_value, max_value)
+        self.progressbar.setRange(0, max_value)
 
 
 class DebugWindow(QMainWindow):
@@ -191,8 +191,8 @@ class MainWindow(QWidget):
 
 
 class MainTab(QWidget):
-    initialize_progress_signal = pyqtSignal(int, int)  # min,max
-    update_progress_signal = pyqtSignal()
+    reset_progressbar_signal = pyqtSignal(int)  # max progress
+    increment_progressbar_signal = pyqtSignal(int) # increment value
     update_text_signal = pyqtSignal(str)
 
     TAB_REGISTER = [
@@ -273,7 +273,7 @@ class MainTab(QWidget):
                 map_id = int(map_id_str) if map_id_str != "" else 0
                 num = tab.compare_top.slider.value()
                 thresh = tab.threshold.thresh_slider.value()
-                gen = cg.map_check(map_id, num=num, thresh=thresh)
+                check = cg.create_map_check(map_id, num=num, thresh=thresh)
 
             if current_tab_name == "SCREEN":
                 tab = self.user_tab
@@ -281,13 +281,13 @@ class MainTab(QWidget):
                 user_id = int(user_id_str) if user_id_str != "" else 0
                 num = tab.compare_top_map.slider.value()
                 thresh = tab.threshold.thresh_slider.value()
-                gen = cg.user_check(user_id, num, thresh=thresh)
+                check = cg.create_user_check(user_id, num, thresh=thresh)
 
             if current_tab_name == "LOCAL":
                 tab = self.local_tab
                 path = Path(tab.folder_chooser.path)
                 thresh = tab.threshold.thresh_slider.value()
-                gen = cg.local_check(path, thresh=thresh)
+                check = cg.create_local_check(path, thresh=thresh)
 
             if current_tab_name == "VERIFY":
                 tab = self.verify_tab
@@ -298,14 +298,22 @@ class MainTab(QWidget):
                 user_id_2_str = tab.user_id_2.field.text()
                 user_id_2 = int(user_id_2_str) if user_id_2_str != "" else 0
                 thresh = tab.threshold.thresh_slider.value()
-                gen = cg.verify(map_id, user_id_1, user_id_2, thresh=thresh)
+                check = cg.create_verify_check(map_id, user_id_1, user_id_2, thresh=thresh)
 
-            for result in gen:
-                self.update_progress_signal.emit()  # not working
+
+            num_to_load = len(check.all_replays())
+            self.reset_progressbar_signal.emit(num_to_load)
+            cg.loader.new_session(num_to_load)
+            for replay in check.all_replays():
+                replay.load(cg.loader)
+                self.increment_progressbar_signal.emit(1)
+
+            for result in cg.run(check):
                 self.q.put(result)
 
         except Exception:
             log.exception("ERROR!! while running cg:")
+
         self.cg_running = False
         self.update_text_signal.emit("Idle")
         self.switch_run_button()
