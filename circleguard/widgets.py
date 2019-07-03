@@ -569,6 +569,7 @@ class FolderChooser(QFrame):
         self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
 
         layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.combined, 0, 2, 1, 3)
