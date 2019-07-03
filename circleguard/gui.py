@@ -308,6 +308,7 @@ class MainTab(QWidget):
                 replay.load(cg.loader)
                 self.increment_progressbar_signal.emit(1)
 
+            check.loaded = True
             for result in cg.run(check):
                 self.q.put(result)
 
