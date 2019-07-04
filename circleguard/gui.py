@@ -5,6 +5,7 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
+from datetime import datetime
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
@@ -18,7 +19,8 @@ from visualizer import VisualizerWindow
 
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
-                     CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget)
+                     CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
+                     StringFormatWidget)
 from settings import get_setting, update_default
 import wizard
 
@@ -304,13 +306,20 @@ class MainTab(QWidget):
             num_to_load = len(check.all_replays())
             self.reset_progressbar_signal.emit(num_to_load)
             cg.loader.new_session(num_to_load)
+            timestamp = datetime.now()
+            self.write(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load))
             for replay in check.all_replays():
                 cg.load(replay)
                 self.increment_progressbar_signal.emit(1)
 
             check.loaded = True
+            timestamp = datetime.now()
+            self.write(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
             for result in cg.run(check):
                 self.q.put(result)
+
+            timestamp = datetime.now()
+            self.write(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
 
         except Exception:
             log.exception("ERROR!! while running cg:")
@@ -323,10 +332,15 @@ class MainTab(QWidget):
         try:
             while True:
                 result = self.q.get(block=False)
-                self.visualizer_window = VisualizerWindow(result.replay1, result.replay2)
-                self.visualizer_window.show()
+                # self.visualizer_window = VisualizerWindow(result.replay1, result.replay2)
+                # self.visualizer_window.show()
                 if result.ischeat:
-                    self.write(f"{result.similiarity:0.1f} similarity. {result.replay1.username} vs {result.replay2.username}, {result.later_name} set later")
+                    timestamp = datetime.now()
+                    r1 = result.replay1
+                    r2 = result.replay2
+                    self.write(get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
+                             replay1_name=r1.username, replay2_name=r2.username, later_name=result.later_name,
+                             replay1_mods=r1.mods, replay2_mods=r2.mods, replay1_id=r1.replay_id, replay2_id=r2.replay_id))
                     QApplication.beep()
                     QApplication.alert(self)
         except Empty:
@@ -492,6 +506,9 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(Separator("Debug settings"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
+        self.grid.addWidget(Separator("String Format settings"))
+        self.grid.addWidget(StringFormatWidget(""))
+
 
         self.setLayout(self.grid)
 

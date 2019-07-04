@@ -16,6 +16,13 @@ def reset_defaults():
     SETTINGS.setValue("log_mode", 3)
     SETTINGS.setValue("log_output", 0)
     SETTINGS.setValue("local_replay_dir", "./examples/replays/")
+
+    # string settings
+    SETTINGS.setValue("message_loading_replays", "[{ts:%Y}-{ts:%m}-{ts:%d} {ts:%H}:{ts:%M}:{ts:%S}] Loading {num_replays} Replays")
+    SETTINGS.setValue("message_starting_comparing", "[{ts:%Y}-{ts:%m}-{ts:%d} {ts:%H}:{ts:%M}:{ts:%S}] Comparing Replays")
+    SETTINGS.setValue("message_finished_comparing", "[{ts:%Y}-{ts:%m}-{ts:%d} {ts:%H}:{ts:%M}:{ts:%S}] Done")
+    SETTINGS.setValue("message_cheater_found", "[{ts:%Y}-{ts:%m}-{ts:%d} {ts:%H}:{ts:%M}:{ts:%S}] {similarity} similarity. {replay1_name} vs {replay2_name}, {later_name} set later")
+
     SETTINGS.sync()
 
 
@@ -25,6 +32,8 @@ if not SETTINGS.contains("ran"):
 
 
 def get_setting(name):
+
+
     return SETTINGS.value(name)
 
 

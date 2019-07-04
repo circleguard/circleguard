@@ -3,7 +3,7 @@ import sys
 from functools import partial
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBox,
                              QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
-                             QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox)
+                             QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout)
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
@@ -220,6 +220,40 @@ class OptionWidget(QFrame):
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.box, 0, 2, 1, 3)
+        self.setLayout(layout)
+
+
+class StringFormatWidget(QFrame):
+    def __init__(self, tooltip):
+        super(StringFormatWidget, self).__init__()
+        loading_replays = InputWidget("message_loading_replays", "Shown when replays are being requested "
+                "from the api or loaded from local files", type_="normal")
+        loading_replays.field.setText(get_setting("message_loading_replays"))
+        loading_replays.field.textChanged.connect(partial(update_default, "message_loading_replays"))
+
+        starting_comparing = InputWidget("message_starting_comparing", "Shown when replays are finished "
+                "loading and starting to be compared", type_="normal")
+        starting_comparing.field.setText(get_setting("message_starting_comparing"))
+        starting_comparing.field.textChanged.connect(partial(update_default, "message_starting_comparing"))
+
+        finished_comparing = InputWidget("message_finished_comparing", "Shown when replays are done being compared, "
+                "regardless of if any cheaters were found", type_="normal")
+        finished_comparing.field.setText(get_setting("message_finished_comparing"))
+        finished_comparing.field.textChanged.connect(partial(update_default, "message_finished_comparing"))
+
+
+        cheater_found = InputWidget("message_cheater_found", "Shown when a cheater is found (scores below the threshold). "
+                "This occurs before replays are finished being compared.", type_="normal")
+        cheater_found.field.setText(get_setting("message_cheater_found"))
+        cheater_found.field.textChanged.connect(partial(update_default, "message_cheater_found"))
+
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(loading_replays)
+        layout.addWidget(starting_comparing)
+        layout.addWidget(finished_comparing)
+        layout.addWidget(cheater_found)
+
         self.setLayout(layout)
 
 
