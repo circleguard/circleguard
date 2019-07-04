@@ -305,7 +305,7 @@ class MainTab(QWidget):
             self.reset_progressbar_signal.emit(num_to_load)
             cg.loader.new_session(num_to_load)
             for replay in check.all_replays():
-                replay.load(cg.loader)
+                cg.load(replay)
                 self.increment_progressbar_signal.emit(1)
 
             check.loaded = True
