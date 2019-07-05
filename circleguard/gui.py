@@ -152,8 +152,12 @@ class WindowWrapper(QMainWindow):
         self.progressbar.setValue(self.progressbar.value() + increment)
 
     def reset_progressbar(self, max_value):
-        self.progressbar.setValue(0)
-        self.progressbar.setRange(0, max_value)
+        if not max_value == -1:
+            self.progressbar.setValue(0)
+            self.progressbar.setRange(0, max_value)
+        else:
+            self.progressbar.setRange(0,100)
+            self.progressbar.reset()
 
     def add_comparison_result(self, text, replay1, replay2):
         # this right here could very well lead to some memory issues. I tried to avoid
@@ -316,7 +320,6 @@ class MainTab(QWidget):
                 thresh = tab.threshold.thresh_slider.value()
                 check = cg.create_verify_check(map_id, user_id_1, user_id_2, thresh=thresh)
 
-
             num_to_load = len(check.all_replays())
             self.reset_progressbar_signal.emit(num_to_load)
             cg.loader.new_session(num_to_load)
@@ -326,11 +329,13 @@ class MainTab(QWidget):
                 cg.load(replay)
                 self.increment_progressbar_signal.emit(1)
 
+            self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
             check.loaded = True
             timestamp = datetime.now()
             self.write(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
             for result in cg.run(check):
                 self.q.put(result)
+            self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
 
             timestamp = datetime.now()
             self.write(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
@@ -365,7 +370,6 @@ class MainTab(QWidget):
     def visualize(self, replay1, replay2):
         self.visualizer_window = VisualizerWindow(replay1, replay2)
         self.visualizer_window.show()
-
 
 
 class MapTab(QWidget):
