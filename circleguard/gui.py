@@ -151,7 +151,6 @@ class WindowWrapper(QMainWindow):
         self.progressbar.setValue(self.progressbar.value() + increment)
 
     def reset_progressbar(self, max_value):
-        print(max_value)
         self.progressbar.setValue(0)
         self.progressbar.setRange(0, max_value)
 
