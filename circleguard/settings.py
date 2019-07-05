@@ -22,6 +22,7 @@ def reset_defaults():
     SETTINGS.setValue("message_starting_comparing", "[{ts:%X}] Comparing Replays")
     SETTINGS.setValue("message_finished_comparing", "[{ts:%X}] Done")
     SETTINGS.setValue("message_cheater_found", "[{ts:%X}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}, {later_name} set later")
+    SETTINGS.setValue("string_result_text", "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}")
 
     SETTINGS.sync()
 

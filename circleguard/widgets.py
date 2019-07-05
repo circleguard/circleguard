@@ -247,12 +247,20 @@ class StringFormatWidget(QFrame):
         cheater_found.field.setText(get_setting("message_cheater_found"))
         cheater_found.field.textChanged.connect(partial(update_default, "message_cheater_found"))
 
+
+        result_text = InputWidget("string_result_text", "Text of the result label in the Results Tab", type_="normal")
+        result_text.field.setText(get_setting("string_result_text"))
+        result_text.field.textChanged.connect(partial(update_default, "string_result_text"))
+
+
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(loading_replays)
         layout.addWidget(starting_comparing)
         layout.addWidget(finished_comparing)
         layout.addWidget(cheater_found)
+        layout.addWidget(result_text)
+
 
         self.setLayout(layout)
 

@@ -159,12 +159,17 @@ class WindowWrapper(QMainWindow):
             self.progressbar.setRange(0,100)
             self.progressbar.reset()
 
-    def add_comparison_result(self, text, replay1, replay2):
+    def add_comparison_result(self, result):
         # this right here could very well lead to some memory issues. I tried to avoid
         # leaving a reference to the replays in this method, but it's quite possible
         # things are still not very clean. Ideally only ComparisonResult would have a
-        # reference to the two replays.
-        result_widget = ComparisonResult(text, replay1, replay2)
+        # reference to the two replays, and result should have no references left.
+        r1 = result.replay1
+        r2 = result.replay2
+        timestamp = datetime.now()
+        text = get_setting("string_result_text").format(ts=timestamp, similarity=result.similarity,
+                             replay1_name=r1.username, replay2_name=r2.username, later_name=result.later_name)
+        result_widget = ComparisonResult(text, r1, r2)
         result_widget.button.pressed.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
         self.main_window.results_tab.layout.addWidget(result_widget)
 
@@ -213,7 +218,7 @@ class MainTab(QWidget):
     reset_progressbar_signal = pyqtSignal(int)  # max progress
     increment_progressbar_signal = pyqtSignal(int) # increment value
     update_text_signal = pyqtSignal(str)
-    add_comparison_result_signal = pyqtSignal(str, object, object) # title, replay1, replay2
+    add_comparison_result_signal = pyqtSignal(object) # Result
 
     TAB_REGISTER = [
         {"name": "MAP",    "requires_api": True},
@@ -363,7 +368,7 @@ class MainTab(QWidget):
                     QApplication.beep()
                     QApplication.alert(self)
                     # add to Results Tab so it can be played back on demand
-                    self.add_comparison_result_signal.emit(msg, r1, r2)
+                    self.add_comparison_result_signal.emit(result)
         except Empty:
             pass
 
