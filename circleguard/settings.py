@@ -32,8 +32,6 @@ if not SETTINGS.contains("ran"):
 
 
 def get_setting(name):
-
-
     return SETTINGS.value(name)
 
 
