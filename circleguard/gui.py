@@ -61,6 +61,8 @@ class WindowWrapper(QMainWindow):
         self.progressbar = QProgressBar()
         self.progressbar.setFixedWidth(250)
         self.current_state_label = QLabel("Idle")
+        # statusBar() is a qt function that will create a status bar tied to the window
+        # if it doesnt exist, and access the existing one if it does.
         self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label))
         self.statusBar().setSizeGripEnabled(False)
         self.statusBar().setContentsMargins(8, 2, 10, 3)
