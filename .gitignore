@@ -280,3 +280,4 @@ venv/*
 # personal stuff
 todo.txt
 *.patch
+*.db

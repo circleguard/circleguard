@@ -170,7 +170,7 @@ class WindowWrapper(QMainWindow):
         text = get_setting("string_result_text").format(ts=timestamp, similarity=result.similarity,
                              replay1_name=r1.username, replay2_name=r2.username, later_name=result.later_name)
         result_widget = ComparisonResult(text, r1, r2)
-        result_widget.button.pressed.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
+        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
         self.main_window.results_tab.layout.addWidget(result_widget)
 
 
