@@ -20,7 +20,7 @@ from visualizer import VisualizerWindow
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
-                     StringFormatWidget)
+                     StringFormatWidget, ComparisonResult)
 from settings import get_setting, update_default
 import wizard
 
@@ -71,6 +71,7 @@ class WindowWrapper(QMainWindow):
         self.main_window.main_tab.reset_progressbar_signal.connect(self.reset_progressbar)
         self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
         self.main_window.main_tab.update_text_signal.connect(self.update_label)
+        self.main_window.main_tab.add_comparison_result_signal.connect(self.add_comparison_result)
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
@@ -154,6 +155,15 @@ class WindowWrapper(QMainWindow):
         self.progressbar.setValue(0)
         self.progressbar.setRange(0, max_value)
 
+    def add_comparison_result(self, text, replay1, replay2):
+        # this right here could very well lead to some memory issues. I tried to avoid
+        # leaving a reference to the replays in this method, but it's quite possible
+        # things are still not very clean. Ideally only ComparisonResult would have a
+        # reference to the two replays.
+        result_widget = ComparisonResult(text, replay1, replay2)
+        result_widget.button.pressed.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
+        self.main_window.results_tab.layout.addWidget(result_widget)
+
 
 class DebugWindow(QMainWindow):
     def __init__(self):
@@ -182,8 +192,10 @@ class MainWindow(QWidget):
         self.tab_widget = QTabWidget()
         self.main_tab = MainTab()
         self.settings_tab = SettingsTab()
+        self.results_tab = ResultsTab()
         self.tab_widget.addTab(self.main_tab, "Main Tab")
         self.tab_widget.addTab(self.settings_tab, "Settings Tab")
+        self.tab_widget.addTab(self.results_tab, "Results Tab")
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
         self.tab_widget.currentChanged.connect(self.main_tab.switch_run_button)
 
@@ -197,6 +209,7 @@ class MainTab(QWidget):
     reset_progressbar_signal = pyqtSignal(int)  # max progress
     increment_progressbar_signal = pyqtSignal(int) # increment value
     update_text_signal = pyqtSignal(str)
+    add_comparison_result_signal = pyqtSignal(str, object, object) # title, replay1, replay2
 
     TAB_REGISTER = [
         {"name": "MAP",    "requires_api": True},
@@ -333,19 +346,26 @@ class MainTab(QWidget):
         try:
             while True:
                 result = self.q.get(block=False)
-                # self.visualizer_window = VisualizerWindow(result.replay1, result.replay2)
-                # self.visualizer_window.show()
+                # self.visualize(result.replay1, result.replay2)
                 if result.ischeat:
                     timestamp = datetime.now()
                     r1 = result.replay1
                     r2 = result.replay2
-                    self.write(get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                             replay1_name=r1.username, replay2_name=r2.username, later_name=result.later_name,
-                             replay1_mods=r1.mods, replay2_mods=r2.mods, replay1_id=r1.replay_id, replay2_id=r2.replay_id))
+                    msg = get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
+                            replay1_name=r1.username, replay2_name=r2.username, later_name=result.later_name,
+                            replay1_mods=r1.mods, replay2_mods=r2.mods, replay1_id=r1.replay_id, replay2_id=r2.replay_id)
+                    self.write(msg)
                     QApplication.beep()
                     QApplication.alert(self)
+                    # add to Results Tab so it can be played back on demand
+                    self.add_comparison_result_signal.emit(msg, r1, r2)
         except Empty:
             pass
+
+    def visualize(self, replay1, replay2):
+        self.visualizer_window = VisualizerWindow(replay1, replay2)
+        self.visualizer_window.show()
+
 
 
 class MapTab(QWidget):
@@ -522,6 +542,15 @@ class ScrollableSettingsWidget(QFrame):
     def set_circleguard_loglevel(self):
         set_options(loglevel=self.loglevel.level_combobox.currentData())
 
+class ResultsTab(QWidget):
+    def __init__(self):
+        super(ResultsTab, self).__init__()
+
+        self.layout = QVBoxLayout()
+        # we want widgets to fill from top down,
+        # being vertically centered looks weird
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
 
 def switch_theme(dark):
     update_default("dark_theme", 1 if dark else 0)

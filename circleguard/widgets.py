@@ -422,6 +422,28 @@ class CompareTopPlays(QFrame):
     def update_slider(self, value):
         self.slider.setValue(value)
 
+class ComparisonResult(QFrame):
+    """
+    Stores the result of a comparison that can be replayed at any time.
+    Contains a Label and a QPushButton.
+    """
+
+    def __init__(self, text, replay1, replay2):
+        super(ComparisonResult, self).__init__()
+        self.replay1 = replay1
+        self.replay2 = replay2
+        self.label = QLabel(self)
+        self.label.setText(text)
+
+        self.button = QPushButton(self)
+        self.button.setText("Visualize")
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.button, 0, 2, 1, 2)
+        self.setLayout(layout)
 
 class ThresholdCombined(QFrame):
     """
