@@ -303,7 +303,7 @@ class MainTab(QWidget):
                 name2 = result.replay2.username
                 later = result.later_name
                 earlier = name1 if later == name2 else name2 # the other name
-                sim = result.similiarity
+                sim = result.similarity
                 out = f"{sim:0.1f} similarity. {name1} vs {name2}, {later} set later"
                 if result.ischeat:
                     if self.run_type == "VERIFY":
