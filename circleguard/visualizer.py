@@ -38,6 +38,7 @@ class _Renderer(QWidget):
     def __init__(self, replays=(), beatmap_path="", parent=None):
         super(_Renderer, self).__init__(parent)
         # initialize variables
+        self.setFixedSize(640, 480)
         self.replay_amount = len(replays)
         self.current_time = 0
         self.pos = [-1]*self.replay_amount  # so our first frame is at data[0] since we do pos + 1
@@ -382,7 +383,7 @@ class VisualizerWindow(QMainWindow):
         super(VisualizerWindow, self).__init__()
         self.interface = _Interface(replays, beatmap_path)
         self.setCentralWidget(self.interface)
-        self.setFixedSize(640, 480)
+        self.setWindowFlag(Qt.MSWindowsFixedSizeDialogHint)  # resizing is not important rn
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
         QShortcut(QKeySequence(Qt.Key_Left), self, self.interface.previous_frame)
         QShortcut(QKeySequence(Qt.Key_Right), self, self.interface.next_frame)
