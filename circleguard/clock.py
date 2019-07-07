@@ -31,7 +31,10 @@ class Timer:
         return self.get_time()
 
     def reset(self):
-        self.__init__()
+        self.time_counter = 0
+        self.paused = False
+        self.paused_at_run_time = None
+        self.last_run_time = time.time_ns()
         return self.get_time()
 
     def change_speed(self, speed):
