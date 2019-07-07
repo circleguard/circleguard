@@ -18,14 +18,16 @@ class Timer:
         return self.time_counter
 
     def pause(self):
-        self.paused = True
-        self.paused_at_run_time = time.time_ns()
+        if not self.paused:
+            self.paused = True
+            self.paused_at_run_time = time.time_ns()
         return self.get_time()
 
     def resume(self):
-        self.paused = False
-        self.last_run_time += (time.time_ns()-self.paused_at_run_time)
-        self.paused_at_run_time = None
+        if self.paused:
+            self.last_run_time += (time.time_ns()-self.paused_at_run_time)
+            self.paused_at_run_time = None
+            self.paused = False
         return self.get_time()
 
     def reset(self):
