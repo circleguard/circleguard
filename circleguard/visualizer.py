@@ -9,6 +9,7 @@ from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIco
 
 import osu_parser
 import clock
+import math
 import time
 
 WIDTH_LINE = 1
@@ -198,7 +199,12 @@ class _Renderer(QWidget):
 
     def paint_info(self, painter):
         painter.setPen(QPen(QColor(128, 128, 128), 1))
-        painter.drawText(0, 25, f"clock: {round(self.clock.get_time())}")
+        painter.drawText(0, 15, f"Clock: {round(self.clock.get_time())}")
+        if self.replay_amount > 0:
+            for i in range(self.replay_amount):
+                painter.drawText(0, 30+(15*i), f"Cursor {i}: {int(self.buffer[i][-1][1])}x{int(self.buffer[i][-1][2])}")
+            distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
+            painter.drawText(0, 45 + (15 * i), f"Distance between {i-1}-{i}: {int(distance)}")
 
     def draw_line(self, painter, pen, alpha, start, end):
         """
