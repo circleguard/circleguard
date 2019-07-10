@@ -3,12 +3,13 @@ from circleguard.enums import Mod
 
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF
-from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QStyle, QShortcut
-from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence
+from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QShortcut, QLabel
+from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIcon
 # pylint: enable=no-name-in-module
 
 import osu_parser
 import clock
+import time
 
 WIDTH_LINE = 1
 WIDTH_POINT = 3
@@ -21,6 +22,7 @@ PEN_WHITE = QPen(QColor(255, 255, 255))
 X_OFFSET = 64
 Y_OFFSET = 48
 CURSOR_COLORS = [PEN_BLUE, PEN_RED]
+SPEED_OPTIONS = [0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
 
 
 class Point(QPointF):
@@ -41,7 +43,7 @@ class _Renderer(QWidget):
         self.setFixedSize(640, 480)
         self.replay_amount = len(replays)
         self.current_time = 0
-        self.pos = [-1]*self.replay_amount  # so our first frame is at data[0] since we do pos + 1
+        self.pos = [0]*self.replay_amount  # so our first frame is at data[0] since we do pos + 1
         self.buffer = [[[0, 0, 0]],[[0,0,0]]]
         self.buffer_additions = [[[0, 0, 0]],[[0,0,0]]]
         self.clock = clock.Timer()
@@ -60,12 +62,12 @@ class _Renderer(QWidget):
                     for d in self.data[replay_index]:
                         d[2] = 384 - d[2]
 
-        self.replay_len = max((len(data) for data in self.data)) if self.replay_amount > 0 else 0
+        self.replay_len = max(data[-1][0] for data in self.data) if self.replay_amount > 0 else 0
         self.next_frame()
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_frame_from_timer)
-        self.timer.start(1)  # 60fps (1000ms/60frames)
+        self.timer.start(1000/60)  # 60fps (1000ms/60frames)
 
     def next_frame_from_timer(self):
         """
@@ -83,16 +85,28 @@ class _Renderer(QWidget):
         """
         found = offset
         # attempt to make efficient search
-        for i in range(len(list_to_search)-offset):
-            current = list_to_search[i+offset][index]
-            try:
-                next = list_to_search[i+offset+1][index]
-            except IndexError:
-                found = i+offset
-                break
-            if current < value < next:
-                found = i+offset
-                break
+        if list_to_search[offset][0] <= value:
+            for i in range(len(list_to_search)-offset):
+                current = list_to_search[i+offset][index]
+                try:
+                    next = list_to_search[i+offset+1][index]
+                except IndexError:
+                    found = i+offset
+                    break
+                if current < value < next or current > value < next:
+                    found = i+offset
+                    break
+        else:
+            for i in range(offset):
+                current = list_to_search[offset-i][index]
+                try:
+                    previous = list_to_search[offset-i-1][index]
+                except IndexError:
+                    found = offset-i
+                    break
+                if previous < value < current:
+                    found = offset-i
+                    break
         return found
 
     def next_frame(self):
@@ -101,9 +115,10 @@ class _Renderer(QWidget):
         """
         current_time = self.clock.get_time()
         if self.replay_amount > 0:
-            if current_time > self.data[0][-1][0]:  # resets visualizer if at end
-                self.reset()
+            if current_time > self.data[0][-1][0] or current_time < 0:  # resets visualizer if at end
+                self.reset(end=True if self.clock.current_speed < 0 else False)
 
+        current_time = self.clock.get_time()
         for replay_index in range(self.replay_amount):
             self.pos[replay_index] = self.search_timestamp(self.data[replay_index], 0, current_time, self.pos[replay_index])
             magic = self.pos[replay_index] - FRAMES_ON_SCREEN if self.pos[replay_index] >= FRAMES_ON_SCREEN else 0
@@ -150,7 +165,7 @@ class _Renderer(QWidget):
 
             if self.beatmap.last_time < current_time:
                 self.reset()
-        self.update_signal.emit(1)
+        self.update_signal.emit(current_time)
         self.update()
 
     def paintEvent(self, event):
@@ -316,66 +331,155 @@ class _Renderer(QWidget):
             newpoints.append(self.linear_interpolate(points[i], points[i+1], t))
         return self.get_curve_point(t, newpoints)
 
-    def reset(self):
+    def reset(self, end=False):
         if self.beatmap_path != "":
-            self.pos = [-1] * self.replay_amount
             self.beatmap.reset()
+            self.clock.reset()
             self.hitobjs = []
-        self.clock.reset()
+        if end:
+            self.pos = [len(self.data[0])-1,len(self.data[1])-1]
+            self.clock.reset()
+            self.clock.time_counter = int(self.data[0][-1][0])
+        else:
+            self.pos = [0] * self.replay_amount
+            self.clock.reset()
+        if self.paused:
+            self.clock.pause()
+
+    def search_nearest_frame(self, reverse=False):
+        if not reverse:
+            next_frames = [self.data[x][self.pos[x]][0] for x in range(len(self.data))]
+            self.seek_to(min(next_frames))
+        else:
+            previous_frames = [self.data[x][self.pos[x]-1][0] for x in range(len(self.data))]
+            self.seek_to(min(previous_frames)-1)
 
     def seek_to(self, position):
-        """
-        TODO Doesn't actually seek to a position, just advances the frame.
-        This and previous_frame are both effectively broken right now
-        """
+        self.clock.time_counter = position
         self.next_frame()
 
     def pause(self):
-        """
-        Switches the current paused state of the visualizer.
-        """
-        if self.paused:
-            self.paused = False
-        else:
-            self.paused = True
+        self.paused = True
+        self.clock.pause()
+
+    def resume(self):
+        self.paused = False
+        self.clock.resume()
 
 
 class _Interface(QWidget):
     def __init__(self, replays=(), beatmap_path=""):
         super(_Interface, self).__init__()
         self.renderer = _Renderer(replays, beatmap_path)
+
         self.layout = QGridLayout()
         self.slider = QSlider(Qt.Horizontal)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.renderer, 0, 0, 1, 10)
+        self.play_direction = 1
+
+        self.play_reverse_button = QPushButton()
+        self.play_reverse_button.setIcon(QIcon("./resources/play_reverse.png"))
+        self.play_reverse_button.setFixedSize(20, 20)
+        self.play_reverse_button.setToolTip("Plays visualization in reverse")
+        self.play_reverse_button.clicked.connect(self.play_reverse)
+
+        self.play_normal_button = QPushButton()
+        self.play_normal_button.setIcon(QIcon("./resources/play_normal.png"))
+        self.play_normal_button.setFixedSize(20, 20)
+        self.play_normal_button.setToolTip("Plays visualization in normally")
+        self.play_normal_button.clicked.connect(self.play_normal)
+
+        self.next_frame_button = QPushButton()
+        self.next_frame_button.setIcon(QIcon("./resources/frame_next.png"))
+        self.next_frame_button.setFixedSize(20, 20)
+        self.next_frame_button.setToolTip("Displays next frame")
+        self.next_frame_button.clicked.connect(self.next_frame)
+
+        self.previous_frame_button = QPushButton()
+        self.previous_frame_button.setIcon(QIcon("./resources/frame_back.png"))
+        self.previous_frame_button.setFixedSize(20, 20)
+        self.previous_frame_button.setToolTip("Displays previous frame")
+        self.previous_frame_button.clicked.connect(self.previous_frame)
+
+        self.pause_button = QPushButton()
+        self.pause_button.setIcon(QIcon("./resources/pause.png"))
+        self.pause_button.setFixedSize(20, 20)
+        self.pause_button.setToolTip("Pause visualization")
+        self.pause_button.clicked.connect(self.pause)
+
+        self.speed_up_button = QPushButton()
+        self.speed_up_button.setIcon(QIcon("./resources/speed_up.png"))
+        self.speed_up_button.setFixedSize(20, 20)
+        self.speed_up_button.setToolTip("Speed up")
+        self.speed_up_button.clicked.connect(self.increase_speed)
+
+        self.speed_down_button = QPushButton()
+        self.speed_down_button.setIcon(QIcon("./resources/speed_down.png"))
+        self.speed_down_button.setFixedSize(20, 20)
+        self.speed_down_button.setToolTip("Speed down")
+        self.speed_down_button.clicked.connect(self.lower_speed)
+
+        self.slider.setRange(0, self.renderer.replay_len)
+        self.slider.setValue(0)
+        self.slider.setFixedHeight(20)
+        self.slider.setStyleSheet("outline: none;")
+        self.renderer.update_signal.connect(self.update_slider)
+        self.slider.valueChanged.connect(self.renderer.seek_to)
+
+        self.speed_label = QLabel("1.00")
+        self.speed_label.setFixedSize(40, 20)
+        self.speed_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+
+        self.layout.addWidget(self.renderer, 0, 0, 16, 17)
+        self.layout.addWidget(self.play_reverse_button, 17, 0, 1, 1)
+        self.layout.addWidget(self.previous_frame_button, 17, 1, 1, 1)
+        self.layout.addWidget(self.pause_button, 17, 2, 1, 1)
+        self.layout.addWidget(self.next_frame_button, 17, 3, 1, 1)
+        self.layout.addWidget(self.play_normal_button, 17, 4, 1, 1)
+        self.layout.addWidget(self.slider, 17, 5, 1, 9)
+        self.layout.addWidget(self.speed_label, 17, 14, 1, 1)
+        self.layout.addWidget(self.speed_down_button, 17, 15, 1, 1)
+        self.layout.addWidget(self.speed_up_button, 17, 16, 1, 1)
         self.setLayout(self.layout)
 
-    def update_slider(self, delta_value):
-        """
-        Increases the slider's position by delta_value amount.
+    def play_normal(self):
+        self.renderer.resume()
+        self.play_direction = 1
+        self._update_speed()
 
-        Arguments:
-            Integer delta_value: How much to increase the slider's value by.
-        """
-        self.slider.setValue(self.slider.value() + delta_value)
+    def update_slider(self, value):
+        self.slider.setValue(value)
 
-    # messy repeated code, there's got to be a better way to work around interface.pause always switching states
-    # and the frame methods only ever pausing and never unpausing
+    def play_reverse(self):
+        self.renderer.resume()
+        self.play_direction = -1
+        self._update_speed()
+
+    def _update_speed(self):
+        print(float(self.speed_label.text())*self.play_direction)
+        self.renderer.clock.change_speed(float(self.speed_label.text())*self.play_direction)
+
     def previous_frame(self):
-        if not self.renderer.paused:
-            self.pause()
-        self.run_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay if self.renderer.paused else QStyle.SP_MediaPause))
-        self.renderer.seek_to(self.slider.value() - 1)
+        self.renderer.pause()
+        self.renderer.search_nearest_frame(reverse=True)
 
     def next_frame(self):
-        if not self.renderer.paused:
-            self.pause()
-        self.run_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay if self.renderer.paused else QStyle.SP_MediaPause))
-        self.renderer.seek_to(self.slider.value() + 1)
+        self.renderer.pause()
+        self.renderer.search_nearest_frame(reverse=False)
 
     def pause(self):
         self.renderer.pause()
-        self.run_button.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay if self.renderer.paused else QStyle.SP_MediaPause))
+
+    def lower_speed(self):
+        index = SPEED_OPTIONS.index(float(self.speed_label.text()))
+        if index != 0:
+            self.speed_label.setText(str(SPEED_OPTIONS[index-1]))
+            self._update_speed()
+
+    def increase_speed(self):
+        index = SPEED_OPTIONS.index(float(self.speed_label.text()))
+        if index != len(SPEED_OPTIONS)-1:
+            self.speed_label.setText(str(SPEED_OPTIONS[index+1]))
+            self._update_speed()
 
 
 class VisualizerWindow(QMainWindow):
