@@ -8,6 +8,7 @@ from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
 from settings import get_setting, reset_defaults, update_default
+from visualizer import VisualizerWindow
 
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
@@ -562,7 +563,7 @@ class FolderChooser(QFrame):
 
         self.file_chooser_button = QPushButton(self)
         self.file_chooser_button.setText("Choose "+("Folder" if self.folder_mode else "File"))
-        self.file_chooser_button.pressed.connect(self.set_dir)
+        self.file_chooser_button.clicked.connect(self.set_dir)
         self.file_chooser_button.setFixedWidth(100)
 
         self.path_label = QLabel(self)
@@ -609,7 +610,7 @@ class ResetSettings(QFrame):
 
         self.button = QPushButton(self)
         self.button.setText("Reset")
-        self.button.pressed.connect(self.reset_settings)
+        self.button.clicked.connect(self.reset_settings)
         self.button.setFixedWidth(100)
 
         layout = QGridLayout()
@@ -627,6 +628,33 @@ class ResetSettings(QFrame):
         if prompt == QMessageBox.Yes:
             reset_defaults()
             sys.exit(0)
+
+
+class BeatmapTest(QFrame):
+    def __init__(self):
+        super(BeatmapTest, self).__init__()
+        self.visualizer_window = None
+
+        self.file_chooser = FolderChooser("Beatmap File", "", folder_mode=False)
+        self.label = QLabel(self)
+        self.label.setText("Test Beatmap:")
+
+        self.button = QPushButton(self)
+        self.button.setText("Visualize")
+        self.button.clicked.connect(self.visualize)
+        self.button.setFixedWidth(100)
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.file_chooser, 0, 0, 1, 3)
+        layout.addWidget(self.label, 1, 0, 1, 1)
+        layout.addItem(SPACER, 1, 1, 1, 1)
+        layout.addWidget(self.button, 1, 2, 1, 1)
+        self.setLayout(layout)
+
+    def visualize(self):
+        self.visualizer_window = VisualizerWindow(beatmap_path=self.file_chooser.path)
+        self.visualizer_window.show()
 
 
 class TopPlays(QFrame):

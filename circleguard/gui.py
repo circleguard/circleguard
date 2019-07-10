@@ -21,7 +21,7 @@ from visualizer import VisualizerWindow
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
-                     TopPlays)
+                     TopPlays, BeatmapTest)
 from settings import get_setting, update_default
 import wizard
 
@@ -177,7 +177,6 @@ class MainTab(QWidget):
         {"name": "SCREEN", "requires_api": True},
         {"name": "LOCAL",  "requires_api": False},
         {"name": "VERIFY", "requires_api": True},
-        {"name": "BEATMAP", "requires_api": False},
     ]
 
     def __init__(self):
@@ -189,12 +188,10 @@ class MainTab(QWidget):
         self.user_tab = UserTab()
         self.local_tab = LocalTab()
         self.verify_tab = VerifyTab()
-        self.beatmap_tab = BeatmapTab()
         tabs.addTab(self.map_tab, "Check Map")
         tabs.addTab(self.user_tab, "Screen User")
         tabs.addTab(self.local_tab, "Check Local Replays")
         tabs.addTab(self.verify_tab, "Verify")
-        tabs.addTab(self.beatmap_tab, "Beatmap Test")
         self.tabs = tabs
         self.tabs.currentChanged.connect(self.switch_run_button)
 
@@ -227,16 +224,8 @@ class MainTab(QWidget):
     def run(self):
         current_tab = self.tabs.currentIndex()
         self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
-        if self.run_type == "BEATMAP":
-            try:
-                self.visualizer_window = VisualizerWindow(beatmap_path=self.beatmap_tab.file_chooser.path)
-                self.visualizer_window.show()
-            except Exception as e:
-                log.error(e)
-                log.error(f"Beatmap [{self.beatmap_tab.file_chooser.path}] was not successfully displayed or no map has been chosen")
-        else:
-            pool = ThreadPool(processes=1)
-            pool.apply_async(self.run_circleguard)
+        pool = ThreadPool(processes=1)
+        pool.apply_async(self.run_circleguard)
 
     def switch_run_button(self):
         if not self.cg_running:
@@ -336,7 +325,6 @@ class MapTab(QWidget):
         self.compare_top = CompareTopUsers()
 
         self.threshold = Threshold()  # ThresholdCombined()
-
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.id_combined, 1, 0, 2, 1)
@@ -422,20 +410,6 @@ class VerifyTab(QWidget):
         self.setLayout(layout)
 
 
-class BeatmapTab(QWidget):
-    def __init__(self):
-        super(BeatmapTab, self).__init__()
-        self.info = QLabel(self)
-        self.info.setText("Testing beatmap rendering OwO.")
-        self.file_chooser = FolderChooser("Beatmap File", "", folder_mode=False)
-
-        layout = QGridLayout()
-        layout.addWidget(self.info, 0, 0, 1, 1)
-        layout.addWidget(self.file_chooser, 1, 0, 1, 1)
-
-        self.setLayout(layout)
-
-
 class SettingsTab(QWidget):
     def __init__(self):
         super(SettingsTab, self).__init__()
@@ -482,6 +456,8 @@ class SettingsTab(QWidget):
         self.grid.addWidget(Separator("Debug settings"), 8, 0, 1, 1)
         self.grid.addWidget(self.loglevel, 9, 0, 4, 1)
         self.grid.addWidget(ResetSettings(), 13, 0, 1, 1)
+        self.grid.addWidget(Separator("Visualizer Experiments"), 14, 0, 1, 1)
+        self.grid.addWidget(BeatmapTest(), 15, 0, 2, 1)
 
         self.setLayout(self.grid)
 
