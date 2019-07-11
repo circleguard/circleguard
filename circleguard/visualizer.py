@@ -44,7 +44,7 @@ class _Renderer(QWidget):
         self.setFixedSize(640, 480)
         self.replay_amount = len(replays)
         self.current_time = 0
-        self.pos = [0]*self.replay_amount  # so our first frame is at data[0] since we do pos + 1
+        self.pos = [1]*self.replay_amount  # so our first frame is at data[0] since we do pos + 1
         self.buffer = [[[0, 0, 0]],[[0,0,0]]]
         self.buffer_additions = [[[0, 0, 0]],[[0,0,0]]]
         self.clock = clock.Timer()
