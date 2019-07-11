@@ -201,10 +201,16 @@ class _Renderer(QWidget):
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawText(0, 15, f"Clock: {round(self.clock.get_time())}")
         if self.replay_amount > 0:
-            for i in range(self.replay_amount):
-                painter.drawText(0, 30+(15*i), f"Cursor {i}: {int(self.buffer[i][-1][1])}x{int(self.buffer[i][-1][2])}")
-            distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
-            painter.drawText(0, 45 + (15 * i), f"Distance between {i-1}-{i}: {int(distance)}")
+            for i in range(len(self.buffer)):
+                if len(self.buffer[i]) > 0:  # skips empty buffers
+                    painter.drawText(0, 30+(15*i), f"Cursor {i}: {int(self.buffer[i][-1][1])}x{int(self.buffer[i][-1][2])}")
+                else:
+                    painter.drawText(0, 30+(15*i), f"Cursor {i}: Not yet loaded")
+            try:
+                distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
+                painter.drawText(0, 45 + (15 * i), f"Distance between {i-1}-{i}: {int(distance)}")
+            except IndexError:  # Edge case where we only have one cursor
+                pass
 
     def draw_line(self, painter, pen, alpha, start, end):
         """
