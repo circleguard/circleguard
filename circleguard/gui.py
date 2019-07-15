@@ -171,7 +171,10 @@ class WindowWrapper(QMainWindow):
                              replay1_name=r1.username, replay2_name=r2.username, later_name=result.later_name)
         result_widget = ComparisonResult(text, r1, r2)
         result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
-        self.main_window.results_tab.layout.addWidget(result_widget)
+        # remove info text if shown
+        if not self.main_window.results_tab.results.info_label.isHidden():
+            self.main_window.results_tab.results.info_label.hide()
+        self.main_window.results_tab.results.layout.addWidget(result_widget)
 
 
 class DebugWindow(QMainWindow):
@@ -550,15 +553,33 @@ class ScrollableSettingsWidget(QFrame):
     def set_circleguard_loglevel(self):
         set_options(loglevel=self.loglevel.level_combobox.currentData())
 
+
 class ResultsTab(QWidget):
     def __init__(self):
         super(ResultsTab, self).__init__()
 
-        self.layout = QVBoxLayout()
+        _layout = QVBoxLayout()
+        self.qscrollarea = QScrollArea(self)
+        self.results = ResultsFrame()
+        self.qscrollarea.setWidget(self.results)
+        self.qscrollarea.setWidgetResizable(True)
+        # \/ https://stackoverflow.com/a/16482646
+
         # we want widgets to fill from top down,
         # being vertically centered looks weird
+        _layout.addWidget(self.qscrollarea)
+        self.setLayout(_layout)
+
+
+class ResultsFrame(QFrame):
+    def __init__(self):
+        super(ResultsFrame, self).__init__()
+        self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignTop)
+        self.info_label = QLabel("After running Comparisons, this tab will fill up with results")
+        self.layout.addWidget(self.info_label)
         self.setLayout(self.layout)
+
 
 def switch_theme(dark):
     update_default("dark_theme", 1 if dark else 0)

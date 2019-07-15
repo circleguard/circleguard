@@ -17,6 +17,7 @@ DRAW_SIZE = 600 # square area
 OSU_WINDOW_SIZE = 512 # a constant of the game
 POS_MULT = DRAW_SIZE / OSU_WINDOW_SIZE # multiply each point by this
 
+
 class _Renderer(QWidget):
     update_signal = pyqtSignal(int)
 
