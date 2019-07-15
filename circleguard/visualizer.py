@@ -1,6 +1,8 @@
+import math
+import time
+
 from circleguard import utils
 from circleguard.enums import Mod
-
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF
 from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QShortcut, QLabel
@@ -9,8 +11,6 @@ from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIco
 
 import osu_parser
 import clock
-import math
-import time
 
 WIDTH_LINE = 1
 WIDTH_POINT = 3
