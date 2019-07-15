@@ -1,4 +1,3 @@
-import sys
 import os
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
@@ -17,7 +16,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPai
 from circleguard import Circleguard, set_options, loader
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
-
+from utils import resource_path
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
@@ -26,23 +25,9 @@ from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, Wi
 from settings import get_setting, update_default
 import wizard
 
-ROOT_PATH = Path(__file__).parent.absolute()
 __version__ = "0.1d"
 
 log = logging.getLogger(__name__)
-
-
-def resource_path(str_path):
-    """
-    Returns a Path representing where to look for resource files for the program,
-    such as databases or images.
-
-    This location changes if the program is run from an application built with pyinstaller.
-    """
-
-    if hasattr(sys, '_MEIPASS'):  # being run from a pyinstall'd app
-        return Path(sys._MEIPASS) / Path(str_path)  # pylint: disable=no-member
-    return ROOT_PATH / Path(str_path)
 
 
 # logging methodology heavily adapted from https://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt

@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayo
 
 from settings import get_setting, update_default
 from widgets import OptionWidget, InputWidget
-from gui import resource_path
+from utils import resource_path
 
 
 class WizardPage(QWizardPage):
