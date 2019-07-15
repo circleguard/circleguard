@@ -5,6 +5,7 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
+from osuAPI import OsuAPI
 from datetime import datetime
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
@@ -20,7 +21,8 @@ from visualizer import VisualizerWindow
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
-                     StringFormatWidget, ComparisonResult)
+                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult)
+
 from settings import get_setting, update_default
 import wizard
 
@@ -257,7 +259,7 @@ class MainTab(QWidget):
         layout.addWidget(self.terminal)
         layout.addWidget(self.run_button)
         self.setLayout(layout)
-
+        self.run_type = "NONE"  # set after you click run, depending on your current tab
         self.switch_run_button()  # disable run button if there is no api key
 
     def write(self, message):
@@ -270,6 +272,8 @@ class MainTab(QWidget):
         self.terminal.setTextCursor(cursor)
 
     def run(self):
+        current_tab = self.tabs.currentIndex()
+        self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
         pool = ThreadPool(processes=1)
         pool.apply_async(self.run_circleguard)
 
@@ -288,9 +292,7 @@ class MainTab(QWidget):
         self.update_text_signal.emit("Loading Replays")
         try:
             cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"), "cache.db"))
-            current_tab = self.tabs.currentIndex()
-            current_tab_name = MainTab.TAB_REGISTER[current_tab]["name"]
-            if current_tab_name == "MAP":
+            if self.run_type == "MAP":
                 tab = self.map_tab
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
                 #       maybe fancy flashing red stars for required fields
@@ -300,7 +302,7 @@ class MainTab(QWidget):
                 thresh = tab.threshold.thresh_slider.value()
                 check = cg.create_map_check(map_id, num=num, thresh=thresh)
 
-            if current_tab_name == "SCREEN":
+            if self.run_type == "SCREEN":
                 tab = self.user_tab
                 user_id_str = tab.user_id.field.text()
                 user_id = int(user_id_str) if user_id_str != "" else 0
@@ -308,13 +310,13 @@ class MainTab(QWidget):
                 thresh = tab.threshold.thresh_slider.value()
                 check = cg.create_user_check(user_id, num, thresh=thresh)
 
-            if current_tab_name == "LOCAL":
+            if self.run_type == "LOCAL":
                 tab = self.local_tab
                 path = Path(tab.folder_chooser.path)
                 thresh = tab.threshold.thresh_slider.value()
                 check = cg.create_local_check(path, thresh=thresh)
 
-            if current_tab_name == "VERIFY":
+            if self.run_type == "VERIFY":
                 tab = self.verify_tab
                 map_id_str = tab.map_id.field.text()
                 map_id = int(map_id_str) if map_id_str != "" else 0
@@ -373,7 +375,7 @@ class MainTab(QWidget):
             pass
 
     def visualize(self, replay1, replay2):
-        self.visualizer_window = VisualizerWindow(replay1, replay2)
+        self.visualizer_window = VisualizerWindow(replays=(replay1, replay2))
         self.visualizer_window.show()
 
 
@@ -389,7 +391,6 @@ class MapTab(QWidget):
         self.compare_top = CompareTopUsers()
 
         self.threshold = Threshold()  # ThresholdCombined()
-
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.id_combined, 1, 0, 2, 1)
@@ -413,11 +414,12 @@ class UserTab(QWidget):
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1)
         layout.addWidget(self.user_id, 1, 0, 1, 1)
-        layout.addWidget(self.compare_top_map, 2, 0, 1, 1)
-        layout.addWidget(self.compare_top_user, 3, 0, 1, 1)
-        layout.addWidget(self.threshold, 4, 0, 1, 1)
-
-        self.setLayout(layout)
+        # leave space for inserting the user user top plays widget
+        layout.addWidget(self.compare_top_map, 3, 0, 1, 1)
+        layout.addWidget(self.compare_top_user, 4, 0, 1, 1)
+        layout.addWidget(self.threshold, 5, 0, 1, 1)
+        self.layout = layout
+        self.setLayout(self.layout)
 
 
 class LocalTab(QWidget):
@@ -429,6 +431,7 @@ class LocalTab(QWidget):
                           "If both a user and a map are given, it will compare the local replays against the user's "
                           "score on that map.")
         self.folder_chooser = FolderChooser("Replay folder", get_setting("local_replay_dir"))
+        self.folder_chooser.path_signal.connect(self.update_dir)
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
         self.threshold = Threshold()  # ThresholdCombined()
@@ -446,6 +449,9 @@ class LocalTab(QWidget):
 
     def switch_compare(self):
         self.compare_top.update_user(self.id_combined.map_id.field.text() != "")
+
+    def update_dir(self, path):
+        update_default("local_replay_dir", path)
 
 
 class VerifyTab(QWidget):
@@ -536,9 +542,10 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(Separator("Debug settings"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
+        self.grid.addWidget(Separator("Visualizer Experiments"))
+        self.grid.addWidget(BeatmapTest())
         self.grid.addWidget(Separator("String Format settings"))
         self.grid.addWidget(StringFormatWidget(""))
-
 
         self.setLayout(self.grid)
 
