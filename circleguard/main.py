@@ -30,7 +30,7 @@ iterator = circleguard.run(Check(replays))
 # iterator = circleguard.map_check(221777, num=3)
 # iterator = circleguard.local_check()
 for result in iterator:
-    print(result.similiarity)
+    print(result.similarity)
     print(result.replay1.id)
     print(result.replay2.id)
 # circleguard.verify(1699366, 12092800, 7477458, False)

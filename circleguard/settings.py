@@ -10,12 +10,20 @@ def reset_defaults():
     SETTINGS.setValue("api_key", "")
     SETTINGS.setValue("dark_theme", 0)
     SETTINGS.setValue("caching", 0)
-    SETTINGS.setValue("cache_dir", "./db/")
+    SETTINGS.setValue("cache_dir", ".")
     SETTINGS.setValue("log_save", 0)
     SETTINGS.setValue("log_dir", "./logs/")
     SETTINGS.setValue("log_mode", 3)
     SETTINGS.setValue("log_output", 0)
-    SETTINGS.setValue("local_replay_dir", "./replays/")
+    SETTINGS.setValue("local_replay_dir", "./examples/replays/")
+
+    # string settings
+    SETTINGS.setValue("message_loading_replays", "[{ts:%X}] Loading {num_replays} Replays")
+    SETTINGS.setValue("message_starting_comparing", "[{ts:%X}] Comparing Replays")
+    SETTINGS.setValue("message_finished_comparing", "[{ts:%X}] Done")
+    SETTINGS.setValue("message_cheater_found", "[{ts:%X}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}, {later_name} set later")
+    SETTINGS.setValue("string_result_text", "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}")
+
     SETTINGS.sync()
 
 

@@ -5,23 +5,24 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
-
 from osuAPI import OsuAPI
+from datetime import datetime
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
-from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel,
-                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow)
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor
+from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
+                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy)
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter
 # pylint: enable=no-name-in-module
 
-
-from circleguard import Circleguard, set_options
+from circleguard import Circleguard, set_options, loader
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
-from widgets import (Threshold, set_event_window, InputWidget, ResetSettings,
+
+from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
-                     TopPlays, BeatmapTest)
+                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult)
+
 from settings import get_setting, update_default
 import wizard
 
@@ -29,6 +30,7 @@ ROOT_PATH = Path(__file__).parent.absolute()
 __version__ = "0.1d"
 
 log = logging.getLogger(__name__)
+
 
 def resource_path(str_path):
     """
@@ -58,7 +60,20 @@ class Handler(QObject, logging.Handler):
 class WindowWrapper(QMainWindow):
     def __init__(self):
         super(WindowWrapper, self).__init__()
+        self.progressbar = QProgressBar()
+        self.progressbar.setFixedWidth(250)
+        self.current_state_label = QLabel("Idle")
+        # statusBar() is a qt function that will create a status bar tied to the window
+        # if it doesnt exist, and access the existing one if it does.
+        self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label))
+        self.statusBar().setSizeGripEnabled(False)
+        self.statusBar().setContentsMargins(8, 2, 10, 3)
+
         self.main_window = MainWindow()
+        self.main_window.main_tab.reset_progressbar_signal.connect(self.reset_progressbar)
+        self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
+        self.main_window.main_tab.update_text_signal.connect(self.update_label)
+        self.main_window.main_tab.add_comparison_result_signal.connect(self.add_comparison_result)
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
@@ -132,6 +147,34 @@ class WindowWrapper(QMainWindow):
                 self.debug_window.show()
                 self.debug_window.write(message)
 
+    def update_label(self, text):
+        self.current_state_label.setText(text)
+
+    def increment_progressbar(self, increment):
+        self.progressbar.setValue(self.progressbar.value() + increment)
+
+    def reset_progressbar(self, max_value):
+        if not max_value == -1:
+            self.progressbar.setValue(0)
+            self.progressbar.setRange(0, max_value)
+        else:
+            self.progressbar.setRange(0,100)
+            self.progressbar.reset()
+
+    def add_comparison_result(self, result):
+        # this right here could very well lead to some memory issues. I tried to avoid
+        # leaving a reference to the replays in this method, but it's quite possible
+        # things are still not very clean. Ideally only ComparisonResult would have a
+        # reference to the two replays, and result should have no references left.
+        r1 = result.replay1
+        r2 = result.replay2
+        timestamp = datetime.now()
+        text = get_setting("string_result_text").format(ts=timestamp, similarity=result.similarity,
+                             replay1_name=r1.username, replay2_name=r2.username, later_name=result.later_name)
+        result_widget = ComparisonResult(text, r1, r2)
+        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
+        self.main_window.results_tab.layout.addWidget(result_widget)
+
 
 class DebugWindow(QMainWindow):
     def __init__(self):
@@ -159,19 +202,26 @@ class MainWindow(QWidget):
 
         self.tab_widget = QTabWidget()
         self.main_tab = MainTab()
+        self.results_tab = ResultsTab()
         self.settings_tab = SettingsTab()
         self.tab_widget.addTab(self.main_tab, "Main Tab")
+        self.tab_widget.addTab(self.results_tab, "Results Tab")
         self.tab_widget.addTab(self.settings_tab, "Settings Tab")
-
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
         self.tab_widget.currentChanged.connect(self.main_tab.switch_run_button)
 
         self.main_layout = QVBoxLayout()
         self.main_layout.addWidget(self.tab_widget)
+        self.main_layout.setContentsMargins(10, 10, 10, 0)
         self.setLayout(self.main_layout)
 
 
 class MainTab(QWidget):
+    reset_progressbar_signal = pyqtSignal(int)  # max progress
+    increment_progressbar_signal = pyqtSignal(int) # increment value
+    update_text_signal = pyqtSignal(str)
+    add_comparison_result_signal = pyqtSignal(object) # Result
+
     TAB_REGISTER = [
         {"name": "MAP",    "requires_api": True},
         {"name": "SCREEN", "requires_api": True},
@@ -239,6 +289,7 @@ class MainTab(QWidget):
     def run_circleguard(self):
         self.cg_running = True
         self.switch_run_button()
+        self.update_text_signal.emit("Loading Replays")
         try:
             cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"), "cache.db"))
             if self.run_type == "MAP":
@@ -249,7 +300,7 @@ class MainTab(QWidget):
                 map_id = int(map_id_str) if map_id_str != "" else 0
                 num = tab.compare_top.slider.value()
                 thresh = tab.threshold.thresh_slider.value()
-                gen = cg.map_check(map_id, num=num, thresh=thresh)
+                check = cg.create_map_check(map_id, num=num, thresh=thresh)
 
             if self.run_type == "SCREEN":
                 tab = self.user_tab
@@ -257,13 +308,13 @@ class MainTab(QWidget):
                 user_id = int(user_id_str) if user_id_str != "" else 0
                 num = tab.compare_top_map.slider.value()
                 thresh = tab.threshold.thresh_slider.value()
-                gen = cg.user_check(user_id, num, thresh=thresh)
+                check = cg.create_user_check(user_id, num, thresh=thresh)
 
             if self.run_type == "LOCAL":
                 tab = self.local_tab
                 path = Path(tab.folder_chooser.path)
                 thresh = tab.threshold.thresh_slider.value()
-                gen = cg.local_check(path, thresh=thresh)
+                check = cg.create_local_check(path, thresh=thresh)
 
             if self.run_type == "VERIFY":
                 tab = self.verify_tab
@@ -274,43 +325,58 @@ class MainTab(QWidget):
                 user_id_2_str = tab.user_id_2.field.text()
                 user_id_2 = int(user_id_2_str) if user_id_2_str != "" else 0
                 thresh = tab.threshold.thresh_slider.value()
-                gen = cg.verify(map_id, user_id_1, user_id_2, thresh=thresh)
+                check = cg.create_verify_check(map_id, user_id_1, user_id_2, thresh=thresh)
 
-            for result in gen:
+            num_to_load = len(check.all_replays())
+            self.reset_progressbar_signal.emit(num_to_load)
+            cg.loader.new_session(num_to_load)
+            timestamp = datetime.now()
+            self.write(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load))
+            for replay in check.all_replays():
+                cg.load(replay)
+                self.increment_progressbar_signal.emit(1)
+
+            self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
+            check.loaded = True
+            timestamp = datetime.now()
+            self.write(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+            for result in cg.run(check):
                 self.q.put(result)
+            self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
+
+            timestamp = datetime.now()
+            self.write(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
 
         except Exception:
             log.exception("ERROR!! while running cg:")
+
         self.cg_running = False
+        self.update_text_signal.emit("Idle")
         self.switch_run_button()
 
     def print_results(self):
         try:
             while True:
                 result = self.q.get(block=False)
-                name1 = result.replay1.username
-                name2 = result.replay2.username
-                later = result.later_name
-                earlier = name1 if later == name2 else name2 # the other name
-                sim = result.similarity
-                out = f"{sim:0.1f} similarity. {name1} vs {name2}, {later} set later"
+                # self.visualize(result.replay1, result.replay2)
                 if result.ischeat:
-                    if self.run_type == "VERIFY":
-                        # special prints if it was ran as a verify call
-                        out = "{} stole his replay from {} ({:0.1f} sim)".format(later, earlier, sim)
+                    timestamp = datetime.now()
+                    r1 = result.replay1
+                    r2 = result.replay2
+                    msg = get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
+                            replay1_name=r1.username, replay2_name=r2.username, later_name=result.later_name,
+                            replay1_mods=r1.mods, replay2_mods=r2.mods, replay1_id=r1.replay_id, replay2_id=r2.replay_id)
+                    self.write(msg)
                     QApplication.beep()
                     QApplication.alert(self)
-                    # keeping a reference to the window is necessary or else it disappears
-                    self.visualizer_window = VisualizerWindow(replays=(result.replay1,result.replay2))
-                    self.visualizer_window.show()
-                else:
-                    if self.run_type == "VERIFY":
-                        out = "The replays by {} and {} are not copies. ({:0.1f} sim)".format(name1, name2, sim)
-
-                self.write(out)
-
+                    # add to Results Tab so it can be played back on demand
+                    self.add_comparison_result_signal.emit(result)
         except Empty:
             pass
+
+    def visualize(self, replay1, replay2):
+        self.visualizer_window = VisualizerWindow(replay1, replay2)
+        self.visualizer_window.show()
 
 
 class MapTab(QWidget):
@@ -413,6 +479,13 @@ class VerifyTab(QWidget):
 class SettingsTab(QWidget):
     def __init__(self):
         super(SettingsTab, self).__init__()
+        self.qscrollarea = QScrollArea(self)
+        self.qscrollarea.setWidget(ScrollableSettingsWidget())
+        self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
+        self.qscrollarea.setWidgetResizable(True)
+        # \/ https://stackoverflow.com/a/16482646
+        self.qscrollarea.setStyleSheet("QScrollArea { background: transparent; } QScrollArea > QWidget > QWidget { background: transparent;} ")
+
         self.info = QLabel(self)
         self.info.setText(f"Backend Version: {cg_version}<br/>"
                           f"Frontend Version: {__version__}<br/>"
@@ -422,6 +495,20 @@ class SettingsTab(QWidget):
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.info)
+        layout.addWidget(self.qscrollarea)
+        self.setLayout(layout)
+
+
+class ScrollableSettingsWidget(QFrame):
+    """
+    This class contains all of the actual settings content - SettingsTab just has a
+    QScrollArea wrapped around this widget so that it can be scrolled down.
+    """
+    def __init__(self):
+        super().__init__()
 
         self.apikey_widget = InputWidget("Api Key", "", type_="password")
         self.apikey_widget.field.setText(get_setting("api_key"))
@@ -444,20 +531,21 @@ class SettingsTab(QWidget):
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
         self.set_circleguard_loglevel()  # set the default loglevel in cg, not just in gui
 
-        self.grid = QGridLayout()
-        self.grid.addWidget(self.info, 0, 0, 1, 1)
-        self.grid.addWidget(Separator("Circleguard settings"), 1, 0, 1, 1)
-        self.grid.addWidget(self.apikey_widget, 2, 0, 1, 1)
-        self.grid.addWidget(self.thresh_widget, 3, 0, 1, 1)
-        self.grid.addWidget(self.cache, 4, 0, 1, 1)
-        self.grid.addWidget(self.cache_dir, 5, 0, 1, 1)
-        self.grid.addWidget(Separator("GUI settings"), 6, 0, 1, 1)
-        self.grid.addWidget(self.darkmode, 7, 0, 1, 1)
-        self.grid.addWidget(Separator("Debug settings"), 8, 0, 1, 1)
-        self.grid.addWidget(self.loglevel, 9, 0, 4, 1)
-        self.grid.addWidget(ResetSettings(), 13, 0, 1, 1)
-        self.grid.addWidget(Separator("Visualizer Experiments"), 14, 0, 1, 1)
-        self.grid.addWidget(BeatmapTest(), 15, 0, 2, 1)
+        self.grid = QVBoxLayout()
+        self.grid.addWidget(Separator("Circleguard settings"))
+        self.grid.addWidget(self.apikey_widget)
+        self.grid.addWidget(self.thresh_widget)
+        self.grid.addWidget(self.cache)
+        self.grid.addWidget(self.cache_dir)
+        self.grid.addWidget(Separator("GUI settings"))
+        self.grid.addWidget(self.darkmode)
+        self.grid.addWidget(Separator("Debug settings"))
+        self.grid.addWidget(self.loglevel)
+        self.grid.addWidget(ResetSettings())
+        self.grid.addWidget(Separator("Visualizer Experiments"))
+        self.grid.addWidget(BeatmapTest())
+        self.grid.addWidget(Separator("String Format settings"))
+        self.grid.addWidget(StringFormatWidget(""))
 
         self.setLayout(self.grid)
 
@@ -470,6 +558,15 @@ class SettingsTab(QWidget):
     def set_circleguard_loglevel(self):
         set_options(loglevel=self.loglevel.level_combobox.currentData())
 
+class ResultsTab(QWidget):
+    def __init__(self):
+        super(ResultsTab, self).__init__()
+
+        self.layout = QVBoxLayout()
+        # we want widgets to fill from top down,
+        # being vertically centered looks weird
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
 
 def switch_theme(dark):
     update_default("dark_theme", 1 if dark else 0)
