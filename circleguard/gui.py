@@ -375,7 +375,7 @@ class MainTab(QWidget):
             pass
 
     def visualize(self, replay1, replay2):
-        self.visualizer_window = VisualizerWindow(replay1, replay2)
+        self.visualizer_window = VisualizerWindow(replays=(replay1, replay2))
         self.visualizer_window.show()
 
 
