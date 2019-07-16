@@ -480,7 +480,10 @@ class _Interface(QWidget):
         self.renderer.search_nearest_frame(reverse=False)
 
     def pause(self):
-        self.renderer.pause()
+        if(self.renderer.paused):
+            self.renderer.resume()
+        else:
+            self.renderer.pause()
 
     def lower_speed(self):
         index = SPEED_OPTIONS.index(float(self.speed_label.text()))
