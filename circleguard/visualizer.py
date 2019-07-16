@@ -85,6 +85,12 @@ class _Renderer(QWidget):
     def search_timestamp(self, list_to_search, index, value, offset):
         """
         searches an array (:list_to_search:) for a :value: located at :index:.
+
+        Args:
+            list list_to_search: A list of List which contain the timestamp at index
+            Integer index: Index of the timestamp
+            Float value: The timestamp to search for.
+            Integer offset: Position of last timestamp
         """
         found = offset
         # attempt to make efficient search
@@ -173,7 +179,7 @@ class _Renderer(QWidget):
 
     def paintEvent(self, event):
         """
-        Called whenever self.update() is called
+        Called whenever self.update() is called. Draws all cursors and Hitobjects
         """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
@@ -185,9 +191,12 @@ class _Renderer(QWidget):
 
     def paint_cursor(self, painter, index):
         """
-        Called whenever self.update() is called
-        """
+        Draws a cursor.
 
+        Arguments:
+            QPainter painter: The painter.
+            Integer index: The index of the cursor to be drawn.
+        """
         alpha_step = 255/FRAMES_ON_SCREEN
         for i in range(len(self.buffer[index])-1):
             self.draw_line(painter, CURSOR_COLORS[index], i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]), (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
@@ -200,6 +209,12 @@ class _Renderer(QWidget):
             self.draw_hitobject(painter, hitobj)
 
     def paint_info(self, painter):
+        """
+        Draws various Information.
+
+        Args:
+           QPainter painter: The painter.
+        """
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawText(0, 15, f"Clock: {round(self.clock.get_time())}")
         if self.replay_amount > 0:
@@ -223,8 +238,8 @@ class _Renderer(QWidget):
             QPen pen: The pen, containing the color of the line.
             Integer alpha: The alpha level from 0-255 to set the line to.
                            https://doc.qt.io/qt-5/qcolor.html#alpha-blended-drawing
-            QPoint start: The start of the line.
-            QPoint end: The end of the line.
+            List start: The X&Y position of the start of the line.
+            List end: The X&Y position of the end of the line.
         """
 
         c = pen.color()
@@ -234,6 +249,15 @@ class _Renderer(QWidget):
         painter.drawLine(start[0]+X_OFFSET, start[1]+Y_OFFSET, end[0]+X_OFFSET, end[1]+Y_OFFSET)
 
     def draw_point(self, painter, pen, alpha, point):
+        """
+        Draws a line using the given painter, pen, and alpha level from Point start to Point end.
+
+        Args:
+           QPainter painter: The painter.
+           QPen pen: The pen, containing the color of the line.
+           Integer alpha: The alpha level from 0-255 to set the line to.
+           List point: The X&Y position of the point.
+        """
         c = pen.color()
         pen_ = QPen(QColor(c.red(), c.green(), c.blue(), alpha))
         pen_.setWidth(WIDTH_POINT)
@@ -241,6 +265,13 @@ class _Renderer(QWidget):
         painter.drawPoint(point[0]+X_OFFSET, point[1]+Y_OFFSET)
 
     def draw_hitobject(self, painter, hitobj):
+        """
+        Calls corresponding functions to draw a Hitobjecz.
+
+        Args:
+            QPainter painter: The painter.
+            Hitobj hitobj: A Hitobject.
+        """
         if hitobj.type == "circle":
             self.draw_hitcircle(painter, hitobj)
             self.draw_approachcircle(painter, hitobj)
@@ -250,6 +281,13 @@ class _Renderer(QWidget):
             self.draw_spinner(painter, hitobj)
 
     def draw_hitcircle(self, painter, hitobj):
+        """
+        Draws Hitcircle.
+
+        Args:
+            QPainter painter: The painter.
+            Hitobj hitobj: A Hitobject.
+        """
         current_time = self.clock.get_time()
         hitcircle_alpha = 255-((hitobj.time - current_time - (hitobj.preempt-hitobj.fade_in))/hitobj.fade_in)*255
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
@@ -262,6 +300,13 @@ class _Renderer(QWidget):
         painter.drawEllipse(hitobj.x-hircircle_radius+X_OFFSET, hitobj.y-hircircle_radius+Y_OFFSET, hircircle_radius*2, hircircle_radius*2)  # Qpoint placed it at the wrong position, no idea why
 
     def draw_spinner(self, painter, hitobj):
+        """
+        Draws Spinner.
+
+        Args:
+            QPainter painter: The painter.
+            Hitobj hitobj: A Hitobject.
+        """
         current_time = self.clock.get_time()
         small_circle = (384 / 16) * (1 - (0.7 * (self.beatmap.cs - 5) / 5))
         big_circle = (384/2)
@@ -279,6 +324,13 @@ class _Renderer(QWidget):
         painter.drawEllipse(512/2-spinner_radius+X_OFFSET, 384/2-spinner_radius+Y_OFFSET, spinner_radius*2, spinner_radius*2)  # Qpoint placed it at the wrong position, no idea why
 
     def draw_approachcircle(self, painter, hitobj):
+        """
+        Draws Approachcircle.
+
+        Args:
+            QPainter painter: The painter.
+            Hitobj hitobj: A Hitobject.
+        """
         current_time = self.clock.get_time()
         hitcircle_alpha = 255-((hitobj.time - current_time - (hitobj.preempt-hitobj.fade_in))/hitobj.fade_in)*255
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
@@ -292,6 +344,13 @@ class _Renderer(QWidget):
         painter.drawEllipse(hitobj.x-approachcircle_radius+X_OFFSET, hitobj.y-approachcircle_radius+Y_OFFSET, approachcircle_radius*2, approachcircle_radius*2)  # Qpoint placed it at the wrong position, no idea why
 
     def draw_slider(self, painter, hitobj):
+        """
+        Draws sliderbody and hitcircle & approachcircle if needed
+
+        Args:
+            QPainter painter: The painter.
+            Hitobj hitobj: A Hitobject.
+        """
         current_time = self.clock.get_time()
         self.draw_sliderbody(painter, hitobj)
         if hitobj.time > current_time:
@@ -299,6 +358,13 @@ class _Renderer(QWidget):
             self.draw_approachcircle(painter,hitobj)
 
     def draw_sliderbody(self, painter, hitobj):
+        """
+        Draws a sliderbody using a QpainterPath.
+
+        Args:
+            QPainter painter: The painter.
+            Hitobj hitobj: A Hitobject.
+        """
         sliderbody = QPainterPath()
         sliderbody_radius = (384 / 16) * (1 - (0.7 * (self.beatmap.cs - 5) / 5))
 
@@ -338,6 +404,15 @@ class _Renderer(QWidget):
         return (1 - r) * x1[0] + r * x2[0], (1 - r) * x1[1] + r * x2[1]
 
     def get_curve_point(self, t, points):
+        """
+        Returns point from the curve at a given timestamp
+        Warning! This function is recursive.
+        It will most likely cause a RecursionError if the array is bigger than 1000!
+
+        Args:
+            Integer t: timestamp
+            Array points: array of point
+        """
         if len(points) == 1:
             return points[0]
         newpoints = []
@@ -346,12 +421,19 @@ class _Renderer(QWidget):
         return self.get_curve_point(t, newpoints)
 
     def reset(self, end=False):
+        """
+        Reset Visualization. If end is passed, the function will reset to the end of the map,
+        setting the clock to the the max of the cursor data.
+
+        Args:
+            Boolean end: Moves everything to the end of the cursor data.
+        """
         if self.beatmap_path != "":
             self.beatmap.reset()
             self.clock.reset()
             self.hitobjs = []
         if end:
-            self.pos = [len(self.data[0])-1,len(self.data[1])-1]
+            self.pos = [len(self.data[0])-1, len(self.data[1])-1]
             self.clock.reset()
             self.clock.time_counter = int(self.data[0][-1][0])
         else:
@@ -361,6 +443,13 @@ class _Renderer(QWidget):
             self.clock.pause()
 
     def search_nearest_frame(self, reverse=False):
+        """
+        Searches next frame in the corresponding direction.
+        It gets a list of timestamps at the current position for every cursor and chooses the nearest one.
+
+        Args:
+            Boolean reverse: chooses the search direction
+        """
         if not reverse:
             next_frames = [self.data[x][self.pos[x]][0] for x in range(len(self.data))]
             self.seek_to(min(next_frames))
@@ -369,16 +458,29 @@ class _Renderer(QWidget):
             self.seek_to(min(previous_frames)-1)
 
     def seek_to(self, position):
+        """
+        Seeks to position if the change is bigger than ± 10.
+        Also calls next_frame() so the correct frame is displayed.
+
+        Args:
+            Integer position: position to seek to in ms
+        """
         if not position-10 < self.clock.time_counter < position+10:
             self.clock.time_counter = position
             if self.paused:
                 self.next_frame()
 
     def pause(self):
+        """
+        Set paused flag and pauses the clock.
+        """
         self.paused = True
         self.clock.pause()
 
     def resume(self):
+        """
+        Removes paused flag and resumes the clock.
+        """
         self.paused = False
         self.clock.resume()
 
