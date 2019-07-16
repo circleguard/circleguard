@@ -36,6 +36,7 @@ class Point(QPointF):
         super().__init__(x, y)
 
 
+
 class _Renderer(QWidget):
     update_signal = pyqtSignal(int)
 

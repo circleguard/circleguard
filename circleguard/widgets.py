@@ -431,6 +431,7 @@ class CompareTopPlays(QFrame):
     def update_slider(self, value):
         self.slider.setValue(value)
 
+
 class ComparisonResult(QFrame):
     """
     Stores the result of a comparison that can be replayed at any time.
@@ -453,6 +454,7 @@ class ComparisonResult(QFrame):
         layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.button, 0, 2, 1, 2)
         self.setLayout(layout)
+
 
 class ThresholdCombined(QFrame):
     """
