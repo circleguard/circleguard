@@ -27,16 +27,6 @@ CURSOR_COLORS = [PEN_BLUE, PEN_RED]
 SPEED_OPTIONS = [0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
 
 
-class Point(QPointF):
-    """
-    A sublcass of QPoint that acts solely to remove the need to multiply x and y
-    by POS_MULT when creating a point.
-    """
-    def __init__(self, x, y):
-        super().__init__(x, y)
-
-
-
 class _Renderer(QWidget):
     update_signal = pyqtSignal(int)
 
