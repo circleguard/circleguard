@@ -369,8 +369,10 @@ class _Renderer(QWidget):
             self.seek_to(min(previous_frames)-1)
 
     def seek_to(self, position):
-        self.clock.time_counter = position
-        self.next_frame()
+        if not position-10 < self.clock.time_counter < position+10:
+            self.clock.time_counter = position
+            if self.paused:
+                self.next_frame()
 
     def pause(self):
         self.paused = True
