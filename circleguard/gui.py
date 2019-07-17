@@ -556,7 +556,6 @@ class ResultsTab(QWidget):
         self.results = ResultsFrame()
         self.qscrollarea.setWidget(self.results)
         self.qscrollarea.setWidgetResizable(True)
-        # \/ https://stackoverflow.com/a/16482646
 
         # we want widgets to fill from top down,
         # being vertically centered looks weird
