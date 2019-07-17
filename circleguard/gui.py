@@ -322,7 +322,7 @@ class MainTab(QWidget):
             timestamp = datetime.now()
             self.write(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load))
             for replay in check.all_replays():
-                cg.load(replay)
+                cg.load(check, replay)
                 self.increment_progressbar_signal.emit(1)
 
             self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
