@@ -337,7 +337,8 @@ class MainTab(QWidget):
             self.write(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
 
         except Exception:
-            log.exception("ERROR!! while running cg:")
+            log.exception("Error while running circlecore. Please"
+                            "report this to the developers through discord or github.\n")
 
         self.cg_running = False
         self.update_text_signal.emit("Idle")
