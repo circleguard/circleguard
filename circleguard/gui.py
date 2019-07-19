@@ -27,7 +27,6 @@ from settings import get_setting, update_default
 import wizard
 
 __version__ = "1.0"
-ACCENT = QColor(71,174,247)
 
 log = logging.getLogger(__name__)
 
@@ -553,30 +552,26 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode.box.setChecked(old_theme)
         self.cache.box.setChecked(get_setting("caching"))
         self.cache_dir.switch_enabled(get_setting("caching"))
-        self.rainbow.box.setChecked(get_setting("rainbow_enabled"))
+        self.rainbow.box.setChecked(get_setting("rainbow_accent"))
 
     def set_circleguard_loglevel(self):
         set_options(loglevel=self.loglevel.level_combobox.currentData())
-    
-    def next_color(self):
-        if get_setting("rainbow_enabled"):
-            (r, g, b) = colorsys.hsv_to_rgb(self._rainbow_counter, 1.0, 1.0)
-            color = QColor(int(255 * r), int(255 * g), int(255 * b))
-            switch_theme(get_setting("dark_theme"), color)
-            self._rainbow_counter += self._rainbow_speed
-            if self._rainbow_counter >= 1:
-                self._rainbow_counter = 0
-        else:
-            switch_theme(get_setting("dark_theme"))
 
-    def switch_rainbow(self,state):
-        update_default("rainbow_enabled", 1 if state else 0)
-        if get_setting("rainbow_enabled"):
+    def next_color(self):
+        (r, g, b) = colorsys.hsv_to_rgb(self._rainbow_counter, 1.0, 1.0)
+        color = QColor(int(255 * r), int(255 * g), int(255 * b))
+        switch_theme(get_setting("dark_theme"), color)
+        self._rainbow_counter += self._rainbow_speed
+        if self._rainbow_counter >= 1:
+            self._rainbow_counter = 0
+
+    def switch_rainbow(self, state):
+        update_default("rainbow_accent", 1 if state else 0)
+        if get_setting("rainbow_accent"):
             self.timer.start(1000/15)
         else:
             self.timer.stop()
-            self.next_color()
-
+            switch_theme(get_setting("dark_theme"))
 
 class ResultsTab(QWidget):
     def __init__(self):
@@ -604,9 +599,8 @@ class ResultsFrame(QFrame):
         self.setLayout(self.layout)
 
 
-def switch_theme(dark, accent_overwrite=None):
+def switch_theme(dark, accent=QColor(71,174,247)):
     update_default("dark_theme", 1 if dark else 0)
-    accent = accent_overwrite if not accent_overwrite is None else ACCENT
     if dark:
         dark_p = QPalette()
 
