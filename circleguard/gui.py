@@ -512,7 +512,7 @@ class ScrollableSettingsWidget(QFrame):
         self.thresh_widget = Threshold()
         self.thresh_widget.spinbox.valueChanged.connect(partial(update_default, "threshold"))
 
-        self.darkmode = OptionWidget("Dark mode", "We wouldn't feel right shipping a product without darkmode")
+        self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
         self.darkmode.box.stateChanged.connect(switch_theme)
 
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
