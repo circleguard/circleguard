@@ -42,7 +42,7 @@ def get_setting(name):
 def update_default(name, value):
     SETTINGS.setValue(name, value)
 
-# validate settings
+# add setting if missing (occurs between updates if we add a new default setting)
 for key, value in DEFAULTS.items():
     if not SETTINGS.contains(key):
         SETTINGS.setValue(key, value)
