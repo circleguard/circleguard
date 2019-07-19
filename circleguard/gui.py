@@ -4,6 +4,7 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
+import colorsys
 from osuAPI import OsuAPI
 from datetime import datetime
 # pylint: disable=no-name-in-module
@@ -498,6 +499,10 @@ class ScrollableSettingsWidget(QFrame):
     """
     def __init__(self):
         super().__init__()
+        self._rainbow_speed = 0.005
+        self._rainbow_counter = 0
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.next_color)
 
         self.apikey_widget = InputWidget("Api Key", "", type_="password")
         self.apikey_widget.field.setText(get_setting("api_key"))
@@ -520,6 +525,9 @@ class ScrollableSettingsWidget(QFrame):
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
         self.set_circleguard_loglevel()  # set the default loglevel in cg, not just in gui
 
+        self.rainbow = OptionWidget("Rainbow mode", ":3")
+        self.rainbow.box.stateChanged.connect(self.switch_rainbow)
+
         self.grid = QVBoxLayout()
         self.grid.addWidget(Separator("Circleguard settings"))
         self.grid.addWidget(self.apikey_widget)
@@ -531,7 +539,8 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(Separator("Debug settings"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
-        self.grid.addWidget(Separator("Visualizer Experiments"))
+        self.grid.addWidget(Separator("Experiments"))
+        self.grid.addWidget(self.rainbow)
         self.grid.addWidget(BeatmapTest())
         self.grid.addWidget(Separator("String Format settings"))
         self.grid.addWidget(StringFormatWidget(""))
@@ -543,9 +552,29 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode.box.setChecked(old_theme)
         self.cache.box.setChecked(get_setting("caching"))
         self.cache_dir.switch_enabled(get_setting("caching"))
+        self.rainbow.box.setChecked(get_setting("rainbow_enabled"))
 
     def set_circleguard_loglevel(self):
         set_options(loglevel=self.loglevel.level_combobox.currentData())
+    
+    def next_color(self):
+        if get_setting("rainbow_enabled"):
+            (r, g, b) = colorsys.hsv_to_rgb(self._rainbow_counter, 1.0, 1.0)
+            color = QColor(int(255 * r), int(255 * g), int(255 * b))
+            switch_theme(get_setting("dark_theme"), color)
+            self._rainbow_counter += self._rainbow_speed
+            if self._rainbow_counter >= 1:
+                self._rainbow_counter = 0
+        else:
+            switch_theme(get_setting("dark_theme"))
+
+    def switch_rainbow(self,state):
+        update_default("rainbow_enabled", 1 if state else 0)
+        if get_setting("rainbow_enabled"):
+            self.timer.start(1000/15)
+        else:
+            self.timer.stop()
+            self.next_color()
 
 
 class ResultsTab(QWidget):
