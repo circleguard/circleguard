@@ -5,7 +5,6 @@ from queue import Queue, Empty
 from functools import partial
 import logging
 import colorsys
-from osuAPI import OsuAPI
 from datetime import datetime
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
