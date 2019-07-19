@@ -2,29 +2,31 @@
 from PyQt5.QtCore import QSettings
 # pylint: enable=no-name-in-module
 
+DEFAULTS = {
+    "ran": False,
+    "threshold": 18,
+    "api_key": "",
+    "dark_theme": 0,
+    "rainbow_accent": 0,
+    "caching": 0,
+    "cache_dir": ".",
+    "log_save": 0,
+    "log_dir": "./logs/",
+    "log_mode": 3,
+    "log_output": 0,
+    "local_replay_dir": "./examples/replays/",
+    # string settings
+    "message_loading_replays": "[{ts:%X}] Loading {num_replays} Replays",
+    "message_starting_comparing": "[{ts:%X}] Comparing Replays",
+    "message_finished_comparing": "[{ts:%X}] Done",
+    "message_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}, {later_name} set later",
+    "string_result_text": "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}"
+}
 
 def reset_defaults():
     SETTINGS.clear()
-    SETTINGS.setValue("ran", False)
-    SETTINGS.setValue("threshold", 18)
-    SETTINGS.setValue("api_key", "")
-    SETTINGS.setValue("dark_theme", 0)
-    SETTINGS.setValue("rainbow_accent", 0)
-    SETTINGS.setValue("caching", 0)
-    SETTINGS.setValue("cache_dir", ".")
-    SETTINGS.setValue("log_save", 0)
-    SETTINGS.setValue("log_dir", "./logs/")
-    SETTINGS.setValue("log_mode", 3)
-    SETTINGS.setValue("log_output", 0)
-    SETTINGS.setValue("local_replay_dir", "./examples/replays/")
-
-    # string settings
-    SETTINGS.setValue("message_loading_replays", "[{ts:%X}] Loading {num_replays} Replays")
-    SETTINGS.setValue("message_starting_comparing", "[{ts:%X}] Comparing Replays")
-    SETTINGS.setValue("message_finished_comparing", "[{ts:%X}] Done")
-    SETTINGS.setValue("message_cheater_found", "[{ts:%X}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}, {later_name} set later")
-    SETTINGS.setValue("string_result_text", "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}")
-
+    for key, value in DEFAULTS.items():
+        SETTINGS.setValue(key, value)
     SETTINGS.sync()
 
 
@@ -39,3 +41,8 @@ def get_setting(name):
 
 def update_default(name, value):
     SETTINGS.setValue(name, value)
+
+# validate settings
+for key, value in DEFAULTS.items():
+    if not SETTINGS.contains(key):
+        SETTINGS.setValue(key, value)
