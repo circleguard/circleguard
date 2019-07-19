@@ -1,7 +1,3 @@
 numpy>=1.16.0
 PyQt5>=5.12.0
-requests>=2.21.0
-https://github.com/circleguard/osu-replay-parser/archive/v4.0.1.zip
-https://github.com/circleguard/wtc-lzma-compressor/archive/v1.1.2.zip
-https://github.com/circleguard/osu-api/archive/v1.1.1.zip
-https://github.com/circleguard/circleguard/archive/restructure.zip
+https://github.com/circleguard/circlecore/archive/master.zip
