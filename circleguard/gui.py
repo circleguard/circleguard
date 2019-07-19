@@ -143,7 +143,7 @@ class WindowWrapper(QMainWindow):
             self.progressbar.setValue(0)
             self.progressbar.setRange(0, max_value)
         else:
-            self.progressbar.setRange(0,100)
+            self.progressbar.setRange(0, 100)
             self.progressbar.reset()
 
     def add_comparison_result(self, result):
@@ -155,7 +155,8 @@ class WindowWrapper(QMainWindow):
         r2 = result.replay2
         timestamp = datetime.now()
         text = get_setting("string_result_text").format(ts=timestamp, similarity=result.similarity,
-                             replay1_name=r1.username, replay2_name=r2.username, later_name=result.later_name)
+                                                        replay1_name=r1.username, replay2_name=r2.username,
+                                                        later_name=result.later_name)
         result_widget = ComparisonResult(text, r1, r2)
         result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
         # remove info text if shown
@@ -206,9 +207,9 @@ class MainWindow(QWidget):
 
 class MainTab(QWidget):
     reset_progressbar_signal = pyqtSignal(int)  # max progress
-    increment_progressbar_signal = pyqtSignal(int) # increment value
+    increment_progressbar_signal = pyqtSignal(int)  # increment value
     update_text_signal = pyqtSignal(str)
-    add_comparison_result_signal = pyqtSignal(object) # Result
+    add_comparison_result_signal = pyqtSignal(object)  # Result
 
     TAB_REGISTER = [
         {"name": "MAP",    "requires_api": True},
@@ -339,7 +340,7 @@ class MainTab(QWidget):
 
         except Exception:
             log.exception("Error while running circlecore. Please"
-                            "report this to the developers through discord or github.\n")
+                          "report this to the developers through discord or github.\n")
 
         self.cg_running = False
         self.update_text_signal.emit("Idle")
@@ -355,8 +356,10 @@ class MainTab(QWidget):
                     r1 = result.replay1
                     r2 = result.replay2
                     msg = get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                            replay1_name=r1.username, replay2_name=r2.username, later_name=result.later_name,
-                            replay1_mods=r1.mods, replay2_mods=r2.mods, replay1_id=r1.replay_id, replay2_id=r2.replay_id)
+                                                                      replay1_name=r1.username, replay2_name=r2.username,
+                                                                      later_name=result.later_name, replay1_mods=r1.mods,
+                                                                      replay2_mods=r2.mods, replay1_id=r1.replay_id,
+                                                                      replay2_id=r2.replay_id)
                     self.write(msg)
                     QApplication.beep()
                     QApplication.alert(self)
@@ -573,6 +576,7 @@ class ScrollableSettingsWidget(QFrame):
             self.timer.stop()
             switch_theme(get_setting("dark_theme"))
 
+
 class ResultsTab(QWidget):
     def __init__(self):
         super(ResultsTab, self).__init__()
@@ -599,7 +603,7 @@ class ResultsFrame(QFrame):
         self.setLayout(self.layout)
 
 
-def switch_theme(dark, accent=QColor(71,174,247)):
+def switch_theme(dark, accent=QColor(71, 174, 247)):
     update_default("dark_theme", 1 if dark else 0)
     if dark:
         dark_p = QPalette()

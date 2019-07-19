@@ -228,31 +228,28 @@ class StringFormatWidget(QFrame):
     def __init__(self, tooltip):
         super(StringFormatWidget, self).__init__()
         loading_replays = InputWidget("message_loading_replays", "Shown when replays are being requested "
-                "from the api or loaded from local files", type_="normal")
+                                      "from the api or loaded from local files", type_="normal")
         loading_replays.field.setText(get_setting("message_loading_replays"))
         loading_replays.field.textChanged.connect(partial(update_default, "message_loading_replays"))
 
         starting_comparing = InputWidget("message_starting_comparing", "Shown when replays are finished "
-                "loading and starting to be compared", type_="normal")
+                                         "loading and starting to be compared", type_="normal")
         starting_comparing.field.setText(get_setting("message_starting_comparing"))
         starting_comparing.field.textChanged.connect(partial(update_default, "message_starting_comparing"))
 
         finished_comparing = InputWidget("message_finished_comparing", "Shown when replays are done being compared, "
-                "regardless of if any cheaters were found", type_="normal")
+                                         "regardless of if any cheaters were found", type_="normal")
         finished_comparing.field.setText(get_setting("message_finished_comparing"))
         finished_comparing.field.textChanged.connect(partial(update_default, "message_finished_comparing"))
 
-
         cheater_found = InputWidget("message_cheater_found", "Shown when a cheater is found (scores below the threshold). "
-                "This occurs before replays are finished being compared.", type_="normal")
+                                    "This occurs before replays are finished being compared.", type_="normal")
         cheater_found.field.setText(get_setting("message_cheater_found"))
         cheater_found.field.textChanged.connect(partial(update_default, "message_cheater_found"))
-
 
         result_text = InputWidget("string_result_text", "Text of the result label in the Results Tab", type_="normal")
         result_text.field.setText(get_setting("string_result_text"))
         result_text.field.textChanged.connect(partial(update_default, "string_result_text"))
-
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -261,7 +258,6 @@ class StringFormatWidget(QFrame):
         layout.addWidget(finished_comparing)
         layout.addWidget(cheater_found)
         layout.addWidget(result_text)
-
 
         self.setLayout(layout)
 
@@ -733,6 +729,7 @@ class TopPlays(QFrame):
     plays they want to have processed by circleguard.
     """
     MAX_HEIGHT = 5
+
     def __init__(self):
         super().__init__()
         self.layout = QGridLayout()
@@ -750,7 +747,7 @@ class TopPlays(QFrame):
 
         self.row += 1
 
-        if(self.row > TopPlays.MAX_HEIGHT):
+        if self.row > TopPlays.MAX_HEIGHT:
             self.row = 1
             self.col += 1
 

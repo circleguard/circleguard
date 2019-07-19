@@ -1,5 +1,6 @@
 import io
 
+
 class Beatmap():
 
     def __init__(self, path):

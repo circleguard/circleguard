@@ -23,6 +23,7 @@ DEFAULTS = {
     "string_result_text": "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}"
 }
 
+
 def reset_defaults():
     SETTINGS.clear()
     for key, value in DEFAULTS.items():
@@ -41,6 +42,7 @@ def get_setting(name):
 
 def update_default(name, value):
     SETTINGS.setValue(name, value)
+
 
 # add setting if missing (occurs between updates if we add a new default setting)
 for key, value in DEFAULTS.items():
