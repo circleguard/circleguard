@@ -26,6 +26,7 @@ from settings import get_setting, update_default
 import wizard
 
 __version__ = "1.0"
+ACCENT = QColor(71,174,247)
 
 log = logging.getLogger(__name__)
 
@@ -573,9 +574,9 @@ class ResultsFrame(QFrame):
         self.setLayout(self.layout)
 
 
-def switch_theme(dark):
+def switch_theme(dark, accent_overwrite=None):
     update_default("dark_theme", 1 if dark else 0)
-    accent = QColor(218, 130, 42)
+    accent = accent_overwrite if not accent_overwrite is None else ACCENT
     if dark:
         dark_p = QPalette()
 
@@ -608,8 +609,9 @@ def switch_theme(dark):
         updated_palette = QPalette()
         # fixes inactive items not being greyed out
         updated_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
+        updated_palette.setColor(QPalette.Highlight, accent)
         updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
-        updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, QColor(240, 240, 240))
+        updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, Qt.darkGray)
         updated_palette.setColor(QPalette.Link, accent)
         updated_palette.setColor(QPalette.LinkVisited, accent)
         app.setPalette(updated_palette)
