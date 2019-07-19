@@ -347,6 +347,7 @@ class CompareTopUsers(QFrame):
         self.label.setToolTip("Compare this many plays from the leaderboard")
 
         slider = QSlider(Qt.Horizontal)
+        slider.setFocusPolicy(Qt.ClickFocus)
         slider.setMinimum(2)
         slider.setMaximum(100)
         slider.setValue(50)
@@ -402,6 +403,7 @@ class CompareTopPlays(QFrame):
         label.setToolTip("Compare this many plays from the user")
 
         slider = QSlider(Qt.Horizontal)
+        slider.setFocusPolicy(Qt.ClickFocus)
         slider.setValue(20)
         slider.setMinimum(1)
         slider.setMaximum(100)
@@ -476,6 +478,7 @@ class ThresholdCombined(QFrame):
         self.thresh_label = thresh_label
 
         thresh_slider = QSlider(Qt.Horizontal)
+        thresh_slider.setFocusPolicy(Qt.ClickFocus)
         thresh_slider.setRange(0, 30)
         thresh_slider.setValue(get_setting("threshold"))
         thresh_slider.valueChanged.connect(self.update_thresh_spinbox)
@@ -569,42 +572,43 @@ class Threshold(QFrame):
     def __init__(self, prefix=""):
         super(Threshold, self).__init__()
 
-        thresh_label = QLabel(self)
-        thresh_label.setText(prefix + "Threshold:")
-        thresh_label.setToolTip("Cutoff for how similar two replays must be to be printed")
-        self.thresh_label = thresh_label
+        label = QLabel(self)
+        label.setText(prefix + "Threshold:")
+        label.setToolTip("Cutoff for how similar two replays must be to be printed")
+        self.label = label
 
-        thresh_slider = QSlider(Qt.Horizontal)
-        thresh_slider.setRange(0, 30)
-        thresh_slider.setValue(get_setting("threshold"))
-        thresh_slider.valueChanged.connect(self.update_thresh_spinbox)
-        self.thresh_slider = thresh_slider
+        slider = QSlider(Qt.Horizontal)
+        slider.setFocusPolicy(Qt.ClickFocus)
+        slider.setRange(0, 30)
+        slider.setValue(get_setting("threshold"))
+        slider.valueChanged.connect(self.update_spinbox)
+        self.slider = slider
 
-        thresh_spinbox = SpinBox(self)
-        thresh_spinbox.setValue(get_setting("threshold"))
-        thresh_spinbox.setAlignment(Qt.AlignCenter)
-        thresh_spinbox.setRange(0, 30)
-        thresh_spinbox.setSingleStep(1)
-        thresh_spinbox.valueChanged.connect(self.update_thresh_slider)
-        self.thresh_spinbox = thresh_spinbox
-        self.thresh_spinbox.setFixedWidth(100)
-        self.combined = WidgetCombiner(thresh_slider, thresh_spinbox)
+        spinbox = SpinBox(self)
+        spinbox.setValue(get_setting("threshold"))
+        spinbox.setAlignment(Qt.AlignCenter)
+        spinbox.setRange(0, 30)
+        spinbox.setSingleStep(1)
+        spinbox.setFixedWidth(100)
+        spinbox.valueChanged.connect(self.update_slider)
+        self.spinbox = spinbox
+        self.combined = WidgetCombiner(slider, spinbox)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
 
-        layout.addWidget(thresh_label, 0, 0, 1, 1)
+        layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.combined, 0, 2, 1, 3)
 
         self.setLayout(layout)
 
     # keep spinbox and slider in sync
-    def update_thresh_spinbox(self, value):
-        self.thresh_spinbox.setValue(value)
+    def update_spinbox(self, value):
+        self.spinbox.setValue(value)
 
-    def update_thresh_slider(self, value):
-        self.thresh_slider.setValue(value)
+    def update_slider(self, value):
+        self.slider.setValue(value)
 
 
 class WidgetCombiner(QFrame):

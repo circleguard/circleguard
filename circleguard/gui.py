@@ -235,6 +235,7 @@ class MainTab(QWidget):
         self.tabs.currentChanged.connect(self.switch_run_button)
 
         terminal = QTextEdit()
+        terminal.setFocusPolicy(Qt.ClickFocus)
         terminal.setReadOnly(True)
         terminal.ensureCursorVisible()
         self.terminal = terminal
@@ -289,7 +290,7 @@ class MainTab(QWidget):
                 map_id_str = tab.id_combined.map_id.field.text()
                 map_id = int(map_id_str) if map_id_str != "" else 0
                 num = tab.compare_top.slider.value()
-                thresh = tab.threshold.thresh_slider.value()
+                thresh = tab.threshold.slider.value()
                 check = cg.create_map_check(map_id, num=num, thresh=thresh)
 
             if self.run_type == "SCREEN":
@@ -297,13 +298,13 @@ class MainTab(QWidget):
                 user_id_str = tab.user_id.field.text()
                 user_id = int(user_id_str) if user_id_str != "" else 0
                 num = tab.compare_top_map.slider.value()
-                thresh = tab.threshold.thresh_slider.value()
+                thresh = tab.threshold.slider.value()
                 check = cg.create_user_check(user_id, num, thresh=thresh)
 
             if self.run_type == "LOCAL":
                 tab = self.local_tab
                 path = Path(tab.folder_chooser.path)
-                thresh = tab.threshold.thresh_slider.value()
+                thresh = tab.threshold.slider.value()
                 check = cg.create_local_check(path, thresh=thresh)
 
             if self.run_type == "VERIFY":
@@ -314,7 +315,7 @@ class MainTab(QWidget):
                 user_id_1 = int(user_id_1_str) if user_id_1_str != "" else 0
                 user_id_2_str = tab.user_id_2.field.text()
                 user_id_2 = int(user_id_2_str) if user_id_2_str != "" else 0
-                thresh = tab.threshold.thresh_slider.value()
+                thresh = tab.threshold.slider.value()
                 check = cg.create_verify_check(map_id, user_id_1, user_id_2, thresh=thresh)
 
             num_to_load = len(check.all_replays())
@@ -509,7 +510,7 @@ class ScrollableSettingsWidget(QFrame):
         self.apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
 
         self.thresh_widget = Threshold()
-        self.thresh_widget.thresh_spinbox.valueChanged.connect(partial(update_default, "threshold"))
+        self.thresh_widget.spinbox.valueChanged.connect(partial(update_default, "threshold"))
 
         self.darkmode = OptionWidget("Dark mode", "We wouldn't feel right shipping a product without darkmode")
         self.darkmode.box.stateChanged.connect(switch_theme)
