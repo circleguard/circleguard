@@ -74,13 +74,14 @@ class _Renderer(QWidget):
 
     def search_timestamp(self, list_to_search, index, value, offset):
         """
-        searches an array (:list_to_search:) for a :value: located at :index:.
+        Searches an array (:list_to_search:) for a :value: located in column :index:,
+        assuming the data is monotonically increasing.
 
         Args:
             list list_to_search: A list of List which contain the timestamp at index
-            Integer index: Index of the timestamp
-            Float value: The timestamp to search for.
-            Integer offset: Position of last timestamp
+            Integer index: The column index of the timestamp
+            Float value: The value to search for.
+            Integer offset: Position of the timestamp to start the search from.
         """
         found = offset
         # attempt to make efficient search
