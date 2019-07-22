@@ -1,6 +1,6 @@
 # Circleguard
 
-Circleguard is a player made and maintained cheat detection tool. It currently focuses heavily on detecting replay stealing and remodding, but can be used as an all purpose replay viewer.
+Circleguard is a player made and maintained cheat detection tool for osu!. It currently focuses heavily on detecting replay stealing and remodding, but can be used as an all purpose replay viewer.
 
 Circleguard is the frontend gui, which runs circlecore behind the scenes. If you're looking to integrate circlecore into your own project, extensive documentation on the internals can be found at its repo [here](https://github.com/circleguard/circlecore). It is available as a pip module.
 
