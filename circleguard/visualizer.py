@@ -93,7 +93,7 @@ class _Renderer(QWidget):
                 except IndexError:
                     found = i
                     break
-                if current < value < next or current > value < next:
+                if current != value and value < next:
                     found = i
                     break
         else:
