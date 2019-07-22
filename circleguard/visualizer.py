@@ -86,26 +86,26 @@ class _Renderer(QWidget):
         found = offset
         # attempt to make efficient search
         if list_to_search[offset][0] <= value:
-            for i in range(len(list_to_search)-offset):
-                current = list_to_search[i+offset][index]
+            for i in range(offset, len(list_to_search)):
+                current = list_to_search[i][index]
                 try:
-                    next = list_to_search[i+offset+1][index]
+                    next = list_to_search[i + 1][index]
                 except IndexError:
-                    found = i+offset
+                    found = i
                     break
                 if current < value < next or current > value < next:
-                    found = i+offset
+                    found = i
                     break
         else:
-            for i in range(offset):
-                current = list_to_search[offset-i][index]
+            for i in range(offset, 0, -1):
+                current = list_to_search[i][index]
                 try:
-                    previous = list_to_search[offset-i-1][index]
+                    previous = list_to_search[i-1][index]
                 except IndexError:
-                    found = offset-i
+                    found = i
                     break
                 if previous < value < current:
-                    found = offset-i
+                    found = i
                     break
         return found
 
