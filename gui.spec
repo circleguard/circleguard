@@ -3,6 +3,7 @@
 block_cipher = None
 from os.path import expanduser
 os.path.expanduser
+from circleguard import __version__ # circlecore version, not gui
 a = Analysis(['circleguard/gui.py'],
              pathex=['.'],
              binaries=[('/System/Library/Frameworks/Tk.framework/Tk', 'tk'), ('/System/Library/Frameworks/Tcl.framework/Tcl', 'tcl')],
@@ -35,6 +36,7 @@ app = BUNDLE(exe,
              icon='./circleguard/resources/logo.icns',
              bundle_identifier=None,
              info_plist={
-              'NSHighResolutionCapable': 'True'
+              'NSHighResolutionCapable': 'True',
+              'CFBundleShortVersionString': __version__
              }
        )
