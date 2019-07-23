@@ -32,7 +32,7 @@ If you are building for windows or mac, we provide premade specfiles for easy bu
 
 ## Contributing
 
-If you would like to contribute to Circleguard, join our discord and ask what you can help with, or take a look at the [open issues for circleguard](https://github.com/circleguard/circleguard/issues) and [circlecore](https://github.com/circleguard/circlecore/issues). We're happy to work with you if you have any questions.
+If you would like to contribute to Circleguard, join our discord and ask what you can help with, or take a look at the [open issues for circleguard](https://github.com/circleguard/circleguard/issues) and [circlecore](https://github.com/circleguard/circlecore/issues). We're happy to work with you if you have any questions!
 
 You can also help out by opening issues for bugs or feature requests, which helps us and others keep track of what needs to be done next.
 
