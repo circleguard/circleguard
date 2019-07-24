@@ -688,8 +688,12 @@ class ResetSettings(QFrame):
 
     def reset_settings(self):
         prompt = QMessageBox.question(self, "Reset settings",
-                                            "This will reset all settings to their default value.\n"
-                                            "Any currently running operations will be canceled and you will have to open the app again.")
+                                "Aer you sure?\n"
+                                "This will reset all settings to their default value.\n"
+                                "Any currently running operations will be canceled and "
+                                "you will have to open the app again.",
+                                buttons=QMessageBox.Cancel | QMessageBox.Yes,
+                                defaultButton=QMessageBox.Cancel)
         if prompt == QMessageBox.Yes:
             reset_defaults()
             sys.exit(0)
