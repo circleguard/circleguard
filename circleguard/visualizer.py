@@ -72,42 +72,38 @@ class _Renderer(QWidget):
             return
         self.next_frame()
 
-    def search_timestamp(self, list_to_search, index, value, offset):
+    def search_timestamp(self, array, index, value, offset):
         """
-        Searches an array (:list_to_search:) for a :value: located in column :index:,
+        Searches an (:array:) for a :value: located in column :index:,
         assuming the data is monotonically increasing.
 
         Args:
-            list list_to_search: A list of List which contain the timestamp at index
+            list array: A list of List which contain the timestamp at index
             Integer index: The column index of the timestamp
             Float value: The value to search for.
             Integer offset: Position of the timestamp to start the search from.
         """
-        found = offset
-        # attempt to make efficient search
-        if list_to_search[offset][index] <= value:
-            for i in range(offset, len(list_to_search)):
-                current = list_to_search[i][index]
-                try:
-                    next = list_to_search[i + 1][index]
-                except IndexError:
-                    found = i
-                    break
-                if current != value and value < next:
-                    found = i
-                    break
+
+        if array[offset][index] <= value:
+            high = len(array) - 1
+            low = offset
         else:
-            for i in range(offset, 0, -1):
-                current = list_to_search[i][index]
-                try:
-                    previous = list_to_search[i-1][index]
-                except IndexError:
-                    found = i
-                    break
-                if previous < value < current:
-                    found = i
-                    break
-        return found
+            high = offset
+            low = 0
+
+        while array[high][index] != array[low][index] and array[low][index] <= value <= array[high][index]:
+            mid = low + (value - array[low][index]) * (high - low) // (array[high][index] - array[low][index])
+
+            mid = int(mid)
+
+            if array[mid][index] < value:
+                low = mid + 1
+            elif array[mid][index] > value:
+                high = mid - 1
+            else:
+                return mid
+
+        return low
 
     def next_frame(self):
         """
