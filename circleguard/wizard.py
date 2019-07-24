@@ -2,7 +2,7 @@ from functools import partial
 
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
 # pylint: enable=no-name-in-module
 
@@ -24,6 +24,8 @@ class WizardPage(QWizardPage):
 class WelcomeWindow(QWizard):
     def __init__(self):
         super(WelcomeWindow, self).__init__()
+        self.setWindowTitle("Wizard")
+        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.SetupPage = SetupPage()
         self.addPage(IntroPage())
         self.addPage(self.SetupPage)
