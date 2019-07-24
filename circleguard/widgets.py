@@ -687,20 +687,12 @@ class ResetSettings(QFrame):
         self.setLayout(layout)
 
     def reset_settings(self):
-        mbox = QMessageBox()
-        mbox.setText("Reset Settings")
-        mbox.setInformativeText("This will reset all settings to their default value. Any currently running "
-                                  "operations will be canceled and you will have to open the app again.")
-        mbox.setStandardButtons(QMessageBox.Yes | QMessageBox.NoButton | QMessageBox.Cancel)
-        mbox.setDefaultButton(QMessageBox.Cancel)
-        # a bit of a hack to resize the mbox
-        mbox.setStyleSheet("QLabel{min-width:500 px; font-size: 13px;} QPushButton{ width:100px; font-size: 13px;}")
-        ret = mbox.exec_()
-        if ret == QMessageBox.Yes:
+        prompt = QMessageBox.question(self, "Reset settings",
+                                            "This will reset all settings to their default value.\n"
+                                            "Any currently running operations will be canceled and you will have to open the app again.")
+        if prompt == QMessageBox.Yes:
             reset_defaults()
             sys.exit(0)
-        if ret == QMessageBox.Cancel:
-            mbox.destroy()
 
 
 class BeatmapTest(QFrame):
