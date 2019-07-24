@@ -85,7 +85,7 @@ class _Renderer(QWidget):
         """
         found = offset
         # attempt to make efficient search
-        if list_to_search[offset][0] <= value:
+        if list_to_search[offset][index] <= value:
             for i in range(offset, len(list_to_search)):
                 current = list_to_search[i][index]
                 try:
