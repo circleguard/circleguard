@@ -658,7 +658,8 @@ if __name__ == "__main__":
     WINDOW.show()
     if not (str(get_setting("ran")).lower() == "true"):
         welcome = wizard.WelcomeWindow()
-        welcome.DarkModePage.darkmode.box.stateChanged.connect(switch_theme)
+        welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
+        welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default,"caching"))
         welcome.show()
         update_default("ran", True)
     app.exec_()

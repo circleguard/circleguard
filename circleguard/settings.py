@@ -8,7 +8,7 @@ DEFAULTS = {
     "api_key": "",
     "dark_theme": 0,
     "rainbow_accent": 0,
-    "caching": 0,
+    "caching": 1,
     "cache_dir": ".",
     "log_save": 0,
     "log_dir": "./logs/",

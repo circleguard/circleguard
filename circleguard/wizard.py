@@ -24,9 +24,9 @@ class WizardPage(QWizardPage):
 class WelcomeWindow(QWizard):
     def __init__(self):
         super(WelcomeWindow, self).__init__()
-        self.DarkModePage = DarkModePage()
+        self.SetupPage = SetupPage()
         self.addPage(IntroPage())
-        self.addPage(self.DarkModePage)
+        self.addPage(self.SetupPage)
         self.addPage(ApiKeyPage())
         self.addPage(BeatmapUserIdPage())
         self.addPage(ConclusionPage())
@@ -67,18 +67,27 @@ class IntroPage(WizardPage):
         self.setLayout(layout)
 
 
-class DarkModePage(WizardPage):
+class SetupPage(WizardPage):
     def __init__(self, parent=None):
-        super(DarkModePage, self).__init__(parent)
+        super(SetupPage, self).__init__(parent)
         self.setTitle("Settings")
-        label = QLabel("Choose the look and feel of the application")
-        label.setWordWrap(True)
+        dark_label = QLabel("Choose the look and feel of the application")
+        dark_label.setWordWrap(True)
 
         self.darkmode = OptionWidget("Dark mode", "")
+        self.darkmode.box.setCheckState(get_setting("dark_theme"))
+
+        cache_label = QLabel("Caching reduces downloading time by reusing already downloaded replays")
+        cache_label.setWordWrap(True)
+
+        self.caching = OptionWidget("Caching", "")
+        self.caching.box.setCheckState(get_setting("Caching"))
 
         layout = QVBoxLayout()
-        layout.addWidget(label)
+        layout.addWidget(dark_label)
         layout.addWidget(self.darkmode)
+        layout.addWidget(cache_label)
+        layout.addWidget(self.caching)
         self.setLayout(layout)
 
 
