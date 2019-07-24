@@ -687,13 +687,18 @@ class ResetSettings(QFrame):
         self.setLayout(layout)
 
     def reset_settings(self):
-        prompt = QMessageBox.question(self, "Reset settings",
-                                            "Are you sure you want to continue?\n"
-                                            "This step is irreversible and will force the gui to be closed.\n"
-                                            "Any running operations will be canceled!")
-        if prompt == QMessageBox.Yes:
+        mbox = QMessageBox()
+        mbox.setText("Reset Settings")
+        mbox.setInformativeText("This will reset all settings to their default value. Any currently running "
+                                  "operations will be canceled and you will have to open the app again.")
+        mbox.setStandardButtons(QMessageBox.Yes | QMessageBox.NoButton | QMessageBox.Cancel)
+        mbox.setDefaultButton(QMessageBox.Cancel)
+        ret = mbox.exec_()
+        if ret == QMessageBox.Yes:
             reset_defaults()
             sys.exit(0)
+        if ret == QMessageBox.Cancel:
+            mbox.destroy()
 
 
 class BeatmapTest(QFrame):
