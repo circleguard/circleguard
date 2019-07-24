@@ -693,6 +693,8 @@ class ResetSettings(QFrame):
                                   "operations will be canceled and you will have to open the app again.")
         mbox.setStandardButtons(QMessageBox.Yes | QMessageBox.NoButton | QMessageBox.Cancel)
         mbox.setDefaultButton(QMessageBox.Cancel)
+        # a bit of a hack to resize the mbox
+        mbox.setStyleSheet("QLabel{min-width:500 px; font-size: 13px;} QPushButton{ width:100px; font-size: 13px;}")
         ret = mbox.exec_()
         if ret == QMessageBox.Yes:
             reset_defaults()
