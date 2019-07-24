@@ -477,7 +477,6 @@ class SettingsTab(QWidget):
         self.qscrollarea.setWidget(ScrollableSettingsWidget())
         self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
         self.qscrollarea.setWidgetResizable(True)
-        # \/ https://stackoverflow.com/a/16482646
 
         self.info = QLabel(self)
         self.info.setText(f"Backend Version: {cg_version}<br/>"
