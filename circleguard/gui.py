@@ -482,7 +482,7 @@ class SettingsTab(QWidget):
         self.info.setText(f"Backend Version: {cg_version}<br/>"
                           f"Frontend Version: {__version__}<br/>"
                           f"Found a bug or want to request a feature? "
-                          f"Open an issue <a href=\"https://github.com/circleguard/circleguard\">here</a>!")
+                          f"Open an issue <a href=\"https://github.com/circleguard/circleguard/issues\">here</a>!")
         self.info.setTextFormat(Qt.RichText)
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
