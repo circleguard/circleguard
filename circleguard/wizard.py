@@ -83,7 +83,7 @@ class SetupPage(WizardPage):
         cache_label.setWordWrap(True)
 
         self.caching = OptionWidget("Caching", "")
-        self.caching.box.setCheckState(get_setting("Caching"))
+        self.caching.box.setCheckState(get_setting("caching"))
 
         layout = QVBoxLayout()
         layout.addWidget(dark_label)
