@@ -631,7 +631,7 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
         app.setPalette(dark_p)
         app.setStyleSheet("QToolTip { color: #ffffff; "
                           "background-color: #2a2a2a; "
-                          "border: 1px solid white; }")
+                          "border: 1px solid white; }"
                           "QLabel {font-weight: Normal; }")
     else:
         app.setPalette(app.style().standardPalette())
