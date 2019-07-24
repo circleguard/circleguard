@@ -564,7 +564,6 @@ class _Interface(QWidget):
         self._update_speed()
 
     def _update_speed(self):
-        print(float(self.speed_label.text())*self.play_direction)
         self.renderer.clock.change_speed(float(self.speed_label.text())*self.play_direction)
 
     def previous_frame(self):
