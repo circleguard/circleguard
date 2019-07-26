@@ -341,7 +341,7 @@ class MainTab(QWidget):
                             cg.load(check_, replay)
                         check_.loaded = True
             else:
-                for replay in check.all_replays:
+                for replay in check.all_replays():
                     cg.load(check, replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
