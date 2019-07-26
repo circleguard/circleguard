@@ -103,7 +103,7 @@ class _Renderer(QWidget):
             else:
                 return mid
 
-        return low
+        return mid
 
     def next_frame(self):
         """
