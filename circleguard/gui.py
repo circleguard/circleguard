@@ -297,9 +297,10 @@ class MainTab(QWidget):
                 tab = self.user_tab
                 user_id_str = tab.user_id.field.text()
                 user_id = int(user_id_str) if user_id_str != "" else 0
-                num = tab.compare_top_map.slider.value()
+                num_top = tab.compare_top_map.slider.value()
+                num_users = tab.compare_top_users.slider.value()
                 thresh = tab.threshold.slider.value()
-                check = cg.create_user_check(user_id, num, thresh=thresh)
+                check = cg.create_user_check(user_id, num_top, num_users, thresh=thresh)
 
             if self.run_type == "LOCAL":
                 tab = self.local_tab
@@ -318,28 +319,52 @@ class MainTab(QWidget):
                 thresh = tab.threshold.slider.value()
                 check = cg.create_verify_check(map_id, user_id_1, user_id_2, thresh=thresh)
 
-            num_to_load = len(check.all_replays())
+            # user_check convenience method comes with some caveats; a list
+            # of list of check objects is returned instead of a singl Check
+            # because it checks for remodding and replay stealing for
+            # each top play of the user
+            if self.run_type == "SCREEN":
+                num_to_load = 0
+                for check_list in check:
+                    for check_ in check_list:
+                        num_to_load += len(check_.all_replays())
+            else:
+                num_to_load = len(check.all_replays())
             self.reset_progressbar_signal.emit(num_to_load)
             cg.loader.new_session(num_to_load)
             timestamp = datetime.now()
             self.write(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load))
-            for replay in check.all_replays():
-                cg.load(check, replay)
-                self.increment_progressbar_signal.emit(1)
+            if self.run_type == "SCREEN":
+                for check_list in check:
+                    for check_ in check_list:
+                        for replay in check_.all_replays():
+                            cg.load(check_, replay)
+                        check_.loaded = True
+            else:
+                for replay in check.all_replays:
+                    cg.load(check, replay)
+                    self.increment_progressbar_signal.emit(1)
+                check.loaded = True
+
 
             self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
-            check.loaded = True
             timestamp = datetime.now()
             self.write(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
-            for result in cg.run(check):
-                self.q.put(result)
+            if self.run_type == "SCREEN":
+                for check_list in check:
+                    for check_ in check_list:
+                        for result in cg.run(check_):
+                            self.q.put(result)
+            else:
+                for result in cg.run(check):
+                    self.q.put(result)
             self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
 
             timestamp = datetime.now()
             self.write(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
 
         except Exception:
-            log.exception("Error while running circlecore. Please"
+            log.exception("Error while running circlecore. Please "
                           "report this to the developers through discord or github.\n")
 
         self.cg_running = False
@@ -401,7 +426,7 @@ class UserTab(QWidget):
         self.info.setText("Compare a user's top plays against the map's leaderboard.")
 
         self.user_id = InputWidget("User Id", "User id, as seen in the profile url", type_="id")
-        self.compare_top_user = CompareTopUsers()
+        self.compare_top_users = CompareTopUsers()
         self.compare_top_map = CompareTopPlays()
         self.threshold = Threshold()  # ThresholdCombined()
 
@@ -410,7 +435,7 @@ class UserTab(QWidget):
         layout.addWidget(self.user_id, 1, 0, 1, 1)
         # leave space for inserting the user user top plays widget
         layout.addWidget(self.compare_top_map, 3, 0, 1, 1)
-        layout.addWidget(self.compare_top_user, 4, 0, 1, 1)
+        layout.addWidget(self.compare_top_users, 4, 0, 1, 1)
         layout.addWidget(self.threshold, 5, 0, 1, 1)
         self.layout = layout
         self.setLayout(self.layout)
