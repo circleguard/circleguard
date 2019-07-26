@@ -87,9 +87,11 @@ class _Renderer(QWidget):
         if array[offset][index] <= value:
             high = len(array) - 1
             low = offset
+            mid = low
         else:
             high = offset
             low = 0
+            mid = high
 
         while array[high][index] != array[low][index] and array[low][index] <= value <= array[high][index]:
             mid = low + (value - array[low][index]) * (high - low) // (array[high][index] - array[low][index])
