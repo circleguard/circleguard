@@ -341,7 +341,7 @@ class MainTab(QWidget):
                             cg.load(check_, replay)
                         check_.loaded = True
             else:
-                for replay in check.all_replays:
+                for replay in check.all_replays():
                     cg.load(check, replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
@@ -390,6 +390,17 @@ class MainTab(QWidget):
                     QApplication.alert(self)
                     # add to Results Tab so it can be played back on demand
                     self.add_comparison_result_signal.emit(result)
+
+                elif get_setting("message_no_cheater_found") != "":
+                    timestamp = datetime.now()
+                    r1 = result.replay1
+                    r2 = result.replay2
+                    msg = get_setting("message_no_cheater_found").format(ts=timestamp, similarity=result.similarity,
+                                                                      replay1_name=r1.username, replay2_name=r2.username,
+                                                                      later_name=result.later_name, replay1_mods=r1.mods,
+                                                                      replay2_mods=r2.mods, replay1_id=r1.replay_id,
+                                                                      replay2_id=r2.replay_id)
+                    self.write(msg)
         except Empty:
             pass
 
@@ -403,8 +414,8 @@ class MapTab(QWidget):
         super(MapTab, self).__init__()
 
         self.info = QLabel(self)
-        self.info.setText("Compare the top plays of a Map's leaderboard.\nIf a user is given, "
-                          "it will compare that user's play on the map against the top plays.")
+        self.info.setText("Compares the top plays on a Map's leaderboard.\nIf a user is given, "
+                          "it will compare that user's play on the map against the other top plays of the map.")
 
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers()
@@ -423,7 +434,7 @@ class UserTab(QWidget):
     def __init__(self):
         super(UserTab, self).__init__()
         self.info = QLabel(self)
-        self.info.setText("Compare a user's top plays against the map's leaderboard.")
+        self.info.setText("Compares each of a user's top plays against that map's leaderboard.")
 
         self.user_id = InputWidget("User Id", "User id, as seen in the profile url", type_="id")
         self.compare_top_users = CompareTopUsers()
@@ -445,9 +456,9 @@ class LocalTab(QWidget):
     def __init__(self):
         super(LocalTab, self).__init__()
         self.info = QLabel(self)
-        self.info.setText("Compare local replays in a given folder.\n"
-                          "If a Map is given, it will compare the local replays against the leaderboard of the map.\n"
-                          "If both a user and a map are given, it will compare the local replays against the user's "
+        self.info.setText("Compares osr files in a given folder.\n"
+                          "If a Map is given, it will compare the osrs against the leaderboard of that map.\n"
+                          "If both a user and a map are given, it will compare the osrs against the user's "
                           "score on that map.")
         self.folder_chooser = FolderChooser("Replay folder", get_setting("local_replay_dir"))
         self.folder_chooser.path_signal.connect(self.update_dir)
@@ -477,7 +488,7 @@ class VerifyTab(QWidget):
     def __init__(self):
         super(VerifyTab, self).__init__()
         self.info = QLabel(self)
-        self.info.setText("Verifies that the scores are steals of each other.")
+        self.info.setText("Checks if the given user's replays on a map are steals of each other.")
 
         self.map_id = InputWidget("Map Id", "Beatmap id, not the mapset id!", type_="id")
         self.user_id_1 = InputWidget("User Id #1", "User id, as seen in the profile url", type_="id")

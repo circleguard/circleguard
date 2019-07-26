@@ -20,6 +20,8 @@ DEFAULTS = {
     "message_starting_comparing": "[{ts:%X}] Comparing Replays",
     "message_finished_comparing": "[{ts:%X}] Done",
     "message_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}, {later_name} set later",
+    "message_no_cheater_found": "",
+
     "string_result_text": "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}"
 }
 
