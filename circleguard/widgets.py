@@ -247,6 +247,12 @@ class StringFormatWidget(QFrame):
         cheater_found.field.setText(get_setting("message_cheater_found"))
         cheater_found.field.textChanged.connect(partial(update_default, "message_cheater_found"))
 
+        no_cheater_found = InputWidget("message_no_cheater_found", "Shown when two replays are compared and no "
+                                    "cheating is found (scores bove the threshold). Leave blank for no message.\n"
+                                    "All attributes available in message_cheater_found are available here.", type_="normal")
+        no_cheater_found.field.setText(get_setting("message_no_cheater_found"))
+        no_cheater_found.field.textChanged.connect(partial(update_default, "message_no_cheater_found"))
+
         result_text = InputWidget("string_result_text", "Text of the result label in the Results Tab", type_="normal")
         result_text.field.setText(get_setting("string_result_text"))
         result_text.field.textChanged.connect(partial(update_default, "string_result_text"))
@@ -257,6 +263,7 @@ class StringFormatWidget(QFrame):
         layout.addWidget(starting_comparing)
         layout.addWidget(finished_comparing)
         layout.addWidget(cheater_found)
+        layout.addWidget(no_cheater_found)
         layout.addWidget(result_text)
 
         self.setLayout(layout)

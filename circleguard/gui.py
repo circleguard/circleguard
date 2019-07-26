@@ -390,6 +390,17 @@ class MainTab(QWidget):
                     QApplication.alert(self)
                     # add to Results Tab so it can be played back on demand
                     self.add_comparison_result_signal.emit(result)
+
+                elif get_setting("message_no_cheater_found") != "":
+                    timestamp = datetime.now()
+                    r1 = result.replay1
+                    r2 = result.replay2
+                    msg = get_setting("message_no_cheater_found").format(ts=timestamp, similarity=result.similarity,
+                                                                      replay1_name=r1.username, replay2_name=r2.username,
+                                                                      later_name=result.later_name, replay1_mods=r1.mods,
+                                                                      replay2_mods=r2.mods, replay1_id=r1.replay_id,
+                                                                      replay2_id=r2.replay_id)
+                    self.write(msg)
         except Empty:
             pass
 
