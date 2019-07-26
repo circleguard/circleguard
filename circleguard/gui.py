@@ -57,8 +57,10 @@ class WindowWrapper(QMainWindow):
         self.main_window = MainWindow()
         self.main_window.main_tab.reset_progressbar_signal.connect(self.reset_progressbar)
         self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
-        self.main_window.main_tab.update_text_signal.connect(self.update_label)
+        self.main_window.main_tab.update_label_signal.connect(self.update_label)
         self.main_window.main_tab.add_comparison_result_signal.connect(self.add_comparison_result)
+        self.main_window.main_tab.write_to_terminal_signal.connect(self.main_window.main_tab.write)
+
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
@@ -208,7 +210,8 @@ class MainWindow(QWidget):
 class MainTab(QWidget):
     reset_progressbar_signal = pyqtSignal(int)  # max progress
     increment_progressbar_signal = pyqtSignal(int)  # increment value
-    update_text_signal = pyqtSignal(str)
+    update_label_signal = pyqtSignal(str)
+    write_to_terminal_signal = pyqtSignal(str)
     add_comparison_result_signal = pyqtSignal(object)  # Result
 
     TAB_REGISTER = [
@@ -279,7 +282,7 @@ class MainTab(QWidget):
     def run_circleguard(self):
         self.cg_running = True
         self.switch_run_button()
-        self.update_text_signal.emit("Loading Replays")
+        self.update_label_signal.emit("Loading Replays")
         try:
             set_options(cache=bool(get_setting("caching")))
             cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"), "cache.db"))
@@ -333,7 +336,7 @@ class MainTab(QWidget):
             self.reset_progressbar_signal.emit(num_to_load)
             cg.loader.new_session(num_to_load)
             timestamp = datetime.now()
-            self.write(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load))
+            self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load))
             if self.run_type == "SCREEN":
                 for check_list in check:
                     for check_ in check_list:
@@ -349,7 +352,7 @@ class MainTab(QWidget):
 
             self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
             timestamp = datetime.now()
-            self.write(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+            self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
             if self.run_type == "SCREEN":
                 for check_list in check:
                     for check_ in check_list:
@@ -361,14 +364,14 @@ class MainTab(QWidget):
             self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
 
             timestamp = datetime.now()
-            self.write(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
+            self.write_to_terminal_signal.emit(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
 
         except Exception:
             log.exception("Error while running circlecore. Please "
                           "report this to the developers through discord or github.\n")
 
         self.cg_running = False
-        self.update_text_signal.emit("Idle")
+        self.update_label_signal.emit("Idle")
         self.switch_run_button()
 
     def print_results(self):
