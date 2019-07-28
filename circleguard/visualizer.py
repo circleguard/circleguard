@@ -16,7 +16,7 @@ from utils import resource_path
 import math
 
 import numpy as np
-np.seterr('raise')
+PREVIOUS_ERRSTATE = np.seterr('raise')
 
 WIDTH_LINE = 1
 WIDTH_POINT = 3
@@ -622,3 +622,4 @@ class VisualizerWindow(QMainWindow):
     def closeEvent(self, event):
         super().closeEvent(event)
         self.interface.renderer.timer.stop()
+        np.seterr(**PREVIOUS_ERRSTATE)
