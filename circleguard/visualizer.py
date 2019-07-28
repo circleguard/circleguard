@@ -15,6 +15,9 @@ from utils import resource_path
 
 import math
 
+import numpy as np
+np.seterr('raise')
+
 WIDTH_LINE = 1
 WIDTH_POINT = 3
 WIDTH_CIRCLE_BORDER = 8
@@ -58,6 +61,7 @@ class _Renderer(QWidget):
                         d[2] = 384 - d[2]
 
         self.play_direction = 1
+        
         self.replay_len = max(data[-1][0] for data in self.data) if self.replay_amount > 0 else 0
         self.next_frame()
 
@@ -106,7 +110,12 @@ class _Renderer(QWidget):
             elif value > array[high][index]:
                 return high - 1 if direction > 0 else high
                 
-            mid = low + (value - array[low][index]) * (high - low) // (array[high][index] - array[low][index])
+            try:
+                mid = low + (value - array[low][index]) * (high - low) // (array[high][index] - array[low][index])
+            except:
+                mid = low + (value - array[low][index]) / (array[high][index] - array[low][index]) * (high - low)
+                mid = int(mid)
+                
 
             if array[mid][index] < value:
                 low = mid + 1
