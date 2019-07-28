@@ -77,13 +77,13 @@ class SetupPage(WizardPage):
         dark_label.setWordWrap(True)
 
         self.darkmode = OptionWidget("Dark mode", "")
-        self.darkmode.box.setCheckState(get_setting("dark_theme"))
+        self.darkmode.box.setChecked(get_setting("dark_theme"))
 
         cache_label = QLabel("Caching reduces downloading time by storing replays when they are first downloaded")
         cache_label.setWordWrap(True)
 
         self.caching = OptionWidget("Caching", "")
-        self.caching.box.setCheckState(get_setting("caching"))
+        self.caching.box.setChecked(get_setting("caching"))
 
         layout = QVBoxLayout()
         layout.addWidget(dark_label)

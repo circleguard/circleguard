@@ -116,7 +116,6 @@ class _Renderer(QWidget):
                 mid = low + (value - array[low][index]) / (array[high][index] - array[low][index]) * (high - low)
                 mid = int(mid)
 
-
             if array[mid][index] < value:
                 low = mid + 1
             elif array[mid][index] > value:
