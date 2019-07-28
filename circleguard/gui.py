@@ -18,7 +18,7 @@ from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
 from utils import resource_path
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
-                     FolderChooser, IdWidgetCombined, Separator, OptionWidget,
+                     FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
                      TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult)
 
@@ -505,6 +505,9 @@ class ScrollableSettingsWidget(QFrame):
         self._rainbow_counter = 0
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_color)
+        self.welcome = wizard.WelcomeWindow()
+        self.welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
+        self.welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default, "caching"))
 
         self.apikey_widget = InputWidget("Api Key", "", type_="password")
         self.apikey_widget.field.setText(get_setting("api_key"))
@@ -530,6 +533,9 @@ class ScrollableSettingsWidget(QFrame):
         self.rainbow = OptionWidget("Rainbow mode", ":3")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
+        self.wizard = ButtonWidget("Run Wizard", "")
+        self.wizard.button.clicked.connect(self.show_wizard)
+
         self.grid = QVBoxLayout()
         self.grid.addWidget(Separator("Circleguard settings"))
         self.grid.addWidget(self.apikey_widget)
@@ -541,6 +547,7 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(Separator("Debug settings"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
+        self.grid.addWidget(self.wizard)
         self.grid.addWidget(Separator("Experiments"))
         self.grid.addWidget(self.rainbow)
         self.grid.addWidget(BeatmapTest())
@@ -574,6 +581,9 @@ class ScrollableSettingsWidget(QFrame):
         else:
             self.timer.stop()
             switch_theme(get_setting("dark_theme"))
+
+    def show_wizard(self):
+        self.welcome.show()
 
 
 class ResultsTab(QWidget):
