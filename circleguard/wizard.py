@@ -79,7 +79,7 @@ class SetupPage(WizardPage):
         self.darkmode = OptionWidget("Dark mode", "")
         self.darkmode.box.setCheckState(get_setting("dark_theme"))
 
-        cache_label = QLabel("Caching reduces downloading time by reusing already downloaded replays")
+        cache_label = QLabel("Caching reduces downloading time by storing replays when they are first downloaded")
         cache_label.setWordWrap(True)
 
         self.caching = OptionWidget("Caching", "")
