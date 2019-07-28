@@ -61,7 +61,7 @@ class _Renderer(QWidget):
                         d[2] = 384 - d[2]
 
         self.play_direction = 1
-        
+
         self.replay_len = max(data[-1][0] for data in self.data) if self.replay_amount > 0 else 0
         self.next_frame()
 
@@ -109,13 +109,13 @@ class _Renderer(QWidget):
                 return low if direction > 0 else low - 1
             elif value > array[high][index]:
                 return high - 1 if direction > 0 else high
-                
+
             try:
                 mid = low + (value - array[low][index]) * (high - low) // (array[high][index] - array[low][index])
             except:
                 mid = low + (value - array[low][index]) / (array[high][index] - array[low][index]) * (high - low)
                 mid = int(mid)
-                
+
 
             if array[mid][index] < value:
                 low = mid + 1
@@ -500,7 +500,6 @@ class _Interface(QWidget):
 
         self.layout = QGridLayout()
         self.slider = QSlider(Qt.Horizontal)
-        self.play_direction = 1
 
         self.play_reverse_button = QPushButton()
         self.play_reverse_button.setIcon(QIcon(str(resource_path("./resources/play_reverse.png"))))
@@ -569,7 +568,6 @@ class _Interface(QWidget):
 
     def play_normal(self):
         self.renderer.resume()
-        self.play_direction = 1
         self.renderer.play_direction = 1
         self._update_speed()
 
@@ -578,12 +576,11 @@ class _Interface(QWidget):
 
     def play_reverse(self):
         self.renderer.resume()
-        self.play_direction = -1
         self.renderer.play_direction = -1
         self._update_speed()
 
     def _update_speed(self):
-        self.renderer.clock.change_speed(float(self.speed_label.text())*self.play_direction)
+        self.renderer.clock.change_speed(float(self.speed_label.text())*self.renderer.play_direction)
 
     def previous_frame(self):
         self.renderer.pause()
