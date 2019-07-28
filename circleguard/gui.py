@@ -18,7 +18,7 @@ from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
 from utils import resource_path
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
-                     FolderChooser, IdWidgetCombined, Separator, OptionWidget,
+                     FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
                      TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult)
 
@@ -516,13 +516,12 @@ class SettingsTab(QWidget):
         self.qscrollarea.setWidget(ScrollableSettingsWidget())
         self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
         self.qscrollarea.setWidgetResizable(True)
-        # \/ https://stackoverflow.com/a/16482646
 
         self.info = QLabel(self)
         self.info.setText(f"Backend Version: {cg_version}<br/>"
                           f"Frontend Version: {__version__}<br/>"
                           f"Found a bug or want to request a feature? "
-                          f"Open an issue <a href=\"https://github.com/circleguard/circleguard\">here</a>!")
+                          f"Open an issue <a href=\"https://github.com/circleguard/circleguard/issues\">here</a>!")
         self.info.setTextFormat(Qt.RichText)
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
@@ -545,6 +544,9 @@ class ScrollableSettingsWidget(QFrame):
         self._rainbow_counter = 0
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_color)
+        self.welcome = wizard.WelcomeWindow()
+        self.welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
+        self.welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default, "caching"))
 
         self.apikey_widget = InputWidget("Api Key", "", type_="password")
         self.apikey_widget.field.setText(get_setting("api_key"))
@@ -570,6 +572,9 @@ class ScrollableSettingsWidget(QFrame):
         self.rainbow = OptionWidget("Rainbow mode", ":3")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
+        self.wizard = ButtonWidget("Run Wizard", "")
+        self.wizard.button.clicked.connect(self.show_wizard)
+
         self.grid = QVBoxLayout()
         self.grid.addWidget(Separator("Circleguard settings"))
         self.grid.addWidget(self.apikey_widget)
@@ -581,6 +586,7 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(Separator("Debug settings"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
+        self.grid.addWidget(self.wizard)
         self.grid.addWidget(Separator("Experiments"))
         self.grid.addWidget(self.rainbow)
         self.grid.addWidget(BeatmapTest())
@@ -614,6 +620,9 @@ class ScrollableSettingsWidget(QFrame):
         else:
             self.timer.stop()
             switch_theme(get_setting("dark_theme"))
+
+    def show_wizard(self):
+        self.welcome.show()
 
 
 class ResultsTab(QWidget):
@@ -670,7 +679,8 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
         app.setPalette(dark_p)
         app.setStyleSheet("QToolTip { color: #ffffff; "
                           "background-color: #2a2a2a; "
-                          "border: 1px solid white; }")
+                          "border: 1px solid white; }"
+                          "QLabel {font-weight: Normal; }")
     else:
         app.setPalette(app.style().standardPalette())
         updated_palette = QPalette()
@@ -684,7 +694,8 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
         app.setPalette(updated_palette)
         app.setStyleSheet("QToolTip { color: #000000; "
                           "background-color: #D5D5D5; "
-                          "border: 1px solid white; }")
+                          "border: 1px solid white; }"
+                          "QLabel {font-weight: Normal; }")
 
 
 if __name__ == "__main__":
@@ -697,7 +708,8 @@ if __name__ == "__main__":
     WINDOW.show()
     if not (str(get_setting("ran")).lower() == "true"):
         welcome = wizard.WelcomeWindow()
-        welcome.DarkModePage.darkmode.box.stateChanged.connect(switch_theme)
+        welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
+        welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default,"caching"))
         welcome.show()
         update_default("ran", True)
     app.exec_()

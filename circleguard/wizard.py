@@ -2,7 +2,7 @@ from functools import partial
 
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
 # pylint: enable=no-name-in-module
 
@@ -24,9 +24,11 @@ class WizardPage(QWizardPage):
 class WelcomeWindow(QWizard):
     def __init__(self):
         super(WelcomeWindow, self).__init__()
-        self.DarkModePage = DarkModePage()
+        self.setWindowTitle("Wizard")
+        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
+        self.SetupPage = SetupPage()
         self.addPage(IntroPage())
-        self.addPage(self.DarkModePage)
+        self.addPage(self.SetupPage)
         self.addPage(ApiKeyPage())
         self.addPage(BeatmapUserIdPage())
         self.addPage(ConclusionPage())
@@ -67,18 +69,27 @@ class IntroPage(WizardPage):
         self.setLayout(layout)
 
 
-class DarkModePage(WizardPage):
+class SetupPage(WizardPage):
     def __init__(self, parent=None):
-        super(DarkModePage, self).__init__(parent)
+        super(SetupPage, self).__init__(parent)
         self.setTitle("Settings")
-        label = QLabel("Choose the look and feel of the application")
-        label.setWordWrap(True)
+        dark_label = QLabel("Choose the look and feel of the application")
+        dark_label.setWordWrap(True)
 
         self.darkmode = OptionWidget("Dark mode", "")
+        self.darkmode.box.setChecked(get_setting("dark_theme"))
+
+        cache_label = QLabel("Caching reduces downloading time by storing replays when they are first downloaded")
+        cache_label.setWordWrap(True)
+
+        self.caching = OptionWidget("Caching", "")
+        self.caching.box.setChecked(get_setting("caching"))
 
         layout = QVBoxLayout()
-        layout.addWidget(label)
+        layout.addWidget(dark_label)
         layout.addWidget(self.darkmode)
+        layout.addWidget(cache_label)
+        layout.addWidget(self.caching)
         self.setLayout(layout)
 
 

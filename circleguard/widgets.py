@@ -224,6 +224,29 @@ class OptionWidget(QFrame):
         self.setLayout(layout)
 
 
+class ButtonWidget(QFrame):
+    """
+    A container class of widgets that represents an option with a boolean state.
+    This class holds a Label and CheckBox.
+    """
+
+    def __init__(self, title, tooltip, end=":"):
+        super(ButtonWidget, self).__init__()
+
+        label = QLabel(self)
+        label.setText(title + end)
+        label.setToolTip(tooltip)
+        self.button = QPushButton("Execute")
+        self.button.setFixedWidth(100)
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.button, 0, 2, 1, 1)
+        self.setLayout(layout)
+
+
 class StringFormatWidget(QFrame):
     def __init__(self, tooltip):
         super(StringFormatWidget, self).__init__()
@@ -695,9 +718,12 @@ class ResetSettings(QFrame):
 
     def reset_settings(self):
         prompt = QMessageBox.question(self, "Reset settings",
-                                            "Are you sure you want to continue?\n"
-                                            "This step is irreversible and will force the gui to be closed.\n"
-                                            "Any running operations will be canceled!")
+                                      "Are you sure?\n"
+                                      "This will reset all settings to their default value.\n"
+                                      "Any currently running operations will be canceled and "
+                                      "you will have to open the app again.",
+                                      buttons=QMessageBox.Cancel | QMessageBox.Yes,
+                                      defaultButton=QMessageBox.Cancel)
         if prompt == QMessageBox.Yes:
             reset_defaults()
             sys.exit(0)

@@ -13,6 +13,11 @@ import osu_parser
 import clock
 from utils import resource_path
 
+import math
+
+import numpy as np
+PREVIOUS_ERRSTATE = np.seterr('raise')
+
 WIDTH_LINE = 1
 WIDTH_POINT = 3
 WIDTH_CIRCLE_BORDER = 8
@@ -55,6 +60,8 @@ class _Renderer(QWidget):
                     for d in self.data[replay_index]:
                         d[2] = 384 - d[2]
 
+        self.play_direction = 1
+
         self.replay_len = max(data[-1][0] for data in self.data) if self.replay_amount > 0 else 0
         self.next_frame()
 
@@ -72,41 +79,51 @@ class _Renderer(QWidget):
             return
         self.next_frame()
 
-    def search_timestamp(self, list_to_search, index, value, offset):
+    def search_timestamp(self, array, index, value, offset):
         """
-        searches an array (:list_to_search:) for a :value: located at :index:.
+        Searches an (:array:) for a :value: located in column :index:,
+        assuming the data is monotonically increasing.
 
         Args:
-            list list_to_search: A list of List which contain the timestamp at index
-            Integer index: Index of the timestamp
-            Float value: The timestamp to search for.
-            Integer offset: Position of last timestamp
+            list array: A list of List which contain the timestamp at index
+            Integer index: The column index of the timestamp
+            Float value: The value to search for.
+            Integer offset: Position of the timestamp to start the search from.
         """
-        found = offset
-        # attempt to make efficient search
-        if list_to_search[offset][0] <= value:
-            for i in range(len(list_to_search)-offset):
-                current = list_to_search[i+offset][index]
-                try:
-                    next = list_to_search[i+offset+1][index]
-                except IndexError:
-                    found = i+offset
-                    break
-                if current < value < next or current > value < next:
-                    found = i+offset
-                    break
+
+        direction = self.play_direction
+
+        if array[offset][index] <= value:
+            high = len(array) - 1
+            low = offset
+            mid = low
+            value = int(math.ceil(value))
         else:
-            for i in range(offset):
-                current = list_to_search[offset-i][index]
-                try:
-                    previous = list_to_search[offset-i-1][index]
-                except IndexError:
-                    found = offset-i
-                    break
-                if previous < value < current:
-                    found = offset-i
-                    break
-        return found
+            high = offset
+            low = 0
+            mid = high
+            value = int(value)
+
+        while array[high][index] != array[low][index]:
+            if value < array[low][index]:
+                return low if direction > 0 else low - 1
+            elif value > array[high][index]:
+                return high - 1 if direction > 0 else high
+
+            try:
+                mid = low + (value - array[low][index]) * (high - low) // (array[high][index] - array[low][index])
+            except:
+                mid = low + (value - array[low][index]) / (array[high][index] - array[low][index]) * (high - low)
+                mid = int(mid)
+
+            if array[mid][index] < value:
+                low = mid + 1
+            elif array[mid][index] > value:
+                high = mid - 1
+            else:
+                return mid
+
+        return low
 
     def next_frame(self):
         """
@@ -482,7 +499,6 @@ class _Interface(QWidget):
 
         self.layout = QGridLayout()
         self.slider = QSlider(Qt.Horizontal)
-        self.play_direction = 1
 
         self.play_reverse_button = QPushButton()
         self.play_reverse_button.setIcon(QIcon(str(resource_path("./resources/play_reverse.png"))))
@@ -551,7 +567,7 @@ class _Interface(QWidget):
 
     def play_normal(self):
         self.renderer.resume()
-        self.play_direction = 1
+        self.renderer.play_direction = 1
         self._update_speed()
 
     def update_slider(self, value):
@@ -559,12 +575,11 @@ class _Interface(QWidget):
 
     def play_reverse(self):
         self.renderer.resume()
-        self.play_direction = -1
+        self.renderer.play_direction = -1
         self._update_speed()
 
     def _update_speed(self):
-        print(float(self.speed_label.text())*self.play_direction)
-        self.renderer.clock.change_speed(float(self.speed_label.text())*self.play_direction)
+        self.renderer.clock.change_speed(float(self.speed_label.text())*self.renderer.play_direction)
 
     def previous_frame(self):
         self.renderer.pause()
@@ -606,3 +621,4 @@ class VisualizerWindow(QMainWindow):
     def closeEvent(self, event):
         super().closeEvent(event)
         self.interface.renderer.timer.stop()
+        np.seterr(**PREVIOUS_ERRSTATE)
