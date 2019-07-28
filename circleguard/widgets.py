@@ -224,6 +224,29 @@ class OptionWidget(QFrame):
         self.setLayout(layout)
 
 
+class ButtonWidget(QFrame):
+    """
+    A container class of widgets that represents an option with a boolean state.
+    This class holds a Label and CheckBox.
+    """
+
+    def __init__(self, title, tooltip, end=":"):
+        super(ButtonWidget, self).__init__()
+
+        label = QLabel(self)
+        label.setText(title + end)
+        label.setToolTip(tooltip)
+        self.button = QPushButton("Execute")
+        self.button.setFixedWidth(100)
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.button, 0, 2, 1, 1)
+        self.setLayout(layout)
+
+
 class StringFormatWidget(QFrame):
     def __init__(self, tooltip):
         super(StringFormatWidget, self).__init__()
