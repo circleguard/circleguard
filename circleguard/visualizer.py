@@ -13,6 +13,8 @@ import osu_parser
 import clock
 from utils import resource_path
 
+import math
+
 WIDTH_LINE = 1
 WIDTH_POINT = 3
 WIDTH_CIRCLE_BORDER = 8
@@ -55,6 +57,7 @@ class _Renderer(QWidget):
                     for d in self.data[replay_index]:
                         d[2] = 384 - d[2]
 
+        self.play_direction = 1
         self.replay_len = max(data[-1][0] for data in self.data) if self.replay_amount > 0 else 0
         self.next_frame()
 
@@ -84,19 +87,26 @@ class _Renderer(QWidget):
             Integer offset: Position of the timestamp to start the search from.
         """
 
+        direction = self.play_direction
+
         if array[offset][index] <= value:
             high = len(array) - 1
             low = offset
             mid = low
+            value = int(math.ceil(value))
         else:
             high = offset
             low = 0
             mid = high
+            value = int(value)
 
-        while array[high][index] != array[low][index] and array[low][index] <= value <= array[high][index]:
+        while array[high][index] != array[low][index]:
+            if value < array[low][index]:
+                return low if direction > 0 else low - 1
+            elif value > array[high][index]:
+                return high - 1 if direction > 0 else high
+                
             mid = low + (value - array[low][index]) * (high - low) // (array[high][index] - array[low][index])
-
-            mid = int(mid)
 
             if array[mid][index] < value:
                 low = mid + 1
@@ -105,7 +115,7 @@ class _Renderer(QWidget):
             else:
                 return mid
 
-        return mid
+        return low
 
     def next_frame(self):
         """
@@ -551,6 +561,7 @@ class _Interface(QWidget):
     def play_normal(self):
         self.renderer.resume()
         self.play_direction = 1
+        self.renderer.play_direction = 1
         self._update_speed()
 
     def update_slider(self, value):
@@ -559,6 +570,7 @@ class _Interface(QWidget):
     def play_reverse(self):
         self.renderer.resume()
         self.play_direction = -1
+        self.renderer.play_direction = -1
         self._update_speed()
 
     def _update_speed(self):
