@@ -9,7 +9,7 @@ DEFAULTS = {
     "dark_theme": 0,
     "rainbow_accent": 0,
     "caching": 1,
-    "cache_dir": ".",
+    "cache_dir": "./db/",
     "log_save": 0,
     "log_dir": "./logs/",
     "log_mode": 1, # ERROR
