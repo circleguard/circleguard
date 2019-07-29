@@ -1,10 +1,13 @@
 import os
+import sys
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
 import colorsys
+import traceback
+import threading
 from datetime import datetime
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
@@ -16,7 +19,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPai
 from circleguard import Circleguard, set_options, loader
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
-from utils import resource_path
+from utils import resource_path, write_log
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
@@ -28,6 +31,39 @@ import wizard
 __version__ = "1.0.0"
 
 log = logging.getLogger(__name__)
+
+
+# save old excepthook
+sys._excepthook = sys.excepthook
+
+# this allows us to log any and all exceptions thrown to a log file -
+# pyqt likes to eat exceptions and quit silently
+def my_excepthook(exctype, value, tb):
+    # call original excepthook before ours
+    write_log("sys.excepthook error\n"
+              "Type: " + str(value) + "\n"
+              "Value: " + str(value) + "\n"
+              "Traceback: " + "".join(traceback.format_tb(tb)) + '\n')
+    sys._excepthook(exctype, value, tb)
+
+sys.excepthook = my_excepthook
+
+# sys.excepthook doesn't persist across threads
+# (http://bugs.python.org/issue1230540). This is a hacky workaround that overrides
+# the threading init method to use our excepthook.
+# https://stackoverflow.com/a/31622038
+threading_init = threading.Thread.__init__
+def init(self, *args, **kwargs):
+    threading_init(self, *args, **kwargs)
+    run_original = self.run
+
+    def run_with_except_hook(*args2, **kwargs2):
+        try:
+            run_original(*args2, **kwargs2)
+        except Exception:
+            sys.excepthook(*sys.exc_info())
+    self.run = run_with_except_hook
+threading.Thread.__init__ = init
 
 
 # logging methodology heavily adapted from https://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
@@ -75,7 +111,7 @@ class WindowWrapper(QMainWindow):
         logging.getLogger(__name__).addHandler(handler)
         formatter = logging.Formatter("[%(levelname)s] %(asctime)s  %(message)s ", datefmt="%Y/%m/%d %I:%M:%S %p")
         handler.setFormatter(formatter)
-        handler.new_message.connect(self.print_debug)
+        handler.new_message.connect(self.log)
 
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
@@ -105,29 +141,20 @@ class WindowWrapper(QMainWindow):
         """
         self.main_window.main_tab.print_results()
 
-    def print_debug(self, message):
+    def log(self, message):
         """
         Message is the string message sent to the io stream
         """
-        log_dir = resource_path(get_setting("log_dir"))
+
         if get_setting("log_save"):
-            if not os.path.exists(log_dir):  # create dir if nonexistent
-                os.makedirs(log_dir)
-            directory = os.path.join(log_dir, "circleguard.log")
-            with open(directory, 'a+') as f:  # append so it creates a file if it doesn't exist
-                f.seek(0)
-                data = f.read().splitlines(True)
-            data.append(message+"\n")
-            with open(directory, 'w+') as f:
-                f.writelines(data[-10000:])  # keep file at 10000 lines
+            write_log(message)
 
-        if get_setting("log_output") == 0:
-            pass
-
-        if get_setting("log_output") == 1 or get_setting("log_output") == 3:
+        # TERMINAL / BOTH
+        if get_setting("log_output") in [1, 3]:
             self.main_window.main_tab.write(message)
 
-        if get_setting("log_output") == 2 or get_setting("log_output") == 3:
+        # NEW WINDOW / BOTH
+        if get_setting("log_output") in [2, 3]:
             if self.debug_window and self.debug_window.isVisible():
                 self.debug_window.write(message)
             else:
@@ -268,8 +295,11 @@ class MainTab(QWidget):
     def run(self):
         current_tab = self.tabs.currentIndex()
         self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
-        pool = ThreadPool(processes=1)
-        pool.apply_async(self.run_circleguard)
+        thread = threading.Thread(target=self.run_circleguard)
+        thread.start()
+        # pool = ThreadPool(processes=1)
+        # raise Exception("dddd")
+        # pool.apply_async(self.run_circleguard)
 
     def switch_run_button(self):
         if not self.cg_running:
