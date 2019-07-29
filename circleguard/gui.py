@@ -292,9 +292,13 @@ class MainTab(QWidget):
                 #       maybe fancy flashing red stars for required fields
                 map_id_str = tab.id_combined.map_id.field.text()
                 map_id = int(map_id_str) if map_id_str != "" else 0
+
+                user_id_str = tab.id_combined.user_id.field.text()
+                user_id = int(user_id_str) if user_id_str != "" else None
+                
                 num = tab.compare_top.slider.value()
                 thresh = tab.threshold.slider.value()
-                check = cg.create_map_check(map_id, num=num, thresh=thresh)
+                check = cg.create_map_check(map_id, u=user_id, num=num, thresh=thresh)
 
             if self.run_type == "SCREEN":
                 tab = self.user_tab
