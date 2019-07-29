@@ -109,10 +109,11 @@ class WindowWrapper(QMainWindow):
         """
         Message is the string message sent to the io stream
         """
+        log_dir = resource_path(get_setting("log_dir"))
         if get_setting("log_save"):
-            if not os.path.exists(get_setting('log_dir')):  # create dir if nonexistent
-                os.makedirs(get_setting('log_dir'))
-            directory = os.path.join(get_setting("log_dir"), "circleguard.log")
+            if not os.path.exists(log_dir):  # create dir if nonexistent
+                os.makedirs(log_dir)
+            directory = os.path.join(log_dir, "circleguard.log")
             with open(directory, 'a+') as f:  # append so it creates a file if it doesn't exist
                 f.seek(0)
                 data = f.read().splitlines(True)
@@ -286,6 +287,7 @@ class MainTab(QWidget):
         try:
             set_options(cache=bool(get_setting("caching")))
             cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
+
             if self.run_type == "MAP":
                 tab = self.map_tab
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
@@ -295,7 +297,7 @@ class MainTab(QWidget):
 
                 user_id_str = tab.id_combined.user_id.field.text()
                 user_id = int(user_id_str) if user_id_str != "" else None
-                
+
                 num = tab.compare_top.slider.value()
                 thresh = tab.threshold.slider.value()
                 check = cg.create_map_check(map_id, u=user_id, num=num, thresh=thresh)
@@ -311,7 +313,7 @@ class MainTab(QWidget):
 
             if self.run_type == "LOCAL":
                 tab = self.local_tab
-                path = Path(tab.folder_chooser.path)
+                path = resource_path(Path(tab.folder_chooser.path))
                 thresh = tab.threshold.slider.value()
                 check = cg.create_local_check(path, thresh=thresh)
 
