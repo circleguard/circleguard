@@ -314,8 +314,13 @@ class MainTab(QWidget):
             if self.run_type == "LOCAL":
                 tab = self.local_tab
                 path = resource_path(Path(tab.folder_chooser.path))
+                map_id_str = tab.id_combined.map_id.field.text()
+                map_id = int(map_id_str) if map_id_str != "" else 0
+                user_id_str = tab.id_combined.user_id.field.text()
+                user_id = int(user_id_str) if user_id_str != "" else 0
+                num = tab.compare_top.slider.value()
                 thresh = tab.threshold.slider.value()
-                check = cg.create_local_check(path, thresh=thresh)
+                check = cg.create_local_check(path, map_id=map_id, u=user_id, num=num, thresh=thresh)
 
             if self.run_type == "VERIFY":
                 tab = self.verify_tab
