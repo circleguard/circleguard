@@ -439,7 +439,7 @@ class CompareTopPlays(QFrame):
         spinbox = SpinBox(self)
         spinbox.setValue(20)
         spinbox.setAlignment(Qt.AlignCenter)
-        spinbox.setRange(2, 100)
+        spinbox.setRange(1, 100)
         spinbox.setSingleStep(1)
         spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
