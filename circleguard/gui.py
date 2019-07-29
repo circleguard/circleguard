@@ -285,7 +285,7 @@ class MainTab(QWidget):
         self.update_label_signal.emit("Loading Replays")
         try:
             set_options(cache=bool(get_setting("caching")))
-            cg = Circleguard(get_setting("api_key"), os.path.join(get_setting("cache_dir"), "cache.db"))
+            cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
             if self.run_type == "MAP":
                 tab = self.map_tab
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
