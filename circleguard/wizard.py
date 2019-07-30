@@ -39,6 +39,8 @@ class WelcomeWindow(QWizard):
         self.setButtonText(QWizard.CancelButton, "Skip")
         self.setWizardStyle(QWizard.ModernStyle)
 
+        self.setFixedSize(525, 400)
+
     def mousePressEvent(self, event):
         focused = self.focusWidget()
         if focused is not None:
