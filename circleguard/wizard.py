@@ -159,7 +159,7 @@ class ConclusionPage(WizardPage):
                        "<ul>"
                        "<li><a href=\"https://discord.gg/e84qxkQ\">Discord</a></li>"
                        "<li><a href=\"https://github.com/circleguard/circleguard\">GitHub</a></li>"
-                       "<li><a href=\"http://old.reddit.com/r/osureport\">report cheaters at r/osureport</a></li>"
+                       "<li><a href=\"http://reddit.com/r/osureport\">report cheaters at r/osureport</a></li>"
                        "</ul>"
                        "<p>Thanks for helping to clean up osu!</p>")
 
