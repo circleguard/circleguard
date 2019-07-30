@@ -10,7 +10,7 @@ DEFAULTS = {
     "rainbow_accent": 0,
     "caching": 1,
     "cache_dir": "./db/",
-    "log_save": 0,
+    "log_save": 1,
     "log_dir": "./logs/",
     "log_mode": 1, # ERROR
     "log_output": 1, # TERMINAL
