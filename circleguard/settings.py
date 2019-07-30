@@ -39,10 +39,7 @@ if not SETTINGS.contains("ran"):
 
 
 def get_setting(name):
-    try:
-        return int(SETTINGS.value(name))
-    except ValueError:
-        return SETTINGS.value(name)
+    return type(DEFAULTS[name])(SETTINGS.value(name))
 
 
 def update_default(name, value):
