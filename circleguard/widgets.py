@@ -236,7 +236,7 @@ class ButtonWidget(QFrame):
         label = QLabel(self)
         label.setText(title + end)
         label.setToolTip(tooltip)
-        self.button = QPushButton("Execute")
+        self.button = QPushButton("Show")
         self.button.setFixedWidth(100)
 
         layout = QGridLayout()
