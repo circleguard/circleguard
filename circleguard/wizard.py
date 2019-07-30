@@ -84,6 +84,9 @@ class SetupPage(WizardPage):
 
         self.caching = OptionWidget("Caching", "")
         self.caching.box.setChecked(get_setting("caching"))
+        # TODO still won't update the settings checkbox because the main window
+        # is loaded before the wizard finishes, so it uses an old setting.
+        self.caching.box.stateChanged.connect(partial(update_default, "caching"))
 
         layout = QVBoxLayout()
         layout.addWidget(dark_label)
