@@ -6,11 +6,11 @@ DEFAULTS = {
     "ran": False,
     "threshold": 18,
     "api_key": "",
-    "dark_theme": 0,
-    "rainbow_accent": 0,
-    "caching": 1,
+    "dark_theme": False,
+    "rainbow_accent": False,
+    "caching": True,
     "cache_dir": "./db/",
-    "log_save": 1,
+    "log_save": True,
     "log_dir": "./logs/",
     "log_mode": 1, # ERROR
     "log_output": 1, # TERMINAL

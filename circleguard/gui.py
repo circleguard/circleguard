@@ -693,7 +693,7 @@ class ResultsFrame(QFrame):
 
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
-    update_default("dark_theme", 1 if dark else 0)
+    update_default("dark_theme", dark)
     if dark:
         dark_p = QPalette()
 
