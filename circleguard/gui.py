@@ -462,7 +462,7 @@ class MapTab(QWidget):
                           "it will compare that user's play on the map against the other top plays of the map.")
 
         self.id_combined = IdWidgetCombined()
-        self.compare_top = CompareTopUsers()
+        self.compare_top = CompareTopUsers(2)
 
         self.threshold = Threshold()  # ThresholdCombined()
         layout = QGridLayout()
@@ -481,7 +481,7 @@ class UserTab(QWidget):
         self.info.setText("Compares each of a user's top plays against that map's leaderboard.")
 
         self.user_id = InputWidget("User Id", "User id, as seen in the profile url", type_="id")
-        self.compare_top_users = CompareTopUsers()
+        self.compare_top_users = CompareTopUsers(1)
         self.compare_top_map = CompareTopPlays()
         self.threshold = Threshold()  # ThresholdCombined()
 
@@ -507,7 +507,7 @@ class LocalTab(QWidget):
         self.folder_chooser = FolderChooser("Replay folder", get_setting("local_replay_dir"))
         self.folder_chooser.path_signal.connect(self.update_dir)
         self.id_combined = IdWidgetCombined()
-        self.compare_top = CompareTopUsers()
+        self.compare_top = CompareTopUsers(1)
         self.threshold = Threshold()  # ThresholdCombined()
         self.id_combined.map_id.field.textChanged.connect(self.switch_compare)
         self.switch_compare()
