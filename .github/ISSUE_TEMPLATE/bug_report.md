@@ -1,21 +1,25 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Report a bug or unintented behavior
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-Describe the bug so it's easily understandable.  
-Add logs and screenshots if possible, but remember to make sure that you don't share private information!  
-Mention what you would expect to happen, and what actually happened. 
- 
-### How to add logs:
+Thanks for filing a bug report. Please follow the steps below to help us get it resolved quicker.
 
-- Enable the Save log function in Settings
+In the Settings Tab:
+
+- Enable the Save log function
+- Set log location to somewhere you have access to
 - Set Debug mode to `Trace`
-- Reproduce bug
-- Locate the log and upload it to [https://paste.fiery.me/]() or a different website. 
-- Included the link in this Issue
+- Note the backend and frontend version you are using
+
+Then:
+
+- Reproduce the bug
+- Locate the log file and upload it to [pastebin.com](https://pastebin.com/) or another website
+- Below the next line, describe the bug, leave both your backend and frontend version, and a link to your log file.
+
 # Remove everything above before opening the issue
