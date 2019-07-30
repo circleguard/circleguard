@@ -22,7 +22,7 @@ from visualizer import VisualizerWindow
 from utils import resource_path, write_log
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
-                     CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
+                     CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderLabelSetting,
                      TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult)
 
 from settings import get_setting, update_default
@@ -435,7 +435,7 @@ class MainTab(QWidget):
                     # add to Results Tab so it can be played back on demand
                     self.add_comparison_result_signal.emit(result)
 
-                elif get_setting("message_no_cheater_found") != "":
+                elif result.similarity < get_setting("threshold_display"):
                     timestamp = datetime.now()
                     r1 = result.replay1
                     r2 = result.replay2
@@ -593,8 +593,10 @@ class ScrollableSettingsWidget(QFrame):
         self.apikey_widget.field.setText(get_setting("api_key"))
         self.apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
 
-        self.thresh_widget = Threshold()
-        self.thresh_widget.spinbox.valueChanged.connect(partial(update_default, "threshold"))
+        self.cheat_thresh = SliderLabelSetting("Cheat Threshold", "Comparisons that score below this will be stored so you can view them",
+                                                "threshold_cheat", 30)
+        self.display_thresh = SliderLabelSetting("Display Threshold", "Comparisons that score below this will be printed to the textbox",
+                                                "threshold_display", 100)
 
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
         self.darkmode.box.stateChanged.connect(switch_theme)
@@ -619,7 +621,8 @@ class ScrollableSettingsWidget(QFrame):
         self.grid = QVBoxLayout()
         self.grid.addWidget(Separator("General"))
         self.grid.addWidget(self.apikey_widget)
-        self.grid.addWidget(self.thresh_widget)
+        self.grid.addWidget(self.cheat_thresh)
+        self.grid.addWidget(self.display_thresh)
         self.grid.addWidget(self.cache)
         self.grid.addWidget(self.cache_dir)
         self.grid.addWidget(Separator("Appearance"))

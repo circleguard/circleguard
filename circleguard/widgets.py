@@ -270,8 +270,7 @@ class StringFormatWidget(QFrame):
         cheater_found.field.setText(get_setting("message_cheater_found"))
         cheater_found.field.textChanged.connect(partial(update_default, "message_cheater_found"))
 
-        no_cheater_found = InputWidget("message_no_cheater_found", "Shown when two replays are compared and no "
-                                    "cheating is found (scores bove the threshold). Leave blank for no message.\n"
+        no_cheater_found = InputWidget("message_no_cheater_found", "Shown when a comparison scores below DISPLAY_THRESHOLD.\n"
                                     "All attributes available in message_cheater_found are available here.", type_="normal")
         no_cheater_found.field.setText(get_setting("message_no_cheater_found"))
         no_cheater_found.field.textChanged.connect(partial(update_default, "message_no_cheater_found"))
@@ -483,6 +482,57 @@ class ComparisonResult(QFrame):
         layout.addWidget(self.button, 0, 2, 1, 2)
         self.setLayout(layout)
 
+class SliderLabelSetting(QFrame):
+    """
+    A container class of a QLabel, QSlider, and SpinBox, and links the slider
+    and spinbox to a setting (ie the default values of the slider and spinbox
+    will be the value of the setting, and changes made to the slider or
+    spinbox will affect the setting).
+    """
+
+    def __init__(self, display, tooltip, setting_name, max_):
+        super().__init__()
+        self.setting_name = setting_name
+
+        label = QLabel(self)
+        label.setText(display)
+        label.setToolTip(tooltip)
+        self.label = label
+
+        slider = QSlider(Qt.Horizontal)
+        slider.setFocusPolicy(Qt.ClickFocus)
+        slider.setRange(0, max_)
+        slider.setValue(get_setting(setting_name))
+        slider.valueChanged.connect(self.update_spinbox)
+        self.slider = slider
+
+        spinbox = SpinBox(self)
+        spinbox.setValue(get_setting(setting_name))
+        spinbox.setAlignment(Qt.AlignCenter)
+        spinbox.setRange(0, max_)
+        spinbox.setSingleStep(1)
+        spinbox.setFixedWidth(100)
+        spinbox.valueChanged.connect(self.update_slider)
+        self.spinbox = spinbox
+        self.combined = WidgetCombiner(slider, spinbox)
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.combined, 0, 2, 1, 3)
+
+        self.setLayout(layout)
+
+    # keep spinbox and slider in sync
+    def update_spinbox(self, value):
+        self.spinbox.setValue(value)
+        update_default(self.setting_name, value)
+
+    def update_slider(self, value):
+        self.slider.setValue(value)
+        update_default(self.setting_name, value)
+
 class Threshold(QFrame):
     """
     A container class of widgets that represents user input for the threshold to consider a comparison a cheat.
@@ -503,12 +553,12 @@ class Threshold(QFrame):
         slider = QSlider(Qt.Horizontal)
         slider.setFocusPolicy(Qt.ClickFocus)
         slider.setRange(0, 30)
-        slider.setValue(get_setting("threshold"))
+        slider.setValue(get_setting("threshold_cheat"))
         slider.valueChanged.connect(self.update_spinbox)
         self.slider = slider
 
         spinbox = SpinBox(self)
-        spinbox.setValue(get_setting("threshold"))
+        spinbox.setValue(get_setting("threshold_cheat"))
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(0, 30)
         spinbox.setSingleStep(1)
@@ -532,6 +582,7 @@ class Threshold(QFrame):
 
     def update_slider(self, value):
         self.slider.setValue(value)
+
 
 
 class WidgetCombiner(QFrame):

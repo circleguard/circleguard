@@ -4,7 +4,8 @@ from PyQt5.QtCore import QSettings
 
 DEFAULTS = {
     "ran": False,
-    "threshold": 18,
+    "threshold_cheat": 18,
+    "threshold_display": 25,
     "api_key": "",
     "dark_theme": False,
     "rainbow_accent": False,
@@ -19,8 +20,8 @@ DEFAULTS = {
     "message_loading_replays": "[{ts:%X}] Loading {num_replays} Replays",
     "message_starting_comparing": "[{ts:%X}] Comparing Replays",
     "message_finished_comparing": "[{ts:%X}] Done",
-    "message_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}, {later_name} set later",
-    "message_no_cheater_found": "",
+    "message_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}, {later_name} set later. Extremely similar replays; you just caught yourself a cheater.",
+    "message_no_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}. Replays likely not stolen.",
 
     "string_result_text": "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}"
 }
