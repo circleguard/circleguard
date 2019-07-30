@@ -250,34 +250,27 @@ class ButtonWidget(QFrame):
 class StringFormatWidget(QFrame):
     def __init__(self, tooltip):
         super(StringFormatWidget, self).__init__()
-        loading_replays = InputWidget("message_loading_replays", "Shown when replays are being requested "
-                                      "from the api or loaded from local files", type_="normal")
-        loading_replays.field.setText(get_setting("message_loading_replays"))
-        loading_replays.field.textChanged.connect(partial(update_default, "message_loading_replays"))
+        loading_replays = LineEditSetting("message_loading_replays", "Shown when replays are being requested "
+                                      "from the api or loaded from local files", "normal", "message_loading_replays")
 
-        starting_comparing = InputWidget("message_starting_comparing", "Shown when replays are finished "
-                                         "loading and starting to be compared", type_="normal")
-        starting_comparing.field.setText(get_setting("message_starting_comparing"))
-        starting_comparing.field.textChanged.connect(partial(update_default, "message_starting_comparing"))
+        starting_comparing = LineEditSetting("message_starting_comparing", "Shown when replays are finished "
+                                         "loading and starting to be compared", "normal",
+                                         "message_starting_comparing")
 
-        finished_comparing = InputWidget("message_finished_comparing", "Shown when replays are done being compared, "
-                                         "regardless of if any cheaters were found", type_="normal")
-        finished_comparing.field.setText(get_setting("message_finished_comparing"))
-        finished_comparing.field.textChanged.connect(partial(update_default, "message_finished_comparing"))
+        finished_comparing = LineEditSetting("message_finished_comparing", "Shown when replays are done being compared, "
+                                         "regardless of if any cheaters were found", "normal",
+                                         "message_finished_comparing")
 
-        cheater_found = InputWidget("message_cheater_found", "Shown when a cheater is found (scores below the threshold). "
-                                    "This occurs before replays are finished being compared.", type_="normal")
-        cheater_found.field.setText(get_setting("message_cheater_found"))
-        cheater_found.field.textChanged.connect(partial(update_default, "message_cheater_found"))
+        cheater_found = LineEditSetting("message_cheater_found", "Shown when a cheater is found (scores below the threshold). "
+                                    "This occurs before replays are finished being compared.", "normal",
+                                    "message_cheater_found")
 
-        no_cheater_found = InputWidget("message_no_cheater_found", "Shown when a comparison scores below DISPLAY_THRESHOLD.\n"
-                                    "All attributes available in message_cheater_found are available here.", type_="normal")
-        no_cheater_found.field.setText(get_setting("message_no_cheater_found"))
-        no_cheater_found.field.textChanged.connect(partial(update_default, "message_no_cheater_found"))
+        no_cheater_found = LineEditSetting("message_no_cheater_found", "Shown when a comparison scores below DISPLAY_THRESHOLD.\n"
+                                    "All attributes available in message_cheater_found are available here.", "normal",
+                                    "message_no_cheater_found")
 
-        result_text = InputWidget("string_result_text", "Text of the result label in the Results Tab", type_="normal")
-        result_text.field.setText(get_setting("string_result_text"))
-        result_text.field.textChanged.connect(partial(update_default, "string_result_text"))
+        result_text = LineEditSetting("string_result_text", "Text of the result label in the Results Tab", "normal",
+                                      "string_result_text")
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -366,7 +359,7 @@ class CompareTopUsers(QFrame):
     """
 
     def __init__(self, minimum):
-        super(CompareTopUsers, self).__init__()
+        super().__init__()
         self.label = QLabel(self)
         self.label.setText("Compare Top Users:")
         self.label.setToolTip("Compare this many plays from the leaderboard")
@@ -422,7 +415,7 @@ class CompareTopPlays(QFrame):
     """
 
     def __init__(self):
-        super(CompareTopPlays, self).__init__()
+        super().__init__()
         label = QLabel(self)
         label.setText("Compare Top Plays:")
         label.setToolTip("Compare this many plays from the user")
@@ -466,7 +459,7 @@ class ComparisonResult(QFrame):
     """
 
     def __init__(self, text, replay1, replay2):
-        super(ComparisonResult, self).__init__()
+        super().__init__()
         self.replay1 = replay1
         self.replay2 = replay2
         self.label = QLabel(self)
@@ -532,6 +525,22 @@ class SliderBoxSetting(QFrame):
     def update_slider(self, value):
         self.slider.setValue(value)
         update_default(self.setting_name, value)
+
+class LineEditSetting(QFrame):
+    """
+    A container class of a QLabel and InputWidget that links the input widget
+    to a setting (ie the default value of the widget will be the value of the
+    setting, and changes made to the widget will affect the setting).
+    """
+    def __init__(self, display, tooltip, type_, setting_name):
+        super().__init__()
+        self.input_ = InputWidget(display, tooltip, type_=type_)
+        self.input_.field.setText(get_setting(setting_name))
+        self.input_.field.textChanged.connect(partial(update_default, setting_name))
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.input_)
+        self.setLayout(layout)
 
 class Threshold(QFrame):
     """

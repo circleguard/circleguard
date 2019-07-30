@@ -23,7 +23,7 @@ from utils import resource_path, write_log
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
-                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult)
+                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting)
 
 from settings import get_setting, update_default
 import wizard
@@ -589,9 +589,7 @@ class ScrollableSettingsWidget(QFrame):
         self.welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
         self.welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default, "caching"))
 
-        self.apikey_widget = InputWidget("Api Key", "", type_="password")
-        self.apikey_widget.field.setText(get_setting("api_key"))
-        self.apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
+        self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
 
         self.cheat_thresh = SliderBoxSetting("Cheat Threshold", "Comparisons that score below this will be stored so you can view them",
                                                 "threshold_cheat", 30)
