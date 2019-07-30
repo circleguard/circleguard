@@ -44,7 +44,7 @@ def get_setting(name):
 
 
 def update_default(name, value):
-    SETTINGS.setValue(name, type(DEFAULTS[name](value)))
+    SETTINGS.setValue(name, type(DEFAULTS[name])(value))
 
 
 # add setting if missing (occurs between updates if we add a new default setting)
