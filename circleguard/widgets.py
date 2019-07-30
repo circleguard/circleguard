@@ -482,7 +482,7 @@ class ComparisonResult(QFrame):
         layout.addWidget(self.button, 0, 2, 1, 2)
         self.setLayout(layout)
 
-class SliderLabelSetting(QFrame):
+class SliderBoxSetting(QFrame):
     """
     A container class of a QLabel, QSlider, and SpinBox, and links the slider
     and spinbox to a setting (ie the default values of the slider and spinbox

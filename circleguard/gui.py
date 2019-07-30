@@ -22,7 +22,7 @@ from visualizer import VisualizerWindow
 from utils import resource_path, write_log
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
-                     CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderLabelSetting,
+                     CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
                      TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult)
 
 from settings import get_setting, update_default
@@ -593,9 +593,9 @@ class ScrollableSettingsWidget(QFrame):
         self.apikey_widget.field.setText(get_setting("api_key"))
         self.apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
 
-        self.cheat_thresh = SliderLabelSetting("Cheat Threshold", "Comparisons that score below this will be stored so you can view them",
+        self.cheat_thresh = SliderBoxSetting("Cheat Threshold", "Comparisons that score below this will be stored so you can view them",
                                                 "threshold_cheat", 30)
-        self.display_thresh = SliderLabelSetting("Display Threshold", "Comparisons that score below this will be printed to the textbox",
+        self.display_thresh = SliderBoxSetting("Display Threshold", "Comparisons that score below this will be printed to the textbox",
                                                 "threshold_display", 100)
 
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
