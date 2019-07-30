@@ -365,7 +365,7 @@ class CompareTopUsers(QFrame):
     The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
     """
 
-    def __init__(self):
+    def __init__(self, minimum):
         super(CompareTopUsers, self).__init__()
         self.label = QLabel(self)
         self.label.setText("Compare Top Users:")
@@ -373,7 +373,7 @@ class CompareTopUsers(QFrame):
 
         slider = QSlider(Qt.Horizontal)
         slider.setFocusPolicy(Qt.ClickFocus)
-        slider.setMinimum(2)
+        slider.setMinimum(minimum)
         slider.setMaximum(100)
         slider.setValue(50)
         slider.valueChanged.connect(self.update_spinbox)
@@ -382,7 +382,7 @@ class CompareTopUsers(QFrame):
         spinbox = SpinBox(self)
         spinbox.setValue(50)
         spinbox.setAlignment(Qt.AlignCenter)
-        spinbox.setRange(2, 100)
+        spinbox.setRange(minimum, 100)
         spinbox.setSingleStep(1)
         spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
