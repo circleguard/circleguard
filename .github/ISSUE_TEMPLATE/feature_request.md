@@ -1,13 +1,12 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Suggest a new feature or functionality for the gui
 title: ''
 labels: ''
 assignees: ''
 
 ---
 
-Thanks for filing a Feature request.
-If you want to have something added to the gui, you are at the correct place!
-But if you want to have something added to the base functionality (for example, add support for new cheats), please open an issue on https://github.com/circleguard/circlecore instead.
+Please describe the new feature in as much detail as necessary. If you would like more base functionality (like detecting a different type of cheat), open this issue at [circlecore](https://github.com/circleguard/circlecore/new) instead. If you aren't sure where to open it, open the issue here nd we will move it if necessary.
+
 # Remove everything above before opening the issue
