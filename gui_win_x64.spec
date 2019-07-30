@@ -8,7 +8,7 @@ os.path.expanduser
 a = Analysis(['circleguard/gui.py'],
              pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x64', expanduser('~/AppData/Local/Programs/Python/Python37/')],
              binaries=[(expanduser('~/AppData/Local/Programs/Python/Python37/Lib/tkinter'), 'tk'), (expanduser('~/AppData/Local/Programs/Python/Python37/tcl'), 'tcl')],
-             datas=[('circleguard/resources/','resources/'), ('circleguard/db/','db/')],
+             datas=[('circleguard/resources/','resources/'), ('circleguard/db/','db/'), ('circleguard/examples', 'examples/'), ('circleguard/logs', 'logs/')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -21,7 +21,7 @@ pyz = PYZ(a.pure, a.zipped_data,
              cipher=block_cipher)
 exe = EXE(pyz,
           a.scripts,
-          name='Circleguard_x64',
+          name='Circleguard',
           exclude_binaries=True,
           debug=False,
           bootloader_ignore_signals=False,
@@ -34,11 +34,11 @@ coll = COLLECT(
           a.binaries,
           a.zipfiles,
           a.datas,
-          name='Circleguard_x64',
+          name='Circleguard',
           strip=False,
           upx=True
 )
 
 
-shortcut = winshell.shortcut(abspath(".\dist\Circleguard_x64\Circleguard_x64.exe"))
-shortcut.write(abspath("./dist/Circleguard_x64.lnk"))
+shortcut = winshell.shortcut(abspath(".\dist\Circleguard\Circleguard.exe"))
+shortcut.write(abspath("./dist/Circleguard.lnk"))
