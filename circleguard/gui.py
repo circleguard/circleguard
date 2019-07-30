@@ -627,12 +627,12 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(Separator("Debug settings"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
-        self.grid.addWidget(self.wizard)
-        self.grid.addWidget(Separator("Experiments"))
-        self.grid.addWidget(self.rainbow)
-        self.grid.addWidget(BeatmapTest())
         self.grid.addWidget(Separator("String Format settings"))
         self.grid.addWidget(StringFormatWidget(""))
+        self.grid.addWidget(Separator("Dev"))
+        self.grid.addWidget(self.rainbow)
+        self.grid.addWidget(self.wizard)
+        self.grid.addWidget(BeatmapTest())
 
         self.setLayout(self.grid)
 
