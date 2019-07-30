@@ -747,7 +747,7 @@ if __name__ == "__main__":
     set_event_window(WINDOW)
     WINDOW.resize(600, 500)
     WINDOW.show()
-    if not (str(get_setting("ran")).lower() == "true"):
+    if not get_setting("ran"):
         welcome = wizard.WelcomeWindow()
         welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
         welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default,"caching"))
