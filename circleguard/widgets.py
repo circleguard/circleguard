@@ -236,7 +236,7 @@ class ButtonWidget(QFrame):
         label = QLabel(self)
         label.setText(title + end)
         label.setToolTip(tooltip)
-        self.button = QPushButton("Execute")
+        self.button = QPushButton("Show")
         self.button.setFixedWidth(100)
 
         layout = QGridLayout()
@@ -250,35 +250,27 @@ class ButtonWidget(QFrame):
 class StringFormatWidget(QFrame):
     def __init__(self, tooltip):
         super(StringFormatWidget, self).__init__()
-        loading_replays = InputWidget("message_loading_replays", "Shown when replays are being requested "
-                                      "from the api or loaded from local files", type_="normal")
-        loading_replays.field.setText(get_setting("message_loading_replays"))
-        loading_replays.field.textChanged.connect(partial(update_default, "message_loading_replays"))
+        loading_replays = LineEditSetting("message_loading_replays", "Shown when replays are being requested "
+                                      "from the api or loaded from local files", "normal", "message_loading_replays")
 
-        starting_comparing = InputWidget("message_starting_comparing", "Shown when replays are finished "
-                                         "loading and starting to be compared", type_="normal")
-        starting_comparing.field.setText(get_setting("message_starting_comparing"))
-        starting_comparing.field.textChanged.connect(partial(update_default, "message_starting_comparing"))
+        starting_comparing = LineEditSetting("message_starting_comparing", "Shown when replays are finished "
+                                         "loading and starting to be compared", "normal",
+                                         "message_starting_comparing")
 
-        finished_comparing = InputWidget("message_finished_comparing", "Shown when replays are done being compared, "
-                                         "regardless of if any cheaters were found", type_="normal")
-        finished_comparing.field.setText(get_setting("message_finished_comparing"))
-        finished_comparing.field.textChanged.connect(partial(update_default, "message_finished_comparing"))
+        finished_comparing = LineEditSetting("message_finished_comparing", "Shown when replays are done being compared, "
+                                         "regardless of if any cheaters were found", "normal",
+                                         "message_finished_comparing")
 
-        cheater_found = InputWidget("message_cheater_found", "Shown when a cheater is found (scores below the threshold). "
-                                    "This occurs before replays are finished being compared.", type_="normal")
-        cheater_found.field.setText(get_setting("message_cheater_found"))
-        cheater_found.field.textChanged.connect(partial(update_default, "message_cheater_found"))
+        cheater_found = LineEditSetting("message_cheater_found", "Shown when a cheater is found (scores below the threshold). "
+                                    "This occurs before replays are finished being compared.", "normal",
+                                    "message_cheater_found")
 
-        no_cheater_found = InputWidget("message_no_cheater_found", "Shown when two replays are compared and no "
-                                    "cheating is found (scores bove the threshold). Leave blank for no message.\n"
-                                    "All attributes available in message_cheater_found are available here.", type_="normal")
-        no_cheater_found.field.setText(get_setting("message_no_cheater_found"))
-        no_cheater_found.field.textChanged.connect(partial(update_default, "message_no_cheater_found"))
+        no_cheater_found = LineEditSetting("message_no_cheater_found", "Shown when a comparison scores below DISPLAY_THRESHOLD.\n"
+                                    "All attributes available in message_cheater_found are available here.", "normal",
+                                    "message_no_cheater_found")
 
-        result_text = InputWidget("string_result_text", "Text of the result label in the Results Tab", type_="normal")
-        result_text.field.setText(get_setting("string_result_text"))
-        result_text.field.textChanged.connect(partial(update_default, "string_result_text"))
+        result_text = LineEditSetting("string_result_text", "Text of the result label in the Results Tab", "normal",
+                                      "string_result_text")
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -366,15 +358,15 @@ class CompareTopUsers(QFrame):
     The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
     """
 
-    def __init__(self):
-        super(CompareTopUsers, self).__init__()
+    def __init__(self, minimum):
+        super().__init__()
         self.label = QLabel(self)
         self.label.setText("Compare Top Users:")
         self.label.setToolTip("Compare this many plays from the leaderboard")
 
         slider = QSlider(Qt.Horizontal)
         slider.setFocusPolicy(Qt.ClickFocus)
-        slider.setMinimum(2)
+        slider.setMinimum(minimum)
         slider.setMaximum(100)
         slider.setValue(50)
         slider.valueChanged.connect(self.update_spinbox)
@@ -383,7 +375,7 @@ class CompareTopUsers(QFrame):
         spinbox = SpinBox(self)
         spinbox.setValue(50)
         spinbox.setAlignment(Qt.AlignCenter)
-        spinbox.setRange(2, 100)
+        spinbox.setRange(minimum, 100)
         spinbox.setSingleStep(1)
         spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
@@ -423,7 +415,7 @@ class CompareTopPlays(QFrame):
     """
 
     def __init__(self):
-        super(CompareTopPlays, self).__init__()
+        super().__init__()
         label = QLabel(self)
         label.setText("Compare Top Plays:")
         label.setToolTip("Compare this many plays from the user")
@@ -439,7 +431,7 @@ class CompareTopPlays(QFrame):
         spinbox = SpinBox(self)
         spinbox.setValue(20)
         spinbox.setAlignment(Qt.AlignCenter)
-        spinbox.setRange(2, 100)
+        spinbox.setRange(1, 100)
         spinbox.setSingleStep(1)
         spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
@@ -467,7 +459,7 @@ class ComparisonResult(QFrame):
     """
 
     def __init__(self, text, replay1, replay2):
-        super(ComparisonResult, self).__init__()
+        super().__init__()
         self.replay1 = replay1
         self.replay2 = replay2
         self.label = QLabel(self)
@@ -483,108 +475,72 @@ class ComparisonResult(QFrame):
         layout.addWidget(self.button, 0, 2, 1, 2)
         self.setLayout(layout)
 
-
-class ThresholdCombined(QFrame):
+class SliderBoxSetting(QFrame):
     """
-    A container class of widgets that represents user input for the threshold/auto threshold
-    to consider a comparison a cheat.
-    This class holds 2 rows of a Label, Slider, and SpinBox.
-
-    The SpinBox and Slider of each row are linked internally by this class,
-    so when one changes, so does the other.
+    A container class of a QLabel, QSlider, and SpinBox, and links the slider
+    and spinbox to a setting (ie the default values of the slider and spinbox
+    will be the value of the setting, and changes made to the slider or
+    spinbox will affect the setting).
     """
 
-    def __init__(self):
-        super(ThresholdCombined, self).__init__()
-        self.thresh_state = 0
+    def __init__(self, display, tooltip, setting_name, max_):
+        super().__init__()
+        self.setting_name = setting_name
 
-        thresh_label = QLabel(self)
-        thresh_label.setText("Threshold:")
-        thresh_label.setToolTip("Cutoff for how similar two replays must be to be printed")
-        self.thresh_label = thresh_label
+        label = QLabel(self)
+        label.setText(display)
+        label.setToolTip(tooltip)
+        self.label = label
 
-        thresh_slider = QSlider(Qt.Horizontal)
-        thresh_slider.setFocusPolicy(Qt.ClickFocus)
-        thresh_slider.setRange(0, 30)
-        thresh_slider.setValue(get_setting("threshold"))
-        thresh_slider.valueChanged.connect(self.update_thresh_spinbox)
-        self.thresh_slider = thresh_slider
+        slider = QSlider(Qt.Horizontal)
+        slider.setFocusPolicy(Qt.ClickFocus)
+        slider.setRange(0, max_)
+        slider.setValue(get_setting(setting_name))
+        slider.valueChanged.connect(self.update_spinbox)
+        self.slider = slider
 
-        thresh_spinbox = SpinBox(self)
-        thresh_spinbox.setValue(get_setting("threshold"))
-        thresh_spinbox.setAlignment(Qt.AlignCenter)
-        thresh_spinbox.setRange(0, 30)
-        thresh_spinbox.setSingleStep(1)
-        thresh_spinbox.valueChanged.connect(self.update_thresh_slider)
-        self.thresh_spinbox = thresh_spinbox
-        self.thresh_spinbox.valueChanged.connect(partial(self.switch_thresh, 0))
-        self.thresh_spinbox.setFixedWidth(100)
-
-        autothresh_label = QLabel(self)
-        autothresh_label.setText("Auto Threshold:")
-        autothresh_label.setToolTip("Stddevs below average threshold to print for" +
-                                    "\n(typically between TLS and 2.5. The higher, the less results you will get)")
-        self.autothresh_label = autothresh_label
-
-        autothresh_slider = QSlider(Qt.Horizontal)
-        autothresh_slider.setRange(10, 30)
-        autothresh_slider.setValue(20)
-        autothresh_slider.valueChanged.connect(self.update_autothresh_spinbox)
-        self.autothresh_slider = autothresh_slider
-
-        autothresh_slider = QSlider(Qt.Horizontal)
-        autothresh_slider.setRange(10, 30)
-        autothresh_slider.setValue(20)
-        autothresh_slider.valueChanged.connect(self.update_autothresh_spinbox)
-        self.autothresh_slider = autothresh_slider
-
-        autothresh_spinbox = DoubleSpinBox(self)
-        autothresh_spinbox.setValue(2.0)
-        autothresh_spinbox.setAlignment(Qt.AlignCenter)
-        autothresh_spinbox.setRange(1.0, 3.0)
-        autothresh_spinbox.setSingleStep(0.1)
-        autothresh_spinbox.valueChanged.connect(self.update_autothresh_slider)
-        self.autothresh_spinbox = autothresh_spinbox
-        self.autothresh_spinbox.valueChanged.connect(partial(self.switch_thresh, 1))
-        self.autothresh_spinbox.setFixedWidth(100)
+        spinbox = SpinBox(self)
+        spinbox.setValue(get_setting(setting_name))
+        spinbox.setAlignment(Qt.AlignCenter)
+        spinbox.setRange(0, max_)
+        spinbox.setSingleStep(1)
+        spinbox.setFixedWidth(100)
+        spinbox.valueChanged.connect(self.update_slider)
+        self.spinbox = spinbox
+        self.combined = WidgetCombiner(slider, spinbox)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-
-        layout.addWidget(thresh_label, 0, 0, 1, 1)
+        layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(thresh_slider, 0, 2, 1, 2)
-        layout.addWidget(thresh_spinbox, 0, 4, 1, 1)
-
-        layout.addWidget(autothresh_label, 1, 0, 1, 1)
-        layout.addItem(SPACER, 1, 1, 1, 1)
-        layout.addWidget(autothresh_slider, 1, 2, 1, 2)
-        layout.addWidget(autothresh_spinbox, 1, 4, 1, 1)
+        layout.addWidget(self.combined, 0, 2, 1, 3)
 
         self.setLayout(layout)
-        self.switch_thresh(0)
 
     # keep spinbox and slider in sync
-    def update_thresh_spinbox(self, value):
-        self.thresh_spinbox.setValue(value)
+    def update_spinbox(self, value):
+        self.spinbox.setValue(value)
+        update_default(self.setting_name, value)
 
-    def update_thresh_slider(self, value):
-        self.thresh_slider.setValue(value)
+    def update_slider(self, value):
+        self.slider.setValue(value)
+        update_default(self.setting_name, value)
 
-    def update_autothresh_spinbox(self, value):
-        self.autothresh_spinbox.setValue(value/10)
-
-    def update_autothresh_slider(self, value):
-        self.autothresh_slider.setValue(value*10)
-
-    def switch_thresh(self, state):
-        self.thresh_state = state
-        style = "color: gray" if state else ""
-        self.thresh_label.setStyleSheet(style)
-        self.thresh_spinbox.setStyleSheet(style)
-        self.autothresh_label.setStyleSheet(style)
-        self.autothresh_spinbox.setStyleSheet(style)
-
+class LineEditSetting(QFrame):
+    """
+    A container class of a QLabel and InputWidget that links the input widget
+    to a setting (ie the default value of the widget will be the value of the
+    setting, and changes made to the widget will affect the setting).
+    """
+    def __init__(self, display, tooltip, type_, setting_name):
+        super().__init__()
+        self.input_ = InputWidget(display, tooltip, type_=type_)
+        self.input_.field.setText(get_setting(setting_name))
+        self.input_.field.textChanged.connect(partial(update_default, setting_name))
+        layout = QVBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.input_)
+        self.setLayout(layout)
 
 class Threshold(QFrame):
     """
@@ -606,12 +562,12 @@ class Threshold(QFrame):
         slider = QSlider(Qt.Horizontal)
         slider.setFocusPolicy(Qt.ClickFocus)
         slider.setRange(0, 30)
-        slider.setValue(get_setting("threshold"))
+        slider.setValue(get_setting("threshold_cheat"))
         slider.valueChanged.connect(self.update_spinbox)
         self.slider = slider
 
         spinbox = SpinBox(self)
-        spinbox.setValue(get_setting("threshold"))
+        spinbox.setValue(get_setting("threshold_cheat"))
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(0, 30)
         spinbox.setSingleStep(1)
@@ -635,6 +591,7 @@ class Threshold(QFrame):
 
     def update_slider(self, value):
         self.slider.setValue(value)
+
 
 
 class WidgetCombiner(QFrame):

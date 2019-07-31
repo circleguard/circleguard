@@ -30,7 +30,9 @@ class WelcomeWindow(QWizard):
         self.addPage(IntroPage())
         self.addPage(self.SetupPage)
         self.addPage(ApiKeyPage())
-        self.addPage(BeatmapUserIdPage())
+        self.addPage(TutorialPage1())
+        self.addPage(TutorialPage2())
+        self.addPage(TutorialPage3())
         self.addPage(ConclusionPage())
 
         # disable help button
@@ -38,6 +40,8 @@ class WelcomeWindow(QWizard):
         self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         self.setButtonText(QWizard.CancelButton, "Skip")
         self.setWizardStyle(QWizard.ModernStyle)
+
+        self.setFixedSize(525, 400)
 
     def mousePressEvent(self, event):
         focused = self.focusWidget()
@@ -84,6 +88,9 @@ class SetupPage(WizardPage):
 
         self.caching = OptionWidget("Caching", "")
         self.caching.box.setChecked(get_setting("caching"))
+        # TODO still won't update the settings checkbox because the main window
+        # is loaded before the wizard finishes, so it uses an old setting.
+        self.caching.box.stateChanged.connect(partial(update_default, "caching"))
 
         layout = QVBoxLayout()
         layout.addWidget(dark_label)
@@ -121,12 +128,11 @@ class ApiKeyPage(WizardPage):
         self.setLayout(layout)
 
 
-class BeatmapUserIdPage(WizardPage):
+class TutorialPage1(WizardPage):
     def __init__(self, parent=None):
-        super(BeatmapUserIdPage, self).__init__(parent)
-        self.setTitle("Small tutorial")
-        label = QLabel("<p>If you're an experienced reporter, you can skip this "
-                       "step. If you're not, I hope you appreciate the following brief overview.</p>"
+        super().__init__(parent)
+        self.setTitle("A Small Tutorial")
+        label = QLabel("<p>If you're an experienced reporter, you can skip this page."
                        "<p>When using Circleguard, you will be asked to enter Beatmap Ids and User Ids. "
                        "To find a User Id, go to their profile page and copy the numbers that appear in the url. "
                        "For instance, cookiezi (<a href=\"https://osu.ppy.sh/users/124493\">https://osu.ppy.sh/users/124493</a>) "
@@ -136,6 +142,53 @@ class BeatmapUserIdPage(WizardPage):
                        "For instance, <a href=\"https://osu.ppy.sh/beatmapsets/39804#osu/129891\">"
                        "https://osu.ppy.sh/beatmapsets/39804#osu/129891</a> has a Beatmapset Id of 39804 and a Beatmap Id of "
                        "129891. Use the Beatmap Id (129891) to check this map.")
+
+        label.setTextFormat(Qt.RichText)
+        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label.setOpenExternalLinks(True)
+        label.setWordWrap(True)
+
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        self.setLayout(layout)
+
+class TutorialPage2(WizardPage):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTitle("A Small Tutorial (cont.)")
+        label = QLabel("<p>When you run a check on a map, user, osr files, etc. the results can "
+                       "be confusing to read at first.</p>"
+                       "<p>Circleguard compares replays in sets of two at a time. The similarity "
+                       "reported to you is, roughly speaking, the average pixel distance between the two cursors. "
+                       "Anything below 18 similarity is almost certainly a replay steal, and when a replay that scores "
+                       "below 18 is found, circleguard will audially and visually alert you (os specific), as well as "
+                       "printing to the center area. This threshold is adjustable in the settings and on each tab.</p>"
+                       "<p>Circleguard will also print results (but not otherwise alert you) for replays that have a "
+                       "similarity under 25. This is to give you suspicious replays that you may want to investiage further. "
+                       "This threshold is, of course, adjustable in the settings.")
+
+        label.setTextFormat(Qt.RichText)
+        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        label.setOpenExternalLinks(True)
+        label.setWordWrap(True)
+
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        self.setLayout(layout)
+
+
+class TutorialPage3(WizardPage):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setTitle("A Small Tutorial (cont.)")
+        label = QLabel("<p>Circleguard tries to present the information to you in a manageble manner, "
+                       "but you can change what text is shown.</p>"
+                       "<p>In the settings tab, there are multiple "
+                       "settings for strings that are shown at different points in the program - when you "
+                       "find a cheater, when you finish a comparison, when you find a replay with a low similarity, "
+                       "but not quite a cheater (under 25 by default), etc. You can change them to print anything you want, "
+                       "such as a different timestamp format, or including the mods each player used. The "
+                       "formatting is done through python's <a href=https://pyformat.info/>'new-style' strformat<a/>.</p>")
 
         label.setTextFormat(Qt.RichText)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
@@ -156,7 +209,7 @@ class ConclusionPage(WizardPage):
                        "<ul>"
                        "<li><a href=\"https://discord.gg/e84qxkQ\">Discord</a></li>"
                        "<li><a href=\"https://github.com/circleguard/circleguard\">GitHub</a></li>"
-                       "<li><a href=\"http://old.reddit.com/r/osureport\">report cheaters at r/osureport</a></li>"
+                       "<li><a href=\"http://reddit.com/r/osureport\">report cheaters at r/osureport</a></li>"
                        "</ul>"
                        "<p>Thanks for helping to clean up osu!</p>")
 

@@ -1,10 +1,13 @@
 import os
+import sys
 from pathlib import Path
 from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
 import colorsys
+import traceback
+import threading
 from datetime import datetime
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
@@ -16,11 +19,11 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPai
 from circleguard import Circleguard, set_options, loader
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
-from utils import resource_path
+from utils import resource_path, write_log
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
-                     CompareTopPlays, CompareTopUsers, ThresholdCombined, LoglevelWidget,
-                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult)
+                     CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
+                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting)
 
 from settings import get_setting, update_default
 import wizard
@@ -28,6 +31,39 @@ import wizard
 __version__ = "1.0.0"
 
 log = logging.getLogger(__name__)
+
+
+# save old excepthook
+sys._excepthook = sys.excepthook
+
+# this allows us to log any and all exceptions thrown to a log file -
+# pyqt likes to eat exceptions and quit silently
+def my_excepthook(exctype, value, tb):
+    # call original excepthook before ours
+    write_log("sys.excepthook error\n"
+              "Type: " + str(value) + "\n"
+              "Value: " + str(value) + "\n"
+              "Traceback: " + "".join(traceback.format_tb(tb)) + '\n')
+    sys._excepthook(exctype, value, tb)
+
+sys.excepthook = my_excepthook
+
+# sys.excepthook doesn't persist across threads
+# (http://bugs.python.org/issue1230540). This is a hacky workaround that overrides
+# the threading init method to use our excepthook.
+# https://stackoverflow.com/a/31622038
+threading_init = threading.Thread.__init__
+def init(self, *args, **kwargs):
+    threading_init(self, *args, **kwargs)
+    run_original = self.run
+
+    def run_with_except_hook(*args2, **kwargs2):
+        try:
+            run_original(*args2, **kwargs2)
+        except Exception:
+            sys.excepthook(*sys.exc_info())
+    self.run = run_with_except_hook
+threading.Thread.__init__ = init
 
 
 # logging methodology heavily adapted from https://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
@@ -75,7 +111,7 @@ class WindowWrapper(QMainWindow):
         logging.getLogger(__name__).addHandler(handler)
         formatter = logging.Formatter("[%(levelname)s] %(asctime)s  %(message)s ", datefmt="%Y/%m/%d %I:%M:%S %p")
         handler.setFormatter(formatter)
-        handler.new_message.connect(self.print_debug)
+        handler.new_message.connect(self.log)
 
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
@@ -105,28 +141,20 @@ class WindowWrapper(QMainWindow):
         """
         self.main_window.main_tab.print_results()
 
-    def print_debug(self, message):
+    def log(self, message):
         """
         Message is the string message sent to the io stream
         """
+
         if get_setting("log_save"):
-            if not os.path.exists(get_setting('log_dir')):  # create dir if nonexistent
-                os.makedirs(get_setting('log_dir'))
-            directory = os.path.join(get_setting("log_dir"), "circleguard.log")
-            with open(directory, 'a+') as f:  # append so it creates a file if it doesn't exist
-                f.seek(0)
-                data = f.read().splitlines(True)
-            data.append(message+"\n")
-            with open(directory, 'w+') as f:
-                f.writelines(data[-10000:])  # keep file at 10000 lines
+            write_log(message)
 
-        if get_setting("log_output") == 0:
-            pass
-
-        if get_setting("log_output") == 1 or get_setting("log_output") == 3:
+        # TERMINAL / BOTH
+        if get_setting("log_output") in [1, 3]:
             self.main_window.main_tab.write(message)
 
-        if get_setting("log_output") == 2 or get_setting("log_output") == 3:
+        # NEW WINDOW / BOTH
+        if get_setting("log_output") in [2, 3]:
             if self.debug_window and self.debug_window.isVisible():
                 self.debug_window.write(message)
             else:
@@ -267,8 +295,11 @@ class MainTab(QWidget):
     def run(self):
         current_tab = self.tabs.currentIndex()
         self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
-        pool = ThreadPool(processes=1)
-        pool.apply_async(self.run_circleguard)
+        thread = threading.Thread(target=self.run_circleguard)
+        thread.start()
+        # pool = ThreadPool(processes=1)
+        # raise Exception("dddd")
+        # pool.apply_async(self.run_circleguard)
 
     def switch_run_button(self):
         if not self.cg_running:
@@ -286,15 +317,20 @@ class MainTab(QWidget):
         try:
             set_options(cache=bool(get_setting("caching")))
             cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
+
             if self.run_type == "MAP":
                 tab = self.map_tab
                 # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
                 #       maybe fancy flashing red stars for required fields
                 map_id_str = tab.id_combined.map_id.field.text()
                 map_id = int(map_id_str) if map_id_str != "" else 0
+
+                user_id_str = tab.id_combined.user_id.field.text()
+                user_id = int(user_id_str) if user_id_str != "" else None
+
                 num = tab.compare_top.slider.value()
                 thresh = tab.threshold.slider.value()
-                check = cg.create_map_check(map_id, num=num, thresh=thresh)
+                check = cg.create_map_check(map_id, u=user_id, num=num, thresh=thresh)
 
             if self.run_type == "SCREEN":
                 tab = self.user_tab
@@ -307,9 +343,14 @@ class MainTab(QWidget):
 
             if self.run_type == "LOCAL":
                 tab = self.local_tab
-                path = Path(tab.folder_chooser.path)
+                path = resource_path(Path(tab.folder_chooser.path))
+                map_id_str = tab.id_combined.map_id.field.text()
+                map_id = int(map_id_str) if map_id_str != "" else 0
+                user_id_str = tab.id_combined.user_id.field.text()
+                user_id = int(user_id_str) if user_id_str != "" else 0
+                num = tab.compare_top.slider.value()
                 thresh = tab.threshold.slider.value()
-                check = cg.create_local_check(path, thresh=thresh)
+                check = cg.create_local_check(path, map_id=map_id, u=user_id, num=num, thresh=thresh)
 
             if self.run_type == "VERIFY":
                 tab = self.verify_tab
@@ -394,7 +435,7 @@ class MainTab(QWidget):
                     # add to Results Tab so it can be played back on demand
                     self.add_comparison_result_signal.emit(result)
 
-                elif get_setting("message_no_cheater_found") != "":
+                elif result.similarity < get_setting("threshold_display"):
                     timestamp = datetime.now()
                     r1 = result.replay1
                     r2 = result.replay2
@@ -421,7 +462,7 @@ class MapTab(QWidget):
                           "it will compare that user's play on the map against the other top plays of the map.")
 
         self.id_combined = IdWidgetCombined()
-        self.compare_top = CompareTopUsers()
+        self.compare_top = CompareTopUsers(2)
 
         self.threshold = Threshold()  # ThresholdCombined()
         layout = QGridLayout()
@@ -440,7 +481,7 @@ class UserTab(QWidget):
         self.info.setText("Compares each of a user's top plays against that map's leaderboard.")
 
         self.user_id = InputWidget("User Id", "User id, as seen in the profile url", type_="id")
-        self.compare_top_users = CompareTopUsers()
+        self.compare_top_users = CompareTopUsers(1)
         self.compare_top_map = CompareTopPlays()
         self.threshold = Threshold()  # ThresholdCombined()
 
@@ -466,7 +507,7 @@ class LocalTab(QWidget):
         self.folder_chooser = FolderChooser("Replay folder", get_setting("local_replay_dir"))
         self.folder_chooser.path_signal.connect(self.update_dir)
         self.id_combined = IdWidgetCombined()
-        self.compare_top = CompareTopUsers()
+        self.compare_top = CompareTopUsers(1)
         self.threshold = Threshold()  # ThresholdCombined()
         self.id_combined.map_id.field.textChanged.connect(self.switch_compare)
         self.switch_compare()
@@ -548,12 +589,12 @@ class ScrollableSettingsWidget(QFrame):
         self.welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
         self.welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default, "caching"))
 
-        self.apikey_widget = InputWidget("Api Key", "", type_="password")
-        self.apikey_widget.field.setText(get_setting("api_key"))
-        self.apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
+        self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
 
-        self.thresh_widget = Threshold()
-        self.thresh_widget.spinbox.valueChanged.connect(partial(update_default, "threshold"))
+        self.cheat_thresh = SliderBoxSetting("Cheat Threshold", "Comparisons that score below this will be stored so you can view them",
+                                                "threshold_cheat", 30)
+        self.display_thresh = SliderBoxSetting("Display Threshold", "Comparisons that score below this will be printed to the textbox",
+                                                "threshold_display", 100)
 
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
         self.darkmode.box.stateChanged.connect(switch_theme)
@@ -576,22 +617,23 @@ class ScrollableSettingsWidget(QFrame):
         self.wizard.button.clicked.connect(self.show_wizard)
 
         self.grid = QVBoxLayout()
-        self.grid.addWidget(Separator("Circleguard settings"))
+        self.grid.addWidget(Separator("General"))
         self.grid.addWidget(self.apikey_widget)
-        self.grid.addWidget(self.thresh_widget)
+        self.grid.addWidget(self.cheat_thresh)
+        self.grid.addWidget(self.display_thresh)
         self.grid.addWidget(self.cache)
         self.grid.addWidget(self.cache_dir)
-        self.grid.addWidget(Separator("GUI settings"))
+        self.grid.addWidget(Separator("Appearance"))
         self.grid.addWidget(self.darkmode)
-        self.grid.addWidget(Separator("Debug settings"))
+        self.grid.addWidget(Separator("Debug"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
-        self.grid.addWidget(self.wizard)
-        self.grid.addWidget(Separator("Experiments"))
-        self.grid.addWidget(self.rainbow)
-        self.grid.addWidget(BeatmapTest())
-        self.grid.addWidget(Separator("String Format settings"))
+        self.grid.addWidget(Separator("Message Format"))
         self.grid.addWidget(StringFormatWidget(""))
+        self.grid.addWidget(Separator("Dev"))
+        self.grid.addWidget(self.rainbow)
+        self.grid.addWidget(self.wizard)
+        self.grid.addWidget(BeatmapTest())
 
         self.setLayout(self.grid)
 
@@ -652,7 +694,7 @@ class ResultsFrame(QFrame):
 
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
-    update_default("dark_theme", 1 if dark else 0)
+    update_default("dark_theme", dark)
     if dark:
         dark_p = QPalette()
 
@@ -706,7 +748,7 @@ if __name__ == "__main__":
     set_event_window(WINDOW)
     WINDOW.resize(600, 500)
     WINDOW.show()
-    if not (str(get_setting("ran")).lower() == "true"):
+    if not get_setting("ran"):
         welcome = wizard.WelcomeWindow()
         welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
         welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default,"caching"))
