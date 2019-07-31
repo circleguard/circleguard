@@ -22,7 +22,7 @@ def zipdir(path, ziph):
 PyInstaller.config.CONF['distpath'] = "./dist/Circleguard_win_x86"
 a = Analysis(['circleguard/gui.py'],
              pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x86', expanduser('~/AppData/Local/Programs/Python/Python37-32/')],
-             binaries=[(expanduser('~/AppData/Local/Programs/Python/Python37-32/Lib/tkinter'), 'tk'), (expanduser('~/AppData/Local/Programs/Python/Python37-32/tcl'), 'tcl')],
+             binaries=[],
              datas=[('circleguard/resources/','resources/'), ('circleguard/db/','db/'), ('circleguard/examples', 'examples/'), ('circleguard/logs', 'logs/')],
              hiddenimports=[],
              hookspath=[],
