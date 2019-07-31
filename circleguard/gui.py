@@ -394,6 +394,7 @@ class MainTab(QWidget):
             self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
             timestamp = datetime.now()
             self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+            self.update_label_signal.emit("Comparing Replays")
             if self.run_type == "SCREEN":
                 for check_list in check:
                     for check_ in check_list:
