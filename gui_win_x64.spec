@@ -4,15 +4,25 @@ block_cipher = None
 from os.path import *
 import sys
 import winshell
+import zipfile
+import PyInstaller.config
 os.path.expanduser
+
+# https://stackoverflow.com/a/42056050
+def zipdir(path, ziph):
+    length = len(path)
+
+    # ziph is zipfile handle
+    for root, dirs, files in os.walk(path):
+        folder = root[length:] # path without "parent"
+        for file in files:
+            ziph.write(os.path.join(root, file), os.path.join(folder, file))
+
+# pyinstaller build
+PyInstaller.config.CONF['distpath'] = "./dist/Circleguard_win_x64"
 a = Analysis(['circleguard/gui.py'],
              pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x64', expanduser('~/AppData/Local/Programs/Python/Python37/')],
-             binaries=[(expanduser('~/AppData/Local/Programs/Python/Python37/Lib/tkinter'), 'tk'), (expanduser('~/AppData/Local/Programs/Python/Python37/tcl'), 'tcl')],
              datas=[('circleguard/resources/','resources/'), ('circleguard/db/','db/'), ('circleguard/examples', 'examples/'), ('circleguard/logs', 'logs/')],
-             hiddenimports=[],
-             hookspath=[],
-             runtime_hooks=[],
-             excludes=[],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher,
@@ -39,6 +49,13 @@ coll = COLLECT(
           upx=True
 )
 
+# post-build script
+shortcut = winshell.shortcut(abspath(".\dist\Circleguard_win_x64\Circleguard\Circleguard.exe"))
+shortcut.write(abspath("./dist/Circleguard_win_x64/Circleguard.lnk"))
 
-shortcut = winshell.shortcut(abspath(".\dist\Circleguard\Circleguard.exe"))
-shortcut.write(abspath("./dist/Circleguard.lnk"))
+print("Creating zip")
+os. chdir("./dist/")
+zipf = zipfile.ZipFile('./Circleguard_win_x64.zip', 'w', zipfile.ZIP_DEFLATED)
+zipdir('./Circleguard_win_x64/', zipf)
+zipf.close()
+print("Finished zip")
