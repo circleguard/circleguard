@@ -198,7 +198,7 @@ class WindowWrapper(QMainWindow):
 class DebugWindow(QMainWindow):
     def __init__(self):
         super(DebugWindow, self).__init__()
-        self.setWindowTitle("Debug Window")
+        self.setWindowTitle("Debug")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         terminal = QTextEdit()
         terminal.setReadOnly(True)

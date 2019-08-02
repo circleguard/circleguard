@@ -230,13 +230,13 @@ class _Renderer(QWidget):
             for i in range(len(self.buffer)):
                 painter.setPen(CURSOR_COLORS[i])
                 if len(self.buffer[i]) > 0:  # skips empty buffers
-                    painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: {int(self.buffer[i][-1][1])}x{int(self.buffer[i][-1][2])}")
+                    painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: {int(self.buffer[i][-1][1])}, {int(self.buffer[i][-1][2])}")
                 else:
                     painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: Not yet loaded")
             painter.setPen(QPen(QColor(128, 128, 128), 1))
             try:
                 distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
-                painter.drawText(0, 45 + (15 * i), f"Distance between {self.usernames[i-1]}-{self.usernames[i]}: {int(distance)}")
+                painter.drawText(0, 45 + (15 * i), f"Cursor Distance {self.usernames[i-1]}-{self.usernames[i]}: {int(distance)}px")
             except IndexError:  # Edge case where we only have one cursor
                 pass
 
@@ -615,7 +615,7 @@ class _Interface(QWidget):
 class VisualizerWindow(QMainWindow):
     def __init__(self, replays=(), beatmap_path=""):
         super(VisualizerWindow, self).__init__()
-        self.setWindowTitle("Visualizer Window")
+        self.setWindowTitle("Visualizer")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.interface = _Interface(replays, beatmap_path)
         self.setCentralWidget(self.interface)
