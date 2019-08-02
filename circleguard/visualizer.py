@@ -615,6 +615,8 @@ class _Interface(QWidget):
 class VisualizerWindow(QMainWindow):
     def __init__(self, replays=(), beatmap_path=""):
         super(VisualizerWindow, self).__init__()
+        self.setWindowTitle("Visualizer Window")
+        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.interface = _Interface(replays, beatmap_path)
         self.setCentralWidget(self.interface)
         self.setWindowFlag(Qt.MSWindowsFixedSizeDialogHint)  # resizing is not important rn
