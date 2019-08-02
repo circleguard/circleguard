@@ -188,7 +188,7 @@ class TutorialPage3(WizardPage):
                        "find a cheater, when you finish a comparison, when you find a replay with a low similarity, "
                        "but not quite a cheater (under 25 by default), etc. You can change them to print anything you want, "
                        "such as a different timestamp format, or including the mods each player used. The "
-                       "formatting is done through python's <a href=https://pyformat.info/>'new-style' strformat<a/>.</p>")
+                       "formatting is done through python's <a href=\"https://pyformat.info\">'new-style' strformat</a>.</p>")
 
         label.setTextFormat(Qt.RichText)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)

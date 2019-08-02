@@ -28,7 +28,7 @@ from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, Wi
 from settings import get_setting, update_default
 import wizard
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 log = logging.getLogger(__name__)
 
@@ -198,12 +198,14 @@ class WindowWrapper(QMainWindow):
 class DebugWindow(QMainWindow):
     def __init__(self):
         super(DebugWindow, self).__init__()
+        self.setWindowTitle("Debug Output")
+        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         terminal = QTextEdit()
         terminal.setReadOnly(True)
         terminal.ensureCursorVisible()
         self.terminal = terminal
         self.setCentralWidget(self.terminal)
-        self.setFixedSize(800, 350)
+        self.resize(800, 350)
 
     def write(self, message):
         self.terminal.append(message)
@@ -394,6 +396,7 @@ class MainTab(QWidget):
             self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
             timestamp = datetime.now()
             self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+            self.update_label_signal.emit("Comparing Replays")
             if self.run_type == "SCREEN":
                 for check_list in check:
                     for check_ in check_list:

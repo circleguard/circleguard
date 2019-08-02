@@ -51,8 +51,10 @@ class _Renderer(QWidget):
         if beatmap_path != "":
             self.beatmap = osu_parser.from_path(beatmap_path)
         self.data = []
+        self.usernames = []
         for replay in replays:
             self.data.append(replay.as_list_with_timestamps())  # t,x,y
+            self.usernames.append(replay.username)
         # flip all replays with hr
         for replay_index in range(len(replays)):
             for mods in utils.bits(replays[replay_index].mods):
@@ -226,13 +228,15 @@ class _Renderer(QWidget):
         painter.drawText(0, 15, f"Clock: {round(self.clock.get_time())}")
         if self.replay_amount > 0:
             for i in range(len(self.buffer)):
+                painter.setPen(CURSOR_COLORS[i])
                 if len(self.buffer[i]) > 0:  # skips empty buffers
-                    painter.drawText(0, 30+(15*i), f"Cursor {i}: {int(self.buffer[i][-1][1])}x{int(self.buffer[i][-1][2])}")
+                    painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: {int(self.buffer[i][-1][1])}, {int(self.buffer[i][-1][2])}")
                 else:
-                    painter.drawText(0, 30+(15*i), f"Cursor {i}: Not yet loaded")
+                    painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: Not yet loaded")
+            painter.setPen(QPen(QColor(128, 128, 128), 1))
             try:
                 distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
-                painter.drawText(0, 45 + (15 * i), f"Distance between {i-1}-{i}: {int(distance)}")
+                painter.drawText(0, 45 + (15 * i), f"Cursor Distance {self.usernames[i-1]}-{self.usernames[i]}: {int(distance)}px")
             except IndexError:  # Edge case where we only have one cursor
                 pass
 
@@ -611,6 +615,8 @@ class _Interface(QWidget):
 class VisualizerWindow(QMainWindow):
     def __init__(self, replays=(), beatmap_path=""):
         super(VisualizerWindow, self).__init__()
+        self.setWindowTitle("Visualizer")
+        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.interface = _Interface(replays, beatmap_path)
         self.setCentralWidget(self.interface)
         self.setWindowFlag(Qt.MSWindowsFixedSizeDialogHint)  # resizing is not important rn
