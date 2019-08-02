@@ -203,7 +203,7 @@ class DebugWindow(QMainWindow):
         terminal.ensureCursorVisible()
         self.terminal = terminal
         self.setCentralWidget(self.terminal)
-        self.setMinimumSize(800, 350)
+        self.resize(800, 350)
 
     def write(self, message):
         self.terminal.append(message)
