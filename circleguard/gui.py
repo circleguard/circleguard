@@ -28,7 +28,7 @@ from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, Wi
 from settings import get_setting, update_default
 import wizard
 
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 
 log = logging.getLogger(__name__)
 
