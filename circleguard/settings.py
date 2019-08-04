@@ -2,7 +2,7 @@
 from PyQt5.QtCore import QSettings
 # pylint: enable=no-name-in-module
 import re
-__version__ = "1.0.2d"  # can't just import from gui since gui imports settings (causes loop/ import errors)
+from version import __version__
 
 DEFAULTS = {
     "ran": False,
