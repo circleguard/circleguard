@@ -49,7 +49,6 @@ def _version_to_int(version):
 def update_settings():
     old_version = _version_to_int(get_setting("last_version"))
     current_version = _version_to_int(__version__)
-    print(old_version, current_version)
     for change_key, change_array in CHANGED.items():
         if _version_to_int(change_key) < current_version:
             for setting in change_array:
