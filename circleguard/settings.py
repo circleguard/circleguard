@@ -51,11 +51,8 @@ def update_settings():
     current_version = _version_to_int(__version__)
     print(old_version, current_version)
     for change_key, change_array in CHANGED.items():
-        print(f"currently checking {change_key}")
         if _version_to_int(change_key) < current_version:
-            print(f"{_version_to_int(change_key)} is before {current_version}")
             for setting in change_array:
-                print(f"set {setting} to Default state")
                 SETTINGS.setValue(setting, DEFAULTS[setting])
     # update_default("last_version", __version__)
 
