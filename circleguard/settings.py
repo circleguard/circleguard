@@ -54,7 +54,7 @@ def update_settings():
         if _version_to_int(change_key) < current_version:
             for setting in change_array:
                 SETTINGS.setValue(setting, DEFAULTS[setting])
-    # update_default("last_version", __version__)
+    update_default("last_version", __version__)
 
 
 def reset_defaults():
