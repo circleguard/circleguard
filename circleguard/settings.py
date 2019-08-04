@@ -20,10 +20,10 @@ DEFAULTS = {
     "message_loading_replays": "[{ts:%X}] Loading {num_replays} Replays",
     "message_starting_comparing": "[{ts:%X}] Comparing Replays",
     "message_finished_comparing": "[{ts:%X}] Done",
-    "message_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}, {later_name} set later. Extremely similar replays; you just caught yourself a cheater.",
-    "message_no_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}. Replays likely not stolen.",
+    "message_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username}, {later_name} set later. Extremely similar replays; you just caught yourself a cheater.",
+    "message_no_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username}. Replays likely not stolen.",
 
-    "string_result_text": "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {replay1_name} vs {replay2_name}"
+    "string_result_text": "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {r1.username} vs {r2.username}"
 }
 
 

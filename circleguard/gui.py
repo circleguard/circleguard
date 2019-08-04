@@ -185,8 +185,8 @@ class WindowWrapper(QMainWindow):
         r2 = result.replay2
         timestamp = datetime.now()
         text = get_setting("string_result_text").format(ts=timestamp, similarity=result.similarity,
-                                                        replay1_name=r1.username, replay2_name=r2.username,
-                                                        later_name=result.later_name)
+                                                        r1_name=r1.username, r2_name=r2.username,
+                                                        later_name=result.later_name, r1=r1, r2=r2)
         result_widget = ComparisonResult(text, r1, r2)
         result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
         # remove info text if shown
@@ -428,10 +428,8 @@ class MainTab(QWidget):
                     r1 = result.replay1
                     r2 = result.replay2
                     msg = get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                                                                      replay1_name=r1.username, replay2_name=r2.username,
-                                                                      later_name=result.later_name, replay1_mods=r1.mods,
-                                                                      replay2_mods=r2.mods, replay1_id=r1.replay_id,
-                                                                      replay2_id=r2.replay_id)
+                                                                      later_name=result.later_name,
+                                                                      r1=r1, r2=r2)
                     self.write(msg)
                     QApplication.beep()
                     QApplication.alert(self)
@@ -443,10 +441,8 @@ class MainTab(QWidget):
                     r1 = result.replay1
                     r2 = result.replay2
                     msg = get_setting("message_no_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                                                                      replay1_name=r1.username, replay2_name=r2.username,
-                                                                      later_name=result.later_name, replay1_mods=r1.mods,
-                                                                      replay2_mods=r2.mods, replay1_id=r1.replay_id,
-                                                                      replay2_id=r2.replay_id)
+                                                                      later_name=result.later_name,
+                                                                      r1=r1, r2=r2)
                     self.write(msg)
         except Empty:
             pass
