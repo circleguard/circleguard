@@ -6,7 +6,7 @@ from version import __version__
 
 DEFAULTS = {
     "ran": False,
-    "last_version": "0.0.1",
+    "last_version": "0.0.0",  # force run update_settings if the user previously had a version without this key
     "threshold_cheat": 18,
     "threshold_display": 25,
     "api_key": "",
@@ -31,11 +31,9 @@ DEFAULTS = {
 }
 
 CHANGED = {
-    "1.0.0": [
-        "caching",
-        "rainbow_accent"
-    ],
-    "1.0.1": [
+    "1.1.0": [
+        "message_cheater_found",
+        "message_no_cheater_found",
         "string_result_text"
     ]
 }
