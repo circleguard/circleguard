@@ -1,9 +1,12 @@
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import QSettings
 # pylint: enable=no-name-in-module
+import re
+__version__ = "1.0.2d"  # can't just import from gui since gui imports settings (causes loop/ import errors)
 
 DEFAULTS = {
     "ran": False,
+    "last_version": "0.0.1",
     "threshold_cheat": 18,
     "threshold_display": 25,
     "api_key": "",
@@ -26,6 +29,37 @@ DEFAULTS = {
 
     "string_result_text": "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}"
 }
+
+CHANGED = {
+    "1.0.0": [
+        "caching",
+        "rainbow_accent"
+    ],
+    "1.0.1": [
+        "string_result_text"
+    ]
+}
+
+
+def _version_to_int(version):
+    version = version.split(".")
+    version = [re.sub("[^0-9]", "", digit) for digit in version]
+    version = int("".join(version))
+    return version
+
+
+def update_settings():
+    old_version = _version_to_int(get_setting("last_version"))
+    current_version = _version_to_int(__version__)
+    print(old_version, current_version)
+    for change_key, change_array in CHANGED.items():
+        print(f"currently checking {change_key}")
+        if _version_to_int(change_key) < current_version:
+            print(f"{_version_to_int(change_key)} is before {current_version}")
+            for setting in change_array:
+                print(f"set {setting} to Default state")
+                SETTINGS.setValue(setting, DEFAULTS[setting])
+    # update_default("last_version", __version__)
 
 
 def reset_defaults():
@@ -52,3 +86,6 @@ def update_default(name, value):
 for key, value in DEFAULTS.items():
     if not SETTINGS.contains(key):
         SETTINGS.setValue(key, value)
+
+# reset setting key if updated
+update_settings()
