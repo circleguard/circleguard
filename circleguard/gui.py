@@ -352,7 +352,7 @@ class MainTab(QWidget):
                 user_id = int(user_id_str) if user_id_str != "" else 0
                 num = tab.compare_top.slider.value()
                 thresh = tab.threshold.slider.value()
-                check = cg.create_local_check(path, map_id=map_id, u=user_id, num=num, thresh=thresh)
+                check = cg.create_local_check(path, map_id=map_id, u=user_id, num=num, thresh=thresh, load_map_id=True)
 
             if self.run_type == "VERIFY":
                 tab = self.verify_tab
