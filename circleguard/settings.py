@@ -3,6 +3,7 @@ from PyQt5.QtCore import QSettings
 # pylint: enable=no-name-in-module
 import re
 from version import __version__
+from packaging import version
 
 DEFAULTS = {
     "ran": False,
@@ -39,20 +40,12 @@ CHANGED = {
 }
 
 
-def _version_to_int(version):
-    version = version.split(".")
-    version = [re.sub("[^0-9]", "", digit) for digit in version]
-    version = int("".join(version))
-    return version
-
-
-def update_settings():
-    old_version = _version_to_int(get_setting("last_version"))
-    current_version = _version_to_int(__version__)
-    for change_key, change_array in CHANGED.items():
-        if _version_to_int(change_key) < current_version:
-            for setting in change_array:
-                SETTINGS.setValue(setting, DEFAULTS[setting])
+def overwrite_outdated_settings():
+    last_version = version.parse(get_setting("last_version"))
+    for ver, changed_arr in CHANGED.items():
+        if last_version < version.parse(ver):
+            for setting in changed_arr:
+                update_default(setting, DEFAULTS[setting])
     update_default("last_version", __version__)
 
 
@@ -81,5 +74,5 @@ for key, value in DEFAULTS.items():
     if not SETTINGS.contains(key):
         SETTINGS.setValue(key, value)
 
-# reset setting key if updated
-update_settings()
+# overwrite setting key if they were changed in a release
+overwrite_outdated_settings()
