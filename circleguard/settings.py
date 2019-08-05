@@ -1,9 +1,13 @@
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import QSettings
 # pylint: enable=no-name-in-module
+import re
+from version import __version__
+from packaging import version
 
 DEFAULTS = {
     "ran": False,
+    "last_version": "0.0.0",  # force run update_settings if the user previously had a version without this key
     "threshold_cheat": 18,
     "threshold_display": 25,
     "api_key": "",
@@ -26,6 +30,23 @@ DEFAULTS = {
 
     "string_result_text": "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}"
 }
+
+CHANGED = {
+    "1.1.0": [
+        "message_cheater_found",
+        "message_no_cheater_found",
+        "string_result_text"
+    ]
+}
+
+
+def overwrite_outdated_settings():
+    last_version = version.parse(get_setting("last_version"))
+    for ver, changed_arr in CHANGED.items():
+        if last_version < version.parse(ver):
+            for setting in changed_arr:
+                update_default(setting, DEFAULTS[setting])
+    update_default("last_version", __version__)
 
 
 def reset_defaults():
@@ -52,3 +73,6 @@ def update_default(name, value):
 for key, value in DEFAULTS.items():
     if not SETTINGS.contains(key):
         SETTINGS.setValue(key, value)
+
+# overwrite setting key if they were changed in a release
+overwrite_outdated_settings()
