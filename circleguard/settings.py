@@ -42,6 +42,7 @@ CHANGED = {
 
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
+    last_version = version.parse(last_version.base_version)  # remove dev stuff
     for ver, changed_arr in CHANGED.items():
         if last_version < version.parse(ver):
             for setting in changed_arr:
