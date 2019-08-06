@@ -101,6 +101,7 @@ class WindowWrapper(QMainWindow):
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, lambda: sys.exit(1))
 
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
