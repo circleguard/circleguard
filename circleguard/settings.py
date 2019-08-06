@@ -63,6 +63,10 @@ if not SETTINGS.contains("ran"):
 
 
 def get_setting(name):
+    type_ = type(DEFAULTS[name])
+    val = SETTINGS.value(name)
+    if type_ is bool:
+        return False if val == "false" else bool(val)
     return type(DEFAULTS[name])(SETTINGS.value(name))
 
 
