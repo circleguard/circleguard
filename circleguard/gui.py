@@ -324,7 +324,7 @@ class MainTab(QWidget):
         self.switch_run_button()
         self.update_label_signal.emit("Loading Replays")
         try:
-            set_options(cache=bool(get_setting("caching")))
+            set_options(cache=get_setting("caching"))
             cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
 
             if self.run_type == "MAP":
