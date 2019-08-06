@@ -232,6 +232,7 @@ class MainWindow(QWidget):
         self.main_tab = MainTab()
         self.results_tab = ResultsTab()
         self.settings_tab = SettingsTab()
+        self.queue_tab = QueueTab()
         self.tab_widget.addTab(self.main_tab, "Main Tab")
         self.tab_widget.addTab(self.results_tab, "Results Tab")
         self.tab_widget.addTab(self.settings_tab, "Settings Tab")
@@ -262,6 +263,7 @@ class MainTab(QWidget):
         super().__init__()
 
         self.q = Queue()
+        self.events = [] # threading.Events object for canceling cg runs
         self.cg_running = False
         tabs = QTabWidget()
         self.map_tab = MapTab()
@@ -305,11 +307,12 @@ class MainTab(QWidget):
     def run(self):
         current_tab = self.tabs.currentIndex()
         self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
-        thread = threading.Thread(target=self.run_circleguard)
+        self.events.append(threading.Event())
+        thread = threading.Thread(target=self.run_circleguard, args=[self.events[0]])
         thread.start()
-        # pool = ThreadPool(processes=1)
-        # raise Exception("dddd")
-        # pool.apply_async(self.run_circleguard)
+
+    def stop_run(self, run):
+        self.events[run].set()
 
     def switch_run_button(self):
         if not self.cg_running:
@@ -320,7 +323,7 @@ class MainTab(QWidget):
             # impact functionality. Still might be worth looking into
             self.run_button.setEnabled(False)
 
-    def run_circleguard(self):
+    def run_circleguard(self, event):
         self.cg_running = True
         self.switch_run_button()
         self.update_label_signal.emit("Loading Replays")
@@ -392,10 +395,16 @@ class MainTab(QWidget):
                 for check_list in check:
                     for check_ in check_list:
                         for replay in check_.all_replays():
+                            if event.wait(0):
+                                self.update_label_signal.emit("Canceled")
+                                return
                             cg.load(check_, replay)
                         check_.loaded = True
             else:
                 for replay in check.all_replays():
+                    if event.wait(0):
+                        self.update_label_signal.emit("Canceled")
+                        return
                     cg.load(check, replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
@@ -409,9 +418,15 @@ class MainTab(QWidget):
                 for check_list in check:
                     for check_ in check_list:
                         for result in cg.run(check_):
+                            if event.wait(0):
+                                self.update_label_signal.emit("Canceled")
+                                return
                             self.q.put(result)
             else:
                 for result in cg.run(check):
+                    if event.wait(0):
+                        self.update_label_signal.emit("Canceled")
+                        return
                     self.q.put(result)
             self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
 
@@ -676,7 +691,7 @@ class ResultsTab(QWidget):
     def __init__(self):
         super().__init__()
 
-        _layout = QVBoxLayout()
+        layout = QVBoxLayout()
         self.qscrollarea = QScrollArea(self)
         self.results = ResultsFrame()
         self.qscrollarea.setWidget(self.results)
@@ -684,8 +699,8 @@ class ResultsTab(QWidget):
 
         # we want widgets to fill from top down,
         # being vertically centered looks weird
-        _layout.addWidget(self.qscrollarea)
-        self.setLayout(_layout)
+        layout.addWidget(self.qscrollarea)
+        self.setLayout(layout)
 
 
 class ResultsFrame(QFrame):
@@ -696,6 +711,19 @@ class ResultsFrame(QFrame):
         self.info_label = QLabel("After running Comparisons, this tab will fill up with results")
         self.layout.addWidget(self.info_label)
         self.setLayout(self.layout)
+
+
+class QueueTab(QFrame):
+    def __init__(self):
+        super().__init__()
+
+        layout = QVBoxLayout()
+        self.runs = []
+        self.setLayout(layout)
+
+    def add_run(self, label, id_):
+        ...
+
 
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
