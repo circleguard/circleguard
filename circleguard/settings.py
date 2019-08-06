@@ -28,7 +28,7 @@ DEFAULTS = {
     "message_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}, {r.later_replay.username} set later. Extremely similar replays; look at the visualization to investigate further.",
     "message_no_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}. Replays likely not stolen.",
 
-    "string_result_text": "[{ts:%x} {ts:%H}:{ts:%M}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}"
+    "string_result_text": "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}",
 }
 
 CHANGED = {
