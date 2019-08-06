@@ -79,7 +79,7 @@ class Handler(QObject, logging.Handler):
 
 class WindowWrapper(QMainWindow):
     def __init__(self, clipboard):
-        super(WindowWrapper, self).__init__()
+        super().__init__()
 
         self.clipboard = clipboard
         self.progressbar = QProgressBar()
@@ -203,7 +203,7 @@ class WindowWrapper(QMainWindow):
 
 class DebugWindow(QMainWindow):
     def __init__(self):
-        super(DebugWindow, self).__init__()
+        super().__init__()
         self.setWindowTitle("Debug Output")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         terminal = QTextEdit()
@@ -225,7 +225,7 @@ class DebugWindow(QMainWindow):
 
 class MainWindow(QWidget):
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super().__init__()
 
         self.tab_widget = QTabWidget()
         self.main_tab = MainTab()
@@ -258,7 +258,8 @@ class MainTab(QWidget):
     ]
 
     def __init__(self):
-        super(MainTab, self).__init__()
+        super().__init__()
+
         self.q = Queue()
         self.cg_running = False
         tabs = QTabWidget()
@@ -458,7 +459,7 @@ class MainTab(QWidget):
 
 class MapTab(QWidget):
     def __init__(self):
-        super(MapTab, self).__init__()
+        super().__init__()
 
         self.info = QLabel(self)
         self.info.setText("Compares the top plays on a Map's leaderboard.\nIf a user is given, "
@@ -479,7 +480,7 @@ class MapTab(QWidget):
 
 class UserTab(QWidget):
     def __init__(self):
-        super(UserTab, self).__init__()
+        super().__init__()
         self.info = QLabel(self)
         self.info.setText("Compares each of a user's top plays against that map's leaderboard.")
 
@@ -501,7 +502,7 @@ class UserTab(QWidget):
 
 class LocalTab(QWidget):
     def __init__(self):
-        super(LocalTab, self).__init__()
+        super().__init__()
         self.info = QLabel(self)
         self.info.setText("Compares osr files in a given folder.\n"
                           "If a Map is given, it will compare the osrs against the leaderboard of that map.\n"
@@ -533,7 +534,7 @@ class LocalTab(QWidget):
 
 class VerifyTab(QWidget):
     def __init__(self):
-        super(VerifyTab, self).__init__()
+        super().__init__()
         self.info = QLabel(self)
         self.info.setText("Checks if the given user's replays on a map are steals of each other.")
 
@@ -672,7 +673,7 @@ class ScrollableSettingsWidget(QFrame):
 
 class ResultsTab(QWidget):
     def __init__(self):
-        super(ResultsTab, self).__init__()
+        super().__init__()
 
         _layout = QVBoxLayout()
         self.qscrollarea = QScrollArea(self)
@@ -688,7 +689,7 @@ class ResultsTab(QWidget):
 
 class ResultsFrame(QFrame):
     def __init__(self):
-        super(ResultsFrame, self).__init__()
+        super().__init__()
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignTop)
         self.info_label = QLabel("After running Comparisons, this tab will fill up with results")
