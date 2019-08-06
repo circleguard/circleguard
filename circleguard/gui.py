@@ -427,8 +427,7 @@ class MainTab(QWidget):
                     r1 = result.replay1
                     r2 = result.replay2
                     msg = get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                                                                      later_name=result.later_name,
-                                                                      r1=r1, r2=r2)
+                                                                      r=result, r1=r1, r2=r2)
                     self.write(msg)
                     QApplication.beep()
                     QApplication.alert(self)
@@ -440,8 +439,7 @@ class MainTab(QWidget):
                     r1 = result.replay1
                     r2 = result.replay2
                     msg = get_setting("message_no_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                                                                      later_name=result.later_name,
-                                                                      r1=r1, r2=r2)
+                                                                      r=result, r1=r1, r2=r2)
                     self.write(msg)
         except Empty:
             pass
