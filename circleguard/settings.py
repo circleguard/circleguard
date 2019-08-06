@@ -76,6 +76,9 @@ if not SETTINGS.contains("ran"):
 def get_setting(name):
     type_ = type(DEFAULTS[name])
     val = SETTINGS.value(name)
+    # windows registry keys doesnt properly preserve types, so convert "false"
+    # keys to a true False value instead of bool("false") which would return True.
+    # second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
     if type_ is bool:
         return False if val == "false" else bool(val)
     return type(DEFAULTS[name])(SETTINGS.value(name))
