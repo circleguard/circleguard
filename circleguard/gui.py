@@ -78,8 +78,10 @@ class Handler(QObject, logging.Handler):
 
 
 class WindowWrapper(QMainWindow):
-    def __init__(self):
+    def __init__(self, clipboard):
         super(WindowWrapper, self).__init__()
+
+        self.clipboard = clipboard
         self.progressbar = QProgressBar()
         self.progressbar.setFixedWidth(250)
         self.current_state_label = QLabel("Idle")
@@ -184,14 +186,19 @@ class WindowWrapper(QMainWindow):
         r2 = result.replay2
         timestamp = datetime.now()
         text = get_setting("string_result_text").format(ts=timestamp, similarity=result.similarity,
-                                                        r1_name=r1.username, r2_name=r2.username,
-                                                        later_name=result.later_name, r1=r1, r2=r2)
-        result_widget = ComparisonResult(text, r1, r2)
+                                                        r=result, r1=r1, r2=r2)
+        result_widget = ComparisonResult(text, result, r1, r2)
+        # set button signal connections (visualize and copy template to clipboard)
         result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
+        result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard,
+                get_setting("template_replay_steal").format(r=result_widget.result, r1=result_widget.replay1, r2=result_widget.replay2)))
         # remove info text if shown
         if not self.main_window.results_tab.results.info_label.isHidden():
             self.main_window.results_tab.results.info_label.hide()
         self.main_window.results_tab.results.layout.addWidget(result_widget)
+
+    def copy_to_clipboard(self, text):
+        self.clipboard.setText(text)
 
 
 class DebugWindow(QMainWindow):
@@ -351,7 +358,7 @@ class MainTab(QWidget):
                 user_id = int(user_id_str) if user_id_str != "" else 0
                 num = tab.compare_top.slider.value()
                 thresh = tab.threshold.slider.value()
-                check = cg.create_local_check(path, map_id=map_id, u=user_id, num=num, thresh=thresh, load_map_id=True)
+                check = cg.create_local_check(path, map_id=map_id, u=user_id, num=num, thresh=thresh)
 
             if self.run_type == "VERIFY":
                 tab = self.verify_tab
@@ -740,7 +747,7 @@ if __name__ == "__main__":
     # create and open window
     app = QApplication([])
     app.setStyle("Fusion")
-    WINDOW = WindowWrapper()
+    WINDOW = WindowWrapper(app.clipboard())
     set_event_window(WINDOW)
     WINDOW.resize(600, 500)
     WINDOW.show()

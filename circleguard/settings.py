@@ -29,6 +29,15 @@ DEFAULTS = {
     "message_no_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}. Replays likely not stolen.",
 
     "string_result_text": "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}",
+    "template_replay_steal": ("Profile: https://osu.ppy.sh/users/{r.later_replay.user_id}"
+                             "\n\n"
+                             "Map: https://osu.ppy.sh/b/{r.later_replay.map_id}"
+                             "\n\n"
+                             "{r.later_replay.username}'s replay (cheated): https://osu.ppy.sh/scores/osu/{r.later_replay.replay_id}/download"
+                             "\n\n"
+                             "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}/download"
+                             "\n\n"
+                             "{r.similarity:.2f} similarity according to [circleguard](https://github.com/circleguard/circleguard)")
 }
 
 CHANGED = {
