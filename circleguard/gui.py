@@ -615,7 +615,7 @@ class ScrollableSettingsWidget(QFrame):
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
         self.set_circleguard_loglevel()  # set the default loglevel in cg, not just in gui
 
-        self.rainbow = OptionWidget("Rainbow mode", ":3")
+        self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
         self.wizard = ButtonWidget("Run Wizard", "")
