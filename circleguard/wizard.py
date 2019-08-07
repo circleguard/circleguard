@@ -110,8 +110,8 @@ class ApiKeyPage(WizardPage):
                       "<p>Go to <a href=\"https://osu.ppy.sh/p/api\">https://osu.ppy.sh/p/api</a>, enter <b>Circleguard</b> "
                       "as your application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
                       "as your application url. Paste the api key you receive into the box below.</p>"
-                      "<p>Your api key will be stored locally, and is never sent to anyone.</p>"
-                      "<p>You can skip this step, but Circleguard will only be able to process local replay files.</p>")
+                      "<p>Your api key will be stored locally, and is never sent anywhere but osu! servers.</p>"
+                      "<p>If you skip this step, you will not be able to run any of the checks./p>")
 
         label.setTextFormat(Qt.RichText)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
@@ -161,7 +161,7 @@ class TutorialPage2(WizardPage):
                        "<p>Circleguard compares replays in sets of two at a time. The similarity "
                        "reported to you is, roughly speaking, the average pixel distance between the two cursors. "
                        "Anything below 18 similarity is almost certainly a replay steal, and when a replay that scores "
-                       "below 18 is found, circleguard will audially and visually alert you (os specific), as well as "
+                       "below 18 is found, circleguard will audially and visually alert you (OS specific), as well as "
                        "printing to the center area. This threshold is adjustable in the settings and on each tab.</p>"
                        "<p>Circleguard will also print results (but not otherwise alert you) for replays that have a "
                        "similarity under 25. This is to give you suspicious replays that you may want to investiage further. "
