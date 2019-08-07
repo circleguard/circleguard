@@ -29,10 +29,10 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False , icon='./circleguard/resources/logo.ico')
+          console=False , icon='./circleguard/resources/logo_mac.ico')
 app = BUNDLE(exe,
              name='Circleguard.app',
-             icon='./circleguard/resources/logo.icns',
+             icon='./circleguard/resources/logo_mac.icns',
              bundle_identifier=None,
              info_plist={
               'NSHighResolutionCapable': 'True',

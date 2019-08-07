@@ -27,8 +27,7 @@ from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, Wi
 
 from settings import get_setting, update_default
 import wizard
-
-__version__ = "1.0.1"
+from version import __version__
 
 log = logging.getLogger(__name__)
 
@@ -79,8 +78,10 @@ class Handler(QObject, logging.Handler):
 
 
 class WindowWrapper(QMainWindow):
-    def __init__(self):
-        super(WindowWrapper, self).__init__()
+    def __init__(self, clipboard):
+        super().__init__()
+
+        self.clipboard = clipboard
         self.progressbar = QProgressBar()
         self.progressbar.setFixedWidth(250)
         self.current_state_label = QLabel("Idle")
@@ -100,6 +101,7 @@ class WindowWrapper(QMainWindow):
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, lambda: sys.exit(1))
 
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
@@ -185,19 +187,24 @@ class WindowWrapper(QMainWindow):
         r2 = result.replay2
         timestamp = datetime.now()
         text = get_setting("string_result_text").format(ts=timestamp, similarity=result.similarity,
-                                                        replay1_name=r1.username, replay2_name=r2.username,
-                                                        later_name=result.later_name)
-        result_widget = ComparisonResult(text, r1, r2)
+                                                        r=result, r1=r1, r2=r2)
+        result_widget = ComparisonResult(text, result, r1, r2)
+        # set button signal connections (visualize and copy template to clipboard)
         result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
+        result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard,
+                get_setting("template_replay_steal").format(r=result_widget.result, r1=result_widget.replay1, r2=result_widget.replay2)))
         # remove info text if shown
         if not self.main_window.results_tab.results.info_label.isHidden():
             self.main_window.results_tab.results.info_label.hide()
         self.main_window.results_tab.results.layout.addWidget(result_widget)
 
+    def copy_to_clipboard(self, text):
+        self.clipboard.setText(text)
+
 
 class DebugWindow(QMainWindow):
     def __init__(self):
-        super(DebugWindow, self).__init__()
+        super().__init__()
         self.setWindowTitle("Debug Output")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         terminal = QTextEdit()
@@ -219,7 +226,7 @@ class DebugWindow(QMainWindow):
 
 class MainWindow(QWidget):
     def __init__(self):
-        super(MainWindow, self).__init__()
+        super().__init__()
 
         self.tab_widget = QTabWidget()
         self.main_tab = MainTab()
@@ -245,14 +252,15 @@ class MainTab(QWidget):
     add_comparison_result_signal = pyqtSignal(object)  # Result
 
     TAB_REGISTER = [
-        {"name": "MAP",    "requires_api": True},
-        {"name": "SCREEN", "requires_api": True},
-        {"name": "LOCAL",  "requires_api": False},
-        {"name": "VERIFY", "requires_api": True},
+        {"name": "MAP"},
+        {"name": "SCREEN"},
+        {"name": "LOCAL"},
+        {"name": "VERIFY"},
     ]
 
     def __init__(self):
-        super(MainTab, self).__init__()
+        super().__init__()
+
         self.q = Queue()
         self.cg_running = False
         tabs = QTabWidget()
@@ -305,7 +313,7 @@ class MainTab(QWidget):
 
     def switch_run_button(self):
         if not self.cg_running:
-            self.run_button.setEnabled(not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["requires_api"] if get_setting("api_key") == "" else True)
+            self.run_button.setEnabled(False if get_setting("api_key") == "" else True)
         else:
             # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
             # statement even though no timer interaction is going on; not sure why it happens but it doesn't
@@ -317,7 +325,7 @@ class MainTab(QWidget):
         self.switch_run_button()
         self.update_label_signal.emit("Loading Replays")
         try:
-            set_options(cache=bool(get_setting("caching")))
+            set_options(cache=get_setting("caching"))
             cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
 
             if self.run_type == "MAP":
@@ -428,10 +436,7 @@ class MainTab(QWidget):
                     r1 = result.replay1
                     r2 = result.replay2
                     msg = get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                                                                      replay1_name=r1.username, replay2_name=r2.username,
-                                                                      later_name=result.later_name, replay1_mods=r1.mods,
-                                                                      replay2_mods=r2.mods, replay1_id=r1.replay_id,
-                                                                      replay2_id=r2.replay_id)
+                                                                      r=result, r1=r1, r2=r2)
                     self.write(msg)
                     QApplication.beep()
                     QApplication.alert(self)
@@ -443,10 +448,7 @@ class MainTab(QWidget):
                     r1 = result.replay1
                     r2 = result.replay2
                     msg = get_setting("message_no_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                                                                      replay1_name=r1.username, replay2_name=r2.username,
-                                                                      later_name=result.later_name, replay1_mods=r1.mods,
-                                                                      replay2_mods=r2.mods, replay1_id=r1.replay_id,
-                                                                      replay2_id=r2.replay_id)
+                                                                      r=result, r1=r1, r2=r2)
                     self.write(msg)
         except Empty:
             pass
@@ -458,7 +460,7 @@ class MainTab(QWidget):
 
 class MapTab(QWidget):
     def __init__(self):
-        super(MapTab, self).__init__()
+        super().__init__()
 
         self.info = QLabel(self)
         self.info.setText("Compares the top plays on a Map's leaderboard.\nIf a user is given, "
@@ -479,7 +481,7 @@ class MapTab(QWidget):
 
 class UserTab(QWidget):
     def __init__(self):
-        super(UserTab, self).__init__()
+        super().__init__()
         self.info = QLabel(self)
         self.info.setText("Compares each of a user's top plays against that map's leaderboard.")
 
@@ -501,7 +503,7 @@ class UserTab(QWidget):
 
 class LocalTab(QWidget):
     def __init__(self):
-        super(LocalTab, self).__init__()
+        super().__init__()
         self.info = QLabel(self)
         self.info.setText("Compares osr files in a given folder.\n"
                           "If a Map is given, it will compare the osrs against the leaderboard of that map.\n"
@@ -533,7 +535,7 @@ class LocalTab(QWidget):
 
 class VerifyTab(QWidget):
     def __init__(self):
-        super(VerifyTab, self).__init__()
+        super().__init__()
         self.info = QLabel(self)
         self.info.setText("Checks if the given user's replays on a map are steals of each other.")
 
@@ -613,7 +615,7 @@ class ScrollableSettingsWidget(QFrame):
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
         self.set_circleguard_loglevel()  # set the default loglevel in cg, not just in gui
 
-        self.rainbow = OptionWidget("Rainbow mode", ":3")
+        self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
         self.wizard = ButtonWidget("Run Wizard", "")
@@ -672,7 +674,7 @@ class ScrollableSettingsWidget(QFrame):
 
 class ResultsTab(QWidget):
     def __init__(self):
-        super(ResultsTab, self).__init__()
+        super().__init__()
 
         _layout = QVBoxLayout()
         self.qscrollarea = QScrollArea(self)
@@ -688,7 +690,7 @@ class ResultsTab(QWidget):
 
 class ResultsFrame(QFrame):
     def __init__(self):
-        super(ResultsFrame, self).__init__()
+        super().__init__()
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignTop)
         self.info_label = QLabel("After running Comparisons, this tab will fill up with results")
@@ -747,7 +749,7 @@ if __name__ == "__main__":
     # create and open window
     app = QApplication([])
     app.setStyle("Fusion")
-    WINDOW = WindowWrapper()
+    WINDOW = WindowWrapper(app.clipboard())
     set_event_window(WINDOW)
     WINDOW.resize(600, 500)
     WINDOW.show()

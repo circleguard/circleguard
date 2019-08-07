@@ -455,11 +455,12 @@ class CompareTopPlays(QFrame):
 class ComparisonResult(QFrame):
     """
     Stores the result of a comparison that can be replayed at any time.
-    Contains a Label and a QPushButton.
+    Contains a Label, QPushButton (visualize) and QPushButton (copy to clipboard).
     """
 
-    def __init__(self, text, replay1, replay2):
+    def __init__(self, text, result, replay1, replay2):
         super().__init__()
+        self.result = result
         self.replay1 = replay1
         self.replay2 = replay2
         self.label = QLabel(self)
@@ -468,11 +469,16 @@ class ComparisonResult(QFrame):
         self.button = QPushButton(self)
         self.button.setText("Visualize")
 
+        self.button_clipboard = QPushButton(self)
+        self.button_clipboard.setText("Copy Template")
+
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.button, 0, 2, 1, 2)
+        layout.addWidget(self.button, 0, 2, 1, 1)
+        layout.addWidget(self.button_clipboard, 0, 3, 1, 1)
+
         self.setLayout(layout)
 
 class SliderBoxSetting(QFrame):
