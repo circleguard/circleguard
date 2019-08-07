@@ -28,7 +28,7 @@ DEFAULTS = {
     "message_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}, {r.later_replay.username} set later. Extremely similar replays; look at the visualization to investigate further.",
     "message_no_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}. Replays likely not stolen.",
 
-    "string_result_text": "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}",
+    "string_result_text": "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} (set later) vs {r.earlier_replay.username} on map {r1.map_id}",
     "template_replay_steal": ("[osu!std] {r.later_replay.username} | Replay Stealing"
                              "\n\n"
                              "Profile: https://osu.ppy.sh/users/{r.later_replay.user_id}"
