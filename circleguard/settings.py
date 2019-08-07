@@ -39,7 +39,7 @@ DEFAULTS = {
                              "\n\n"
                              "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}/download"
                              "\n\n"
-                             "{r.similarity:.2f} similarity according to [circleguard](https://github.com/circleguard/circleguard)")
+                             "^({r.similarity:.2f} similarity according to) [^(circleguard)](https://github.com/circleguard/circleguard) ^(\(higher is less similar\))")
 }
 
 CHANGED = {
