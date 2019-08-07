@@ -23,7 +23,8 @@ from utils import resource_path, write_log
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
-                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting)
+                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting,
+                     RunWidget)
 
 from settings import get_setting, update_default
 import wizard
@@ -97,6 +98,7 @@ class WindowWrapper(QMainWindow):
         self.main_window.main_tab.update_label_signal.connect(self.update_label)
         self.main_window.main_tab.add_comparison_result_signal.connect(self.add_comparison_result)
         self.main_window.main_tab.write_to_terminal_signal.connect(self.main_window.main_tab.write)
+        self.main_window.main_tab.add_run_to_queue.connect(self.add_run_to_queue)
 
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
@@ -201,6 +203,8 @@ class WindowWrapper(QMainWindow):
     def copy_to_clipboard(self, text):
         self.clipboard.setText(text)
 
+    def add_run_to_queue(self, run_id, run_type):
+        self.main_window.queue_tab.add_run(run_id, run_type)
 
 class DebugWindow(QMainWindow):
     def __init__(self):
@@ -234,8 +238,9 @@ class MainWindow(QWidget):
         self.settings_tab = SettingsTab()
         self.queue_tab = QueueTab()
         self.tab_widget.addTab(self.main_tab, "Main Tab")
-        self.tab_widget.addTab(self.results_tab, "Results Tab")
-        self.tab_widget.addTab(self.settings_tab, "Settings Tab")
+        self.tab_widget.addTab(self.results_tab, "Results")
+        self.tab_widget.addTab(self.settings_tab, "Settings")
+        self.tab_widget.addTab(self.queue_tab, "Run Queue")
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
         self.tab_widget.currentChanged.connect(self.main_tab.switch_run_button)
 
@@ -251,6 +256,7 @@ class MainTab(QWidget):
     update_label_signal = pyqtSignal(str)
     write_to_terminal_signal = pyqtSignal(str)
     add_comparison_result_signal = pyqtSignal(object)  # Result
+    add_run_to_queue = pyqtSignal(int, str) #run_id, run_type
 
     TAB_REGISTER = [
         {"name": "MAP"},
@@ -264,6 +270,7 @@ class MainTab(QWidget):
 
         self.q = Queue()
         self.events = [] # threading.Events object for canceling cg runs
+        self.run_id = 0
         self.cg_running = False
         tabs = QTabWidget()
         self.map_tab = MapTab()
@@ -308,6 +315,8 @@ class MainTab(QWidget):
         current_tab = self.tabs.currentIndex()
         self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
         self.events.append(threading.Event())
+        self.add_run_to_queue.emit(self.run_id, self.run_type)
+        self.run_id += 1
         thread = threading.Thread(target=self.run_circleguard, args=[self.events[0]])
         thread.start()
 
@@ -697,8 +706,7 @@ class ResultsTab(QWidget):
         self.qscrollarea.setWidget(self.results)
         self.qscrollarea.setWidgetResizable(True)
 
-        # we want widgets to fill from top down,
-        # being vertically centered looks weird
+
         layout.addWidget(self.qscrollarea)
         self.setLayout(layout)
 
@@ -707,6 +715,8 @@ class ResultsFrame(QFrame):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
+        # we want widgets to fill from top down,
+        # being vertically centered looks weird
         self.layout.setAlignment(Qt.AlignTop)
         self.info_label = QLabel("After running Comparisons, this tab will fill up with results")
         self.layout.addWidget(self.info_label)
@@ -717,12 +727,36 @@ class QueueTab(QFrame):
     def __init__(self):
         super().__init__()
 
-        layout = QVBoxLayout()
         self.runs = []
+        layout = QVBoxLayout()
+        self.qscrollarea = QScrollArea(self)
+        self.queue = QueueFrame()
+        self.qscrollarea.setWidget(self.queue)
+        self.qscrollarea.setWidgetResizable(True)
+        layout.addWidget(self.qscrollarea)
         self.setLayout(layout)
 
-    def add_run(self, label, id_):
-        ...
+    def add_run(self, run_id, run_type):
+        run = RunWidget(run_id, run_type)
+        self.runs.append(run)
+        self.queue.layout.addWidget(run)
+
+    def start_run(self, run_id):
+        self.runs[run_id].start()
+    def end_run(self, run_id):
+        self.runs[run_id].end()
+    def cancel_run(self, run_id):
+        self.runs[run_id].cancel()
+
+class QueueFrame(QFrame):
+
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        # we want widgets to fill from top down,
+        # being vertically centered looks weird
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
 
 
 

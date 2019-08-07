@@ -455,7 +455,7 @@ class CompareTopPlays(QFrame):
 class ComparisonResult(QFrame):
     """
     Stores the result of a comparison that can be replayed at any time.
-    Contains a Label, QPushButton (visualize) and QPushButton (copy to clipboard).
+    Contains a QLabel, QPushButton (visualize) and QPushButton (copy to clipboard).
     """
 
     def __init__(self, text, result, replay1, replay2):
@@ -480,6 +480,48 @@ class ComparisonResult(QFrame):
         layout.addWidget(self.button_clipboard, 0, 3, 1, 1)
 
         self.setLayout(layout)
+
+class RunWidget(QFrame):
+    """
+    A single run with QLabel displaying a state (either done, in progress, or canceled),
+    and a cancel QPushButton if not already canceled.
+    """
+
+    def __init__(self, run_id, run_type):
+        super().__init__()
+        self.status = "Queued"
+        self.label = QLabel(self)
+        self.label.setText(f"{run_type} check")
+
+        self.status_label = QLabel(self)
+        self.status_label.setText(self.status)
+        self.button = QPushButton(self)
+        self.button.setText("Cancel")
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.label, 0, 0, 1, 1)
+        layout.addWidget(self.status_label, 0, 1, 1, 1)
+        # needs to be redefined because RunWidget is being called from a
+        # different thread or something? get weird errors when not redefined
+        SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
+        layout.addItem(SPACER, 0, 2, 1, 1)
+        layout.addWidget(self.button, 0, 3, 1, 1)
+        self.setLayout(layout)
+
+    def start(self):
+        self.status = "Running"
+        self.status_label.setText(self.status)
+
+    def end(self):
+        self.status = "Completed"
+        self.status_label.setText(self.status)
+
+    def cancel(self):
+        self.status = "Canceled"
+        self.status_label.setText(self.status)
+
+
 
 class SliderBoxSetting(QFrame):
     """
