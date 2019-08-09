@@ -253,10 +253,10 @@ class MainTab(QWidget):
     add_comparison_result_signal = pyqtSignal(object)  # Result
 
     TAB_REGISTER = [
-        {"name": "MAP"},
-        {"name": "SCREEN"},
-        {"name": "LOCAL"},
-        {"name": "VERIFY"},
+        {"name": "MAP",    "requires_api": True},
+        {"name": "SCREEN", "requires_api": True},
+        {"name": "LOCAL",  "requires_api": False},
+        {"name": "VERIFY", "requires_api": True},
     ]
 
     def __init__(self):
@@ -314,7 +314,7 @@ class MainTab(QWidget):
 
     def switch_run_button(self):
         if not self.cg_running:
-            self.run_button.setEnabled(False if get_setting("api_key") == "" else True)
+            self.run_button.setEnabled(not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["requires_api"] if get_setting("api_key") == "" else True)
         else:
             # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
             # statement even though no timer interaction is going on; not sure why it happens but it doesn't
