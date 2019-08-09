@@ -1,4 +1,5 @@
 import sys
+import ntpath
 # pylint: disable=no-name-in-module
 from functools import partial
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBox,
@@ -650,7 +651,8 @@ class FolderChooser(QFrame):
 
     def update_dir(self, path):
         self.path = path if path != "" else self.path
-        self.path_label.setText(self.path)
+        label = path if len(self.path) < 64 else ntpath.basename(path)
+        self.path_label.setText(label)
         self.dir_updated()
 
     def dir_updated(self):
