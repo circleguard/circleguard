@@ -613,10 +613,11 @@ class WidgetCombiner(QFrame):
 class FolderChooser(QFrame):
     path_signal = pyqtSignal(str)
 
-    def __init__(self, title, path, folder_mode=True):
+    def __init__(self, title, path, folder_mode=True, file_ending="osu! Beatmapfile (*.osu)"):
         super(FolderChooser, self).__init__()
         self.path = path
         self.folder_mode = folder_mode
+        self.file_ending = file_ending
         self.label = QLabel(self)
         self.label.setText(title+":")
 
@@ -644,7 +645,7 @@ class FolderChooser(QFrame):
             options |= QFileDialog.HideNameFilterDetails
             path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=QDir.currentPath(), options=options)
         else:
-            path = QFileDialog.getOpenFileName(caption="Select File", filter="osu files (*.osu)")[0]
+            path = QFileDialog.getOpenFileName(caption="Select File", filter=self.file_ending)[0]
         self.update_dir(path)
 
     def update_dir(self, path):
