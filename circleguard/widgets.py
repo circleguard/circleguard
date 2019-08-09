@@ -509,12 +509,8 @@ class RunWidget(QFrame):
         layout.addWidget(self.button, 0, 3, 1, 1)
         self.setLayout(layout)
 
-    def start(self):
-        self.status = "Running"
-        self.status_label.setText(self.status)
-
-    def end(self):
-        self.status = "Completed"
+    def update_status(self, status):
+        self.status = status
         self.status_label.setText(self.status)
 
     def cancel(self):

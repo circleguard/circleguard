@@ -99,6 +99,7 @@ class WindowWrapper(QMainWindow):
         self.main_window.main_tab.add_comparison_result_signal.connect(self.add_comparison_result)
         self.main_window.main_tab.write_to_terminal_signal.connect(self.main_window.main_tab.write)
         self.main_window.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
+        self.main_window.main_tab.update_run_status_signal.connect(self.update_run_status)
         self.main_window.queue_tab.cancel_run_signal.connect(self.cancel_run)
 
         self.setCentralWidget(self.main_window)
@@ -146,6 +147,7 @@ class WindowWrapper(QMainWindow):
         it's nice to have stdout reserved) and then print cg results
         """
         self.main_window.main_tab.print_results()
+        self.main_window.main_tab.check_circleguard_queue()
 
     def log(self, message):
         """
@@ -208,6 +210,9 @@ class WindowWrapper(QMainWindow):
     def add_run_to_queue(self, run):
         self.main_window.queue_tab.add_run(run)
 
+    def update_run_status(self, run_id, status):
+        self.main_window.queue_tab.update_status(run_id, status)
+
     def cancel_run(self, run_id):
         self.main_window.main_tab.runs[run_id].event.set()
 
@@ -262,6 +267,7 @@ class MainTab(QWidget):
     write_to_terminal_signal = pyqtSignal(str)
     add_comparison_result_signal = pyqtSignal(object)  # Result
     add_run_to_queue_signal = pyqtSignal(object) # Run object (or a subclass)
+    update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
 
     TAB_REGISTER = [
         {"name": "MAP"},
@@ -274,6 +280,7 @@ class MainTab(QWidget):
         super().__init__()
 
         self.q = Queue()
+        self.cg_q = Queue()
         self.runs = [] # Run objects for canceling runs
         self.run_id = 0
         tabs = QTabWidget()
@@ -296,7 +303,7 @@ class MainTab(QWidget):
 
         self.run_button = QPushButton()
         self.run_button.setText("Run")
-        self.run_button.clicked.connect(self.run)
+        self.run_button.clicked.connect(self.add_circleguard_run)
 
         layout = QVBoxLayout()
         layout.addWidget(tabs)
@@ -314,7 +321,7 @@ class MainTab(QWidget):
         cursor.movePosition(QTextCursor.End)
         self.terminal.setTextCursor(cursor)
 
-    def run(self):
+    def add_circleguard_run(self):
         current_tab = self.tabs.currentIndex()
         run_type = MainTab.TAB_REGISTER[current_tab]["name"]
         m = self.map_tab
@@ -368,12 +375,11 @@ class MainTab(QWidget):
 
         self.runs.append(run)
         self.add_run_to_queue_signal.emit(run)
-        thread = threading.Thread(target=self.run_circleguard, args=[run])
+        self.cg_q.put(run)
         self.run_id += 1
-        thread.start()
 
-    def stop_run(self, run):
-        self.events[run].set()
+        # called every 1/4 seconds by timer, but force a recheck to not wait for that delay
+        self.check_circleguard_queue()
 
     def switch_run_button(self):
         # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
@@ -381,8 +387,28 @@ class MainTab(QWidget):
         # impact functionality. Still might be worth looking into
         self.run_button.setEnabled(False if get_setting("api_key") == "" else True)
 
+
+    def check_circleguard_queue(self):
+        def _check_circleguard_queue(self):
+            try:
+                while True:
+                    run = self.cg_q.get_nowait()
+                    thread = threading.Thread(target=self.run_circleguard, args=[run])
+                    thread.start()
+                    # run sequentially to not confuse user with terminal output
+                    thread.join()
+            except Empty:
+                return
+        # have to do a double thread use if we start the threads in
+        # the main thread and .join, it will block the gui thread (very bad).
+        thread = threading.Thread(target=_check_circleguard_queue, args=[self])
+        thread.start()
+
+
+
     def run_circleguard(self, run):
         self.update_label_signal.emit("Loading Replays")
+        self.update_run_status_signal.emit(run.run_id, "Loading Replays")
         event = run.event
         try:
             set_options(cache=get_setting("caching"))
@@ -398,7 +424,7 @@ class MainTab(QWidget):
                 check = cg.create_verify_check(run.map_id, run.user_id_1, run.user_id_2, thresh=run.thresh)
 
             # user_check convenience method comes with some caveats; a list
-            # of list of check objects is returned instead of a singl Check
+            # of list of check objects is returned instead of a single Check
             # because it checks for remodding and replay stealing for
             # each top play of the user
             if type(run) is ScreenRun:
@@ -438,6 +464,7 @@ class MainTab(QWidget):
             timestamp = datetime.now()
             self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
             self.update_label_signal.emit("Comparing Replays")
+            self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
             if type(run) is ScreenRun:
                 for check_list in check:
                     for check_ in check_list:
@@ -463,14 +490,13 @@ class MainTab(QWidget):
             log.exception("Error while running circlecore. Please "
                           "report this to the developers through discord or github.\n")
 
-        self.cg_running = False
         self.update_label_signal.emit("Idle")
-        self.switch_run_button()
+        self.update_run_status_signal.emit(run.run_id, "Finished")
 
     def print_results(self):
         try:
             while True:
-                result = self.q.get(block=False)
+                result = self.q.get_nowait()
                 # self.visualize(result.replay1, result.replay2)
                 if result.ischeat:
                     timestamp = datetime.now()
@@ -761,10 +787,9 @@ class QueueTab(QFrame):
         self.run_widgets.append(run_w)
         self.queue.layout.addWidget(run_w)
 
-    def start_run(self, run_id):
-        self.run_widgets[run_id].start()
-    def end_run(self, run_id):
-        self.run_widgets[run_id].end()
+    def update_status(self, run_id, status):
+        self.run_widgets[run_id].update_status(status)
+
     def cancel_run(self, run_id):
         self.cancel_run_signal.emit(run_id)
         self.run_widgets[run_id].cancel()
