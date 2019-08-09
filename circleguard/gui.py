@@ -18,6 +18,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPai
 
 from circleguard import Circleguard, set_options, loader
 from circleguard import __version__ as cg_version
+from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
 from utils import resource_path, write_log
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
@@ -253,10 +254,11 @@ class MainTab(QWidget):
     add_comparison_result_signal = pyqtSignal(object)  # Result
 
     TAB_REGISTER = [
-        {"name": "MAP",    "requires_api": True},
-        {"name": "SCREEN", "requires_api": True},
-        {"name": "LOCAL",  "requires_api": True},
-        {"name": "VERIFY", "requires_api": True},
+        {"name": "MAP",         "requires_api": True},
+        {"name": "SCREEN",      "requires_api": True},
+        {"name": "LOCAL",       "requires_api": True},
+        {"name": "VERIFY",      "requires_api": True},
+        {"name": "VISUALIZE",   "requires_api": False}
     ]
 
     def __init__(self):
@@ -269,10 +271,12 @@ class MainTab(QWidget):
         self.user_tab = UserTab()
         self.local_tab = LocalTab()
         self.verify_tab = VerifyTab()
+        self.visualize_tab = VisualizeTab()
         tabs.addTab(self.map_tab, "Check Map")
         tabs.addTab(self.user_tab, "Screen User")
         tabs.addTab(self.local_tab, "Check Local Replays")
         tabs.addTab(self.verify_tab, "Verify")
+        tabs.addTab(self.visualize_tab, "Visualize Replays")
         self.tabs = tabs
         self.tabs.currentChanged.connect(self.switch_run_button)
 
@@ -555,6 +559,39 @@ class VerifyTab(QWidget):
         layout.addWidget(self.threshold, 4, 0, 1, 1)
 
         self.setLayout(layout)
+
+
+class VisualizeTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.map_id = None
+        self.replays = []
+        self.cg = Circleguard(get_setting("api_key"), "temp/why_is_this_a_dependecy/like/I_have_no_idea_how_to_handle_this.db")
+        self.info = QLabel(self)
+        self.info.setText("Visualizes Replays. Has theoretically support for an infinite amount of replays.")
+        self.replay = FolderChooser("Choose replay", "", folder_mode=False, file_ending="osu! Replayfile (*osr)")
+        self.replay.path_signal.connect(self.add_replay)
+        layout = QGridLayout()
+        layout.addWidget(self.info, 0, 0, 1, 1)
+        layout.addWidget(self.replay)
+
+        self.setLayout(layout)
+
+    def add_replay(self, path):
+        check = Check(ReplayPath(path))
+        replay = ReplayPath(path)
+        self.cg.load(check, replay)
+        if self.map_id == None or len(self.replays) == 0:  # store map_id if nothing stored
+            print("new one")
+            self.map_id = replay.map_id
+        elif replay.map_id != self.map_id:  # ignore replay with diffrent map_ids
+            print("weird one")
+            return
+        if not any(replay.replay_id == i.replay_id for i in self.replays):  # check if already stored
+            print("good one, adding")
+            self.replays.append(replay)
+        else:
+            print("sneaky one, not adding")
 
 
 class SettingsTab(QWidget):
