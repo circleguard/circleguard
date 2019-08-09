@@ -487,11 +487,11 @@ class RunWidget(QFrame):
     and a cancel QPushButton if not already canceled.
     """
 
-    def __init__(self, run_id, run_type):
+    def __init__(self, run):
         super().__init__()
         self.status = "Queued"
         self.label = QLabel(self)
-        self.label.setText(f"{run_type} check")
+        self.label.setText(f"Run #{run.run_id}")
 
         self.status_label = QLabel(self)
         self.status_label.setText(self.status)

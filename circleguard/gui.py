@@ -19,7 +19,7 @@ from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPai
 from circleguard import Circleguard, set_options, loader
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
-from utils import resource_path, write_log
+from utils import resource_path, write_log, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
@@ -98,7 +98,8 @@ class WindowWrapper(QMainWindow):
         self.main_window.main_tab.update_label_signal.connect(self.update_label)
         self.main_window.main_tab.add_comparison_result_signal.connect(self.add_comparison_result)
         self.main_window.main_tab.write_to_terminal_signal.connect(self.main_window.main_tab.write)
-        self.main_window.main_tab.add_run_to_queue.connect(self.add_run_to_queue)
+        self.main_window.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
+        self.main_window.queue_tab.cancel_run_signal.connect(self.cancel_run)
 
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
@@ -204,8 +205,11 @@ class WindowWrapper(QMainWindow):
     def copy_to_clipboard(self, text):
         self.clipboard.setText(text)
 
-    def add_run_to_queue(self, run_id, run_type):
-        self.main_window.queue_tab.add_run(run_id, run_type)
+    def add_run_to_queue(self, run):
+        self.main_window.queue_tab.add_run(run)
+
+    def cancel_run(self, run_id):
+        self.main_window.main_tab.runs[run_id].event.set()
 
 class DebugWindow(QMainWindow):
     def __init__(self):
@@ -257,7 +261,7 @@ class MainTab(QWidget):
     update_label_signal = pyqtSignal(str)
     write_to_terminal_signal = pyqtSignal(str)
     add_comparison_result_signal = pyqtSignal(object)  # Result
-    add_run_to_queue = pyqtSignal(int, str) #run_id, run_type
+    add_run_to_queue_signal = pyqtSignal(object) # Run object (or a subclass)
 
     TAB_REGISTER = [
         {"name": "MAP"},
@@ -270,16 +274,15 @@ class MainTab(QWidget):
         super().__init__()
 
         self.q = Queue()
-        self.events = [] # threading.Events object for canceling cg runs
+        self.runs = [] # Run objects for canceling runs
         self.run_id = 0
-        self.cg_running = False
         tabs = QTabWidget()
         self.map_tab = MapTab()
-        self.user_tab = UserTab()
+        self.screen_tab = ScreenTab()
         self.local_tab = LocalTab()
         self.verify_tab = VerifyTab()
         tabs.addTab(self.map_tab, "Check Map")
-        tabs.addTab(self.user_tab, "Screen User")
+        tabs.addTab(self.screen_tab, "Screen User")
         tabs.addTab(self.local_tab, "Check Local Replays")
         tabs.addTab(self.verify_tab, "Verify")
         self.tabs = tabs
@@ -300,7 +303,6 @@ class MainTab(QWidget):
         layout.addWidget(self.terminal)
         layout.addWidget(self.run_button)
         self.setLayout(layout)
-        self.run_type = "NONE"  # set after you click run, depending on your current tab
         self.switch_run_button()  # disable run button if there is no api key
 
     def write(self, message):
@@ -314,83 +316,92 @@ class MainTab(QWidget):
 
     def run(self):
         current_tab = self.tabs.currentIndex()
-        self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
-        self.events.append(threading.Event())
-        self.add_run_to_queue.emit(self.run_id, self.run_type)
+        run_type = MainTab.TAB_REGISTER[current_tab]["name"]
+        m = self.map_tab
+        s = self.screen_tab
+        l = self.local_tab
+        v = self.verify_tab
+
+        # retrieve every possible variable to avoid nasty indentation (and we might
+        # use it for something later). Shouldn't cause any performance issues.
+
+        m_map_id = m.id_combined.map_id.field.text()
+        m_map_id = int(m_map_id) if m_map_id != "" else None
+        m_user_id = m.id_combined.user_id.field.text()
+        m_user_id = int(m_user_id) if m_user_id != "" else None
+        m_num = m.compare_top.slider.value()
+        m_thresh = m.threshold.slider.value()
+
+        s_user_id = s.user_id.field.text()
+        s_user_id = int(s_user_id) if s_user_id != "" else None
+        s_num_top = s.compare_top_map.slider.value()
+        s_num_users = s.compare_top_users.slider.value()
+        s_thresh = s.threshold.slider.value()
+
+        l_path = resource_path(Path(l.folder_chooser.path))
+        l_map_id = l.id_combined.map_id.field.text()
+        l_map_id = int(l_map_id) if l_map_id != "" else None
+        l_user_id = l.id_combined.user_id.field.text()
+        l_user_id = int(l_user_id) if l_user_id != "" else None
+        l_num = l.compare_top.slider.value()
+        l_thresh = l.threshold.slider.value()
+
+
+        v_map_id = v.map_id.field.text()
+        v_map_id = int(v_map_id) if v_map_id != "" else None
+        v_user_id_1 = v.user_id_1.field.text()
+        v_user_id_1 = int(v_user_id_1) if v_user_id_1 != "" else None
+        v_user_id_2 = v.user_id_2.field.text()
+        v_user_id_2 = int(v_user_id_2) if v_user_id_2 != "" else None
+        v_thresh = v.threshold.slider.value()
+
+        event = threading.Event()
+
+        if run_type == "MAP":
+            run = MapRun(self.run_id, event, m_map_id, m_user_id, m_num, m_thresh)
+        elif run_type == "SCREEN":
+            run = ScreenRun(self.run_id, event, s_user_id, s_num_top, s_num_users, s_thresh)
+        elif run_type == "LOCAL":
+            run = LocalRun(self.run_id, event, l_path, l_map_id, l_user_id, l_num, l_thresh)
+        elif run_type == "VERIFY":
+            run = VerifyRun(self.run_id, event, v_map_id, v_user_id_1, v_user_id_2, v_thresh)
+
+        self.runs.append(run)
+        self.add_run_to_queue_signal.emit(run)
+        thread = threading.Thread(target=self.run_circleguard, args=[run])
         self.run_id += 1
-        thread = threading.Thread(target=self.run_circleguard, args=[self.events[0]])
         thread.start()
 
     def stop_run(self, run):
         self.events[run].set()
 
     def switch_run_button(self):
-        if not self.cg_running:
-            self.run_button.setEnabled(False if get_setting("api_key") == "" else True)
-        else:
-            # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
-            # statement even though no timer interaction is going on; not sure why it happens but it doesn't
-            # impact functionality. Still might be worth looking into
-            self.run_button.setEnabled(False)
+        # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
+        # statement even though no timer interaction is going on; not sure why it happens but it doesn't
+        # impact functionality. Still might be worth looking into
+        self.run_button.setEnabled(False if get_setting("api_key") == "" else True)
 
-    def run_circleguard(self, event):
-        self.cg_running = True
-        self.switch_run_button()
+    def run_circleguard(self, run):
         self.update_label_signal.emit("Loading Replays")
+        event = run.event
         try:
             set_options(cache=get_setting("caching"))
             cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
 
-            if self.run_type == "MAP":
-                tab = self.map_tab
-                # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
-                #       maybe fancy flashing red stars for required fields
-                map_id_str = tab.id_combined.map_id.field.text()
-                map_id = int(map_id_str) if map_id_str != "" else 0
-
-                user_id_str = tab.id_combined.user_id.field.text()
-                user_id = int(user_id_str) if user_id_str != "" else None
-
-                num = tab.compare_top.slider.value()
-                thresh = tab.threshold.slider.value()
-                check = cg.create_map_check(map_id, u=user_id, num=num, thresh=thresh)
-
-            if self.run_type == "SCREEN":
-                tab = self.user_tab
-                user_id_str = tab.user_id.field.text()
-                user_id = int(user_id_str) if user_id_str != "" else 0
-                num_top = tab.compare_top_map.slider.value()
-                num_users = tab.compare_top_users.slider.value()
-                thresh = tab.threshold.slider.value()
-                check = cg.create_user_check(user_id, num_top, num_users, thresh=thresh)
-
-            if self.run_type == "LOCAL":
-                tab = self.local_tab
-                path = resource_path(Path(tab.folder_chooser.path))
-                map_id_str = tab.id_combined.map_id.field.text()
-                map_id = int(map_id_str) if map_id_str != "" else 0
-                user_id_str = tab.id_combined.user_id.field.text()
-                user_id = int(user_id_str) if user_id_str != "" else 0
-                num = tab.compare_top.slider.value()
-                thresh = tab.threshold.slider.value()
-                check = cg.create_local_check(path, map_id=map_id, u=user_id, num=num, thresh=thresh)
-
-            if self.run_type == "VERIFY":
-                tab = self.verify_tab
-                map_id_str = tab.map_id.field.text()
-                map_id = int(map_id_str) if map_id_str != "" else 0
-                user_id_1_str = tab.user_id_1.field.text()
-                user_id_1 = int(user_id_1_str) if user_id_1_str != "" else 0
-                user_id_2_str = tab.user_id_2.field.text()
-                user_id_2 = int(user_id_2_str) if user_id_2_str != "" else 0
-                thresh = tab.threshold.slider.value()
-                check = cg.create_verify_check(map_id, user_id_1, user_id_2, thresh=thresh)
+            if type(run) is MapRun:
+                check = cg.create_map_check(run.map_id, u=run.user_id, num=run.num, thresh=run.thresh)
+            elif type(run) is ScreenRun:
+                check = cg.create_user_check(run.user_id, run.num_top, run.num_users, thresh=run.thresh)
+            elif type(run) is LocalRun:
+                check = cg.create_local_check(run.path, map_id=run.map_id, u=run.user_id, num=run.num, thresh=run.thresh)
+            elif type(run) is VerifyRun:
+                check = cg.create_verify_check(run.map_id, run.user_id_1, run.user_id_2, thresh=run.thresh)
 
             # user_check convenience method comes with some caveats; a list
             # of list of check objects is returned instead of a singl Check
             # because it checks for remodding and replay stealing for
             # each top play of the user
-            if self.run_type == "SCREEN":
+            if type(run) is ScreenRun:
                 num_to_load = 0
                 for check_list in check:
                     for check_ in check_list:
@@ -401,12 +412,13 @@ class MainTab(QWidget):
             cg.loader.new_session(num_to_load)
             timestamp = datetime.now()
             self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load))
-            if self.run_type == "SCREEN":
+            if type(run) is ScreenRun:
                 for check_list in check:
                     for check_ in check_list:
                         for replay in check_.all_replays():
                             if event.wait(0):
                                 self.update_label_signal.emit("Canceled")
+                                self.reset_progressbar_signal.emit(-1)
                                 return
                             cg.load(check_, replay)
                             self.increment_progressbar_signal.emit(1)
@@ -415,6 +427,7 @@ class MainTab(QWidget):
                 for replay in check.all_replays():
                     if event.wait(0):
                         self.update_label_signal.emit("Canceled")
+                        self.reset_progressbar_signal.emit(-1)
                         return
                     cg.load(check, replay)
                     self.increment_progressbar_signal.emit(1)
@@ -425,18 +438,20 @@ class MainTab(QWidget):
             timestamp = datetime.now()
             self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
             self.update_label_signal.emit("Comparing Replays")
-            if self.run_type == "SCREEN":
+            if type(run) is ScreenRun:
                 for check_list in check:
                     for check_ in check_list:
                         for result in cg.run(check_):
                             if event.wait(0):
                                 self.update_label_signal.emit("Canceled")
+                                self.reset_progressbar_signal.emit(-1)
                                 return
                             self.q.put(result)
             else:
                 for result in cg.run(check):
                     if event.wait(0):
                         self.update_label_signal.emit("Canceled")
+                        self.reset_progressbar_signal.emit(-1)
                         return
                     self.q.put(result)
             self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
@@ -505,7 +520,7 @@ class MapTab(QWidget):
         self.setLayout(layout)
 
 
-class UserTab(QWidget):
+class ScreenTab(QWidget):
     def __init__(self):
         super().__init__()
         self.info = QLabel(self)
@@ -726,10 +741,12 @@ class ResultsFrame(QFrame):
 
 
 class QueueTab(QFrame):
+    cancel_run_signal = pyqtSignal(int) # run_id
+
     def __init__(self):
         super().__init__()
 
-        self.runs = []
+        self.run_widgets = []
         layout = QVBoxLayout()
         self.qscrollarea = QScrollArea(self)
         self.queue = QueueFrame()
@@ -738,17 +755,19 @@ class QueueTab(QFrame):
         layout.addWidget(self.qscrollarea)
         self.setLayout(layout)
 
-    def add_run(self, run_id, run_type):
-        run = RunWidget(run_id, run_type)
-        self.runs.append(run)
-        self.queue.layout.addWidget(run)
+    def add_run(self, run):
+        run_w = RunWidget(run)
+        run_w.button.pressed.connect(partial(self.cancel_run, run.run_id))
+        self.run_widgets.append(run_w)
+        self.queue.layout.addWidget(run_w)
 
     def start_run(self, run_id):
-        self.runs[run_id].start()
+        self.run_widgets[run_id].start()
     def end_run(self, run_id):
-        self.runs[run_id].end()
+        self.run_widgets[run_id].end()
     def cancel_run(self, run_id):
-        self.runs[run_id].cancel()
+        self.cancel_run_signal.emit(run_id)
+        self.run_widgets[run_id].cancel()
 
 class QueueFrame(QFrame):
 
