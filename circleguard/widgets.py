@@ -483,8 +483,9 @@ class ComparisonResult(QFrame):
 
 class RunWidget(QFrame):
     """
-    A single run with QLabel displaying a state (either done, in progress, or canceled),
-    and a cancel QPushButton if not already canceled.
+    A single run with QLabel displaying a state (either queued, finished,
+    loading replays, comparing, or canceled), and a cancel QPushButton
+    if not already finished or canceled.
     """
 
     def __init__(self, run):
@@ -520,6 +521,7 @@ class RunWidget(QFrame):
 
     def cancel(self):
         self.status = "Canceled"
+        self.button.deleteLater()
         self.status_label.setText(self.status)
 
 
