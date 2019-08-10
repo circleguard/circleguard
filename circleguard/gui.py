@@ -256,8 +256,6 @@ class MainTab(QWidget):
     TAB_REGISTER = [
         {"name": "MAP"},
         {"name": "SCREEN"},
-        {"name": "MAP"},
-        {"name": "SCREEN"},
         {"name": "LOCAL"},
         {"name": "VERIFY"},
         {"name": "VISUALIZE"}
