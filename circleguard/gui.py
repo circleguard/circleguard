@@ -113,7 +113,7 @@ class WindowWrapper(QMainWindow):
         logging.getLogger("circleguard").addHandler(handler)
         logging.getLogger("ossapi").addHandler(handler)
         logging.getLogger(__name__).addHandler(handler)
-        formatter = logging.Formatter("[%(levelname)s] %(asctime)s %(message)s (%(name)s, %(filename)s:%(lineno)d)", datefmt="%Y/%m/%d %I:%M:%S %p")
+        formatter = logging.Formatter("[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)", datefmt="%Y/%m/%d %H:%M:%S")
         handler.setFormatter(formatter)
         handler.new_message.connect(self.log)
 
