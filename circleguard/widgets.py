@@ -776,7 +776,8 @@ class BooleanPlay(QFrame):
 class EntryWidget(QFrame):
     pressed_signal = pyqtSignal(object)
     """
-    Represents a single entry, consisting of a title, an action name and data which is stored for ease of use.
+    Represents a single entry of some kind of data, consisting of a title, a button and the data which is stored at self.data.
+    When the button is pressed, pressed_signal is emitted with the data for ease of use.
     """
     def __init__(self, title, action_name, data=None):
         super().__init__()
