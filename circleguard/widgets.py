@@ -774,7 +774,7 @@ class BooleanPlay(QFrame):
 
 
 class EntryWidget(QFrame):
-    button_pressed = pyqtSignal(object)
+    pressed_signal = pyqtSignal(object)
     """
     Represents a single entry, consisting of a title, an action name and data which is stored for ease of use.
     """
@@ -783,12 +783,12 @@ class EntryWidget(QFrame):
         self.data = data
         self.button = QPushButton(action_name)
         self.button.setFixedWidth(100)
-        self.button.clicked.connect(self._pressed_action)
+        self.button.clicked.connect(self.button_pressed)
         layout = QGridLayout()
         layout.addWidget(QLabel(title), 0, 0, 1, 1)
         layout.addWidget(self.button, 0, 1, 1, 1)
         layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
-    def _pressed_action(self, _):
-        self.button_pressed.emit(self.data)
+    def button_pressed(self, _):
+        self.pressed_signal.emit(self.data)

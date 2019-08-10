@@ -601,7 +601,7 @@ class VisualizeTab(QWidget):
         if not any(replay.replay_id == i.data.replay_id for i in self.replays):  # check if already stored
             log.info(f"adding new replay {replay} with replay id {replay.replay_id[0]} on map {replay.map_id}")
             widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id[0]}", "Delete", replay)
-            widget.button_pressed.connect(self.remove_replay)
+            widget.pressed_signal.connect(self.remove_replay)
             self.replays.append(widget)
             self.result_frame.results.layout.addWidget(widget)
         else:
