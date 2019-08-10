@@ -90,7 +90,7 @@ class WindowWrapper(QMainWindow):
         # if it doesnt exist, and access the existing one if it does.
         self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label))
         self.statusBar().setSizeGripEnabled(False)
-        self.statusBar().setContentsMargins(8, 2, 10, 3)
+        self.statusBar().setContentsMargins(8, 2, 10, 2)
 
         self.main_window = MainWindow()
         self.main_window.main_tab.reset_progressbar_signal.connect(self.reset_progressbar)
