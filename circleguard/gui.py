@@ -24,7 +24,7 @@ from utils import resource_path, write_log
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
-                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting)
+                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting, EntryWidget)
 
 from settings import get_setting, update_default
 import wizard
@@ -254,11 +254,11 @@ class MainTab(QWidget):
     add_comparison_result_signal = pyqtSignal(object)  # Result
 
     TAB_REGISTER = [
-        {"name": "MAP",         "requires_api": True},
-        {"name": "SCREEN",      "requires_api": True},
-        {"name": "LOCAL",       "requires_api": True},
-        {"name": "VERIFY",      "requires_api": True},
-        {"name": "VISUALIZE",   "requires_api": False}
+        {"name": "MAP",         "custom_action": False},
+        {"name": "SCREEN",      "custom_action": False},
+        {"name": "LOCAL",       "custom_action": False},
+        {"name": "VERIFY",      "custom_action": False},
+        {"name": "VISUALIZE",   "custom_action": True}
     ]
 
     def __init__(self):
@@ -310,15 +310,18 @@ class MainTab(QWidget):
     def run(self):
         current_tab = self.tabs.currentIndex()
         self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
-        thread = threading.Thread(target=self.run_circleguard)
-        thread.start()
+        if not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["custom_action"]:
+            thread = threading.Thread(target=self.run_circleguard)
+            thread.start()
+        else:
+            self.visualize([replay.data for replay in self.visualize_tab.replays])
         # pool = ThreadPool(processes=1)
         # raise Exception("dddd")
         # pool.apply_async(self.run_circleguard)
 
     def switch_run_button(self):
         if not self.cg_running:
-            self.run_button.setEnabled(not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["requires_api"] if get_setting("api_key") == "" else True)
+            self.run_button.setEnabled(not get_setting("api_key") == "")
         else:
             # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
             # statement even though no timer interaction is going on; not sure why it happens but it doesn't
@@ -459,8 +462,8 @@ class MainTab(QWidget):
         except Empty:
             pass
 
-    def visualize(self, replay1, replay2):
-        self.visualizer_window = VisualizerWindow(replays=(replay1, replay2))
+    def visualize(self, replays):
+        self.visualizer_window = VisualizerWindow(replays=replays)
         self.visualizer_window.show()
 
 
@@ -564,16 +567,22 @@ class VerifyTab(QWidget):
 class VisualizeTab(QWidget):
     def __init__(self):
         super().__init__()
+        self.result_frame = ResultsTab()
+        self.result_frame.results.info_label.hide()
         self.map_id = None
         self.replays = []
         self.cg = Circleguard(get_setting("api_key"), "temp/why_is_this_a_dependecy/like/I_have_no_idea_how_to_handle_this.db")
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an infinite amount of replays.")
-        self.replay = FolderChooser("Choose replay", "", folder_mode=False, file_ending="osu! Replayfile (*osr)")
-        self.replay.path_signal.connect(self.add_replay)
+        self.file_chooser = FolderChooser("Choose replay", "", folder_mode=False, file_ending="osu! Replayfile (*osr)", hidden_path=True)
+        self.file_chooser.path_signal.connect(self.add_replay)
+        self.folder_chooser = FolderChooser("Choose replay folder", "", hidden_path=True)
+        self.folder_chooser.path_signal.connect(self.add_replays)
         layout = QGridLayout()
-        layout.addWidget(self.info, 0, 0, 1, 1)
-        layout.addWidget(self.replay)
+        layout.addWidget(self.info)
+        layout.addWidget(self.file_chooser)
+        layout.addWidget(self.folder_chooser)
+        layout.addWidget(self.result_frame)
 
         self.setLayout(layout)
 
@@ -582,16 +591,32 @@ class VisualizeTab(QWidget):
         replay = ReplayPath(path)
         self.cg.load(check, replay)
         if self.map_id == None or len(self.replays) == 0:  # store map_id if nothing stored
-            print("new one")
+            log.info(f"Changing map_id from {self.map_id} to {replay.map_id}")
             self.map_id = replay.map_id
         elif replay.map_id != self.map_id:  # ignore replay with diffrent map_ids
-            print("weird one")
+            log.error(f"replay {replay} doesn't match with current map_id ({replay.map_id} != {self.map_id}")
             return
-        if not any(replay.replay_id == i.replay_id for i in self.replays):  # check if already stored
-            print("good one, adding")
-            self.replays.append(replay)
+        if not any(replay.replay_id == i.data.replay_id for i in self.replays):  # check if already stored
+            log.info(f"adding new replay {replay} with replay id {replay.replay_id[0]} on map {replay.map_id}")
+            widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id[0]}", "Delete", replay)
+            widget.button_pressed.connect(self.remove_replay)
+            self.replays.append(widget)
+            self.result_frame.results.layout.addWidget(widget)
         else:
-            print("sneaky one, not adding")
+            log.info(f"skipping replay {replay} with replay id {replay.replay_id[0]} on map {replay.map_id} since it's already saved")
+
+    def add_replays(self, path):
+        for file in os.listdir(path):  # os.walk seems unnecessary
+            if file.endswith(".osr"):
+                self.add_replay(os.path.join(path, file))
+
+    def remove_replay(self, data):
+        replay_ids = [i.data.replay_id[0] for i in self.replays]
+        index = replay_ids.index(data.replay_id[0])
+        self.result_frame.results.layout.removeWidget(self.replays[index])
+        self.replays[index].deleteLater()
+        self.replays[index] = None
+        self.replays.pop(index)
 
 
 class SettingsTab(QWidget):
@@ -643,6 +668,12 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
         self.darkmode.box.stateChanged.connect(switch_theme)
 
+        self.visualizer_info = OptionWidget("Visualizer show info", "")
+        self.visualizer_info.box.stateChanged.connect(partial(update_default,"visualizer_info"))
+
+        self.visualizer_bg = OptionWidget("Visualizer black Background", "Reopen Visualizer for it to apply")
+        self.visualizer_bg.box.stateChanged.connect(partial(update_default,"visualizer_bg"))
+
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
         self.cache.box.stateChanged.connect(partial(update_default, "caching"))
 
@@ -669,6 +700,8 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(self.cache_dir)
         self.grid.addWidget(Separator("Appearance"))
         self.grid.addWidget(self.darkmode)
+        self.grid.addWidget(self.visualizer_info)
+        self.grid.addWidget(self.visualizer_bg)
         self.grid.addWidget(Separator("Debug"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
@@ -685,6 +718,8 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
         self.darkmode.box.setChecked(old_theme)
         self.cache.box.setChecked(get_setting("caching"))
+        self.visualizer_info.box.setChecked(get_setting("visualizer_info"))
+        self.visualizer_bg.box.setChecked(get_setting("visualizer_bg"))
         self.cache_dir.switch_enabled(get_setting("caching"))
         self.rainbow.box.setChecked(get_setting("rainbow_accent"))
 

@@ -6,12 +6,13 @@ from circleguard.enums import Mod
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF
 from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QShortcut, QLabel
-from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIcon
+from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIcon, QPalette
 # pylint: enable=no-name-in-module
 
 import osu_parser
 import clock
 from utils import resource_path
+from settings import get_setting
 
 import math
 
@@ -22,13 +23,10 @@ WIDTH_LINE = 1
 WIDTH_POINT = 3
 WIDTH_CIRCLE_BORDER = 8
 FRAMES_ON_SCREEN = 15  # how many frames for each replay to draw on screen at a time
-PEN_BLUE = QPen(QColor(63, 127, 255))
-PEN_RED = QPen(QColor(255, 127, 63))
 PEN_BLACK = QPen(QColor(17, 17, 17))
 PEN_WHITE = QPen(QColor(255, 255, 255))
 X_OFFSET = 64
 Y_OFFSET = 48
-CURSOR_COLORS = [PEN_BLUE, PEN_RED]
 SPEED_OPTIONS = [0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
 
 
@@ -42,12 +40,14 @@ class _Renderer(QWidget):
         self.replay_amount = len(replays)
         self.current_time = 0
         self.pos = [1]*self.replay_amount  # so our first frame is at data[0] since we do pos + 1
-        self.buffer = [[[0, 0, 0]],[[0,0,0]]]
-        self.buffer_additions = [[[0, 0, 0]],[[0,0,0]]]
+        self.buffer = [[[[0, 0, 0]]]*self.replay_amount][0]
+        self.buffer_additions = [[[[0, 0, 0]]]*self.replay_amount][0]
         self.clock = clock.Timer()
+        self.last_time = time.time_ns()
         self.hitobjs = []
         self.paused = False
         self.beatmap_path = beatmap_path
+        self.CURSOR_COLORS = [QPen(QColor().fromHslF(i/self.replay_amount,0.75,0.5)) for i in range(self.replay_amount)]
         if beatmap_path != "":
             self.beatmap = osu_parser.from_path(beatmap_path)
         self.data = []
@@ -194,7 +194,8 @@ class _Renderer(QWidget):
         painter.setRenderHint(QPainter.Antialiasing)
         if self.beatmap_path != "":
             self.paint_beatmap(painter)
-        self.paint_info(painter)
+        if get_setting("visualizer_info"):
+            self.paint_info(painter)
         for index in range(self.replay_amount):
             self.paint_cursor(painter, index)
 
@@ -208,10 +209,10 @@ class _Renderer(QWidget):
         """
         alpha_step = 255/FRAMES_ON_SCREEN
         for i in range(len(self.buffer[index])-1):
-            self.draw_line(painter, CURSOR_COLORS[index], i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]), (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
-            self.draw_point(painter, CURSOR_COLORS[index], i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]))
+            self.draw_line(painter, self.CURSOR_COLORS[index], i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]), (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
+            self.draw_point(painter, self.CURSOR_COLORS[index], i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]))
             if i == len(self.buffer[index])-2:
-                self.draw_point(painter, CURSOR_COLORS[index], (i+1)*alpha_step, (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
+                self.draw_point(painter, self.CURSOR_COLORS[index], (i+1)*alpha_step, (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
 
     def paint_beatmap(self, painter):
         for hitobj in self.hitobjs[::-1]:
@@ -227,18 +228,19 @@ class _Renderer(QWidget):
         painter.setPen(QPen(QColor(128, 128, 128), 1))
         painter.drawText(0, 15, f"Clock: {round(self.clock.get_time())}")
         if self.replay_amount > 0:
-            for i in range(len(self.buffer)):
-                painter.setPen(CURSOR_COLORS[i])
+            for i in range(self.replay_amount):
+                painter.setPen(self.CURSOR_COLORS[i])
                 if len(self.buffer[i]) > 0:  # skips empty buffers
                     painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: {int(self.buffer[i][-1][1])}, {int(self.buffer[i][-1][2])}")
                 else:
                     painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: Not yet loaded")
             painter.setPen(QPen(QColor(128, 128, 128), 1))
-            try:
-                distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
-                painter.drawText(0, 45 + (15 * i), f"Cursor Distance {self.usernames[i-1]}-{self.usernames[i]}: {int(distance)}px")
-            except IndexError:  # Edge case where we only have one cursor
-                pass
+            if self.replay_amount == 2:
+                try:
+                    distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
+                    painter.drawText(0, 45 + (15 * i), f"Cursor Distance {self.usernames[i-1]}-{self.usernames[i]}: {int(distance)}px")
+                except IndexError:  # Edge case where we only have data from one cursor
+                    pass
 
     def draw_line(self, painter, pen, alpha, start, end):
         """
@@ -615,6 +617,11 @@ class _Interface(QWidget):
 class VisualizerWindow(QMainWindow):
     def __init__(self, replays=(), beatmap_path=""):
         super(VisualizerWindow, self).__init__()
+        if get_setting("visualizer_bg"):
+            pal = QPalette()
+            pal.setColor(QPalette.Background, Qt.black)
+            self.setAutoFillBackground(True)
+            self.setPalette(pal)
         self.setWindowTitle("Visualizer")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.interface = _Interface(replays, beatmap_path)
