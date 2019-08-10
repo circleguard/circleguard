@@ -192,7 +192,7 @@ class WindowWrapper(QMainWindow):
                                                         r=result, r1=r1, r2=r2)
         result_widget = ComparisonResult(text, result, r1, r2)
         # set button signal connections (visualize and copy template to clipboard)
-        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
+        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, (result_widget.replay1, result_widget.replay2)))
         result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard,
                 get_setting("template_replay_steal").format(r=result_widget.result, r1=result_widget.replay1, r2=result_widget.replay2)))
         # remove info text if shown
