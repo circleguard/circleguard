@@ -489,6 +489,7 @@ class RunWidget(QFrame):
 
     def __init__(self, run):
         super().__init__()
+
         self.status = "Queued"
         self.label = QLabel(self)
         self.label.setText(f"Run #{run.run_id}")
@@ -510,6 +511,10 @@ class RunWidget(QFrame):
         self.setLayout(layout)
 
     def update_status(self, status):
+        if status == "Finished":
+            # not a qt function, pyqt's implementation of deleting a widget
+            self.button.deleteLater()
+
         self.status = status
         self.status_label.setText(self.status)
 
