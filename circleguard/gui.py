@@ -567,6 +567,7 @@ class VisualizeTab(QWidget):
         self.result_frame = ResultsTab()
         self.result_frame.results.info_label.hide()
         self.map_id = None
+        self.q = Queue()
         self.replays = []
         self.cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
         self.info = QLabel(self)
@@ -583,7 +584,30 @@ class VisualizeTab(QWidget):
 
         self.setLayout(layout)
 
+    def start_timer(self):
+        timer = QTimer(self)
+        timer.timeout.connect(self.run_timer)
+        timer.start(250)
+
+    def run_timer(self):
+        self.add_widget()
+
     def add_replay(self, path):
+        thread = threading.Thread(target=self._parse_replay, args=(path,))
+        thread.start()
+        self.start_timer()
+
+    def add_replays(self, path):
+        thread = threading.Thread(target=self._parse_replays, args=(path,))
+        thread.start()
+        self.start_timer()
+
+    def _parse_replays(self, path):
+        for file in os.listdir(path):  # os.walk seems unnecessary
+            if file.endswith(".osr"):
+                self._parse_replay(os.path.join(path, file))
+
+    def _parse_replay(self, path):
         check = Check(ReplayPath(path))
         replay = ReplayPath(path)
         self.cg.load(check, replay)
@@ -595,17 +619,21 @@ class VisualizeTab(QWidget):
             return
         if not any(replay.replay_id == r.data.replay_id for r in self.replays):  # check if already stored
             log.info(f"adding new replay {replay} with replay id {replay.replay_id} on map {replay.map_id}")
-            widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id}", "Delete", replay)
-            widget.pressed_signal.connect(self.remove_replay)
-            self.replays.append(widget)
-            self.result_frame.results.layout.addWidget(widget)
+            self.q.put(replay)
         else:
             log.info(f"skipping replay {replay} with replay id {replay.replay_id} on map {replay.map_id} since it's already saved")
+                        
+    def add_widget(self):
+        try:
+            while True:
+                replay = self.q.get(block=False)
+                widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id}", "Delete", replay)
+                widget.pressed_signal.connect(self.remove_replay)
+                self.replays.append(widget)
+                self.result_frame.results.layout.addWidget(widget)
+        except Empty:
+            pass
 
-    def add_replays(self, path):
-        for file in os.listdir(path):  # os.walk seems unnecessary
-            if file.endswith(".osr"):
-                self.add_replay(os.path.join(path, file))
 
     def remove_replay(self, data):
         replay_ids = [i.data.replay_id for i in self.replays]
