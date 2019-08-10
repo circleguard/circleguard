@@ -254,11 +254,13 @@ class MainTab(QWidget):
     add_comparison_result_signal = pyqtSignal(object)  # Result
 
     TAB_REGISTER = [
-        {"name": "MAP",         "custom_action": False},
-        {"name": "SCREEN",      "custom_action": False},
-        {"name": "LOCAL",       "custom_action": False},
-        {"name": "VERIFY",      "custom_action": False},
-        {"name": "VISUALIZE",   "custom_action": True}
+        {"name": "MAP"},
+        {"name": "SCREEN"},
+        {"name": "MAP"},
+        {"name": "SCREEN"},
+        {"name": "LOCAL"},
+        {"name": "VERIFY"},
+        {"name": "VISUALIZE"}
     ]
 
     def __init__(self):
@@ -310,7 +312,7 @@ class MainTab(QWidget):
     def run(self):
         current_tab = self.tabs.currentIndex()
         self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
-        if not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["custom_action"]:
+        if not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["name"] == "VISUALIZE":
             thread = threading.Thread(target=self.run_circleguard)
             thread.start()
         else:
