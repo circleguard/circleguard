@@ -9,7 +9,7 @@ from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
 from settings import get_setting, reset_defaults, update_default
 from visualizer import VisualizerWindow
-
+from utils import MapRun, ScreenRun, LocalRun, VerifyRun
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
@@ -111,17 +111,17 @@ class DoubleSpinBox(QDoubleSpinBox):
 
 
 class QHLine(QFrame):
-    def __init__(self):
+    def __init__(self, shadow=QFrame.Plain):
         super(QHLine, self).__init__()
         self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Plain)
+        self.setFrameShadow(shadow)
 
 
 class QVLine(QFrame):
-    def __init__(self):
+    def __init__(self, shadow=QFrame.Plain):
         super(QVLine, self).__init__()
         self.setFrameShape(QFrame.VLine)
-        self.setFrameShadow(QFrame.Plain)
+        self.setFrameShadow(shadow)
 
 
 class Separator(QFrame):
@@ -493,10 +493,22 @@ class RunWidget(QFrame):
 
         self.status = "Queued"
         self.label = QLabel(self)
-        self.label.setText(f"Run #{run.run_id}")
+        self.text = ""
+        if type(run) is MapRun:
+            self.text = f"Map check on map {run.map_id}'s top {run.num} plays with thresh {run.thresh}."
+        if type(run) is ScreenRun:
+            self.text = f"User screen on user {run.user_id}'s top {run.num_top} plays with thresh {run.thresh}."
+        if type(run) is LocalRun:
+            self.text = f"Local check on folder {run.path}."
+        if type(run) is VerifyRun:
+            self.text = f"Verify check on {run.user_id_1} and {run.user_id_2}'s plays on map {run.map_id}."
+
+
+        self.label.setText(self.text)
 
         self.status_label = QLabel(self)
-        self.status_label.setText(self.status)
+        self.status_label.setText("<b>Status: " + self.status + "</b>")
+        self.status_label.setTextFormat(Qt.RichText) # so we can bold it
         self.button = QPushButton(self)
         self.button.setText("Cancel")
 
@@ -517,12 +529,12 @@ class RunWidget(QFrame):
             self.button.deleteLater()
 
         self.status = status
-        self.status_label.setText(self.status)
+        self.status_label.setText("<b>Status: " + self.status + "</b>")
 
     def cancel(self):
         self.status = "Canceled"
         self.button.deleteLater()
-        self.status_label.setText(self.status)
+        self.status_label.setText("<b>Status: " + self.status + "</b>")
 
 
 
