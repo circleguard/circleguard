@@ -788,6 +788,7 @@ class EntryWidget(QFrame):
         layout = QGridLayout()
         layout.addWidget(QLabel(title), 0, 0, 1, 1)
         layout.addWidget(self.button, 0, 1, 1, 1)
+        layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(layout)
 
     def _pressed_action(self, _):
