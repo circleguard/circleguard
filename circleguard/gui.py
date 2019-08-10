@@ -571,7 +571,7 @@ class VisualizeTab(QWidget):
         self.result_frame.results.info_label.hide()
         self.map_id = None
         self.replays = []
-        self.cg = Circleguard(get_setting("api_key"), "temp/why_is_this_a_dependecy/like/I_have_no_idea_how_to_handle_this.db")
+        self.cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an infinite amount of replays.")
         self.file_chooser = FolderChooser("Choose replay", "", folder_mode=False, file_ending="osu! Replayfile (*osr)", hidden_path=True)
