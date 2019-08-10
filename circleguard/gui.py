@@ -599,13 +599,13 @@ class VisualizeTab(QWidget):
             log.error(f"replay {replay} doesn't match with current map_id ({replay.map_id} != {self.map_id}")
             return
         if not any(replay.replay_id == r.data.replay_id for r in self.replays):  # check if already stored
-            log.info(f"adding new replay {replay} with replay id {replay.replay_id[0]} on map {replay.map_id}")
-            widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id[0]}", "Delete", replay)
+            log.info(f"adding new replay {replay} with replay id {replay.replay_id} on map {replay.map_id}")
+            widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id}", "Delete", replay)
             widget.pressed_signal.connect(self.remove_replay)
             self.replays.append(widget)
             self.result_frame.results.layout.addWidget(widget)
         else:
-            log.info(f"skipping replay {replay} with replay id {replay.replay_id[0]} on map {replay.map_id} since it's already saved")
+            log.info(f"skipping replay {replay} with replay id {replay.replay_id} on map {replay.map_id} since it's already saved")
 
     def add_replays(self, path):
         for file in os.listdir(path):  # os.walk seems unnecessary
@@ -613,8 +613,8 @@ class VisualizeTab(QWidget):
                 self.add_replay(os.path.join(path, file))
 
     def remove_replay(self, data):
-        replay_ids = [i.data.replay_id[0] for i in self.replays]
-        index = replay_ids.index(data.replay_id[0])
+        replay_ids = [i.data.replay_id for i in self.replays]
+        index = replay_ids.index(data.replay_id)
         self.result_frame.results.layout.removeWidget(self.replays[index])
         self.replays[index].deleteLater()
         self.replays[index] = None
