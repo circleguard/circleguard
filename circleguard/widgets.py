@@ -649,7 +649,8 @@ class FolderChooser(QFrame):
             path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=QDir.currentPath(), options=options)
         else:
             path = QFileDialog.getOpenFileName(caption="Select File", filter=self.file_ending)[0]
-        self.update_dir(path)
+        if path != "":
+            self.update_dir(path)
 
     def update_dir(self, path):
         self.path = path if path != "" else self.path
