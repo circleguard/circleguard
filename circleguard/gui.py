@@ -310,14 +310,11 @@ class MainTab(QWidget):
     def run(self):
         current_tab = self.tabs.currentIndex()
         self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
-        if not MainTab.TAB_REGISTER[self.tabs.currentIndex()]["name"] == "VISUALIZE":
+        if self.run_type == "VISUALIZE":
+            self.visualize([replay.data for replay in self.visualize_tab.replays])
+        else:
             thread = threading.Thread(target=self.run_circleguard)
             thread.start()
-        else:
-            self.visualize([replay.data for replay in self.visualize_tab.replays])
-        # pool = ThreadPool(processes=1)
-        # raise Exception("dddd")
-        # pool.apply_async(self.run_circleguard)
 
     def switch_run_button(self):
         if not self.cg_running:
