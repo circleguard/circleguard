@@ -281,6 +281,7 @@ class MainTab(QWidget):
 
         self.q = Queue()
         self.cg_q = Queue()
+        self.helper_thread_running = False
         self.runs = [] # Run objects for canceling runs
         self.run_id = 0
         tabs = QTabWidget()
@@ -394,15 +395,22 @@ class MainTab(QWidget):
                 while True:
                     run = self.cg_q.get_nowait()
                     thread = threading.Thread(target=self.run_circleguard, args=[run])
+                    self.helper_thread_running = True
                     thread.start()
                     # run sequentially to not confuse user with terminal output
                     thread.join()
             except Empty:
+                self.helper_thread_running = False
                 return
-        # have to do a double thread use if we start the threads in
-        # the main thread and .join, it will block the gui thread (very bad).
-        thread = threading.Thread(target=_check_circleguard_queue, args=[self])
-        thread.start()
+
+        # don't launch another thread running cg if one is already running,
+        # or else multiple runs will occur at once (defeats the whole purpose
+        # of sequential runs)
+        if not self.helper_thread_running:
+            # have to do a double thread use if we start the threads in
+            # the main thread and .join, it will block the gui thread (very bad).
+            thread = threading.Thread(target=_check_circleguard_queue, args=[self])
+            thread.start()
 
 
 
