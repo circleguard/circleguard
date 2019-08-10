@@ -598,7 +598,7 @@ class VisualizeTab(QWidget):
         elif replay.map_id != self.map_id:  # ignore replay with diffrent map_ids
             log.error(f"replay {replay} doesn't match with current map_id ({replay.map_id} != {self.map_id}")
             return
-        if not any(replay.replay_id == i.data.replay_id for i in self.replays):  # check if already stored
+        if not any(replay.replay_id == r.data.replay_id for r in self.replays):  # check if already stored
             log.info(f"adding new replay {replay} with replay id {replay.replay_id[0]} on map {replay.map_id}")
             widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id[0]}", "Delete", replay)
             widget.pressed_signal.connect(self.remove_replay)
