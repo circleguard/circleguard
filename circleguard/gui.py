@@ -274,9 +274,9 @@ class MainTab(QWidget):
         self.visualize_tab = VisualizeTab()
         tabs.addTab(self.map_tab, "Check Map")
         tabs.addTab(self.user_tab, "Screen User")
-        tabs.addTab(self.local_tab, "Check Local Replays")
+        tabs.addTab(self.local_tab, "Check Local")
         tabs.addTab(self.verify_tab, "Verify")
-        tabs.addTab(self.visualize_tab, "Visualize Replays")
+        tabs.addTab(self.visualize_tab, "Visualize")
         self.tabs = tabs
         self.tabs.currentChanged.connect(self.switch_run_button)
 
