@@ -682,8 +682,8 @@ class ScrollableSettingsWidget(QFrame):
         self.cache.box.stateChanged.connect(self.cache_dir.switch_enabled)
 
         self.loglevel = LoglevelWidget("")
-        self.loglevel.level_combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
-        self.set_circleguard_loglevel()  # set the default loglevel in cg, not just in gui
+        self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
+        self.set_loglevel()  # set the default loglevel in cg, not just in gui
 
         self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
@@ -723,8 +723,9 @@ class ScrollableSettingsWidget(QFrame):
         self.cache_dir.switch_enabled(get_setting("caching"))
         self.rainbow.box.setChecked(get_setting("rainbow_accent"))
 
-    def set_circleguard_loglevel(self):
-        set_options(loglevel=self.loglevel.level_combobox.currentData())
+    def set_loglevel(self):
+        for logger in logging.root.manager.loggerDict:
+            logging.getLogger(logger).setLevel(self.loglevel.level_combobox.currentData())
 
     def next_color(self):
         (r, g, b) = colorsys.hsv_to_rgb(self._rainbow_counter, 1.0, 1.0)
