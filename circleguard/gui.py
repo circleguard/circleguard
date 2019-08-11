@@ -298,7 +298,6 @@ class MainTab(QWidget):
         self.helper_thread_running = False
         self.runs = [] # Run objects for canceling runs
         self.run_id = 0
-        self.rang = False
         self.visualizer_window = None
         tabs = QTabWidget()
         self.map_tab = MapTab()
@@ -444,7 +443,6 @@ class MainTab(QWidget):
     def run_circleguard(self, run):
         self.update_label_signal.emit("Loading Replays")
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
-        self.rang = False
         event = run.event
         try:
             set_options(cache=get_setting("caching"))
@@ -540,10 +538,8 @@ class MainTab(QWidget):
                 msg = get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
                                                                     r=result, r1=r1, r2=r2)
                 self.write(msg)
-                if not self.rang:
-                    QApplication.beep()
-                    QApplication.alert(self)
-                    self.rang = True
+                QApplication.beep()
+                QApplication.alert(self)
                 # add to Results Tab so it can be played back on demand
                 self.add_comparison_result_signal.emit(result)
 
