@@ -693,10 +693,10 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
         self.darkmode.box.stateChanged.connect(switch_theme)
 
-        self.visualizer_info = OptionWidget("Visualizer show info", "")
+        self.visualizer_info = OptionWidget("Show Visualizer info", "")
         self.visualizer_info.box.stateChanged.connect(partial(update_default,"visualizer_info"))
 
-        self.visualizer_bg = OptionWidget("Visualizer black Background", "Reopen Visualizer for it to apply")
+        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply")
         self.visualizer_bg.box.stateChanged.connect(partial(update_default,"visualizer_bg"))
 
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
