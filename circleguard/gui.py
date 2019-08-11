@@ -140,7 +140,7 @@ class WindowWrapper(QMainWindow):
     def start_timer(self):
         timer = QTimer(self)
         timer.timeout.connect(self.run_timer)
-        timer.start(100)
+        timer.start(1000/60)
 
     def run_timer(self):
         """
@@ -681,7 +681,7 @@ class VisualizeTab(QWidget):
     def start_timer(self):
         timer = QTimer(self)
         timer.timeout.connect(self.run_timer)
-        timer.start(100)
+        timer.start(1000/60)
 
     def run_timer(self):
         self.add_widget()
