@@ -571,7 +571,7 @@ class VisualizeTab(QWidget):
         self.replays = []
         self.cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
         self.info = QLabel(self)
-        self.info.setText("Visualizes Replays. Has theoretically support for an infinite amount of replays.")
+        self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
         self.file_chooser = FolderChooser("Add Replay", "", folder_mode=False, file_ending="osu! Replayfile (*osr)", hidden_path=True)
         self.file_chooser.path_signal.connect(self.add_replay)
         self.folder_chooser = FolderChooser("Add Replay Folder", "", hidden_path=True)
@@ -622,7 +622,7 @@ class VisualizeTab(QWidget):
             self.q.put(replay)
         else:
             log.info(f"skipping replay {replay} with replay id {replay.replay_id} on map {replay.map_id} since it's already saved")
-                        
+
     def add_widget(self):
         try:
             while True:
