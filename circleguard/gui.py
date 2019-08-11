@@ -294,7 +294,7 @@ class MainTab(QWidget):
         self.visualize_tab = VisualizeTab()
         tabs.addTab(self.map_tab, "Check Map")
         tabs.addTab(self.screen_tab, "Screen User")
-        tabs.addTab(self.local_tab, "Check Local Replays")
+        tabs.addTab(self.local_tab, "Check Local")
         tabs.addTab(self.verify_tab, "Verify")
         tabs.addTab(self.visualize_tab, "Visualize")
         self.tabs = tabs
@@ -332,7 +332,7 @@ class MainTab(QWidget):
 
         # special case; visualize runs shouldn't get added to queue
         if run_type == "VISUALIZE":
-            self.visualize([replay.data for repaly in self.visualize_tab.replays])
+            self.visualize([replay.data for replay in self.visualize_tab.replays])
             return
 
         m = self.map_tab
