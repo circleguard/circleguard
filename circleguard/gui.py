@@ -364,7 +364,6 @@ class MainTab(QWidget):
         l_num = l.compare_top.slider.value()
         l_thresh = l.threshold.slider.value()
 
-
         v_map_id = v.map_id.field.text()
         v_map_id = int(v_map_id) if v_map_id != "" else None
         v_user_id_1 = v.user_id_1.field.text()
