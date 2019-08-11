@@ -512,6 +512,8 @@ class RunWidget(QFrame):
         self.status_label.setTextFormat(Qt.RichText) # so we can bold it
         self.button = QPushButton(self)
         self.button.setText("Cancel")
+        self.button.setFixedWidth(50)
+        self.label.setFixedHeight(self.button.size().height()*0.75)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
