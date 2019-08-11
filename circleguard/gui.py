@@ -403,6 +403,10 @@ class MainTab(QWidget):
             try:
                 while True:
                     run = self.cg_q.get_nowait()
+                    # occurs if run is canceled before being started, it will still stop
+                    # before actually loading anything but we don't want the labels to flicker
+                    if run.event.wait(0):
+                        continue
                     thread = threading.Thread(target=self.run_circleguard, args=[run])
                     self.helper_thread_running = True
                     thread.start()
