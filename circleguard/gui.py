@@ -222,7 +222,7 @@ class WindowWrapper(QMainWindow):
         we don't hang the application on loading/comparing while trying to quit"""
         for run in self.main_window.main_tab.runs:
             run.event.set()
-    
+
     def closeEvent(self, event):
         if self.debug_window != None:
             self.debug_window.close()
