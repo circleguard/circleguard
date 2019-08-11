@@ -269,7 +269,7 @@ class MainWindow(QWidget):
 
         self.main_layout = QVBoxLayout()
         self.main_layout.addWidget(self.tab_widget)
-        self.main_layout.setContentsMargins(0, 10, 0, 0)
+        self.main_layout.setContentsMargins(10, 10, 10, 0)
         self.setLayout(self.main_layout)
 
 
