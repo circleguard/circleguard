@@ -224,7 +224,8 @@ class WindowWrapper(QMainWindow):
             run.event.set()
     
     def closeEvent(self, event):
-        self.debug_window.close()
+        if self.debug_window != None:
+            self.debug_window.close()
         if self.main_window.main_tab.visualizer_window != None:
             self.main_window.main_tab.visualizer_window.close()
 
@@ -298,6 +299,7 @@ class MainTab(QWidget):
         self.runs = [] # Run objects for canceling runs
         self.run_id = 0
         self.rang = False
+        self.visualizer_window = None
         tabs = QTabWidget()
         self.map_tab = MapTab()
         self.screen_tab = ScreenTab()
