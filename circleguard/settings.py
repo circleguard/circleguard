@@ -20,6 +20,8 @@ DEFAULTS = {
     "log_mode": 1, # ERROR
     "log_output": 1, # TERMINAL
     "local_replay_dir": "./examples/replays/",
+    "visualizer_info": True,
+    "visualizer_bg": False,
     # string settings
     "message_loading_replays": "[{ts:%X}] Loading {num_replays} Replays",
     "message_starting_comparing": "[{ts:%X}] Comparing Replays",

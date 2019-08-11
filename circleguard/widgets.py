@@ -1,4 +1,5 @@
 import sys
+import ntpath
 # pylint: disable=no-name-in-module
 from functools import partial
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBox,
@@ -613,10 +614,12 @@ class WidgetCombiner(QFrame):
 class FolderChooser(QFrame):
     path_signal = pyqtSignal(str)
 
-    def __init__(self, title, path, folder_mode=True):
+    def __init__(self, title, path, folder_mode=True, file_ending="osu! Beatmapfile (*.osu)", hidden_path=False):
         super(FolderChooser, self).__init__()
         self.path = path
+        self.hidden_path = hidden_path
         self.folder_mode = folder_mode
+        self.file_ending = file_ending
         self.label = QLabel(self)
         self.label.setText(title+":")
 
@@ -626,7 +629,8 @@ class FolderChooser(QFrame):
         self.file_chooser_button.setFixedWidth(100)
 
         self.path_label = QLabel(self)
-        self.path_label.setText(self.path)
+        if not self.hidden_path:
+            self.path_label.setText(self.path)
         self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
 
         layout = QGridLayout()
@@ -644,12 +648,15 @@ class FolderChooser(QFrame):
             options |= QFileDialog.HideNameFilterDetails
             path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=QDir.currentPath(), options=options)
         else:
-            path = QFileDialog.getOpenFileName(caption="Select File", filter="osu files (*.osu)")[0]
-        self.update_dir(path)
+            path = QFileDialog.getOpenFileName(caption="Select File", filter=self.file_ending)[0]
+        if path != "":
+            self.update_dir(path)
 
     def update_dir(self, path):
         self.path = path if path != "" else self.path
-        self.path_label.setText(self.path)
+        if not self.hidden_path:
+            label = path if len(self.path) < 64 else ntpath.basename(path)
+            self.path_label.setText(label)
         self.dir_updated()
 
     def dir_updated(self):
@@ -765,3 +772,25 @@ class BooleanPlay(QFrame):
         layout.addWidget(QLabel(text), 0, 1, 1, 1)
 
         self.setLayout(layout)
+
+
+class EntryWidget(QFrame):
+    pressed_signal = pyqtSignal(object)
+    """
+    Represents a single entry of some kind of data, consisting of a title, a button and the data which is stored at self.data.
+    When the button is pressed, pressed_signal is emitted with the data for ease of use.
+    """
+    def __init__(self, title, action_name, data=None):
+        super().__init__()
+        self.data = data
+        self.button = QPushButton(action_name)
+        self.button.setFixedWidth(100)
+        self.button.clicked.connect(self.button_pressed)
+        layout = QGridLayout()
+        layout.addWidget(QLabel(title), 0, 0, 1, 1)
+        layout.addWidget(self.button, 0, 1, 1, 1)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+
+    def button_pressed(self, _):
+        self.pressed_signal.emit(self.data)
