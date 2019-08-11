@@ -614,10 +614,10 @@ class WidgetCombiner(QFrame):
 class FolderChooser(QFrame):
     path_signal = pyqtSignal(str)
 
-    def __init__(self, title, path, folder_mode=True, file_ending="osu! Beatmapfile (*.osu)", hidden_path=False):
+    def __init__(self, title, path, folder_mode=True, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
         super(FolderChooser, self).__init__()
         self.path = path
-        self.hidden_path = hidden_path
+        self.display_path = display_path
         self.folder_mode = folder_mode
         self.file_ending = file_ending
         self.label = QLabel(self)
@@ -629,7 +629,7 @@ class FolderChooser(QFrame):
         self.file_chooser_button.setFixedWidth(100)
 
         self.path_label = QLabel(self)
-        if not self.hidden_path:
+        if self.display_path:
             self.path_label.setText(self.path)
         self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
 
@@ -654,7 +654,7 @@ class FolderChooser(QFrame):
 
     def update_dir(self, path):
         self.path = path if path != "" else self.path
-        if not self.hidden_path:
+        if self.display_path:
             label = path if len(self.path) < 64 else ntpath.basename(path)
             self.path_label.setText(label)
         self.dir_updated()
