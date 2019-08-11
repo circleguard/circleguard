@@ -13,7 +13,6 @@ from visualizer import VisualizerWindow
 
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
-MAX = 128
 
 
 def set_event_window(window):
@@ -220,8 +219,9 @@ class OptionWidget(QFrame):
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 1, 1, MAX-2)
-        layout.addWidget(self.box, 0, MAX-1, 1, 1)
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.box, 0, 2, 1, 3)
         self.setLayout(layout)
 
 
@@ -339,14 +339,15 @@ class LoglevelWidget(QFrame):
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(level_label, 0, 0, 1, MAX-3)
-        layout.addItem(SPACER, 0, MAX-2, 1, 1)
-        layout.addWidget(self.level_combobox, 0, MAX-1, 1, 1)
-        layout.addWidget(output_label, 1, 0, 1, MAX-3)
-        layout.addItem(SPACER, 1, MAX-2, 1, 1)
-        layout.addWidget(self.output_combobox, 1, MAX-1, 1, 1)
-        layout.addWidget(save_option, 2, 0, 1, MAX)
-        layout.addWidget(self.save_folder, 3, 0, 1, MAX)
+        layout.addWidget(level_label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.level_combobox, 0, 2, 1, 3)
+        layout.addWidget(output_label, 1, 0, 1, 1)
+        layout.addItem(SPACER, 1, 1, 1, 1)
+        layout.addWidget(self.output_combobox, 1, 2, 1, 3)
+        layout.addWidget(save_option, 2, 0, 1, 5)
+        layout.addWidget(self.save_folder, 3, 0, 1, 5)
+
         self.setLayout(layout)
 
 
