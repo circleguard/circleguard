@@ -226,7 +226,7 @@ class _Renderer(QWidget):
            QPainter painter: The painter.
         """
         painter.setPen(QPen(QColor(128, 128, 128), 1))
-        painter.drawText(0, 15, f"Clock: {round(self.clock.get_time())}")
+        painter.drawText(0, 15, f"Clock: {round(self.clock.get_time())} ms")
         if self.replay_amount > 0:
             for i in range(self.replay_amount):
                 painter.setPen(self.CURSOR_COLORS[i])
