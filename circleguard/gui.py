@@ -106,7 +106,7 @@ class WindowWrapper(QMainWindow):
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
-        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, lambda: sys.exit(1))
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, partial(self.cancel_all_runs, self))
 
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
@@ -216,6 +216,12 @@ class WindowWrapper(QMainWindow):
 
     def cancel_run(self, run_id):
         self.main_window.main_tab.runs[run_id].event.set()
+
+    def cancel_all_runs(self):
+        """called when lastWindowClosed signal emits. Cancel all our runs so
+        we don't hang the application on loading/comparing while trying to quit"""
+        for run in self.main_window.main_tab.runs:
+            run.event.set()
 
 class DebugWindow(QMainWindow):
     def __init__(self):
@@ -985,4 +991,6 @@ if __name__ == "__main__":
         welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default,"caching"))
         welcome.show()
         update_default("ran", True)
+
+    app.lastWindowClosed.connect(WINDOW.cancel_all_runs)
     app.exec_()
