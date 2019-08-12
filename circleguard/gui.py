@@ -572,10 +572,11 @@ class VisualizeTab(QWidget):
         self.cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
-        self.file_chooser = FolderChooser("Add Replay", "", folder_mode=False, file_ending="osu! Replayfile (*osr)", display_path=False)
-        self.file_chooser.path_signal.connect(self.add_replay)
-        self.folder_chooser = FolderChooser("Add Replay Folder", "", display_path=False)
-        self.folder_chooser.path_signal.connect(self.add_replays)
+        self.file_chooser = FolderChooser("Add Replays", "", folder_mode=False, multiple_files=True,
+                                            file_ending="osu! Replayfile (*osr)", display_path=False)
+        self.file_chooser.path_signal.connect(self.add_files)
+        self.folder_chooser = FolderChooser("Add Folder", "", display_path=False)
+        self.folder_chooser.path_signal.connect(self.add_folder)
         layout = QGridLayout()
         layout.addWidget(self.info)
         layout.addWidget(self.file_chooser)
@@ -592,20 +593,25 @@ class VisualizeTab(QWidget):
     def run_timer(self):
         self.add_widget()
 
-    def add_replay(self, path):
-        thread = threading.Thread(target=self._parse_replay, args=(path,))
+    def add_files(self, paths):
+        thread = threading.Thread(target=self._parse_replays, args=[paths])
         thread.start()
         self.start_timer()
 
-    def add_replays(self, path):
-        thread = threading.Thread(target=self._parse_replays, args=(path,))
+    def add_folder(self, path):
+        thread = threading.Thread(target=self._parse_folder, args=[path])
         thread.start()
         self.start_timer()
 
-    def _parse_replays(self, path):
-        for file in os.listdir(path):  # os.walk seems unnecessary
-            if file.endswith(".osr"):
-                self._parse_replay(os.path.join(path, file))
+    def _parse_replays(self, paths):
+        for path in paths:
+            # guaranteed to end in .osr by our filter
+            self._parse_replay(path)
+
+    def _parse_folder(self, path):
+        for f in os.listdir(path):  # os.walk seems unnecessary
+            if f.endswith(".osr"):
+                self._parse_replay(os.path.join(path, f))
 
     def _parse_replay(self, path):
         check = Check(ReplayPath(path))
@@ -615,7 +621,7 @@ class VisualizeTab(QWidget):
             log.info(f"Changing map_id from {self.map_id} to {replay.map_id}")
             self.map_id = replay.map_id
         elif replay.map_id != self.map_id:  # ignore replay with diffrent map_ids
-            log.error(f"replay {replay} doesn't match with current map_id ({replay.map_id} != {self.map_id}")
+            log.error(f"replay {replay} doesn't match with current map_id ({replay.map_id} != {self.map_id})")
             return
         if not any(replay.replay_id == r.data.replay_id for r in self.replays):  # check if already stored
             log.info(f"adding new replay {replay} with replay id {replay.replay_id} on map {replay.map_id}")
