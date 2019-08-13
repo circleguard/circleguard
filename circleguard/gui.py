@@ -687,12 +687,12 @@ class VisualizeTab(QWidget):
         self.add_widget()
 
     def add_replay(self, path):
-        thread = threading.Thread(target=self._parse_replay, args=(path,))
+        thread = threading.Thread(target=self._parse_replay, args=[path])
         thread.start()
         self.start_timer()
 
     def add_replays(self, path):
-        thread = threading.Thread(target=self._parse_replays, args=(path,))
+        thread = threading.Thread(target=self._parse_replays, args=[path])
         thread.start()
         self.start_timer()
 
