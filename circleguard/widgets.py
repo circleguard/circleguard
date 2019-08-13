@@ -10,7 +10,7 @@ from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
 from settings import get_setting, reset_defaults, update_default
 from visualizer import VisualizerWindow
-
+from utils import MapRun, ScreenRun, LocalRun, VerifyRun
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
@@ -112,17 +112,17 @@ class DoubleSpinBox(QDoubleSpinBox):
 
 
 class QHLine(QFrame):
-    def __init__(self):
+    def __init__(self, shadow=QFrame.Plain):
         super(QHLine, self).__init__()
         self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Plain)
+        self.setFrameShadow(shadow)
 
 
 class QVLine(QFrame):
-    def __init__(self):
+    def __init__(self, shadow=QFrame.Plain):
         super(QVLine, self).__init__()
         self.setFrameShape(QFrame.VLine)
-        self.setFrameShadow(QFrame.Plain)
+        self.setFrameShadow(shadow)
 
 
 class Separator(QFrame):
@@ -456,7 +456,7 @@ class CompareTopPlays(QFrame):
 class ComparisonResult(QFrame):
     """
     Stores the result of a comparison that can be replayed at any time.
-    Contains a Label, QPushButton (visualize) and QPushButton (copy to clipboard).
+    Contains a QLabel, QPushButton (visualize) and QPushButton (copy to clipboard).
     """
 
     def __init__(self, text, result, replay1, replay2):
@@ -481,6 +481,65 @@ class ComparisonResult(QFrame):
         layout.addWidget(self.button_clipboard, 0, 3, 1, 1)
 
         self.setLayout(layout)
+
+class RunWidget(QFrame):
+    """
+    A single run with QLabel displaying a state (either queued, finished,
+    loading replays, comparing, or canceled), and a cancel QPushButton
+    if not already finished or canceled.
+    """
+
+    def __init__(self, run):
+        super().__init__()
+
+        self.status = "Queued"
+        self.label = QLabel(self)
+        self.text = ""
+        if type(run) is MapRun:
+            self.text = f"Map check on map {run.map_id}'s top {run.num} plays with thresh {run.thresh}."
+        if type(run) is ScreenRun:
+            self.text = f"User screen on user {run.user_id}'s top {run.num_top} plays with thresh {run.thresh}."
+        if type(run) is LocalRun:
+            self.text = f"Local check on folder {run.path}."
+        if type(run) is VerifyRun:
+            self.text = f"Verify check on {run.user_id_1} and {run.user_id_2}'s plays on map {run.map_id}."
+
+
+        self.label.setText(self.text)
+
+        self.status_label = QLabel(self)
+        self.status_label.setText("<b>Status: " + self.status + "</b>")
+        self.status_label.setTextFormat(Qt.RichText) # so we can bold it
+        self.button = QPushButton(self)
+        self.button.setText("Cancel")
+        self.button.setFixedWidth(50)
+        self.label.setFixedHeight(self.button.size().height()*0.75)
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.label, 0, 0, 1, 1)
+        layout.addWidget(self.status_label, 0, 1, 1, 1)
+        # needs to be redefined because RunWidget is being called from a
+        # different thread or something? get weird errors when not redefined
+        SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
+        layout.addItem(SPACER, 0, 2, 1, 1)
+        layout.addWidget(self.button, 0, 3, 1, 1)
+        self.setLayout(layout)
+
+    def update_status(self, status):
+        if status == "Finished":
+            # not a qt function, pyqt's implementation of deleting a widget
+            self.button.deleteLater()
+
+        self.status = status
+        self.status_label.setText("<b>Status: " + self.status + "</b>")
+
+    def cancel(self):
+        self.status = "Canceled"
+        self.button.deleteLater()
+        self.status_label.setText("<b>Status: " + self.status + "</b>")
+
+
 
 class SliderBoxSetting(QFrame):
     """

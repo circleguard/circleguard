@@ -33,7 +33,7 @@ SPEED_OPTIONS = [0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
 class _Renderer(QWidget):
     update_signal = pyqtSignal(int)
 
-    def __init__(self, replays=(), beatmap_path="", parent=None):
+    def __init__(self, replays=[], beatmap_path="", parent=None):
         super(_Renderer, self).__init__(parent)
         # initialize variables
         self.setFixedSize(640, 480)
@@ -499,7 +499,7 @@ class _Renderer(QWidget):
 
 
 class _Interface(QWidget):
-    def __init__(self, replays=(), beatmap_path=""):
+    def __init__(self, replays=[], beatmap_path=""):
         super(_Interface, self).__init__()
         self.renderer = _Renderer(replays, beatmap_path)
 
@@ -615,7 +615,7 @@ class _Interface(QWidget):
 
 
 class VisualizerWindow(QMainWindow):
-    def __init__(self, replays=(), beatmap_path=""):
+    def __init__(self, replays=[], beatmap_path=""):
         super(VisualizerWindow, self).__init__()
         if get_setting("visualizer_bg"):
             pal = QPalette()
