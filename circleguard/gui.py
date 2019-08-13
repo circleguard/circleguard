@@ -140,7 +140,7 @@ class WindowWrapper(QMainWindow):
     def start_timer(self):
         timer = QTimer(self)
         timer.timeout.connect(self.run_timer)
-        timer.start(1000/60)
+        timer.start(250)
 
     def run_timer(self):
         """
@@ -529,27 +529,28 @@ class MainTab(QWidget):
 
     def print_results(self):
         try:
-            result = self.q.get_nowait()
-            # self.visualize(result.replay1, result.replay2)
-            if result.ischeat:
-                timestamp = datetime.now()
-                r1 = result.replay1
-                r2 = result.replay2
-                msg = get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                                                                    r=result, r1=r1, r2=r2)
-                self.write(msg)
-                QApplication.beep()
-                QApplication.alert(self)
-                # add to Results Tab so it can be played back on demand
-                self.add_comparison_result_signal.emit(result)
+            while True:
+                result = self.q.get_nowait()
+                # self.visualize(result.replay1, result.replay2)
+                if result.ischeat:
+                    timestamp = datetime.now()
+                    r1 = result.replay1
+                    r2 = result.replay2
+                    msg = get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
+                                                                      r=result, r1=r1, r2=r2)
+                    self.write(msg)
+                    QApplication.beep()
+                    QApplication.alert(self)
+                    # add to Results Tab so it can be played back on demand
+                    self.add_comparison_result_signal.emit(result)
 
-            elif result.similarity < get_setting("threshold_display"):
-                timestamp = datetime.now()
-                r1 = result.replay1
-                r2 = result.replay2
-                msg = get_setting("message_no_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                                                                    r=result, r1=r1, r2=r2)
-                self.write(msg)
+                elif result.similarity < get_setting("threshold_display"):
+                    timestamp = datetime.now()
+                    r1 = result.replay1
+                    r2 = result.replay2
+                    msg = get_setting("message_no_cheater_found").format(ts=timestamp, similarity=result.similarity,
+                                                                      r=result, r1=r1, r2=r2)
+                    self.write(msg)
         except Empty:
             pass
 
@@ -681,7 +682,7 @@ class VisualizeTab(QWidget):
     def start_timer(self):
         timer = QTimer(self)
         timer.timeout.connect(self.run_timer)
-        timer.start(1000/60)
+        timer.start(250)
 
     def run_timer(self):
         self.add_widget()
