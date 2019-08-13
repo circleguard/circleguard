@@ -730,7 +730,7 @@ class VisualizeTab(QWidget):
 
 
     def remove_replay(self, data):
-        replay_ids = [i.data.replay_id for i in self.replays]
+        replay_ids = [replay.data.replay_id for replay in self.replays]
         index = replay_ids.index(data.replay_id)
         self.result_frame.results.layout.removeWidget(self.replays[index])
         self.replays[index].deleteLater()
