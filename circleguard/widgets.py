@@ -319,7 +319,7 @@ class LoglevelWidget(QFrame):
         output_combobox.addItem("NEW WINDOW")
         output_combobox.addItem("BOTH")
         output_combobox.setInsertPolicy(QComboBox.NoInsert)
-        output_combobox.setCurrentIndex(0)  # NONe by default
+        output_combobox.setCurrentIndex(0)  # NONE by default
         self.output_combobox = output_combobox
         self.save_folder = FolderChooser("Log Folder", get_setting("log_dir"))
         save_option.box.stateChanged.connect(self.save_folder.switch_enabled)
@@ -671,19 +671,21 @@ class WidgetCombiner(QFrame):
 
 
 class FolderChooser(QFrame):
-    path_signal = pyqtSignal(str)
+    path_signal = pyqtSignal(object) # an iterable if multiple_files is True, str otherwise
 
-    def __init__(self, title, path, folder_mode=True, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
+    def __init__(self, title, path, folder_mode=True, multiple_files=False, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
         super(FolderChooser, self).__init__()
         self.path = path
         self.display_path = display_path
         self.folder_mode = folder_mode
+        self.multiple_files = multiple_files
         self.file_ending = file_ending
         self.label = QLabel(self)
         self.label.setText(title+":")
 
         self.file_chooser_button = QPushButton(self)
-        self.file_chooser_button.setText("Choose "+("Folder" if self.folder_mode else "File"))
+        type_ = "Folder" if self.folder_mode else "Files" if self.multiple_files else "File"
+        self.file_chooser_button.setText("Choose " + type_)
         self.file_chooser_button.clicked.connect(self.set_dir)
         self.file_chooser_button.setFixedWidth(100)
 
@@ -705,11 +707,16 @@ class FolderChooser(QFrame):
             options = QFileDialog.Option()
             options |= QFileDialog.ShowDirsOnly
             options |= QFileDialog.HideNameFilterDetails
-            path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=QDir.currentPath(), options=options)
+            update_path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=QDir.currentPath(), options=options)
+        elif self.multiple_files:
+            paths = QFileDialog.getOpenFileNames(caption="Select Files", filter=self.file_ending)
+            # qt returns a list of ([path, path, ...], filter) when we use a filter
+            update_path = paths[0]
         else:
-            path = QFileDialog.getOpenFileName(caption="Select File", filter=self.file_ending)[0]
-        if path != "":
-            self.update_dir(path)
+            update_path = QFileDialog.getOpenFileName(caption="Select File", filter=self.file_ending)[0]
+
+        self.update_dir(update_path)
+
 
     def update_dir(self, path):
         self.path = path if path != "" else self.path
