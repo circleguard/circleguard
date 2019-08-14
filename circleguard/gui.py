@@ -133,7 +133,7 @@ class WindowWrapper(QMainWindow):
 
     def mousePressEvent(self, event):
         focused = self.focusWidget()
-        if focused is not None:
+        if focused is not None and not isinstance(focused, QTextEdit):
             focused.clearFocus()
         super(WindowWrapper, self).mousePressEvent(event)
 
