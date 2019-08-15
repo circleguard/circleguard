@@ -463,8 +463,8 @@ class MainTab(QWidget):
                 # because it checks for remodding and replay stealing for
                 # each top play of the user
                 for check_list in check:
-                    num_to_load = 0
                     for check_ in check_list:
+                        num_to_load = 0
                         replays = check_.all_replays()
                         num_to_load += len(replays)
                         # a compromise between feedback and usefulness of the progressbar. Some users
