@@ -457,25 +457,26 @@ class MainTab(QWidget):
             elif type(run) is VerifyRun:
                 check = cg.create_verify_check(run.map_id, run.user_id_1, run.user_id_2, thresh=run.thresh)
 
-            # user_check convenience method comes with some caveats; a list
-            # of list of check objects is returned instead of a single Check
-            # because it checks for remodding and replay stealing for
-            # each top play of the user
             if type(run) is ScreenRun:
-                num_to_load = 0
+                # user_check convenience method comes with some caveats; a list
+                # of list of check objects is returned instead of a single Check
+                # because it checks for remodding and replay stealing for
+                # each top play of the user
                 for check_list in check:
                     for check_ in check_list:
-                        num_to_load += len(check_.all_replays())
-            else:
-                num_to_load = len(check.all_replays())
-            self.reset_progressbar_signal.emit(num_to_load)
-            cg.loader.new_session(num_to_load)
-            timestamp = datetime.now()
-            self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load))
-            if type(run) is ScreenRun:
-                for check_list in check:
-                    for check_ in check_list:
-                        for replay in check_.all_replays():
+                        num_to_load = 0
+                        replays = check_.all_replays()
+                        num_to_load += len(replays)
+                        # a compromise between feedback and usefulness of the progressbar. Some users
+                        # may prefer that it shows the progress until the entire check is done, but
+                        # this makes the gui appear sluggish, especially when we emit multiple "done" messages
+                        # (one per map).
+                        self.reset_progressbar_signal.emit(num_to_load)
+                        cg.loader.new_session(num_to_load)
+                        timestamp = datetime.now()
+                        self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
+                                                                        map_id=replays[0].map_id))
+                        for replay in replays:
                             if event.wait(0):
                                 self.update_label_signal.emit("Canceled")
                                 self.reset_progressbar_signal.emit(-1)
@@ -483,7 +484,25 @@ class MainTab(QWidget):
                             cg.load(check_, replay)
                             self.increment_progressbar_signal.emit(1)
                         check_.loaded = True
+
+                        self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+                        self.update_label_signal.emit("Comparing Replays")
+                        self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
+                        for result in cg.run(check_):
+                            if event.wait(0):
+                                self.update_label_signal.emit("Canceled")
+                                self.reset_progressbar_signal.emit(-1)
+                                return
+                            self.q.put(result)
+
             else:
+                replays = check.all_replays()
+                num_to_load = len(replays)
+                self.reset_progressbar_signal.emit(num_to_load)
+                cg.loader.new_session(num_to_load)
+                timestamp = datetime.now()
+                self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
+                                                                map_id=replays[0].map_id))
                 for replay in check.all_replays():
                     if event.wait(0):
                         self.update_label_signal.emit("Canceled")
@@ -492,31 +511,19 @@ class MainTab(QWidget):
                     cg.load(check, replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
-
-
-            self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
-            timestamp = datetime.now()
-            self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
-            self.update_label_signal.emit("Comparing Replays")
-            self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
-            if type(run) is ScreenRun:
-                for check_list in check:
-                    for check_ in check_list:
-                        for result in cg.run(check_):
-                            if event.wait(0):
-                                self.update_label_signal.emit("Canceled")
-                                self.reset_progressbar_signal.emit(-1)
-                                return
-                            self.q.put(result)
-            else:
+                self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
+                timestamp = datetime.now()
+                self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+                self.update_label_signal.emit("Comparing Replays")
+                self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
                 for result in cg.run(check):
                     if event.wait(0):
                         self.update_label_signal.emit("Canceled")
                         self.reset_progressbar_signal.emit(-1)
                         return
                     self.q.put(result)
-            self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
 
+            self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
             timestamp = datetime.now()
             self.write_to_terminal_signal.emit(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
 
