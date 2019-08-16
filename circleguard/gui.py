@@ -448,11 +448,13 @@ class MainTab(QWidget):
             set_options(cache=get_setting("caching"))
             cache_path = resource_path(os.path.join(get_setting("cache_dir"), "cache.db"))
             cg = Circleguard(get_setting("api_key"), cache_path, loader=TrackerLoader)
-            def _format_and_emit_ratelimit_signal(length):
+            def _ratelimited(length):
                 message = get_setting("message_ratelimited")
                 ts = datetime.now()
                 self.write_to_terminal_signal.emit(message.format(s=length, ts=ts))
-            cg.loader.ratelimit_signal.connect(_format_and_emit_ratelimit_signal)
+                self.update_label_signal.emit("Ratelimited")
+                self.update_run_status_signal.emit(run.run_id, "Ratelimited")
+            cg.loader.ratelimit_signal.connect(_ratelimited)
 
 
 
