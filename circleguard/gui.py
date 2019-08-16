@@ -459,15 +459,15 @@ class MainTab(QWidget):
             def _check_event(event):
                 """
                 Checks the given event to see if it is set. If it is, the run has been canceled
-                through the queue tab or by the application being quit, and it raises a
-                RunCanceledException. If the event is not set, returns silently.
+                through the queue tab or by the application being quit, and this thread exits
+                through sys.exit(0). If the event is not set, returns silently.
                 """
                 if event.wait(0):
                     self.update_label_signal.emit("Canceled")
                     self.reset_progressbar_signal.emit(-1)
                     # may seem dirty, but actually relatively clean since it only affects this thread.
                     # Any cleanup we may want to do later can occur here as well
-                    sys.exit()
+                    sys.exit(0)
 
             cg.loader.ratelimit_signal.connect(_ratelimited)
             cg.loader.check_stopped_signal.connect(partial(_check_event, event))
