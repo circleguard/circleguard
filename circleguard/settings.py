@@ -24,6 +24,7 @@ DEFAULTS = {
     "visualizer_bg": False,
     # string settings
     "message_loading_replays": "[{ts:%X}] Loading {num_replays} Replays on map {map_id}",
+    "message_ratelimited": "[{ts:%X}] Ratelimited, waiting for {s} seconds",
     "message_starting_comparing": "[{ts:%X}] Comparing Replays",
     "message_finished_comparing": "[{ts:%X}] Done",
     # it is possible though extremely unusual for the replays to have different map ids. This is good enough

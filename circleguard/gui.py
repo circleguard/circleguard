@@ -16,7 +16,7 @@ from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter
 # pylint: enable=no-name-in-module
 
-from circleguard import Circleguard, set_options, loader
+from circleguard import Circleguard, set_options, Loader
 from circleguard import __version__ as cg_version
 from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
@@ -446,7 +446,15 @@ class MainTab(QWidget):
         event = run.event
         try:
             set_options(cache=get_setting("caching"))
-            cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
+            cache_path = resource_path(os.path.join(get_setting("cache_dir"), "cache.db"))
+            cg = Circleguard(get_setting("api_key"), cache_path, loader=TrackerLoader)
+            def _format_and_emit_ratelimit_signal(length):
+                message = get_setting("message_ratelimited")
+                ts = datetime.now()
+                self.write_to_terminal_signal.emit(message.format(s=length, ts=ts))
+            cg.loader.ratelimit_signal.connect(_format_and_emit_ratelimit_signal)
+
+
 
             if type(run) is MapRun:
                 check = cg.create_map_check(run.map_id, u=run.user_id, num=run.num, thresh=run.thresh)
@@ -472,7 +480,6 @@ class MainTab(QWidget):
                         # this makes the gui appear sluggish, especially when we emit multiple "done" messages
                         # (one per map).
                         self.reset_progressbar_signal.emit(num_to_load)
-                        cg.loader.new_session(num_to_load)
                         timestamp = datetime.now()
                         self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
                                                                         map_id=replays[0].map_id))
@@ -499,7 +506,6 @@ class MainTab(QWidget):
                 replays = check.all_replays()
                 num_to_load = len(replays)
                 self.reset_progressbar_signal.emit(num_to_load)
-                cg.loader.new_session(num_to_load)
                 timestamp = datetime.now()
                 self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
                                                                 map_id=replays[0].map_id))
@@ -564,6 +570,22 @@ class MainTab(QWidget):
     def visualize(self, replays):
         self.visualizer_window = VisualizerWindow(replays=replays)
         self.visualizer_window.show()
+
+
+class TrackerLoader(Loader, QObject):
+    """
+    A circleguard.Loader subclass that emits a signal when the loader is ratelimited.
+    It inherits from QObject to allow us to use qt signals.
+    """
+    ratelimit_signal = pyqtSignal(int) # length of the ratelimit in seconds
+
+    def __init__(self, key, cacher=None):
+        Loader.__init__(self, key, cacher)
+        QObject.__init__(self)
+
+    def _ratelimit(self, length):
+        self.ratelimit_signal.emit(length)
+        Loader._ratelimit(self, length)
 
 
 class MapTab(QWidget):
