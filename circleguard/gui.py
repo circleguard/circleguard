@@ -9,6 +9,8 @@ import colorsys
 import traceback
 import threading
 from datetime import datetime
+import math
+import time
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
@@ -454,7 +456,21 @@ class MainTab(QWidget):
                 self.write_to_terminal_signal.emit(message.format(s=length, ts=ts))
                 self.update_label_signal.emit("Ratelimited")
                 self.update_run_status_signal.emit(run.run_id, "Ratelimited")
+            def _check_event(event):
+                """
+                Checks the given event to see if it is set. If it is, the run has been canceled
+                through the queue tab or by the application being quit, and it raises a
+                RunCanceledException. If the event is not set, returns silently.
+                """
+                if event.wait(0):
+                    self.update_label_signal.emit("Canceled")
+                    self.reset_progressbar_signal.emit(-1)
+                    # may seem dirty, but actually relatively clean since it only affects this thread.
+                    # Any cleanup we may want to do later can occur here as well
+                    sys.exit()
+
             cg.loader.ratelimit_signal.connect(_ratelimited)
+            cg.loader.check_stopped_signal.connect(partial(_check_event, event))
 
 
 
@@ -486,10 +502,7 @@ class MainTab(QWidget):
                         self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
                                                                         map_id=replays[0].map_id))
                         for replay in replays:
-                            if event.wait(0):
-                                self.update_label_signal.emit("Canceled")
-                                self.reset_progressbar_signal.emit(-1)
-                                return
+                            _check_event(event)
                             cg.load(check_, replay)
                             self.increment_progressbar_signal.emit(1)
                         check_.loaded = True
@@ -498,10 +511,7 @@ class MainTab(QWidget):
                         self.update_label_signal.emit("Comparing Replays")
                         self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
                         for result in cg.run(check_):
-                            if event.wait(0):
-                                self.update_label_signal.emit("Canceled")
-                                self.reset_progressbar_signal.emit(-1)
-                                return
+                            _check_event(event)
                             self.q.put(result)
 
             else:
@@ -512,10 +522,7 @@ class MainTab(QWidget):
                 self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
                                                                 map_id=replays[0].map_id))
                 for replay in check.all_replays():
-                    if event.wait(0):
-                        self.update_label_signal.emit("Canceled")
-                        self.reset_progressbar_signal.emit(-1)
-                        return
+                    _check_event(event)
                     cg.load(check, replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
@@ -525,10 +532,7 @@ class MainTab(QWidget):
                 self.update_label_signal.emit("Comparing Replays")
                 self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
                 for result in cg.run(check):
-                    if event.wait(0):
-                        self.update_label_signal.emit("Canceled")
-                        self.reset_progressbar_signal.emit(-1)
-                        return
+                    _check_event(event)
                     self.q.put(result)
 
             self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
@@ -580,6 +584,9 @@ class TrackerLoader(Loader, QObject):
     It inherits from QObject to allow us to use qt signals.
     """
     ratelimit_signal = pyqtSignal(int) # length of the ratelimit in seconds
+    check_stopped_signal = pyqtSignal()
+    # how often to emit check_stopped_signal when ratelimited, in seconds
+    INTERVAL = 0.250
 
     def __init__(self, key, cacher=None):
         Loader.__init__(self, key, cacher)
@@ -587,7 +594,14 @@ class TrackerLoader(Loader, QObject):
 
     def _ratelimit(self, length):
         self.ratelimit_signal.emit(length)
-        Loader._ratelimit(self, length)
+        # how many times to wait for 1/4 second (rng standing for range)
+        # we do this loop in order to tell run_circleguard to check if the run
+        # was canceled, or the application quit, instead of hanging on a long
+        # time.sleep
+        rng = math.ceil(length / self.INTERVAL)
+        for _ in range(rng):
+            time.sleep(self.INTERVAL)
+            self.check_stopped_signal.emit()
 
 
 class MapTab(QWidget):
