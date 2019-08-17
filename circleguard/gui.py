@@ -844,6 +844,7 @@ class ScrollableSettingsWidget(QFrame):
 
         self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply")
         self.visualizer_bg.box.stateChanged.connect(partial(update_default,"visualizer_bg"))
+        self.visualizer_bg.box.stateChanged.connect(self.reload_theme)
 
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
         self.cache.box.stateChanged.connect(partial(update_default, "caching"))
@@ -916,6 +917,9 @@ class ScrollableSettingsWidget(QFrame):
 
     def show_wizard(self):
         self.welcome.show()
+
+    def reload_theme(self):
+        switch_theme(get_setting("dark_theme"))
 
 
 class ResultsTab(QWidget):
