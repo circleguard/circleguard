@@ -48,8 +48,10 @@ class _Renderer(QWidget):
         self.paused = False
         self.beatmap_path = beatmap_path
         self.CURSOR_COLORS = [QPen(QColor().fromHslF(i/self.replay_amount,0.75,0.5)) for i in range(self.replay_amount)]
+        self.playback_len = 0
         if beatmap_path != "":
             self.beatmap = Beatmap(beatmap_path)
+            self.playback_len = self.beatmap.hitobjects[-1].time
         self.data = []
         self.usernames = []
         for replay in replays:
@@ -63,7 +65,7 @@ class _Renderer(QWidget):
                         d[2] = 384 - d[2]
 
         self.play_direction = 1
-        self.playback_len = max(data[-1][0] for data in self.data) if self.replay_amount > 0 else self.beatmap.hitobjects[-1].time
+        self.playback_len = max(data[-1][0] for data in self.data) if self.replay_amount > 0 else self.playback_len
         self.next_frame()
 
         self.timer = QTimer(self)
