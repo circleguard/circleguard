@@ -188,8 +188,9 @@ class _Renderer(QWidget):
         """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(PEN_WHITE if (get_setting("dark_theme") or get_setting("visualizer_bg")) else PEN_BLACK)
-        if get_setting("visualizer_bg"):  # might be a performance problem, but I wasn't able to detect any difference on my pc
+        black_bg = get_setting("visualizer_bg")
+        painter.setPen(PEN_WHITE if (get_setting("dark_theme") or black_bg) else PEN_BLACK)
+        if black_bg:
             pal = QPalette()
             pal.setColor(QPalette.Background, Qt.black)
             self.setAutoFillBackground(True)
@@ -258,9 +259,9 @@ class _Renderer(QWidget):
         """
 
         c = pen.color()
-        pen_ = QPen(QColor(c.red(), c.green(), c.blue(), alpha))
-        pen_.setWidth(WIDTH_LINE)
-        painter.setPen(pen_)
+        _pen = QPen(QColor(c.red(), c.green(), c.blue(), alpha))
+        _pen.setWidth(WIDTH_LINE)
+        painter.setPen(_pen)
         painter.drawLine(start[0]+X_OFFSET, start[1]+Y_OFFSET, end[0]+X_OFFSET, end[1]+Y_OFFSET)
 
     def draw_point(self, painter, pen, alpha, point):
@@ -274,9 +275,9 @@ class _Renderer(QWidget):
            List point: The X&Y position of the point.
         """
         c = pen.color()
-        pen_ = QPen(QColor(c.red(), c.green(), c.blue(), alpha))
-        pen_.setWidth(WIDTH_POINT)
-        painter.setPen(pen_)
+        _pen = QPen(QColor(c.red(), c.green(), c.blue(), alpha))
+        _pen.setWidth(WIDTH_POINT)
+        painter.setPen(_pen)
         painter.drawPoint(point[0]+X_OFFSET, point[1]+Y_OFFSET)
 
     def draw_hitobject(self, painter, hitobj):
@@ -307,9 +308,9 @@ class _Renderer(QWidget):
         c = painter.pen().color()
 
         hircircle_radius = (109 - 9 * self.beatmap.difficulty["CircleSize"])/2
-        pen_ = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
-        pen_.setWidth(WIDTH_CIRCLE_BORDER)
-        painter.setPen(pen_)
+        _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
+        _pen.setWidth(WIDTH_CIRCLE_BORDER)
+        painter.setPen(_pen)
         painter.setBrush(QBrush(QColor(c.red(),c.green(),c.blue(),int(hitcircle_alpha/4))))  # fill hitcircle
         painter.drawEllipse(hitobj.x-hircircle_radius+X_OFFSET, hitobj.y-hircircle_radius+Y_OFFSET, hircircle_radius*2, hircircle_radius*2)  # Qpoint placed it at the wrong position, no idea why
         painter.setBrush(QBrush(QColor(c.red(),c.green(),c.blue(),0)))
@@ -333,9 +334,9 @@ class _Renderer(QWidget):
         c = painter.pen().color()
 
         spinner_radius = small_circle+(big_circle*(1-spinner_scale))
-        pen_ = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
-        pen_.setWidth(int(WIDTH_CIRCLE_BORDER/2))
-        painter.setPen(pen_)
+        _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
+        _pen.setWidth(int(WIDTH_CIRCLE_BORDER/2))
+        painter.setPen(_pen)
         painter.drawEllipse(512/2-spinner_radius+X_OFFSET, 384/2-spinner_radius+Y_OFFSET, spinner_radius*2, spinner_radius*2)  # Qpoint placed it at the wrong position, no idea why
 
     def draw_approachcircle(self, painter, hitobj):
@@ -353,9 +354,9 @@ class _Renderer(QWidget):
         c = painter.pen().color()
 
         approachcircle_radius = (109 - 9 * self.beatmap.difficulty["CircleSize"])/2*approachcircle_scale
-        pen_ = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
-        pen_.setWidth(int(WIDTH_CIRCLE_BORDER/2))
-        painter.setPen(pen_)
+        _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
+        _pen.setWidth(int(WIDTH_CIRCLE_BORDER/2))
+        painter.setPen(_pen)
         painter.drawEllipse(hitobj.x-approachcircle_radius+X_OFFSET, hitobj.y-approachcircle_radius+Y_OFFSET, approachcircle_radius*2, approachcircle_radius*2)  # Qpoint placed it at the wrong position, no idea why
 
     def draw_slider(self, painter, hitobj):
