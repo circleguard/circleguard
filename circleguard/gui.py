@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter
 # pylint: enable=no-name-in-module
 
-from circleguard import Circleguard, set_options, Loader
+from circleguard import Circleguard, set_options, Loader, Detect
 from circleguard import __version__ as cg_version
 from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
@@ -447,7 +447,7 @@ class MainTab(QWidget):
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
         event = run.event
         try:
-            set_options(cache=get_setting("caching"))
+            set_options(cache=get_setting("caching"), detect=Detect.STEAL)
             cache_path = resource_path(os.path.join(get_setting("cache_dir"), "cache.db"))
             cg = Circleguard(get_setting("api_key"), cache_path, loader=TrackerLoader)
             def _ratelimited(length):
