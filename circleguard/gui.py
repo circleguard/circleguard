@@ -475,13 +475,13 @@ class MainTab(QWidget):
 
 
             if type(run) is MapRun:
-                check = cg.create_map_check(run.map_id, u=run.user_id, num=run.num, thresh=run.thresh)
+                check = cg.create_map_check(run.map_id, u=run.user_id, num=run.num, steal_thresh=run.thresh)
             elif type(run) is ScreenRun:
-                check = cg.create_user_check(run.user_id, run.num_top, run.num_users, thresh=run.thresh)
+                check = cg.create_user_check(run.user_id, run.num_top, run.num_users, steal_thresh=run.thresh)
             elif type(run) is LocalRun:
-                check = cg.create_local_check(run.path, map_id=run.map_id, u=run.user_id, num=run.num, thresh=run.thresh)
+                check = cg.create_local_check(run.path, map_id=run.map_id, u=run.user_id, num=run.num, steal_thresh=run.thresh)
             elif type(run) is VerifyRun:
-                check = cg.create_verify_check(run.map_id, run.user_id_1, run.user_id_2, thresh=run.thresh)
+                check = cg.create_verify_check(run.map_id, run.user_id_1, run.user_id_2, steal_thresh=run.thresh)
 
             if type(run) is ScreenRun:
                 # user_check convenience method comes with some caveats; a list
