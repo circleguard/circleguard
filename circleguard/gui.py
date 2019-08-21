@@ -519,8 +519,17 @@ class MainTab(QWidget):
                 num_to_load = len(replays)
                 self.reset_progressbar_signal.emit(num_to_load)
                 timestamp = datetime.now()
+                if type(replays[0]) is ReplayPath:
+                    # Not perfect because local checks aren't guaranteed to have the same
+                    # map id for every replay, but it's the best we can do right now.
+                    # time spent loading one replay is worth getting the map id.
+                    cg.load(check, replays[0])
+                    map_id = replays[0].map_id
+                else:
+                    map_id = replays[0].map_id
+
                 self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
-                                                                map_id=replays[0].map_id))
+                                                                map_id=map_id))
                 for replay in check.all_replays():
                     _check_event(event)
                     cg.load(check, replay)
