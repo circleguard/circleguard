@@ -754,7 +754,7 @@ class VisualizeTab(QWidget):
                 self._parse_replay(os.path.join(path, f))
 
     def _parse_replay(self, path):
-        check = Check(ReplayPath(path))
+        check = Check([ReplayPath(path)])
         replay = ReplayPath(path)
         self.cg.load(check, replay)
         if self.map_id == None or len(self.replays) == 0:  # store map_id if nothing stored
