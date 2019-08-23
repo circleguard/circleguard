@@ -19,7 +19,7 @@ With contributions from:
 
 ## Download
 
-The latest version of circleguard can be found here: <https://github.com/circleguard/circleguard/releases/latest>. Download the appropriate binary for your OS - circleguard_win_x64.zip or circleguard_win_x86.zip for Windows, and circleguard.app for Mac OS. Circleguard was previously bundled as an exe for Windows but opened unbearably slowly, so we distribute it as a zip and you can run Circleguard.lnk (found inside the zip) in place of an exe. If you are on another OS such as Linux, you will have to build the app yourself. See [Building From Source](#building-from-source).
+The latest version of circleguard can be found here: <https://github.com/circleguard/circleguard/releases/latest>. Download the appropriate binary for your OS - circleguard_win_x64.zip or circleguard_win_x86.zip for Windows, and circleguard_osx.app.zip for Mac OS. Circleguard was previously bundled as an exe for Windows but opened unbearably slowly, so we distribute it as a zip and you can run Circleguard.lnk (found inside the zip) in place of an exe. If you are on another OS such as Linux, you will have to build the app yourself. See [Building From Source](#building-from-source).
 
 If you don't trust the downloaded binary, you are more than welcome to build from source yourself. You can validate that the code never sends your api key anywhere by looking at the code in the circleguard and circlecore repositories.
 
