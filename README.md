@@ -1,5 +1,7 @@
+
 [![Latest Version](https://img.shields.io/github/release/circleguard/circleguard?label=Latest%20version)](https://circleguard.dev/download)
 [![GitHub Releases Downloads](https://img.shields.io/github/downloads/circleguard/circleguard/total?label=Downloads)](https://circleguard.dev/download)
+[![CodeFactor](https://www.codefactor.io/repository/github/circleguard/circleguard/badge)](https://www.codefactor.io/repository/github/circleguard/circleguard)
 [![Discord Server](https://img.shields.io/discord/532476765860265984?label=Discord&logo=discord&logoColor=%23FFFFFF)](https://discord.gg/e84qxkQ)
 
 # Circleguard
