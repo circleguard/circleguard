@@ -1,4 +1,5 @@
 import sys
+import ntpath
 # pylint: disable=no-name-in-module
 from functools import partial
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBox,
@@ -9,7 +10,7 @@ from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
 from settings import get_setting, reset_defaults, update_default
 from visualizer import VisualizerWindow
-
+from utils import MapRun, ScreenRun, LocalRun, VerifyRun
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
@@ -111,17 +112,17 @@ class DoubleSpinBox(QDoubleSpinBox):
 
 
 class QHLine(QFrame):
-    def __init__(self):
+    def __init__(self, shadow=QFrame.Plain):
         super(QHLine, self).__init__()
         self.setFrameShape(QFrame.HLine)
-        self.setFrameShadow(QFrame.Plain)
+        self.setFrameShadow(shadow)
 
 
 class QVLine(QFrame):
-    def __init__(self):
+    def __init__(self, shadow=QFrame.Plain):
         super(QVLine, self).__init__()
         self.setFrameShape(QFrame.VLine)
-        self.setFrameShadow(QFrame.Plain)
+        self.setFrameShadow(shadow)
 
 
 class Separator(QFrame):
@@ -318,7 +319,7 @@ class LoglevelWidget(QFrame):
         output_combobox.addItem("NEW WINDOW")
         output_combobox.addItem("BOTH")
         output_combobox.setInsertPolicy(QComboBox.NoInsert)
-        output_combobox.setCurrentIndex(0)  # NONe by default
+        output_combobox.setCurrentIndex(0)  # NONE by default
         self.output_combobox = output_combobox
         self.save_folder = FolderChooser("Log Folder", get_setting("log_dir"))
         save_option.box.stateChanged.connect(self.save_folder.switch_enabled)
@@ -455,7 +456,7 @@ class CompareTopPlays(QFrame):
 class ComparisonResult(QFrame):
     """
     Stores the result of a comparison that can be replayed at any time.
-    Contains a Label, QPushButton (visualize) and QPushButton (copy to clipboard).
+    Contains a QLabel, QPushButton (visualize) and QPushButton (copy to clipboard).
     """
 
     def __init__(self, text, result, replay1, replay2):
@@ -480,6 +481,65 @@ class ComparisonResult(QFrame):
         layout.addWidget(self.button_clipboard, 0, 3, 1, 1)
 
         self.setLayout(layout)
+
+class RunWidget(QFrame):
+    """
+    A single run with QLabel displaying a state (either queued, finished,
+    loading replays, comparing, or canceled), and a cancel QPushButton
+    if not already finished or canceled.
+    """
+
+    def __init__(self, run):
+        super().__init__()
+
+        self.status = "Queued"
+        self.label = QLabel(self)
+        self.text = ""
+        if type(run) is MapRun:
+            self.text = f"Map check on map {run.map_id}'s top {run.num} plays with thresh {run.thresh}."
+        if type(run) is ScreenRun:
+            self.text = f"User screen on user {run.user_id}'s top {run.num_top} plays with thresh {run.thresh}."
+        if type(run) is LocalRun:
+            self.text = f"Local check on folder {run.path}."
+        if type(run) is VerifyRun:
+            self.text = f"Verify check on {run.user_id_1} and {run.user_id_2}'s plays on map {run.map_id}."
+
+
+        self.label.setText(self.text)
+
+        self.status_label = QLabel(self)
+        self.status_label.setText("<b>Status: " + self.status + "</b>")
+        self.status_label.setTextFormat(Qt.RichText) # so we can bold it
+        self.button = QPushButton(self)
+        self.button.setText("Cancel")
+        self.button.setFixedWidth(50)
+        self.label.setFixedHeight(self.button.size().height()*0.75)
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.label, 0, 0, 1, 1)
+        layout.addWidget(self.status_label, 0, 1, 1, 1)
+        # needs to be redefined because RunWidget is being called from a
+        # different thread or something? get weird errors when not redefined
+        SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
+        layout.addItem(SPACER, 0, 2, 1, 1)
+        layout.addWidget(self.button, 0, 3, 1, 1)
+        self.setLayout(layout)
+
+    def update_status(self, status):
+        if status == "Finished":
+            # not a qt function, pyqt's implementation of deleting a widget
+            self.button.deleteLater()
+
+        self.status = status
+        self.status_label.setText("<b>Status: " + self.status + "</b>")
+
+    def cancel(self):
+        self.status = "Canceled"
+        self.button.deleteLater()
+        self.status_label.setText("<b>Status: " + self.status + "</b>")
+
+
 
 class SliderBoxSetting(QFrame):
     """
@@ -611,22 +671,27 @@ class WidgetCombiner(QFrame):
 
 
 class FolderChooser(QFrame):
-    path_signal = pyqtSignal(str)
+    path_signal = pyqtSignal(object) # an iterable if multiple_files is True, str otherwise
 
-    def __init__(self, title, path, folder_mode=True):
+    def __init__(self, title, path, folder_mode=True, multiple_files=False, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
         super(FolderChooser, self).__init__()
         self.path = path
+        self.display_path = display_path
         self.folder_mode = folder_mode
+        self.multiple_files = multiple_files
+        self.file_ending = file_ending
         self.label = QLabel(self)
         self.label.setText(title+":")
 
         self.file_chooser_button = QPushButton(self)
-        self.file_chooser_button.setText("Choose "+("Folder" if self.folder_mode else "File"))
+        type_ = "Folder" if self.folder_mode else "Files" if self.multiple_files else "File"
+        self.file_chooser_button.setText("Choose " + type_)
         self.file_chooser_button.clicked.connect(self.set_dir)
         self.file_chooser_button.setFixedWidth(100)
 
         self.path_label = QLabel(self)
-        self.path_label.setText(self.path)
+        if self.display_path:
+            self.path_label.setText(self.path)
         self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
 
         layout = QGridLayout()
@@ -642,14 +707,22 @@ class FolderChooser(QFrame):
             options = QFileDialog.Option()
             options |= QFileDialog.ShowDirsOnly
             options |= QFileDialog.HideNameFilterDetails
-            path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=QDir.currentPath(), options=options)
+            update_path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=QDir.currentPath(), options=options)
+        elif self.multiple_files:
+            paths = QFileDialog.getOpenFileNames(caption="Select Files", filter=self.file_ending)
+            # qt returns a list of ([path, path, ...], filter) when we use a filter
+            update_path = paths[0]
         else:
-            path = QFileDialog.getOpenFileName(caption="Select File", filter="osu files (*.osu)")[0]
-        self.update_dir(path)
+            update_path = QFileDialog.getOpenFileName(caption="Select File", filter=self.file_ending)[0]
+
+        self.update_dir(update_path)
+
 
     def update_dir(self, path):
         self.path = path if path != "" else self.path
-        self.path_label.setText(self.path)
+        if self.display_path:
+            label = path if len(self.path) < 64 else ntpath.basename(path)
+            self.path_label.setText(label)
         self.dir_updated()
 
     def dir_updated(self):
@@ -765,3 +838,25 @@ class BooleanPlay(QFrame):
         layout.addWidget(QLabel(text), 0, 1, 1, 1)
 
         self.setLayout(layout)
+
+
+class EntryWidget(QFrame):
+    pressed_signal = pyqtSignal(object)
+    """
+    Represents a single entry of some kind of data, consisting of a title, a button and the data which is stored at self.data.
+    When the button is pressed, pressed_signal is emitted with the data for ease of use.
+    """
+    def __init__(self, title, action_name, data=None):
+        super().__init__()
+        self.data = data
+        self.button = QPushButton(action_name)
+        self.button.setFixedWidth(100)
+        self.button.clicked.connect(self.button_pressed)
+        layout = QGridLayout()
+        layout.addWidget(QLabel(title), 0, 0, 1, 1)
+        layout.addWidget(self.button, 0, 1, 1, 1)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+
+    def button_pressed(self, _):
+        self.pressed_signal.emit(self.data)

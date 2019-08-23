@@ -20,8 +20,11 @@ DEFAULTS = {
     "log_mode": 1, # ERROR
     "log_output": 1, # TERMINAL
     "local_replay_dir": "./examples/replays/",
+    "visualizer_info": True,
+    "visualizer_bg": False,
     # string settings
-    "message_loading_replays": "[{ts:%X}] Loading {num_replays} Replays",
+    "message_loading_replays": "[{ts:%X}] Loading {num_replays} Replays on map {map_id}",
+    "message_ratelimited": "[{ts:%X}] Ratelimited, waiting for {s} seconds",
     "message_starting_comparing": "[{ts:%X}] Comparing Replays",
     "message_finished_comparing": "[{ts:%X}] Done",
     # it is possible though extremely unusual for the replays to have different map ids. This is good enough
@@ -47,6 +50,9 @@ CHANGED = {
         "message_cheater_found",
         "message_no_cheater_found",
         "string_result_text"
+    ],
+    "1.2.0": [
+        "message_loading_replays"
     ]
 }
 

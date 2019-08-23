@@ -9,6 +9,8 @@ import colorsys
 import traceback
 import threading
 from datetime import datetime
+import math
+import time
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
@@ -16,14 +18,16 @@ from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter
 # pylint: enable=no-name-in-module
 
-from circleguard import Circleguard, set_options, loader
+from circleguard import Circleguard, set_options, Loader, Detect
 from circleguard import __version__ as cg_version
+from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
-from utils import resource_path, write_log
+from utils import resource_path, write_log, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
-                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting)
+                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting, EntryWidget,
+                     RunWidget)
 
 from settings import get_setting, update_default
 import wizard
@@ -89,7 +93,7 @@ class WindowWrapper(QMainWindow):
         # if it doesnt exist, and access the existing one if it does.
         self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label))
         self.statusBar().setSizeGripEnabled(False)
-        self.statusBar().setContentsMargins(8, 2, 10, 3)
+        self.statusBar().setContentsMargins(8, 2, 10, 2)
 
         self.main_window = MainWindow()
         self.main_window.main_tab.reset_progressbar_signal.connect(self.reset_progressbar)
@@ -97,11 +101,14 @@ class WindowWrapper(QMainWindow):
         self.main_window.main_tab.update_label_signal.connect(self.update_label)
         self.main_window.main_tab.add_comparison_result_signal.connect(self.add_comparison_result)
         self.main_window.main_tab.write_to_terminal_signal.connect(self.main_window.main_tab.write)
+        self.main_window.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
+        self.main_window.main_tab.update_run_status_signal.connect(self.update_run_status)
+        self.main_window.queue_tab.cancel_run_signal.connect(self.cancel_run)
 
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
-        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, lambda: sys.exit(1))
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, partial(self.cancel_all_runs, self))
 
         self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
@@ -110,8 +117,9 @@ class WindowWrapper(QMainWindow):
 
         handler = Handler()
         logging.getLogger("circleguard").addHandler(handler)
+        logging.getLogger("ossapi").addHandler(handler)
         logging.getLogger(__name__).addHandler(handler)
-        formatter = logging.Formatter("[%(levelname)s] %(asctime)s  %(message)s ", datefmt="%Y/%m/%d %I:%M:%S %p")
+        formatter = logging.Formatter("[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)", datefmt="%Y/%m/%d %H:%M:%S")
         handler.setFormatter(formatter)
         handler.new_message.connect(self.log)
 
@@ -127,7 +135,7 @@ class WindowWrapper(QMainWindow):
 
     def mousePressEvent(self, event):
         focused = self.focusWidget()
-        if focused is not None:
+        if focused is not None and not isinstance(focused, QTextEdit):
             focused.clearFocus()
         super(WindowWrapper, self).mousePressEvent(event)
 
@@ -142,6 +150,7 @@ class WindowWrapper(QMainWindow):
         it's nice to have stdout reserved) and then print cg results
         """
         self.main_window.main_tab.print_results()
+        self.main_window.main_tab.check_circleguard_queue()
 
     def log(self, message):
         """
@@ -190,7 +199,7 @@ class WindowWrapper(QMainWindow):
                                                         r=result, r1=r1, r2=r2)
         result_widget = ComparisonResult(text, result, r1, r2)
         # set button signal connections (visualize and copy template to clipboard)
-        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replay1, result_widget.replay2))
+        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, [result_widget.replay1, result_widget.replay2]))
         result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard,
                 get_setting("template_replay_steal").format(r=result_widget.result, r1=result_widget.replay1, r2=result_widget.replay2)))
         # remove info text if shown
@@ -201,6 +210,26 @@ class WindowWrapper(QMainWindow):
     def copy_to_clipboard(self, text):
         self.clipboard.setText(text)
 
+    def add_run_to_queue(self, run):
+        self.main_window.queue_tab.add_run(run)
+
+    def update_run_status(self, run_id, status):
+        self.main_window.queue_tab.update_status(run_id, status)
+
+    def cancel_run(self, run_id):
+        self.main_window.main_tab.runs[run_id].event.set()
+
+    def cancel_all_runs(self):
+        """called when lastWindowClosed signal emits. Cancel all our runs so
+        we don't hang the application on loading/comparing while trying to quit"""
+        for run in self.main_window.main_tab.runs:
+            run.event.set()
+
+    def closeEvent(self, event):
+        if self.debug_window != None:
+            self.debug_window.close()
+        if self.main_window.main_tab.visualizer_window != None:
+            self.main_window.main_tab.visualizer_window.close()
 
 class DebugWindow(QMainWindow):
     def __init__(self):
@@ -231,10 +260,12 @@ class MainWindow(QWidget):
         self.tab_widget = QTabWidget()
         self.main_tab = MainTab()
         self.results_tab = ResultsTab()
+        self.queue_tab = QueueTab()
         self.settings_tab = SettingsTab()
         self.tab_widget.addTab(self.main_tab, "Main Tab")
-        self.tab_widget.addTab(self.results_tab, "Results Tab")
-        self.tab_widget.addTab(self.settings_tab, "Settings Tab")
+        self.tab_widget.addTab(self.results_tab, "Results")
+        self.tab_widget.addTab(self.queue_tab, "Queue")
+        self.tab_widget.addTab(self.settings_tab, "Settings")
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
         self.tab_widget.currentChanged.connect(self.main_tab.switch_run_button)
 
@@ -250,28 +281,37 @@ class MainTab(QWidget):
     update_label_signal = pyqtSignal(str)
     write_to_terminal_signal = pyqtSignal(str)
     add_comparison_result_signal = pyqtSignal(object)  # Result
+    add_run_to_queue_signal = pyqtSignal(object) # Run object (or a subclass)
+    update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
 
     TAB_REGISTER = [
         {"name": "MAP"},
         {"name": "SCREEN"},
         {"name": "LOCAL"},
         {"name": "VERIFY"},
+        {"name": "VISUALIZE"}
     ]
 
     def __init__(self):
         super().__init__()
 
         self.q = Queue()
-        self.cg_running = False
+        self.cg_q = Queue()
+        self.helper_thread_running = False
+        self.runs = [] # Run objects for canceling runs
+        self.run_id = 0
+        self.visualizer_window = None
         tabs = QTabWidget()
         self.map_tab = MapTab()
-        self.user_tab = UserTab()
+        self.screen_tab = ScreenTab()
         self.local_tab = LocalTab()
         self.verify_tab = VerifyTab()
+        self.visualize_tab = VisualizeTab()
         tabs.addTab(self.map_tab, "Check Map")
-        tabs.addTab(self.user_tab, "Screen User")
-        tabs.addTab(self.local_tab, "Check Local Replays")
+        tabs.addTab(self.screen_tab, "Screen User")
+        tabs.addTab(self.local_tab, "Check Local")
         tabs.addTab(self.verify_tab, "Verify")
+        tabs.addTab(self.visualize_tab, "Visualize")
         self.tabs = tabs
         self.tabs.currentChanged.connect(self.switch_run_button)
 
@@ -283,14 +323,13 @@ class MainTab(QWidget):
 
         self.run_button = QPushButton()
         self.run_button.setText("Run")
-        self.run_button.clicked.connect(self.run)
+        self.run_button.clicked.connect(self.add_circleguard_run)
 
         layout = QVBoxLayout()
         layout.addWidget(tabs)
         layout.addWidget(self.terminal)
         layout.addWidget(self.run_button)
         self.setLayout(layout)
-        self.run_type = "NONE"  # set after you click run, depending on your current tab
         self.switch_run_button()  # disable run button if there is no api key
 
     def write(self, message):
@@ -302,119 +341,210 @@ class MainTab(QWidget):
         cursor.movePosition(QTextCursor.End)
         self.terminal.setTextCursor(cursor)
 
-    def run(self):
+    def add_circleguard_run(self):
         current_tab = self.tabs.currentIndex()
-        self.run_type = MainTab.TAB_REGISTER[current_tab]["name"]
-        thread = threading.Thread(target=self.run_circleguard)
-        thread.start()
-        # pool = ThreadPool(processes=1)
-        # raise Exception("dddd")
-        # pool.apply_async(self.run_circleguard)
+        run_type = MainTab.TAB_REGISTER[current_tab]["name"]
+
+        # special case; visualize runs shouldn't get added to queue
+        if run_type == "VISUALIZE":
+            self.visualize([replay.data for replay in self.visualize_tab.replays])
+            return
+
+        m = self.map_tab
+        s = self.screen_tab
+        l = self.local_tab
+        v = self.verify_tab
+
+        # retrieve every possible variable to avoid nasty indentation (and we might
+        # use it for something later). Shouldn't cause any performance issues.
+
+        m_map_id = m.id_combined.map_id.field.text()
+        m_map_id = int(m_map_id) if m_map_id != "" else None
+        m_user_id = m.id_combined.user_id.field.text()
+        m_user_id = int(m_user_id) if m_user_id != "" else None
+        m_num = m.compare_top.slider.value()
+        m_thresh = m.threshold.slider.value()
+
+        s_user_id = s.user_id.field.text()
+        s_user_id = int(s_user_id) if s_user_id != "" else None
+        s_num_top = s.compare_top_map.slider.value()
+        s_num_users = s.compare_top_users.slider.value()
+        s_thresh = s.threshold.slider.value()
+
+        l_path = resource_path(Path(l.folder_chooser.path))
+        l_map_id = l.id_combined.map_id.field.text()
+        l_map_id = int(l_map_id) if l_map_id != "" else None
+        l_user_id = l.id_combined.user_id.field.text()
+        l_user_id = int(l_user_id) if l_user_id != "" else None
+        l_num = l.compare_top.slider.value()
+        l_thresh = l.threshold.slider.value()
+
+        v_map_id = v.map_id.field.text()
+        v_map_id = int(v_map_id) if v_map_id != "" else None
+        v_user_id_1 = v.user_id_1.field.text()
+        v_user_id_1 = int(v_user_id_1) if v_user_id_1 != "" else None
+        v_user_id_2 = v.user_id_2.field.text()
+        v_user_id_2 = int(v_user_id_2) if v_user_id_2 != "" else None
+        v_thresh = v.threshold.slider.value()
+
+        event = threading.Event()
+
+        if run_type == "MAP":
+            run = MapRun(self.run_id, event, m_map_id, m_user_id, m_num, m_thresh)
+        elif run_type == "SCREEN":
+            run = ScreenRun(self.run_id, event, s_user_id, s_num_top, s_num_users, s_thresh)
+        elif run_type == "LOCAL":
+            run = LocalRun(self.run_id, event, l_path, l_map_id, l_user_id, l_num, l_thresh)
+        elif run_type == "VERIFY":
+            run = VerifyRun(self.run_id, event, v_map_id, v_user_id_1, v_user_id_2, v_thresh)
+
+        self.runs.append(run)
+        self.add_run_to_queue_signal.emit(run)
+        self.cg_q.put(run)
+        self.run_id += 1
+
+        # called every 1/4 seconds by timer, but force a recheck to not wait for that delay
+        self.check_circleguard_queue()
 
     def switch_run_button(self):
-        if not self.cg_running:
-            self.run_button.setEnabled(False if get_setting("api_key") == "" else True)
-        else:
-            # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
-            # statement even though no timer interaction is going on; not sure why it happens but it doesn't
-            # impact functionality. Still might be worth looking into
-            self.run_button.setEnabled(False)
+        # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
+        # statement even though no timer interaction is going on; not sure why it happens but it doesn't
+        # impact functionality. Still might be worth looking into
+        self.run_button.setEnabled(False if get_setting("api_key") == "" else True)
 
-    def run_circleguard(self):
-        self.cg_running = True
-        self.switch_run_button()
+
+    def check_circleguard_queue(self):
+        def _check_circleguard_queue(self):
+            try:
+                while True:
+                    run = self.cg_q.get_nowait()
+                    # occurs if run is canceled before being started, it will still stop
+                    # before actually loading anything but we don't want the labels to flicker
+                    if run.event.wait(0):
+                        continue
+                    thread = threading.Thread(target=self.run_circleguard, args=[run])
+                    self.helper_thread_running = True
+                    thread.start()
+                    # run sequentially to not confuse user with terminal output
+                    thread.join()
+            except Empty:
+                self.helper_thread_running = False
+                return
+
+        # don't launch another thread running cg if one is already running,
+        # or else multiple runs will occur at once (defeats the whole purpose
+        # of sequential runs)
+        if not self.helper_thread_running:
+            # have to do a double thread use if we start the threads in
+            # the main thread and .join, it will block the gui thread (very bad).
+            thread = threading.Thread(target=_check_circleguard_queue, args=[self])
+            thread.start()
+
+
+
+    def run_circleguard(self, run):
         self.update_label_signal.emit("Loading Replays")
+        self.update_run_status_signal.emit(run.run_id, "Loading Replays")
+        event = run.event
         try:
-            set_options(cache=get_setting("caching"))
-            cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
+            set_options(cache=get_setting("caching"), detect=Detect.STEAL)
+            cache_path = resource_path(os.path.join(get_setting("cache_dir"), "cache.db"))
+            cg = Circleguard(get_setting("api_key"), cache_path, loader=TrackerLoader)
+            def _ratelimited(length):
+                message = get_setting("message_ratelimited")
+                ts = datetime.now()
+                self.write_to_terminal_signal.emit(message.format(s=length, ts=ts))
+                self.update_label_signal.emit("Ratelimited")
+                self.update_run_status_signal.emit(run.run_id, "Ratelimited")
+            def _check_event(event):
+                """
+                Checks the given event to see if it is set. If it is, the run has been canceled
+                through the queue tab or by the application being quit, and this thread exits
+                through sys.exit(0). If the event is not set, returns silently.
+                """
+                if event.wait(0):
+                    self.update_label_signal.emit("Canceled")
+                    self.reset_progressbar_signal.emit(-1)
+                    # may seem dirty, but actually relatively clean since it only affects this thread.
+                    # Any cleanup we may want to do later can occur here as well
+                    sys.exit(0)
 
-            if self.run_type == "MAP":
-                tab = self.map_tab
-                # TODO: generic failure terminal print method, 'please enter a map id' or 'that map has no leaderboard scores, please double check the id'
-                #       maybe fancy flashing red stars for required fields
-                map_id_str = tab.id_combined.map_id.field.text()
-                map_id = int(map_id_str) if map_id_str != "" else 0
+            cg.loader.ratelimit_signal.connect(_ratelimited)
+            cg.loader.check_stopped_signal.connect(partial(_check_event, event))
 
-                user_id_str = tab.id_combined.user_id.field.text()
-                user_id = int(user_id_str) if user_id_str != "" else None
 
-                num = tab.compare_top.slider.value()
-                thresh = tab.threshold.slider.value()
-                check = cg.create_map_check(map_id, u=user_id, num=num, thresh=thresh)
 
-            if self.run_type == "SCREEN":
-                tab = self.user_tab
-                user_id_str = tab.user_id.field.text()
-                user_id = int(user_id_str) if user_id_str != "" else 0
-                num_top = tab.compare_top_map.slider.value()
-                num_users = tab.compare_top_users.slider.value()
-                thresh = tab.threshold.slider.value()
-                check = cg.create_user_check(user_id, num_top, num_users, thresh=thresh)
+            if type(run) is MapRun:
+                check = cg.create_map_check(run.map_id, u=run.user_id, num=run.num, steal_thresh=run.thresh)
+            elif type(run) is ScreenRun:
+                check = cg.create_user_check(run.user_id, run.num_top, run.num_users, steal_thresh=run.thresh)
+            elif type(run) is LocalRun:
+                check = cg.create_local_check(run.path, map_id=run.map_id, u=run.user_id, num=run.num, steal_thresh=run.thresh)
+            elif type(run) is VerifyRun:
+                check = cg.create_verify_check(run.map_id, run.user_id_1, run.user_id_2, steal_thresh=run.thresh)
 
-            if self.run_type == "LOCAL":
-                tab = self.local_tab
-                path = resource_path(Path(tab.folder_chooser.path))
-                map_id_str = tab.id_combined.map_id.field.text()
-                map_id = int(map_id_str) if map_id_str != "" else 0
-                user_id_str = tab.id_combined.user_id.field.text()
-                user_id = int(user_id_str) if user_id_str != "" else 0
-                num = tab.compare_top.slider.value()
-                thresh = tab.threshold.slider.value()
-                check = cg.create_local_check(path, map_id=map_id, u=user_id, num=num, thresh=thresh)
-
-            if self.run_type == "VERIFY":
-                tab = self.verify_tab
-                map_id_str = tab.map_id.field.text()
-                map_id = int(map_id_str) if map_id_str != "" else 0
-                user_id_1_str = tab.user_id_1.field.text()
-                user_id_1 = int(user_id_1_str) if user_id_1_str != "" else 0
-                user_id_2_str = tab.user_id_2.field.text()
-                user_id_2 = int(user_id_2_str) if user_id_2_str != "" else 0
-                thresh = tab.threshold.slider.value()
-                check = cg.create_verify_check(map_id, user_id_1, user_id_2, thresh=thresh)
-
-            # user_check convenience method comes with some caveats; a list
-            # of list of check objects is returned instead of a singl Check
-            # because it checks for remodding and replay stealing for
-            # each top play of the user
-            if self.run_type == "SCREEN":
-                num_to_load = 0
+            if type(run) is ScreenRun:
+                # user_check convenience method comes with some caveats; a list
+                # of list of check objects is returned instead of a single Check
+                # because it checks for remodding and replay stealing for
+                # each top play of the user
                 for check_list in check:
                     for check_ in check_list:
-                        num_to_load += len(check_.all_replays())
-            else:
-                num_to_load = len(check.all_replays())
-            self.reset_progressbar_signal.emit(num_to_load)
-            cg.loader.new_session(num_to_load)
-            timestamp = datetime.now()
-            self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load))
-            if self.run_type == "SCREEN":
-                for check_list in check:
-                    for check_ in check_list:
-                        for replay in check_.all_replays():
-                            cg.load(check_, replay)
+                        num_to_load = 0
+                        replays = check_.all_replays()
+                        num_to_load += len(replays)
+                        # a compromise between feedback and usefulness of the progressbar. Some users
+                        # may prefer that it shows the progress until the entire check is done, but
+                        # this makes the gui appear sluggish, especially when we emit multiple "done" messages
+                        # (one per map).
+                        self.reset_progressbar_signal.emit(num_to_load)
+                        timestamp = datetime.now()
+                        self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
+                                                                        map_id=replays[0].map_id))
+                        for replay in replays:
+                            _check_event(event)
+                            cg.load(replay)
+                            self.increment_progressbar_signal.emit(1)
                         check_.loaded = True
+
+                        self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+                        self.update_label_signal.emit("Comparing Replays")
+                        self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
+                        for result in cg.run(check_):
+                            _check_event(event)
+                            self.q.put(result)
+
             else:
+                replays = check.all_replays()
+                num_to_load = len(replays)
+                self.reset_progressbar_signal.emit(num_to_load)
+                timestamp = datetime.now()
+                if type(replays[0]) is ReplayPath:
+                    # Not perfect because local checks aren't guaranteed to have the same
+                    # map id for every replay, but it's the best we can do right now.
+                    # time spent loading one replay is worth getting the map id.
+                    cg.load(replays[0])
+                    map_id = replays[0].map_id
+                else:
+                    map_id = replays[0].map_id
+
+                self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
+                                                                map_id=map_id))
                 for replay in check.all_replays():
-                    cg.load(check, replay)
+                    _check_event(event)
+                    cg.load(replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
-
-
-            self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
-            timestamp = datetime.now()
-            self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
-            self.update_label_signal.emit("Comparing Replays")
-            if self.run_type == "SCREEN":
-                for check_list in check:
-                    for check_ in check_list:
-                        for result in cg.run(check_):
-                            self.q.put(result)
-            else:
+                self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
+                timestamp = datetime.now()
+                self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+                self.update_label_signal.emit("Comparing Replays")
+                self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
                 for result in cg.run(check):
+                    _check_event(event)
                     self.q.put(result)
-            self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
 
+            self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
             timestamp = datetime.now()
             self.write_to_terminal_signal.emit(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
 
@@ -422,14 +552,13 @@ class MainTab(QWidget):
             log.exception("Error while running circlecore. Please "
                           "report this to the developers through discord or github.\n")
 
-        self.cg_running = False
         self.update_label_signal.emit("Idle")
-        self.switch_run_button()
+        self.update_run_status_signal.emit(run.run_id, "Finished")
 
     def print_results(self):
         try:
             while True:
-                result = self.q.get(block=False)
+                result = self.q.get_nowait()
                 # self.visualize(result.replay1, result.replay2)
                 if result.ischeat:
                     timestamp = datetime.now()
@@ -453,9 +582,35 @@ class MainTab(QWidget):
         except Empty:
             pass
 
-    def visualize(self, replay1, replay2):
-        self.visualizer_window = VisualizerWindow(replays=(replay1, replay2))
+    def visualize(self, replays):
+        self.visualizer_window = VisualizerWindow(replays=replays)
         self.visualizer_window.show()
+
+
+class TrackerLoader(Loader, QObject):
+    """
+    A circleguard.Loader subclass that emits a signal when the loader is ratelimited.
+    It inherits from QObject to allow us to use qt signals.
+    """
+    ratelimit_signal = pyqtSignal(int) # length of the ratelimit in seconds
+    check_stopped_signal = pyqtSignal()
+    # how often to emit check_stopped_signal when ratelimited, in seconds
+    INTERVAL = 0.250
+
+    def __init__(self, key, cacher=None):
+        Loader.__init__(self, key, cacher)
+        QObject.__init__(self)
+
+    def _ratelimit(self, length):
+        self.ratelimit_signal.emit(length)
+        # how many times to wait for 1/4 second (rng standing for range)
+        # we do this loop in order to tell run_circleguard to check if the run
+        # was canceled, or the application quit, instead of hanging on a long
+        # time.sleep
+        rng = math.ceil(length / self.INTERVAL)
+        for _ in range(rng):
+            time.sleep(self.INTERVAL)
+            self.check_stopped_signal.emit()
 
 
 class MapTab(QWidget):
@@ -479,7 +634,7 @@ class MapTab(QWidget):
         self.setLayout(layout)
 
 
-class UserTab(QWidget):
+class ScreenTab(QWidget):
     def __init__(self):
         super().__init__()
         self.info = QLabel(self)
@@ -555,6 +710,94 @@ class VerifyTab(QWidget):
         self.setLayout(layout)
 
 
+class VisualizeTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.result_frame = ResultsTab()
+        self.result_frame.results.info_label.hide()
+        self.map_id = None
+        self.q = Queue()
+        self.replays = []
+        self.cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
+        self.info = QLabel(self)
+        self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
+        self.file_chooser = FolderChooser("Add Replays", "", folder_mode=False, multiple_files=True,
+                                            file_ending="osu! Replayfile (*osr)", display_path=False)
+        self.file_chooser.path_signal.connect(self.add_files)
+        self.folder_chooser = FolderChooser("Add Folder", "", display_path=False)
+        self.folder_chooser.path_signal.connect(self.add_folder)
+        layout = QGridLayout()
+        layout.addWidget(self.info)
+        layout.addWidget(self.file_chooser)
+        layout.addWidget(self.folder_chooser)
+        layout.addWidget(self.result_frame)
+
+        self.setLayout(layout)
+
+    def start_timer(self):
+        timer = QTimer(self)
+        timer.timeout.connect(self.run_timer)
+        timer.start(250)
+
+    def run_timer(self):
+        self.add_widget()
+
+    def add_files(self, paths):
+        thread = threading.Thread(target=self._parse_replays, args=[paths])
+        thread.start()
+        self.start_timer()
+
+    def add_folder(self, path):
+        thread = threading.Thread(target=self._parse_folder, args=[path])
+        thread.start()
+        self.start_timer()
+
+    def _parse_replays(self, paths):
+        for path in paths:
+            # guaranteed to end in .osr by our filter
+            self._parse_replay(path)
+
+    def _parse_folder(self, path):
+        for f in os.listdir(path):  # os.walk seems unnecessary
+            if f.endswith(".osr"):
+                self._parse_replay(os.path.join(path, f))
+
+    def _parse_replay(self, path):
+        replay = ReplayPath(path)
+        self.cg.load(replay)
+        if self.map_id == None or len(self.replays) == 0:  # store map_id if nothing stored
+            log.info(f"Changing map_id from {self.map_id} to {replay.map_id}")
+            self.map_id = replay.map_id
+        elif replay.map_id != self.map_id:  # ignore replay with diffrent map_ids
+            log.error(f"replay {replay} doesn't match with current map_id ({replay.map_id} != {self.map_id})")
+            return
+        if not any(replay.replay_id == r.data.replay_id for r in self.replays):  # check if already stored
+            log.info(f"adding new replay {replay} with replay id {replay.replay_id} on map {replay.map_id}")
+            self.q.put(replay)
+        else:
+            log.info(f"skipping replay {replay} with replay id {replay.replay_id} on map {replay.map_id} since it's already saved")
+
+    def add_widget(self):
+        try:
+            while True:
+                replay = self.q.get(block=False)
+                widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id}", "Delete", replay)
+                widget.pressed_signal.connect(self.remove_replay)
+                self.replays.append(widget)
+                self.result_frame.results.layout.addWidget(widget)
+        except Empty:
+            pass
+
+
+    def remove_replay(self, data):
+        replay_ids = [replay.data.replay_id for replay in self.replays]
+        index = replay_ids.index(data.replay_id)
+        self.result_frame.results.layout.removeWidget(self.replays[index])
+        self.replays[index].deleteLater()
+        self.replays[index] = None
+        self.replays.pop(index)
+
+
 class SettingsTab(QWidget):
     def __init__(self):
         super(SettingsTab, self).__init__()
@@ -604,6 +847,13 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
         self.darkmode.box.stateChanged.connect(switch_theme)
 
+        self.visualizer_info = OptionWidget("Show Visualizer info", "")
+        self.visualizer_info.box.stateChanged.connect(partial(update_default,"visualizer_info"))
+
+        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply")
+        self.visualizer_bg.box.stateChanged.connect(partial(update_default,"visualizer_bg"))
+        self.visualizer_bg.box.stateChanged.connect(self.reload_theme)
+
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
         self.cache.box.stateChanged.connect(partial(update_default, "caching"))
 
@@ -612,8 +862,8 @@ class ScrollableSettingsWidget(QFrame):
         self.cache.box.stateChanged.connect(self.cache_dir.switch_enabled)
 
         self.loglevel = LoglevelWidget("")
-        self.loglevel.level_combobox.currentIndexChanged.connect(self.set_circleguard_loglevel)
-        self.set_circleguard_loglevel()  # set the default loglevel in cg, not just in gui
+        self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
+        self.set_loglevel()  # set the default loglevel in cg, not just in gui
 
         self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
@@ -630,6 +880,8 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(self.cache_dir)
         self.grid.addWidget(Separator("Appearance"))
         self.grid.addWidget(self.darkmode)
+        self.grid.addWidget(self.visualizer_info)
+        self.grid.addWidget(self.visualizer_bg)
         self.grid.addWidget(Separator("Debug"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
@@ -646,11 +898,14 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
         self.darkmode.box.setChecked(old_theme)
         self.cache.box.setChecked(get_setting("caching"))
+        self.visualizer_info.box.setChecked(get_setting("visualizer_info"))
+        self.visualizer_bg.box.setChecked(get_setting("visualizer_bg"))
         self.cache_dir.switch_enabled(get_setting("caching"))
         self.rainbow.box.setChecked(get_setting("rainbow_accent"))
 
-    def set_circleguard_loglevel(self):
-        set_options(loglevel=self.loglevel.level_combobox.currentData())
+    def set_loglevel(self):
+        for logger in logging.root.manager.loggerDict:
+            logging.getLogger(logger).setLevel(self.loglevel.level_combobox.currentData())
 
     def next_color(self):
         (r, g, b) = colorsys.hsv_to_rgb(self._rainbow_counter, 1.0, 1.0)
@@ -671,31 +926,75 @@ class ScrollableSettingsWidget(QFrame):
     def show_wizard(self):
         self.welcome.show()
 
+    def reload_theme(self):
+        switch_theme(get_setting("dark_theme"))
+
 
 class ResultsTab(QWidget):
     def __init__(self):
         super().__init__()
 
-        _layout = QVBoxLayout()
+        layout = QVBoxLayout()
         self.qscrollarea = QScrollArea(self)
         self.results = ResultsFrame()
         self.qscrollarea.setWidget(self.results)
         self.qscrollarea.setWidgetResizable(True)
 
-        # we want widgets to fill from top down,
-        # being vertically centered looks weird
-        _layout.addWidget(self.qscrollarea)
-        self.setLayout(_layout)
+
+        layout.addWidget(self.qscrollarea)
+        self.setLayout(layout)
 
 
 class ResultsFrame(QFrame):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
+        # we want widgets to fill from top down,
+        # being vertically centered looks weird
         self.layout.setAlignment(Qt.AlignTop)
         self.info_label = QLabel("After running Comparisons, this tab will fill up with results")
         self.layout.addWidget(self.info_label)
         self.setLayout(self.layout)
+
+
+class QueueTab(QFrame):
+    cancel_run_signal = pyqtSignal(int) # run_id
+
+    def __init__(self):
+        super().__init__()
+
+        self.run_widgets = []
+        layout = QVBoxLayout()
+        self.qscrollarea = QScrollArea(self)
+        self.queue = QueueFrame()
+        self.qscrollarea.setWidget(self.queue)
+        self.qscrollarea.setWidgetResizable(True)
+        layout.addWidget(self.qscrollarea)
+        self.setLayout(layout)
+
+    def add_run(self, run):
+        run_w = RunWidget(run)
+        run_w.button.pressed.connect(partial(self.cancel_run, run.run_id))
+        self.run_widgets.append(run_w)
+        self.queue.layout.addWidget(run_w)
+
+    def update_status(self, run_id, status):
+        self.run_widgets[run_id].update_status(status)
+
+    def cancel_run(self, run_id):
+        self.cancel_run_signal.emit(run_id)
+        self.run_widgets[run_id].cancel()
+
+class QueueFrame(QFrame):
+
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        # we want widgets to fill from top down,
+        # being vertically centered looks weird
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
+
 
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
@@ -759,4 +1058,6 @@ if __name__ == "__main__":
         welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default,"caching"))
         welcome.show()
         update_default("ran", True)
+
+    app.lastWindowClosed.connect(WINDOW.cancel_all_runs)
     app.exec_()
