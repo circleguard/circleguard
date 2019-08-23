@@ -503,7 +503,7 @@ class MainTab(QWidget):
                                                                         map_id=replays[0].map_id))
                         for replay in replays:
                             _check_event(event)
-                            cg.load(check_, replay)
+                            cg.load(replay)
                             self.increment_progressbar_signal.emit(1)
                         check_.loaded = True
 
@@ -523,7 +523,7 @@ class MainTab(QWidget):
                     # Not perfect because local checks aren't guaranteed to have the same
                     # map id for every replay, but it's the best we can do right now.
                     # time spent loading one replay is worth getting the map id.
-                    cg.load(check, replays[0])
+                    cg.load(replays[0])
                     map_id = replays[0].map_id
                 else:
                     map_id = replays[0].map_id
@@ -532,7 +532,7 @@ class MainTab(QWidget):
                                                                 map_id=map_id))
                 for replay in check.all_replays():
                     _check_event(event)
-                    cg.load(check, replay)
+                    cg.load(replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
                 self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
@@ -763,9 +763,8 @@ class VisualizeTab(QWidget):
                 self._parse_replay(os.path.join(path, f))
 
     def _parse_replay(self, path):
-        check = Check([ReplayPath(path)])
         replay = ReplayPath(path)
-        self.cg.load(check, replay)
+        self.cg.load(replay)
         if self.map_id == None or len(self.replays) == 0:  # store map_id if nothing stored
             log.info(f"Changing map_id from {self.map_id} to {replay.map_id}")
             self.map_id = replay.map_id
