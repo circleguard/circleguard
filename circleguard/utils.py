@@ -29,7 +29,7 @@ def write_log(message):
         data = f.read().splitlines(True)
     data.append(message+"\n")
     with open(directory, 'w+') as f:
-        f.writelines(data[-10000:])  # keep file at 10000 lines
+        f.writelines(data[-1000:])  # keep file at 1000 lines
 
 class Run():
     """

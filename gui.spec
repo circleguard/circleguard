@@ -6,7 +6,7 @@ os.path.expanduser
 from circleguard import __version__ # circlecore version, not gui
 a = Analysis(['circleguard/gui.py'],
              pathex=['.'],
-             datas=[('circleguard/resources/','resources/'), ('circleguard/db/','db/'), ('circleguard/examples/', 'examples/'), ('circleguard/logs/', 'logs/')],
+             datas=[('circleguard/resources/','resources/'), ('circleguard/examples', 'examples/')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
