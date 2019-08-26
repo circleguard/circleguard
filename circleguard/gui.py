@@ -473,7 +473,6 @@ class MainTab(QWidget):
             cg.loader.check_stopped_signal.connect(partial(_check_event, event))
 
 
-
             if type(run) is MapRun:
                 check = cg.create_map_check(run.map_id, u=run.user_id, num=run.num, steal_thresh=run.thresh)
             elif type(run) is ScreenRun:
