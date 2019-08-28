@@ -53,6 +53,9 @@ CHANGED = {
     ],
     "1.2.0": [
         "message_loading_replays"
+    ],
+    "1.3.0": [
+        "cache_location"
     ]
 }
 
