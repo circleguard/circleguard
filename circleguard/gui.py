@@ -18,6 +18,12 @@ from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter
 # pylint: enable=no-name-in-module
 
+# app needs to be initialized before settings is imported so QStandardPaths resolves
+# corerctly with the applicationName
+app = QApplication([])
+app.setStyle("Fusion")
+app.setApplicationName("Circleguard")
+
 from circleguard import Circleguard, set_options, Loader, Detect
 from circleguard import __version__ as cg_version
 from circleguard.replay import ReplayPath, Check
@@ -32,6 +38,9 @@ from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, Wi
 from settings import get_setting, update_default
 import wizard
 from version import __version__
+
+if not os.path.exists(get_setting("cache_location")):
+    os.mkdir(Path(get_setting("cache_location")).parent)
 
 log = logging.getLogger(__name__)
 
@@ -448,7 +457,7 @@ class MainTab(QWidget):
         event = run.event
         try:
             set_options(cache=get_setting("caching"), detect=Detect.STEAL)
-            cache_path = resource_path(os.path.join(get_setting("cache_dir"), "cache.db"))
+            cache_path = resource_path(get_setting("cache_location"))
             cg = Circleguard(get_setting("api_key"), cache_path, loader=TrackerLoader)
             def _ratelimited(length):
                 message = get_setting("message_ratelimited")
@@ -489,9 +498,8 @@ class MainTab(QWidget):
                 # each top play of the user
                 for check_list in check:
                     for check_ in check_list:
-                        num_to_load = 0
-                        replays = check_.all_replays()
-                        num_to_load += len(replays)
+                        replays = check_.all_loadables()
+                        num_to_load = check_.num_replays()
                         # a compromise between feedback and usefulness of the progressbar. Some users
                         # may prefer that it shows the progress until the entire check is done, but
                         # this makes the gui appear sluggish, especially when we emit multiple "done" messages
@@ -514,8 +522,8 @@ class MainTab(QWidget):
                             self.q.put(result)
 
             else:
-                replays = check.all_replays()
-                num_to_load = len(replays)
+                replays = check.all_loadables()
+                num_to_load = check.num_replays()
                 self.reset_progressbar_signal.emit(num_to_load)
                 timestamp = datetime.now()
                 if type(replays[0]) is ReplayPath:
@@ -529,9 +537,9 @@ class MainTab(QWidget):
 
                 self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
                                                                 map_id=map_id))
-                for replay in check.all_replays():
+                for loadable in replays:
                     _check_event(event)
-                    cg.load(replay)
+                    cg.load(loadable)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
                 self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
@@ -717,13 +725,13 @@ class VisualizeTab(QWidget):
         self.map_id = None
         self.q = Queue()
         self.replays = []
-        self.cg = Circleguard(get_setting("api_key"), resource_path(os.path.join(get_setting("cache_dir"), "cache.db")))
+        self.cg = Circleguard(get_setting("api_key"), resource_path(get_setting("cache_location")))
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
-        self.file_chooser = FolderChooser("Add Replays", "", folder_mode=False, multiple_files=True,
+        self.file_chooser = FolderChooser("Add Replays", folder_mode=False, multiple_files=True,
                                             file_ending="osu! Replayfile (*osr)", display_path=False)
         self.file_chooser.path_signal.connect(self.add_files)
-        self.folder_chooser = FolderChooser("Add Folder", "", display_path=False)
+        self.folder_chooser = FolderChooser("Add Folder", display_path=False)
         self.folder_chooser.path_signal.connect(self.add_folder)
         layout = QGridLayout()
         layout.addWidget(self.info)
@@ -856,9 +864,9 @@ class ScrollableSettingsWidget(QFrame):
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
         self.cache.box.stateChanged.connect(partial(update_default, "caching"))
 
-        self.cache_dir = FolderChooser("Cache Path", get_setting("cache_dir"))
-        self.cache_dir.path_signal.connect(partial(update_default, "cache_dir"))
-        self.cache.box.stateChanged.connect(self.cache_dir.switch_enabled)
+        self.cache_location = FolderChooser("Cache Path", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
+        self.cache_location.path_signal.connect(partial(update_default, "cache_location"))
+        self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
         self.loglevel = LoglevelWidget("")
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
@@ -876,7 +884,7 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(self.cheat_thresh)
         self.grid.addWidget(self.display_thresh)
         self.grid.addWidget(self.cache)
-        self.grid.addWidget(self.cache_dir)
+        self.grid.addWidget(self.cache_location)
         self.grid.addWidget(Separator("Appearance"))
         self.grid.addWidget(self.darkmode)
         self.grid.addWidget(self.visualizer_info)
@@ -899,7 +907,7 @@ class ScrollableSettingsWidget(QFrame):
         self.cache.box.setChecked(get_setting("caching"))
         self.visualizer_info.box.setChecked(get_setting("visualizer_info"))
         self.visualizer_bg.box.setChecked(get_setting("visualizer_bg"))
-        self.cache_dir.switch_enabled(get_setting("caching"))
+        self.cache_location.switch_enabled(get_setting("caching"))
         self.rainbow.box.setChecked(get_setting("rainbow_accent"))
 
     def set_loglevel(self):
@@ -1044,9 +1052,7 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
 
 
 if __name__ == "__main__":
-    # create and open window
-    app = QApplication([])
-    app.setStyle("Fusion")
+    # app is initialized at the top of the file
     WINDOW = WindowWrapper(app.clipboard())
     set_event_window(WINDOW)
     WINDOW.resize(600, 500)

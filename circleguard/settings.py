@@ -1,5 +1,5 @@
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, QStandardPaths
 # pylint: enable=no-name-in-module
 import re
 from version import __version__
@@ -14,7 +14,7 @@ DEFAULTS = {
     "dark_theme": False,
     "rainbow_accent": False,
     "caching": True,
-    "cache_dir": "./db/",
+    "cache_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache.db",
     "log_save": True,
     "log_dir": "./logs/",
     "log_mode": 1, # ERROR
@@ -53,6 +53,9 @@ CHANGED = {
     ],
     "1.2.0": [
         "message_loading_replays"
+    ],
+    "1.3.0": [
+        "cache_location"
     ]
 }
 
