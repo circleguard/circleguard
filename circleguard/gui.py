@@ -501,9 +501,8 @@ class MainTab(QWidget):
                 # each top play of the user
                 for check_list in check:
                     for check_ in check_list:
-                        num_to_load = 0
-                        replays = check_.all_replays()
-                        num_to_load += len(replays)
+                        replays = check_.all_loadables()
+                        num_to_load = check_.num_replays()
                         # a compromise between feedback and usefulness of the progressbar. Some users
                         # may prefer that it shows the progress until the entire check is done, but
                         # this makes the gui appear sluggish, especially when we emit multiple "done" messages
@@ -526,8 +525,8 @@ class MainTab(QWidget):
                             self.q.put(result)
 
             else:
-                replays = check.all_replays()
-                num_to_load = len(replays)
+                replays = check.all_loadables()
+                num_to_load = check.num_replays()
                 self.reset_progressbar_signal.emit(num_to_load)
                 timestamp = datetime.now()
                 if type(replays[0]) is ReplayPath:
@@ -541,9 +540,9 @@ class MainTab(QWidget):
 
                 self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
                                                                 map_id=map_id))
-                for replay in check.all_replays():
+                for loadable in replays:
                     _check_event(event)
-                    cg.load(replay)
+                    cg.load(loadable)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
                 self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
