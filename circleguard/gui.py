@@ -39,11 +39,8 @@ from settings import get_setting, update_default
 import wizard
 from version import __version__
 
-try:
+if not os.path.exists(get_setting("cache_location")):
     os.mkdir(Path(get_setting("cache_location")).parent)
-except OSError:
-    # directory already exists
-    pass
 
 log = logging.getLogger(__name__)
 
