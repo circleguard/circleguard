@@ -1,5 +1,6 @@
 import sys
 import ntpath
+from pathlib import Path
 # pylint: disable=no-name-in-module
 from functools import partial
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBox,
@@ -673,7 +674,7 @@ class WidgetCombiner(QFrame):
 class FolderChooser(QFrame):
     path_signal = pyqtSignal(object) # an iterable if multiple_files is True, str otherwise
 
-    def __init__(self, title, path, folder_mode=True, multiple_files=False, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
+    def __init__(self, title, path=str(Path.home()), folder_mode=True, multiple_files=False, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
         super(FolderChooser, self).__init__()
         self.path = path
         self.display_path = display_path
@@ -707,13 +708,17 @@ class FolderChooser(QFrame):
             options = QFileDialog.Option()
             options |= QFileDialog.ShowDirsOnly
             options |= QFileDialog.HideNameFilterDetails
-            update_path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=QDir.currentPath(), options=options)
+            update_path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=self.path, options=options)
         elif self.multiple_files:
-            paths = QFileDialog.getOpenFileNames(caption="Select Files", filter=self.file_ending)
+            paths = QFileDialog.getOpenFileNames(caption="Select Files", directory=self.path, filter=self.file_ending)
             # qt returns a list of ([path, path, ...], filter) when we use a filter
             update_path = paths[0]
         else:
-            update_path = QFileDialog.getOpenFileName(caption="Select File", filter=self.file_ending)[0]
+            paths = QFileDialog.getOpenFileName(caption="Select File", directory=str(Path(self.path).parent), filter=self.file_ending)
+            update_path = paths[0]
+            if update_path == "":
+                # dont update path if cancel is pressed
+                update_path = self.path
 
         self.update_dir(update_path)
 
@@ -723,10 +728,8 @@ class FolderChooser(QFrame):
         if self.display_path:
             label = path if len(self.path) < 64 else ntpath.basename(path)
             self.path_label.setText(label)
-        self.dir_updated()
-
-    def dir_updated(self):
         self.path_signal.emit(self.path)
+
 
     def switch_enabled(self, state):
         self.label.setStyleSheet("color:grey" if not state else "")
