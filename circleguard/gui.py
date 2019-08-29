@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter
 # pylint: enable=no-name-in-module
 
-from circleguard import Circleguard, set_options, Loader, Detect
+from circleguard import Circleguard, set_options, Loader, NoInfoAvailableException, Detect
 from circleguard import __version__ as cg_version
 from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
@@ -547,6 +547,10 @@ class MainTab(QWidget):
             self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
             timestamp = datetime.now()
             self.write_to_terminal_signal.emit(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
+
+        except NoInfoAvailableException:
+            self.write_to_terminal_signal.emit("No information found for those arguments. Please recheck your map/user id")
+            self.reset_progressbar_signal.emit(-1)
 
         except Exception:
             log.exception("Error while running circlecore. Please "
