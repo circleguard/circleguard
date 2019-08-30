@@ -165,10 +165,6 @@ for d in DEFAULTS.values():
         if not SETTINGS.contains(key):
             SETTINGS.setValue(key, value)
 
-# overwrite setting key if they were changed in a release
-overwrite_outdated_settings()
-
-
 # create cfg file if it doesn't exist
 if not os.path.exists(CFG_PATH):
     overwrite_config()
@@ -176,6 +172,11 @@ if not os.path.exists(CFG_PATH):
 # overwrite our settings with the config settings (if the user changed them while
 # the application was closed)
 overwrite_with_config_settings()
+
+# overwrite setting key if they were changed in a release
+# has to be called after overwrite_with_config_settings or the file will
+# overwrite our changes here since it's not synced to the file
+overwrite_outdated_settings()
 
 if not get_setting("ran"):
     reset_defaults()
