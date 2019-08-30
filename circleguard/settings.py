@@ -123,7 +123,7 @@ def overwrite_outdated_settings():
 
 def reset_defaults():
     SETTINGS.clear()
-    for section, d in DEFAULTS.items():
+    for d in DEFAULTS.values():
         for key,value in d.items():
             SETTINGS.setValue(key, value)
     SETTINGS.sync()
@@ -149,7 +149,7 @@ def update_default(name, value):
 
 
 # add setting if missing (occurs between updates if we add a new default setting)
-for section, d in DEFAULTS.items():
+for d in DEFAULTS.values():
     for key,value in d.items():
         if not SETTINGS.contains(key):
             SETTINGS.setValue(key, value)
