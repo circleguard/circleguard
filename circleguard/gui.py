@@ -119,7 +119,7 @@ class WindowWrapper(QMainWindow):
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, partial(self.cancel_all_runs, self))
 
-        self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
+        self.setWindowTitle(f"Circleguard v{__version__}")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.start_timer()
         self.debug_window = None
@@ -814,8 +814,8 @@ class SettingsTab(QWidget):
         self.qscrollarea.setWidgetResizable(True)
 
         self.info = QLabel(self)
-        self.info.setText(f"Backend Version: {cg_version}<br/>"
-                          f"Frontend Version: {__version__}<br/>"
+        self.info.setText(f"Frontend v{__version__}<br/>"
+                          f"Backend v{cg_version}<br/>"
                           f"Found a bug or want to request a feature? "
                           f"Open an issue <a href=\"https://github.com/circleguard/circleguard/issues\">here</a>!")
         self.info.setTextFormat(Qt.RichText)
