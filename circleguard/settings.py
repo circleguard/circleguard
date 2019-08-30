@@ -84,14 +84,6 @@ if not os.path.exists(CFG_PATH):
 config.read(resource_path("circleguard.cfg"))
 
 
-# TODO
-# try using Qsettings("pathtoinifile.cfg", QFormat.INI or whatever) to
-# write and read the ini file. It should still be relatively human readable to change
-
-# PROBLEM: cant use comments with qsettings since the file is only meant to be
-# read/write with respect to qt and not end users or other apps. Solution?
-# use python configparser I guess.
-
 CHANGED = {
     "1.1.0": [
         "message_cheater_found",
