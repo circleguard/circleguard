@@ -68,22 +68,6 @@ DEFAULTS = {
     }
 }
 
-# it's tempting to use QSettings builtin ini file support, but that doesn't let us write comments,
-# which is rather important to explain what attributes are available through string formatting.
-config = RawConfigParser(allow_no_value=True)
-CFG_PATH = resource_path("circleguard.cfg")
-# create cfg file if it doesn't exist
-if not os.path.exists(CFG_PATH):
-    for section,d in DEFAULTS.items():
-        config.add_section(section)
-        for k,v in d.items():
-            config.set(section, k, v)
-    with open(CFG_PATH, "w+") as f:
-        config.write(f)
-
-config.read(resource_path("circleguard.cfg"))
-
-
 CHANGED = {
     "1.1.0": [
         "message_cheater_found",
@@ -113,15 +97,20 @@ def overwrite_outdated_settings():
     update_default("last_version", __version__)
 
 
+def overwrite_with_config_settings():
+    config = RawConfigParser()
+    config.read(resource_path("circleguard.cfg"))
+    for section in config.sections():
+        for k in config[section]:
+            update_default(k, config[section][k])
+
+
 def reset_defaults():
     SETTINGS.clear()
     for d in DEFAULTS.values():
         for key,value in d.items():
             SETTINGS.setValue(key, value)
     SETTINGS.sync()
-
-if not SETTINGS.contains("ran"):
-    reset_defaults()
 
 
 def get_setting(name):
@@ -140,6 +129,10 @@ def update_default(name, value):
     SETTINGS.setValue(name, TYPES[name][0](value))
 
 
+
+if not SETTINGS.contains("ran"):
+    reset_defaults()
+
 # add setting if missing (occurs between updates if we add a new default setting)
 for d in DEFAULTS.values():
     for key,value in d.items():
@@ -148,3 +141,20 @@ for d in DEFAULTS.values():
 
 # overwrite setting key if they were changed in a release
 overwrite_outdated_settings()
+
+# it's tempting to use QSettings builtin ini file support, but that doesn't let us write comments,
+# which is rather important to explain what attributes are available through string formatting.
+config = RawConfigParser(allow_no_value=True)
+CFG_PATH = resource_path("circleguard.cfg")
+# create cfg file if it doesn't exist
+if not os.path.exists(CFG_PATH):
+    for section,d in DEFAULTS.items():
+        config.add_section(section)
+        for k,v in d.items():
+            config.set(section, k, v)
+    with open(CFG_PATH, "w+") as f:
+        config.write(f)
+
+# overwrite our settings with the config settings (if the user changed them while
+# the application was closed)
+overwrite_with_config_settings()
