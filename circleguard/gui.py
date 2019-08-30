@@ -28,7 +28,7 @@ from circleguard import Circleguard, set_options, Loader, Detect
 from circleguard import __version__ as cg_version
 from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
-from utils import resource_path, write_log, MapRun, ScreenRun, LocalRun, VerifyRun
+from utils import resource_path, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
@@ -47,6 +47,18 @@ log = logging.getLogger(__name__)
 
 # save old excepthook
 sys._excepthook = sys.excepthook
+
+def write_log(message):
+    log_dir = resource_path(get_setting("log_dir"))
+    if not os.path.exists(log_dir):  # create dir if nonexistent
+        os.makedirs(log_dir)
+    directory = os.path.join(log_dir, "circleguard.log")
+    with open(directory, 'a+') as f:  # append so it creates a file if it doesn't exist
+        f.seek(0)
+        data = f.read().splitlines(True)
+    data.append(message+"\n")
+    with open(directory, 'w+') as f:
+        f.writelines(data[-1000:])  # keep file at 1000 lines
 
 # this allows us to log any and all exceptions thrown to a log file -
 # pyqt likes to eat exceptions and quit silently
@@ -671,8 +683,7 @@ class LocalTab(QWidget):
                           "If a Map is given, it will compare the osrs against the leaderboard of that map.\n"
                           "If both a user and a map are given, it will compare the osrs against the user's "
                           "score on that map.")
-        self.folder_chooser = FolderChooser("Replay folder", get_setting("local_replay_dir"))
-        self.folder_chooser.path_signal.connect(self.update_dir)
+        self.folder_chooser = FolderChooser("Replay folder")
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers(1)
         self.threshold = Threshold()  # ThresholdCombined()
@@ -690,9 +701,6 @@ class LocalTab(QWidget):
 
     def switch_compare(self):
         self.compare_top.update_user(self.id_combined.map_id.field.text() != "")
-
-    def update_dir(self, path):
-        update_default("local_replay_dir", path)
 
 
 class VerifyTab(QWidget):
