@@ -378,15 +378,17 @@ class CompareTopUsers(QFrame):
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(minimum, 100)
         spinbox.setSingleStep(1)
+        spinbox.setFixedWidth(100)
         spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
+
+        self.combined = WidgetCombiner(slider, spinbox)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.slider, 0, 2, 1, 2)
-        layout.addWidget(self.spinbox, 0, 4, 1, 1)
+        layout.addWidget(self.combined, 0, 2, 1, 3)
         self.setLayout(layout)
 
     # keep spinbox and slider in sync
@@ -434,15 +436,18 @@ class CompareTopPlays(QFrame):
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(1, 100)
         spinbox.setSingleStep(1)
+        spinbox.setFixedWidth(100)
         spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
+        
+        self.combined = WidgetCombiner(slider, spinbox)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(slider, 0, 2, 1, 2)
-        layout.addWidget(spinbox, 0, 4, 1, 1)
+        layout.addWidget(self.combined, 0, 2, 1, 3)
+
         self.setLayout(layout)
 
     # keep spinbox and slider in sync
