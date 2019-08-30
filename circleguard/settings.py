@@ -5,7 +5,10 @@ import os
 from PyQt5.QtCore import QSettings, QStandardPaths
 # pylint: enable=no-name-in-module
 from packaging import version
-from configparser import RawConfigParser
+# it's tempting to use QSettings builtin ini file support instead of configparser,
+# but that doesn't let us write comments, which is rather important to explain
+# what attributes are available through string formatting.
+from configparser import ConfigParser
 
 from utils import resource_path
 from version import __version__
@@ -83,9 +86,14 @@ CHANGED = {
 }
 
 SETTINGS = QSettings("Circleguard", "Circleguard")
+# see third bullet here https://doc.qt.io/qt-5/qsettings.html#platform-limitations,
+# we don't want the global keys on macos when calling allkeys
+SETTINGS.setFallbacksEnabled(False)
+
 # assemble dict of {key: [type, section]} since we have nested dicts in DEFAULTS
 # double list comprehension feels sooo backwards to write
 TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
+CFG_PATH = resource_path("circleguard.cfg")
 
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
@@ -98,11 +106,18 @@ def overwrite_outdated_settings():
 
 
 def overwrite_with_config_settings():
-    config = RawConfigParser()
+    config = ConfigParser(interpolation=None)
     config.read(resource_path("circleguard.cfg"))
     for section in config.sections():
         for k in config[section]:
-            update_default(k, config[section][k])
+            type_ = TYPES[k][0]
+            if type_ is bool:
+                val = config.getboolean(section, k)
+            elif type_ is int:
+                val = config.getint(section, k)
+            else:
+                val = config.get(section, k)
+            update_default(k, val)
 
 
 def reset_defaults():
@@ -120,18 +135,27 @@ def get_setting(name):
     # keys to a true False value instead of bool("false") which would return True.
     # second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
     if type_ is bool:
-        return False if val == "false" else bool(val)
+        return False if val in ["false", "False"] else bool(val)
     v = type_(SETTINGS.value(name))
     return v
 
 
 def update_default(name, value):
+    # import traceback
+    # import sys
+    # traceback.print_stack(file=sys.stdout)
     SETTINGS.setValue(name, TYPES[name][0](value))
 
+# overwrites circleguard.cfg with our settings
+def overwrite_config():
+    config = ConfigParser(allow_no_value=True, interpolation=None)
+    for section in DEFAULTS.keys():
+        config[section] = {}
+    for key in SETTINGS.allKeys():
+        config[TYPES[key][1]][key] = str(SETTINGS.value(key))
 
-
-if not SETTINGS.contains("ran"):
-    reset_defaults()
+    with open(CFG_PATH, "w+") as f:
+        config.write(f)
 
 # add setting if missing (occurs between updates if we add a new default setting)
 for d in DEFAULTS.values():
@@ -142,19 +166,14 @@ for d in DEFAULTS.values():
 # overwrite setting key if they were changed in a release
 overwrite_outdated_settings()
 
-# it's tempting to use QSettings builtin ini file support, but that doesn't let us write comments,
-# which is rather important to explain what attributes are available through string formatting.
-config = RawConfigParser(allow_no_value=True)
-CFG_PATH = resource_path("circleguard.cfg")
+
 # create cfg file if it doesn't exist
 if not os.path.exists(CFG_PATH):
-    for section,d in DEFAULTS.items():
-        config.add_section(section)
-        for k,v in d.items():
-            config.set(section, k, v)
-    with open(CFG_PATH, "w+") as f:
-        config.write(f)
+    overwrite_config()
 
 # overwrite our settings with the config settings (if the user changed them while
 # the application was closed)
 overwrite_with_config_settings()
+
+if not get_setting("ran"):
+    reset_defaults()

@@ -35,7 +35,7 @@ from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, Wi
                      TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting, EntryWidget,
                      RunWidget)
 
-from settings import get_setting, update_default
+from settings import get_setting, update_default, overwrite_config
 import wizard
 from version import __version__
 
@@ -43,7 +43,6 @@ if not os.path.exists(get_setting("cache_location")):
     os.mkdir(Path(get_setting("cache_location")).parent)
 
 log = logging.getLogger(__name__)
-
 
 # save old excepthook
 sys._excepthook = sys.excepthook
@@ -251,6 +250,7 @@ class WindowWrapper(QMainWindow):
             self.debug_window.close()
         if self.main_window.main_tab.visualizer_window != None:
             self.main_window.main_tab.visualizer_window.close()
+        overwrite_config()
 
 class DebugWindow(QMainWindow):
     def __init__(self):
