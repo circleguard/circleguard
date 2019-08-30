@@ -152,6 +152,8 @@ def overwrite_config():
     for section in DEFAULTS.keys():
         config[section] = {}
     for key in SETTINGS.allKeys():
+        if key not in TYPES:
+            continue
         config[TYPES[key][1]][key] = str(SETTINGS.value(key))
 
     with open(CFG_PATH, "w+") as f:
