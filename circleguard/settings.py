@@ -17,7 +17,7 @@ from version import __version__
 DEFAULTS = {
     "Locations": {
         "cache_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache.db",
-        "log_dir": "./logs/"
+        "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/"
     },
     "Messages": {
         "message_loading_replays": "[{ts:%X}] Loading {num_replays} Replays on map {map_id}",
