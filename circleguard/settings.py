@@ -81,7 +81,8 @@ CHANGED = {
         "message_loading_replays"
     ],
     "1.3.0": [
-        "cache_location"
+        "cache_location",
+        "log_dir"
     ]
 }
 
