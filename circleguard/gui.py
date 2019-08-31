@@ -32,7 +32,7 @@ from utils import resource_path, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
-                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting, EntryWidget,
+                     TopPlays, BeatmapTest, ComparisonResult, LineEditSetting, EntryWidget,
                      RunWidget)
 
 from settings import get_setting, update_default, overwrite_config
@@ -872,7 +872,7 @@ class ScrollableSettingsWidget(QFrame):
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
         self.cache.box.stateChanged.connect(partial(update_default, "caching"))
 
-        self.cache_location = FolderChooser("Cache Path", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
+        self.cache_location = FolderChooser("Cache Location", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
         self.cache_location.path_signal.connect(partial(update_default, "cache_location"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
@@ -900,8 +900,6 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(Separator("Debug"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
-        self.grid.addWidget(Separator("Message Format"))
-        self.grid.addWidget(StringFormatWidget(""))
         self.grid.addWidget(Separator("Dev"))
         self.grid.addWidget(self.rainbow)
         self.grid.addWidget(self.wizard)

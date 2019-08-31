@@ -249,43 +249,6 @@ class ButtonWidget(QFrame):
         self.setLayout(layout)
 
 
-class StringFormatWidget(QFrame):
-    def __init__(self, tooltip):
-        super(StringFormatWidget, self).__init__()
-        loading_replays = LineEditSetting("message_loading_replays", "Shown when replays are being requested "
-                                      "from the api or loaded from local files", "normal", "message_loading_replays")
-
-        starting_comparing = LineEditSetting("message_starting_comparing", "Shown when replays are finished "
-                                         "loading and starting to be compared", "normal",
-                                         "message_starting_comparing")
-
-        finished_comparing = LineEditSetting("message_finished_comparing", "Shown when replays are done being compared, "
-                                         "regardless of if any cheaters were found", "normal",
-                                         "message_finished_comparing")
-
-        cheater_found = LineEditSetting("message_cheater_found", "Shown when a cheater is found (scores below the threshold). "
-                                    "This occurs before replays are finished being compared.", "normal",
-                                    "message_cheater_found")
-
-        no_cheater_found = LineEditSetting("message_no_cheater_found", "Shown when a comparison scores below DISPLAY_THRESHOLD.\n"
-                                    "All attributes available in message_cheater_found are available here.", "normal",
-                                    "message_no_cheater_found")
-
-        result_text = LineEditSetting("string_result_text", "Text of the result label in the Results Tab", "normal",
-                                      "string_result_text")
-
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(loading_replays)
-        layout.addWidget(starting_comparing)
-        layout.addWidget(finished_comparing)
-        layout.addWidget(cheater_found)
-        layout.addWidget(no_cheater_found)
-        layout.addWidget(result_text)
-
-        self.setLayout(layout)
-
-
 class LoglevelWidget(QFrame):
     def __init__(self, tooltip):
         super(LoglevelWidget, self).__init__()
