@@ -679,11 +679,10 @@ class FolderChooser(QFrame):
         else:
             paths = QFileDialog.getOpenFileName(caption="Select File", directory=str(Path(self.path).parent), filter=self.file_ending)
             update_path = paths[0]
-            if update_path == "":
-                # dont update path if cancel is pressed
-                update_path = self.path
 
-        self.update_dir(update_path)
+        # dont update path if cancel is pressed
+        if update_path != "":
+            self.update_dir(update_path)
 
 
     def update_dir(self, path):
