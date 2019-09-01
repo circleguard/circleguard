@@ -21,9 +21,20 @@ COMMENTS = {
         "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion."
     },
     "Messages": {
-        "message_loading_replays": "The message displayed just before we begin laoding replays."
+        "section": "Messages written to the terminal at various times.",
+        "message_loading_replays": "Displayed just before we begin laoding replays.",
+        "message_ratelimited": "Displayed when the api returns a response telling us our key is ratelimited.",
+        "message_starting_comparing": "Displayed just before replays are compared for replay stealing.",
+        "message_finished_comparing": "Displayed when all replays have finished being compared.",
+        "message_cheater_found": "Displayed when a comparison scores below the cheat threshold.",
+        "message_no_cheater_found": "Displayed when a comparison scores above the cheat threshold, but below the display threshold."
+    },
+    "Strings": {
+        "section": "Labels seen on widgets",
+        "string_result_text": "Text displayed on a row on the Results tab when a result is added"
     }
 }
+
 DEFAULTS = {
     "Locations": {
         "cache_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache.db",
