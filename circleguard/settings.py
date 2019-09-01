@@ -13,7 +13,17 @@ from configparser import ConfigParser
 from utils import resource_path
 from version import __version__
 
-
+COMMENTS = {
+    "Locations": {
+        "section": "The path to various file or directories used by the program.",
+        "cache_location": "Where the cache to read and write replays to is.\n"
+                "If this location doesn't exist, it will be created, including any nonexistant directories in the path.",
+        "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion."
+    },
+    "Messages": {
+        "message_loading_replays": "The message displayed just before we begin laoding replays."
+    }
+}
 DEFAULTS = {
     "Locations": {
         "cache_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache.db",
@@ -152,10 +162,20 @@ def overwrite_config():
     config = ConfigParser(allow_no_value=True, interpolation=None)
     for section in DEFAULTS.keys():
         config[section] = {}
-    for key in SETTINGS.allKeys():
-        if key not in TYPES:
+    for setting in SETTINGS.allKeys():
+        if setting not in TYPES:
             continue
-        config[TYPES[key][1]][key] = str(SETTINGS.value(key))
+        section = TYPES[setting][1]
+        # write section comment before any others
+        if config[section] == {} and section in COMMENTS and "section" in COMMENTS[section]:
+            comment = "# " + COMMENTS[section]["section"].replace("\n", "\n# ") + "\n"
+            config[section][comment] = None
+        if section in COMMENTS and setting in COMMENTS[section]:
+            comment = "# " + COMMENTS[section][setting].replace("\n", "\n# ") # comment out each newline
+            config[section][comment] = None # slightly hacky but setting a configparser key to None writes it as is, without a trailing = for the val
+
+        config[TYPES[setting][1]][setting] = str(SETTINGS.value(setting))
+
 
     with open(CFG_PATH, "w+") as f:
         config.write(f)
