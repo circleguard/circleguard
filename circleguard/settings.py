@@ -160,6 +160,7 @@ def update_default(name, value):
 # overwrites circleguard.cfg with our settings
 def overwrite_config():
     config = ConfigParser(allow_no_value=True, interpolation=None)
+    config.optionxform = str # preserve case in setting keys
     for section in DEFAULTS.keys():
         config[section] = {}
     for setting in SETTINGS.allKeys():
