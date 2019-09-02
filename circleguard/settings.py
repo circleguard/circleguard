@@ -69,7 +69,7 @@ COMMENTS = {
         "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing",
         "ran": "Whether Circleguard has been ran on this system before. If False, all settings will be reset to their default and the wizard will be displayed",
         "last_version": "The most recent version of Circleguard run on this system. Used to overwrite some settings when they change between versions",
-        "api_key": "Your api key"
+        "api_key": "The api key to use in circlecore"
     },
     "Caching": {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
