@@ -180,7 +180,7 @@ def overwrite_config():
         section = TYPES[setting][1]
         # write section comment before any others
         if config[section] == {} and section in COMMENTS and "section" in COMMENTS[section]:
-            comment = "## " + COMMENTS[section]["section"].replace("\n", "\n# ")
+            comment = "## " + COMMENTS[section]["section"].replace("\n", "\n## ")
             config[section][comment] = None
         if section in COMMENTS and setting in COMMENTS[section]:
             comment = "# " + COMMENTS[section][setting].replace("\n", "\n# ") # comment out each newline
