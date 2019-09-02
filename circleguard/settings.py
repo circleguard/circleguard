@@ -32,6 +32,47 @@ COMMENTS = {
     "Strings": {
         "section": "Labels seen on widgets",
         "string_result_text": "Text displayed on a row on the Results tab when a result is added"
+    },
+    "Templates": {
+        "section": "The templates that can be copied from the Results tab for easy reddit reporting",
+        "template_replay_steal": "Template for replay stealing"
+    },
+    "Thresholds": {
+        "section": "Thresholds for when to store results and when to display results for various types of cheats.\n"
+                "Although possible to set _display settings lower than their respective _cheat setting, it is not advised"
+    },
+    "Appearance": {
+        "dark_theme": "Dark theme skins the application to be a bit easier on the eyes. The gui is developed with a dark theme in mind first, light theme second",
+        "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
+        "visualizer_bg": "If True, uses a pure black background for the visualizer (emulates osu client gameplay). If False, uses a greyish background (recommended)"
+    },
+    "Experimental": {
+        "section": "These settings are liable to be resource intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk",
+        "rainbow_accent": "Makes the accent color (defines the color of the highlight around the currently focused widget, among other things) constantly cycle through colors"
+    },
+    "Logs": {
+        "log_save": "Whether to save logs to a file (whose path is defined by Locations/log_dir)",
+        "log_mode": "All logs with a severity level at or higher than this value will be outputed.\n"
+                "Critical: 0\n"
+                "Error: 1\n"
+                "Warning: 2\n"
+                "Info: 3\n"
+                "Debug: 4\n"
+                "Trace: 5",
+        "log_output": "Where to output logs. This setting has no relation to log_save, so if log_output is 0 and log_save is True, logs will still be written to the log file at the level defined by log_mode.\n"
+                "Nowhere: 0\n"
+                "Terminal: 1\n"
+                "Debug Window: 2\n"
+                "Terminal and Debug Window: 3"
+    },
+    "Core": {
+        "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing",
+        "ran": "Whether Circleguard has been ran on this system before. If False, all settings will be reset to their default and the wizard will be displayed",
+        "last_version": "The most recent version of Circleguard run on this system. Used to overwrite some settings when they change between versions",
+        "api_key": "Your api key"
+    },
+    "Caching": {
+        "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
     }
 }
 
