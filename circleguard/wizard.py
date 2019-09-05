@@ -180,15 +180,15 @@ class TutorialPage2(WizardPage):
 class TutorialPage3(WizardPage):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setTitle("A Small Tutorial (cont.)")
-        label = QLabel("<p>Circleguard tries to present the information to you in a manageble manner, "
-                       "but you can change what text is shown.</p>"
-                       "<p>In the settings tab, there are multiple "
-                       "settings for strings that are shown at different points in the program - when you "
-                       "find a cheater, when you finish a comparison, when you find a replay with a low similarity, "
-                       "but not quite a cheater (under 25 by default), etc. You can change them to print anything you want, "
-                       "such as a different timestamp format, or including the mods each player used. The "
-                       "formatting is done through python's <a href=\"https://pyformat.info\">'new-style' strformat</a>.</p>")
+        self.setTitle("Configuring Settings")
+        label = QLabel("<p>Many aspects of circleguard are configurable.</p>"
+                       "<p>Common settings can be accessed through the Settings tab. "
+                       "All settings are located in a config file, including less common settings or "
+                       "settings that would take too much space to display in the application. "
+                       "You can edit these settings by pressing \"Open\" under \"Edit Settings File\". </p>"
+                       "<p>Settings contained in the config file but not in the settings tab include "
+                       "the content of the messages printed to the terminal, the contents of templates, "
+                       "and various file locations. More information can be found in the comments of the config file.</p>")
 
         label.setTextFormat(Qt.RichText)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
