@@ -164,7 +164,7 @@ class TutorialPage2(WizardPage):
                        "below 18 is found, circleguard will audially and visually alert you (OS specific), as well as "
                        "printing to the center area. This threshold is adjustable in the settings and on each tab.</p>"
                        "<p>Circleguard will also print results (but not otherwise alert you) for replays that have a "
-                       "similarity under 25. This is to give you suspicious replays that you may want to investiage further. "
+                       "similarity under 25 by default. This is to give you suspicious replays that you may want to investiage further. "
                        "This threshold is, of course, adjustable in the settings.")
 
         label.setTextFormat(Qt.RichText)
