@@ -14,6 +14,18 @@ from utils import resource_path
 from version import __version__
 
 COMMENTS = {
+    "file": "Please read the following before editing this file.\n"
+            "We do not validate or error check these settings, so if you put an incorrect value or syntax, your application will crash on start.\n"
+            "If this occurs, you can either fix the error, or if you can't find the cause, delete the file entirely.\n"
+            "This will cause a fresh config to be created when circleguard is run again.\n"
+            "In places where it is easy to create issues by editing the settings, we will warn you about it.\n"
+            "Some settings use curly braces `{}`, especially the Messages, Strings, and Templates sections.\n"
+            "These denote section to be filled with python's strformat. We do not currently document what options\n"
+            "are available to you for each setting, but you can move or remove these brace settings without fear or causing issues.\n"
+            "The `ts` seen in many of the settings is a datetime.datetime object, representing the timestamp at that time.\n"
+            "You may of course use any formatting directive in the settings (instead of the default %X) that datetime supports.\n\n"
+            "After you change settings, you must press the \"sync\" button on the settings tab for them to take effect.\n\n"
+            "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard.",
     "Locations": {
         "section": "The path to various file or directories used by the program",
         "cache_location": "Where the cache to read and write replays to is.\n"
@@ -210,6 +222,10 @@ def update_default(name, value):
 
 # overwrites circleguard.cfg with our settings
 def overwrite_config():
+    # add file comments at top of file
+    with open(CFG_PATH, "w+") as f:
+        f.write("### " + COMMENTS["file"].replace("\n", "\n### ") + "\n\n")
+
     config = ConfigParser(allow_no_value=True, interpolation=None)
     config.optionxform = str # preserve case in setting keys
     for section in DEFAULTS.keys():
@@ -229,7 +245,7 @@ def overwrite_config():
         config[TYPES[setting][1]][setting] = str(SETTINGS.value(setting))
 
 
-    with open(CFG_PATH, "w+") as f:
+    with open(CFG_PATH, "a+") as f:
         config.write(f)
 
 # add setting if missing (occurs between updates if we add a new default setting)
