@@ -228,17 +228,17 @@ class OptionWidget(QFrame):
 
 class ButtonWidget(QFrame):
     """
-    A container class of widgets that represents an option with a boolean state.
-    This class holds a Label and CheckBox.
+    A container class of widgets that represents a clickable action with a label.
+    This class holds a QLabel and QPushButton.
     """
 
-    def __init__(self, title, tooltip, end=":"):
+    def __init__(self, label_title, button_title, tooltip, end=":"):
         super(ButtonWidget, self).__init__()
 
         label = QLabel(self)
-        label.setText(title + end)
+        label.setText(label_title + end)
         label.setToolTip(tooltip)
-        self.button = QPushButton("Show")
+        self.button = QPushButton(button_title)
         self.button.setFixedWidth(100)
 
         layout = QGridLayout()

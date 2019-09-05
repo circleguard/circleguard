@@ -12,10 +12,10 @@ from datetime import datetime
 import math
 import time
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
+from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
                              QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy)
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices
 # pylint: enable=no-name-in-module
 
 # app needs to be initialized before settings is imported so QStandardPaths resolves
@@ -35,7 +35,7 @@ from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, Wi
                      TopPlays, BeatmapTest, ComparisonResult, LineEditSetting, EntryWidget,
                      RunWidget)
 
-from settings import get_setting, update_default, overwrite_config
+from settings import get_setting, update_default, overwrite_config, overwrite_with_config_settings
 import wizard
 from version import __version__
 
@@ -876,6 +876,12 @@ class ScrollableSettingsWidget(QFrame):
         self.cache_location.path_signal.connect(partial(update_default, "cache_location"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
+        self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
+        self.open_settings.button.clicked.connect(self._open_settings)
+
+        self.sync_settings = ButtonWidget("Sync Settings", "Sync", "")
+        self.sync_settings.button.clicked.connect(self._sync_settings)
+
         self.loglevel = LoglevelWidget("")
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
         self.set_loglevel()  # set the default loglevel in cg, not just in gui
@@ -883,7 +889,7 @@ class ScrollableSettingsWidget(QFrame):
         self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
-        self.wizard = ButtonWidget("Run Wizard", "")
+        self.wizard = ButtonWidget("Run Wizard", "Run", "")
         self.wizard.button.clicked.connect(self.show_wizard)
 
         self.grid = QVBoxLayout()
@@ -893,6 +899,8 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(self.display_thresh)
         self.grid.addWidget(self.cache)
         self.grid.addWidget(self.cache_location)
+        self.grid.addWidget(self.open_settings)
+        self.grid.addWidget(self.sync_settings)
         self.grid.addWidget(Separator("Appearance"))
         self.grid.addWidget(self.darkmode)
         self.grid.addWidget(self.visualizer_info)
@@ -941,6 +949,12 @@ class ScrollableSettingsWidget(QFrame):
 
     def reload_theme(self):
         switch_theme(get_setting("dark_theme"))
+
+    def _open_settings(self):
+        QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location")))
+
+    def _sync_settings(self):
+        overwrite_with_config_settings()
 
 
 class ResultsTab(QWidget):

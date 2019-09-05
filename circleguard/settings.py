@@ -18,6 +18,7 @@ COMMENTS = {
         "section": "The path to various file or directories used by the program",
         "cache_location": "Where the cache to read and write replays to is.\n"
                 "If this location doesn't exist, it will be created, including any nonexistant directories in the path",
+        "config_location": "Where the circelguard.cfg file (this very file) resides.",
         "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
     },
     "Messages": {
@@ -79,7 +80,8 @@ COMMENTS = {
 DEFAULTS = {
     "Locations": {
         "cache_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache.db",
-        "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/"
+        "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
+        "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
     },
     "Messages": {
         "message_loading_replays": "[{ts:%X}] Loading {num_replays} Replays on map {map_id}",
@@ -144,9 +146,22 @@ CHANGED = {
     ],
     "1.3.0": [
         "cache_location",
-        "log_dir"
+        "log_dir",
     ]
 }
+
+TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
+def get_setting(name):
+    type_ = TYPES[name][0]
+    val = SETTINGS.value(name)
+    # windows registry keys doesnt properly preserve types, so convert "false"
+    # keys to a true False value instead of bool("false") which would return True.
+    # second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
+    if type_ is bool:
+        return False if val in ["false", "False"] else bool(val)
+    v = type_(SETTINGS.value(name))
+    return v
+
 
 SETTINGS = QSettings("Circleguard", "Circleguard")
 # see third bullet here https://doc.qt.io/qt-5/qsettings.html#platform-limitations,
@@ -155,9 +170,7 @@ SETTINGS.setFallbacksEnabled(False)
 
 # assemble dict of {key: [type, section]} since we have nested dicts in DEFAULTS
 # double list comprehension feels sooo backwards to write
-TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
-CFG_PATH = resource_path("circleguard.cfg")
-
+CFG_PATH = get_setting("config_location")
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
     last_version = version.parse(last_version.base_version)  # remove dev stuff
@@ -170,7 +183,7 @@ def overwrite_outdated_settings():
 
 def overwrite_with_config_settings():
     config = ConfigParser(interpolation=None)
-    config.read(resource_path("circleguard.cfg"))
+    config.read(CFG_PATH)
     for section in config.sections():
         for k in config[section]:
             type_ = TYPES[k][0]
@@ -189,18 +202,6 @@ def reset_defaults():
         for key,value in d.items():
             SETTINGS.setValue(key, value)
     SETTINGS.sync()
-
-
-def get_setting(name):
-    type_ = TYPES[name][0]
-    val = SETTINGS.value(name)
-    # windows registry keys doesnt properly preserve types, so convert "false"
-    # keys to a true False value instead of bool("false") which would return True.
-    # second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
-    if type_ is bool:
-        return False if val in ["false", "False"] else bool(val)
-    v = type_(SETTINGS.value(name))
-    return v
 
 
 def update_default(name, value):
