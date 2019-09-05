@@ -206,9 +206,6 @@ def reset_defaults():
 
 
 def update_default(name, value):
-    # import traceback
-    # import sys
-    # traceback.print_stack(file=sys.stdout)
     SETTINGS.setValue(name, TYPES[name][0](value))
 
 # overwrites circleguard.cfg with our settings
