@@ -84,7 +84,7 @@ DEFAULTS = {
         "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
     },
     "Messages": {
-        "message_loading_replays": "[{ts:%X}] Loading {num_replays} Replays on map {map_id}",
+        "message_loading_replays": "[{ts:%X}] Loading {num_replays} replays on map {map_id}",
         "message_ratelimited": "[{ts:%X}] Ratelimited, waiting for {s} seconds",
         "message_starting_comparing": "[{ts:%X}] Comparing Replays",
         "message_finished_comparing": "[{ts:%X}] Done",
@@ -147,6 +147,7 @@ CHANGED = {
     "1.3.0": [
         "cache_location",
         "log_dir",
+        "message_loading_replays"
     ]
 }
 
