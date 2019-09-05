@@ -111,7 +111,7 @@ class ApiKeyPage(WizardPage):
                       "as your application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
                       "as your application url. Paste the api key you receive into the box below.</p>"
                       "<p>Your api key will be stored locally, and is never sent anywhere but osu! servers.</p>"
-                      "<p>If you skip this step, you will not be able to run any of the checks./p>")
+                      "<p>If you skip this step, you will not be able to run any of the checks.</p>")
 
         label.setTextFormat(Qt.RichText)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
