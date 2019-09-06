@@ -728,7 +728,7 @@ class ResetSettings(QFrame):
         if prompt == QMessageBox.Yes:
             reset_defaults()
             overwrite_config()  # reset config file
-            sys.exit(0)
+            QCoreApplication.quit()
 
 
 class BeatmapTest(QFrame):
