@@ -228,17 +228,17 @@ class OptionWidget(QFrame):
 
 class ButtonWidget(QFrame):
     """
-    A container class of widgets that represents an option with a boolean state.
-    This class holds a Label and CheckBox.
+    A container class of widgets that represents a clickable action with a label.
+    This class holds a QLabel and QPushButton.
     """
 
-    def __init__(self, title, tooltip, end=":"):
+    def __init__(self, label_title, button_title, tooltip, end=":"):
         super(ButtonWidget, self).__init__()
 
         label = QLabel(self)
-        label.setText(title + end)
+        label.setText(label_title + end)
         label.setToolTip(tooltip)
-        self.button = QPushButton("Show")
+        self.button = QPushButton(button_title)
         self.button.setFixedWidth(100)
 
         layout = QGridLayout()
@@ -246,43 +246,6 @@ class ButtonWidget(QFrame):
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.button, 0, 2, 1, 1)
-        self.setLayout(layout)
-
-
-class StringFormatWidget(QFrame):
-    def __init__(self, tooltip):
-        super(StringFormatWidget, self).__init__()
-        loading_replays = LineEditSetting("message_loading_replays", "Shown when replays are being requested "
-                                      "from the api or loaded from local files", "normal", "message_loading_replays")
-
-        starting_comparing = LineEditSetting("message_starting_comparing", "Shown when replays are finished "
-                                         "loading and starting to be compared", "normal",
-                                         "message_starting_comparing")
-
-        finished_comparing = LineEditSetting("message_finished_comparing", "Shown when replays are done being compared, "
-                                         "regardless of if any cheaters were found", "normal",
-                                         "message_finished_comparing")
-
-        cheater_found = LineEditSetting("message_cheater_found", "Shown when a cheater is found (scores below the threshold). "
-                                    "This occurs before replays are finished being compared.", "normal",
-                                    "message_cheater_found")
-
-        no_cheater_found = LineEditSetting("message_no_cheater_found", "Shown when a comparison scores below DISPLAY_THRESHOLD.\n"
-                                    "All attributes available in message_cheater_found are available here.", "normal",
-                                    "message_no_cheater_found")
-
-        result_text = LineEditSetting("string_result_text", "Text of the result label in the Results Tab", "normal",
-                                      "string_result_text")
-
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(loading_replays)
-        layout.addWidget(starting_comparing)
-        layout.addWidget(finished_comparing)
-        layout.addWidget(cheater_found)
-        layout.addWidget(no_cheater_found)
-        layout.addWidget(result_text)
-
         self.setLayout(layout)
 
 
@@ -721,11 +684,10 @@ class FolderChooser(QFrame):
         else:
             paths = QFileDialog.getOpenFileName(caption="Select File", directory=str(Path(self.path).parent), filter=self.file_ending)
             update_path = paths[0]
-            if update_path == "":
-                # dont update path if cancel is pressed
-                update_path = self.path
 
-        self.update_dir(update_path)
+        # dont update path if cancel is pressed
+        if update_path != "":
+            self.update_dir(update_path)
 
 
     def update_dir(self, path):
@@ -770,7 +732,7 @@ class ResetSettings(QFrame):
                                       defaultButton=QMessageBox.Cancel)
         if prompt == QMessageBox.Yes:
             reset_defaults()
-            sys.exit(0)
+            QCoreApplication.quit()
 
 
 class BeatmapTest(QFrame):

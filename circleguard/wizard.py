@@ -111,7 +111,7 @@ class ApiKeyPage(WizardPage):
                       "as your application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
                       "as your application url. Paste the api key you receive into the box below.</p>"
                       "<p>Your api key will be stored locally, and is never sent anywhere but osu! servers.</p>"
-                      "<p>If you skip this step, you will not be able to run any of the checks./p>")
+                      "<p>If you skip this step, you will not be able to run any of the checks.</p>")
 
         label.setTextFormat(Qt.RichText)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)
@@ -164,7 +164,7 @@ class TutorialPage2(WizardPage):
                        "below 18 is found, circleguard will audially and visually alert you (OS specific), as well as "
                        "printing to the center area. This threshold is adjustable in the settings and on each tab.</p>"
                        "<p>Circleguard will also print results (but not otherwise alert you) for replays that have a "
-                       "similarity under 25. This is to give you suspicious replays that you may want to investiage further. "
+                       "similarity under 25 by default. This is to give you suspicious replays that you may want to investiage further. "
                        "This threshold is, of course, adjustable in the settings.")
 
         label.setTextFormat(Qt.RichText)
@@ -180,15 +180,15 @@ class TutorialPage2(WizardPage):
 class TutorialPage3(WizardPage):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setTitle("A Small Tutorial (cont.)")
-        label = QLabel("<p>Circleguard tries to present the information to you in a manageble manner, "
-                       "but you can change what text is shown.</p>"
-                       "<p>In the settings tab, there are multiple "
-                       "settings for strings that are shown at different points in the program - when you "
-                       "find a cheater, when you finish a comparison, when you find a replay with a low similarity, "
-                       "but not quite a cheater (under 25 by default), etc. You can change them to print anything you want, "
-                       "such as a different timestamp format, or including the mods each player used. The "
-                       "formatting is done through python's <a href=\"https://pyformat.info\">'new-style' strformat</a>.</p>")
+        self.setTitle("Configuring Settings")
+        label = QLabel("<p>Many aspects of circleguard are configurable.</p>"
+                       "<p>Common settings can be accessed through the Settings tab. "
+                       "All settings are located in a config file, including less common settings or "
+                       "settings that would take too much space to display in the application. "
+                       "You can edit these settings by pressing \"Open\" under \"Edit Settings File\". </p>"
+                       "<p>Settings contained in the config file but not in the settings tab include "
+                       "the content of the messages printed to the terminal, the contents of templates, "
+                       "and various file locations. More information can be found in the comments of the config file.</p>")
 
         label.setTextFormat(Qt.RichText)
         label.setTextInteractionFlags(Qt.TextBrowserInteraction)

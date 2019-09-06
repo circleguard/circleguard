@@ -12,10 +12,10 @@ from datetime import datetime
 import math
 import time
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal
+from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
                              QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy)
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices
 # pylint: enable=no-name-in-module
 
 # app needs to be initialized before settings is imported so QStandardPaths resolves
@@ -28,14 +28,14 @@ from circleguard import Circleguard, set_options, Loader, Detect, NoInfoAvailabl
 from circleguard import __version__ as cg_version
 from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
-from utils import resource_path, write_log, MapRun, ScreenRun, LocalRun, VerifyRun
+from utils import resource_path, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
-                     TopPlays, BeatmapTest, StringFormatWidget, ComparisonResult, LineEditSetting, EntryWidget,
+                     TopPlays, BeatmapTest, ComparisonResult, LineEditSetting, EntryWidget,
                      RunWidget)
 
-from settings import get_setting, update_default
+from settings import get_setting, update_default, overwrite_config, overwrite_with_config_settings
 import wizard
 from version import __version__
 
@@ -44,9 +44,20 @@ if not os.path.exists(get_setting("cache_location")):
 
 log = logging.getLogger(__name__)
 
-
 # save old excepthook
 sys._excepthook = sys.excepthook
+
+def write_log(message):
+    log_dir = resource_path(get_setting("log_dir"))
+    if not os.path.exists(log_dir):  # create dir if nonexistent
+        os.makedirs(log_dir)
+    directory = os.path.join(log_dir, "circleguard.log")
+    with open(directory, 'a+') as f:  # append so it creates a file if it doesn't exist
+        f.seek(0)
+        data = f.read().splitlines(True)
+    data.append(message+"\n")
+    with open(directory, 'w+') as f:
+        f.writelines(data[-1000:])  # keep file at 1000 lines
 
 # this allows us to log any and all exceptions thrown to a log file -
 # pyqt likes to eat exceptions and quit silently
@@ -119,7 +130,7 @@ class WindowWrapper(QMainWindow):
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, partial(self.cancel_all_runs, self))
 
-        self.setWindowTitle(f"Circleguard (Backend v{cg_version} / Frontend v{__version__})")
+        self.setWindowTitle(f"Circleguard v{__version__}")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.start_timer()
         self.debug_window = None
@@ -234,11 +245,13 @@ class WindowWrapper(QMainWindow):
         for run in self.main_window.main_tab.runs:
             run.event.set()
 
-    def closeEvent(self, event):
+    def on_application_quit(self):
+        """Called when the app.aboutToQuit signal is emitted"""
         if self.debug_window != None:
             self.debug_window.close()
         if self.main_window.main_tab.visualizer_window != None:
             self.main_window.main_tab.visualizer_window.close()
+        overwrite_config()
 
 class DebugWindow(QMainWindow):
     def __init__(self):
@@ -675,8 +688,7 @@ class LocalTab(QWidget):
                           "If a Map is given, it will compare the osrs against the leaderboard of that map.\n"
                           "If both a user and a map are given, it will compare the osrs against the user's "
                           "score on that map.")
-        self.folder_chooser = FolderChooser("Replay folder", get_setting("local_replay_dir"))
-        self.folder_chooser.path_signal.connect(self.update_dir)
+        self.folder_chooser = FolderChooser("Replay folder")
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers(1)
         self.threshold = Threshold()  # ThresholdCombined()
@@ -694,9 +706,6 @@ class LocalTab(QWidget):
 
     def switch_compare(self):
         self.compare_top.update_user(self.id_combined.map_id.field.text() != "")
-
-    def update_dir(self, path):
-        update_default("local_replay_dir", path)
 
 
 class VerifyTab(QWidget):
@@ -818,8 +827,8 @@ class SettingsTab(QWidget):
         self.qscrollarea.setWidgetResizable(True)
 
         self.info = QLabel(self)
-        self.info.setText(f"Backend Version: {cg_version}<br/>"
-                          f"Frontend Version: {__version__}<br/>"
+        self.info.setText(f"Frontend v{__version__}<br/>"
+                          f"Backend v{cg_version}<br/>"
                           f"Found a bug or want to request a feature? "
                           f"Open an issue <a href=\"https://github.com/circleguard/circleguard/issues\">here</a>!")
         self.info.setTextFormat(Qt.RichText)
@@ -868,9 +877,15 @@ class ScrollableSettingsWidget(QFrame):
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
         self.cache.box.stateChanged.connect(partial(update_default, "caching"))
 
-        self.cache_location = FolderChooser("Cache Path", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
+        self.cache_location = FolderChooser("Cache Location", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
         self.cache_location.path_signal.connect(partial(update_default, "cache_location"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
+
+        self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
+        self.open_settings.button.clicked.connect(self._open_settings)
+
+        self.sync_settings = ButtonWidget("Sync Settings", "Sync", "")
+        self.sync_settings.button.clicked.connect(self._sync_settings)
 
         self.loglevel = LoglevelWidget("")
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
@@ -879,7 +894,7 @@ class ScrollableSettingsWidget(QFrame):
         self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
-        self.wizard = ButtonWidget("Run Wizard", "")
+        self.wizard = ButtonWidget("Run Wizard", "Run", "")
         self.wizard.button.clicked.connect(self.show_wizard)
 
         self.grid = QVBoxLayout()
@@ -889,6 +904,8 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(self.display_thresh)
         self.grid.addWidget(self.cache)
         self.grid.addWidget(self.cache_location)
+        self.grid.addWidget(self.open_settings)
+        self.grid.addWidget(self.sync_settings)
         self.grid.addWidget(Separator("Appearance"))
         self.grid.addWidget(self.darkmode)
         self.grid.addWidget(self.visualizer_info)
@@ -896,8 +913,6 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(Separator("Debug"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
-        self.grid.addWidget(Separator("Message Format"))
-        self.grid.addWidget(StringFormatWidget(""))
         self.grid.addWidget(Separator("Dev"))
         self.grid.addWidget(self.rainbow)
         self.grid.addWidget(self.wizard)
@@ -939,6 +954,13 @@ class ScrollableSettingsWidget(QFrame):
 
     def reload_theme(self):
         switch_theme(get_setting("dark_theme"))
+
+    def _open_settings(self):
+        overwrite_config()  # generate file with latest changes
+        QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location")))
+
+    def _sync_settings(self):
+        overwrite_with_config_settings()
 
 
 class ResultsTab(QWidget):
@@ -1069,4 +1091,5 @@ if __name__ == "__main__":
         update_default("ran", True)
 
     app.lastWindowClosed.connect(WINDOW.cancel_all_runs)
+    app.aboutToQuit.connect(WINDOW.on_application_quit)
     app.exec_()
