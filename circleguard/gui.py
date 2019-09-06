@@ -245,7 +245,8 @@ class WindowWrapper(QMainWindow):
         for run in self.main_window.main_tab.runs:
             run.event.set()
 
-    def closeEvent(self, event):
+    def on_application_quit(self):
+        """Called when the app.aboutToQuit signal is emitted"""
         if self.debug_window != None:
             self.debug_window.close()
         if self.main_window.main_tab.visualizer_window != None:
@@ -1086,4 +1087,5 @@ if __name__ == "__main__":
         update_default("ran", True)
 
     app.lastWindowClosed.connect(WINDOW.cancel_all_runs)
+    app.aboutToQuit.connect(WINDOW.on_application_quit)
     app.exec_()

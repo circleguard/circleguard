@@ -727,7 +727,6 @@ class ResetSettings(QFrame):
                                       defaultButton=QMessageBox.Cancel)
         if prompt == QMessageBox.Yes:
             reset_defaults()
-            overwrite_config()  # reset config file
             QCoreApplication.quit()
 
 
