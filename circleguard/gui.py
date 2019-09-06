@@ -951,6 +951,7 @@ class ScrollableSettingsWidget(QFrame):
         switch_theme(get_setting("dark_theme"))
 
     def _open_settings(self):
+        overwrite_config()  # generate file with latest changes
         QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location")))
 
     def _sync_settings(self):
