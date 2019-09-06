@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBo
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
-from settings import get_setting, reset_defaults, update_default, overwrite_config
+from settings import get_setting, reset_defaults, update_default
 from visualizer import VisualizerWindow
 from utils import MapRun, ScreenRun, LocalRun, VerifyRun
 
