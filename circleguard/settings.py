@@ -29,13 +29,13 @@ COMMENTS = {
     "Locations": {
         "section": "The path to various file or directories used by the program",
         "cache_location": "Where the cache to read and write replays to is.\n"
-                "If this location doesn't exist, it will be created, including any nonexistant directories in the path",
+                "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
         "config_location": "Where the circelguard.cfg file (this very file) resides.",
         "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
     },
     "Messages": {
         "section": "Messages written to the terminal at various times",
-        "message_loading_replays": "Displayed just before we begin laoding replays",
+        "message_loading_replays": "Displayed just before we begin loading replays",
         "message_ratelimited": "Displayed when the api returns a response telling us our key is ratelimited",
         "message_starting_comparing": "Displayed just before replays are compared for replay stealing",
         "message_finished_comparing": "Displayed when all replays have finished being compared",
@@ -57,15 +57,15 @@ COMMENTS = {
     "Appearance": {
         "dark_theme": "Dark theme skins the application to be a bit easier on the eyes. The gui is developed with a dark theme in mind first, light theme second",
         "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
-        "visualizer_bg": "If True, uses a pure black background for the visualizer (emulates osu client gameplay). If False, uses a greyish background (recommended)"
+        "visualizer_bg": "If True, uses a pure black background for the visualizer (emulates osu client gameplay). If False, uses the default background of the current theme (recommended)"
     },
     "Experimental": {
-        "section": "These settings are liable to be resource intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk",
+        "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk",
         "rainbow_accent": "Makes the accent color (defines the color of the highlight around the currently focused widget, among other things) constantly cycle through colors"
     },
     "Logs": {
         "log_save": "Whether to save logs to a file (whose path is defined by Locations/log_dir)",
-        "log_mode": "All logs with a severity level at or higher than this value will be outputed.\n"
+        "log_mode": "All logs with a severity level at or higher than this value will be outputted.\n"
                 "Critical: 0\n"
                 "Error: 1\n"
                 "Warning: 2\n"
@@ -80,7 +80,7 @@ COMMENTS = {
     },
     "Core": {
         "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing",
-        "ran": "Whether Circleguard has been ran on this system before. If False, all settings will be reset to their default and the wizard will be displayed",
+        "ran": "Whether Circleguard has been run on this system before. If False, all settings will be reset to their default and the wizard will be displayed",
         "last_version": "The most recent version of Circleguard run on this system. Used to overwrite some settings when they change between versions",
         "api_key": "The api key to use in circlecore"
     },
