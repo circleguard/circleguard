@@ -163,7 +163,6 @@ CHANGED = {
     ]
 }
 
-TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
 def get_setting(name):
     type_ = TYPES[name][0]
     val = SETTINGS.value(name)
@@ -175,15 +174,6 @@ def get_setting(name):
     v = type_(SETTINGS.value(name))
     return v
 
-
-SETTINGS = QSettings("Circleguard", "Circleguard")
-# see third bullet here https://doc.qt.io/qt-5/qsettings.html#platform-limitations,
-# we don't want the global keys on macos when calling allkeys
-SETTINGS.setFallbacksEnabled(False)
-
-# assemble dict of {key: [type, section]} since we have nested dicts in DEFAULTS
-# double list comprehension feels sooo backwards to write
-CFG_PATH = get_setting("config_location")
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
     last_version = version.parse(last_version.base_version)  # remove dev stuff
@@ -248,11 +238,21 @@ def overwrite_config():
     with open(CFG_PATH, "a+") as f:
         config.write(f)
 
+TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
+SETTINGS = QSettings("Circleguard", "Circleguard")
+# see third bullet here https://doc.qt.io/qt-5/qsettings.html#platform-limitations,
+# we don't want the global keys on macos when calling allkeys
+SETTINGS.setFallbacksEnabled(False)
+
 # add setting if missing (occurs between updates if we add a new default setting)
 for d in DEFAULTS.values():
     for key,value in d.items():
         if not SETTINGS.contains(key):
             SETTINGS.setValue(key, value)
+
+# assemble dict of {key: [type, section]} since we have nested dicts in DEFAULTS
+# double list comprehension feels sooo backwards to write
+CFG_PATH = get_setting("config_location")
 
 # create cfg file if it doesn't exist
 if not os.path.exists(CFG_PATH):
