@@ -28,7 +28,7 @@ COMMENTS = {
             "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard.",
     "Locations": {
         "section": "The path to various file or directories used by the program",
-        "cache_location": "Where the cache to read and write replays to is.\n"
+        "cache_dir": "Where the cache to read and write replays to is.\n"
                 "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
         "config_location": "Where the circelguard.cfg file (this very file) resides.",
         "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
@@ -91,7 +91,7 @@ COMMENTS = {
 
 DEFAULTS = {
     "Locations": {
-        "cache_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache.db",
+        "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
         "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
         "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
     },
@@ -157,7 +157,7 @@ CHANGED = {
         "message_loading_replays"
     ],
     "1.3.0": [
-        "cache_location",
+        "cache_dir",
         "log_dir",
         "message_loading_replays"
     ]

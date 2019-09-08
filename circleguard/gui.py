@@ -39,9 +39,6 @@ from settings import get_setting, update_default, overwrite_config, overwrite_wi
 import wizard
 from version import __version__
 
-if not os.path.exists(get_setting("cache_location")):
-    os.mkdir(Path(get_setting("cache_location")).parent)
-
 log = logging.getLogger(__name__)
 
 # save old excepthook
@@ -470,7 +467,7 @@ class MainTab(QWidget):
         event = run.event
         try:
             set_options(cache=get_setting("caching"), detect=Detect.STEAL)
-            cache_path = resource_path(get_setting("cache_location"))
+            cache_path = resource_path(Path(get_setting("cache_dir"),".circleguard.db"))
             cg = Circleguard(get_setting("api_key"), cache_path, loader=TrackerLoader)
             def _ratelimited(length):
                 message = get_setting("message_ratelimited")
@@ -738,7 +735,8 @@ class VisualizeTab(QWidget):
         self.map_id = None
         self.q = Queue()
         self.replays = []
-        self.cg = Circleguard(get_setting("api_key"), resource_path(get_setting("cache_location")))
+        cache_path = resource_path(Path(get_setting("cache_dir"),".circleguard.db"))
+        self.cg = Circleguard(get_setting("api_key"), cache_path)
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
         self.file_chooser = FolderChooser("Add Replays", folder_mode=False, multiple_files=True,
@@ -877,8 +875,8 @@ class ScrollableSettingsWidget(QFrame):
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
         self.cache.box.stateChanged.connect(partial(update_default, "caching"))
 
-        self.cache_location = FolderChooser("Cache Location", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
-        self.cache_location.path_signal.connect(partial(update_default, "cache_location"))
+        self.cache_location = FolderChooser("Cache Location", get_setting("cache_dir"), folder_mode=False, file_ending="SQLite db files (*.db)")
+        self.cache_location.path_signal.connect(partial(update_default, "cache_dir"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
         self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
