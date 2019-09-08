@@ -198,7 +198,6 @@ def overwrite_with_config_settings():
                 val = config.get(section, k)
             update_default(k, val)
 
-
 def reset_defaults():
     SETTINGS.clear()
     for d in DEFAULTS.values():
@@ -206,9 +205,14 @@ def reset_defaults():
             SETTINGS.setValue(key, value)
     SETTINGS.sync()
 
-
 def update_default(name, value):
     SETTINGS.setValue(name, TYPES[name][0](value))
+
+def initialize_dirs():
+    d_dirs = DEFAULTS["Locations"].keys()
+    for d_dir in d_dirs:
+        if not os.path.exists(get_setting(d_dir)):
+            os.mkdir(get_setting(d_dir))
 
 # overwrites circleguard.cfg with our settings
 def overwrite_config():
@@ -266,6 +270,8 @@ overwrite_with_config_settings()
 # has to be called after overwrite_with_config_settings or the file will
 # overwrite our changes here since it's not synced to the file
 overwrite_outdated_settings()
+
+initialize_dirs()
 
 if not get_setting("ran"):
     reset_defaults()
