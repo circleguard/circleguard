@@ -550,6 +550,11 @@ class MainTab(QWidget):
 
                 self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
                                                                 map_id=map_id))
+                if type(run) is MapRun:
+                    # only a single Map object in check.all_loadables() for a map check
+                    map_ = replays[0]
+                    map_.load_info(cg.loader)
+                    replays = map_.all_replays()
                 for loadable in replays:
                     _check_event(event)
                     cg.load(loadable)
