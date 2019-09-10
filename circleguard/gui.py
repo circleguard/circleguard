@@ -696,7 +696,7 @@ class LocalTab(QWidget):
         self.folder_chooser = FolderChooser("Replay folder")
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers(1)
-        self.threshold = Threshold()  # ThresholdCombined()
+        self.threshold = Threshold()
         self.id_combined.map_id.field.textChanged.connect(self.switch_compare)
         self.switch_compare()
 
