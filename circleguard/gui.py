@@ -283,10 +283,12 @@ class MainWindow(QWidget):
         self.main_tab = MainTab()
         self.results_tab = ResultsTab()
         self.queue_tab = QueueTab()
+        self.thresholds_tab = ThresholdsTab()
         self.settings_tab = SettingsTab()
         self.tab_widget.addTab(self.main_tab, "Main")
         self.tab_widget.addTab(self.results_tab, "Results")
         self.tab_widget.addTab(self.queue_tab, "Queue")
+        self.tab_widget.addTab(self.thresholds_tab, "Thresholds")
         self.tab_widget.addTab(self.settings_tab, "Settings")
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
         self.tab_widget.currentChanged.connect(self.main_tab.switch_run_button)
@@ -1033,7 +1035,21 @@ class QueueFrame(QFrame):
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
+class ThresholdsTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.qscrollarea = QScrollArea(self)
+        self.qscrollarea.setWidget(ScrollableThresholdsWidget())
+        self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
+        self.qscrollarea.setWidgetResizable(True)
 
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.qscrollarea)
+        self.setLayout(self.layout)
+
+class ScrollableThresholdsWidget(QFrame):
+    def __init__(self):
+        super().__init__()
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
     update_default("dark_theme", dark)
