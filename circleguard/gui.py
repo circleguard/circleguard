@@ -284,7 +284,7 @@ class MainWindow(QWidget):
         self.results_tab = ResultsTab()
         self.queue_tab = QueueTab()
         self.settings_tab = SettingsTab()
-        self.tab_widget.addTab(self.main_tab, "Main Tab")
+        self.tab_widget.addTab(self.main_tab, "Main")
         self.tab_widget.addTab(self.results_tab, "Results")
         self.tab_widget.addTab(self.queue_tab, "Queue")
         self.tab_widget.addTab(self.settings_tab, "Settings")
