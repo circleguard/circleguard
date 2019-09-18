@@ -827,7 +827,7 @@ class VisualizeTab(QWidget):
 
 class SettingsTab(QWidget):
     def __init__(self):
-        super(SettingsTab, self).__init__()
+        super().__init__()
         self.qscrollarea = QScrollArea(self)
         self.qscrollarea.setWidget(ScrollableSettingsWidget())
         self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
