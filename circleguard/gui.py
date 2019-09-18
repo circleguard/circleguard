@@ -35,7 +35,7 @@ from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, Wi
                      TopPlays, BeatmapTest, ComparisonResult, LineEditSetting, EntryWidget,
                      RunWidget)
 
-from settings import get_setting, update_default, overwrite_config, overwrite_with_config_settings
+from settings import get_setting, update_default, overwrite_config, overwrite_with_config_settings, LinkableSetting
 import wizard
 from version import __version__
 
@@ -687,15 +687,19 @@ class ScreenTab(QWidget):
         self.setLayout(self.layout)
 
 
-class LocalTab(QWidget):
+# all python classes must come before c classes (like QWidget) or super calls break.
+# Further reading: https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
+class LocalTab(LinkableSetting, QWidget):
     def __init__(self):
-        super().__init__()
+        LinkableSetting.__init__(self, "local_replay_dir")
+        QWidget.__init__(self)
         self.info = QLabel(self)
         self.info.setText("Compares osr files in a given folder.\n"
                           "If a Map is given, it will compare the osrs against the leaderboard of that map.\n"
                           "If both a user and a map are given, it will compare the osrs against the user's "
                           "score on that map.")
-        self.folder_chooser = FolderChooser("Replay folder")
+        self.folder_chooser = FolderChooser("Replay folder", get_setting(self.setting))
+        self.folder_chooser.path_signal.connect(self.on_setting_changed_from_gui)
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers(1)
         self.threshold = Threshold()
@@ -714,10 +718,11 @@ class LocalTab(QWidget):
     def switch_compare(self):
         self.compare_top.update_user(self.id_combined.map_id.field.text() != "")
 
+    def on_setting_changed(self, new_val):
+        self.folder_chooser.path_label.setText(new_val)
 
 class VerifyTab(QWidget):
     def __init__(self):
-        super().__init__()
         self.info = QLabel(self)
         self.info.setText("Checks if the given user's replays on a map are steals of each other.")
 
