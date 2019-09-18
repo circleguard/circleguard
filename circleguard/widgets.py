@@ -403,7 +403,7 @@ class CompareTopPlays(QFrame):
         spinbox.setFixedWidth(100)
         spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
-        
+
         self.combined = WidgetCombiner(slider, spinbox)
 
         layout = QGridLayout()
