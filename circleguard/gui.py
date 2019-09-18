@@ -864,11 +864,6 @@ class ScrollableSettingsWidget(QFrame):
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
 
-        self.cheat_thresh = SliderBoxSetting("Cheat Threshold", "Comparisons that score below this will be stored so you can view them",
-                                                "threshold_cheat", 30)
-        self.display_thresh = SliderBoxSetting("Display Threshold", "Comparisons that score below this will be printed to the textbox",
-                                                "threshold_display", 100)
-
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
         self.darkmode.box.stateChanged.connect(self.reload_theme)
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
@@ -898,8 +893,6 @@ class ScrollableSettingsWidget(QFrame):
         self.grid = QVBoxLayout()
         self.grid.addWidget(Separator("General"))
         self.grid.addWidget(self.apikey_widget)
-        self.grid.addWidget(self.cheat_thresh)
-        self.grid.addWidget(self.display_thresh)
         self.grid.addWidget(self.cache)
         self.grid.addWidget(self.cache_location)
         self.grid.addWidget(self.open_settings)
@@ -1028,7 +1021,7 @@ class ThresholdsTab(QWidget):
         super().__init__()
         self.qscrollarea = QScrollArea(self)
         self.qscrollarea.setWidget(ScrollableThresholdsWidget())
-        self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
+        # self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
         self.qscrollarea.setWidgetResizable(True)
 
         self.layout = QVBoxLayout()
@@ -1038,6 +1031,15 @@ class ThresholdsTab(QWidget):
 class ScrollableThresholdsWidget(QFrame):
     def __init__(self):
         super().__init__()
+        self.threshold_steal = SliderBoxSetting("Stealing", "Comparisons that score below this will be stored so you can view them",
+                "threshold_cheat", 30)
+        self.threshold_display = SliderBoxSetting("Stealing Display", "Comparisons that score below this will be printed to the console",
+                "threshold_display", 100)
+        self.grid = QVBoxLayout()
+        self.grid.addWidget(self.threshold_steal)
+        self.grid.addWidget(self.threshold_display)
+        self.grid.setAlignment(Qt.AlignTop)
+        self.setLayout(self.grid)
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
     update_default("dark_theme", dark)
