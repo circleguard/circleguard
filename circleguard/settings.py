@@ -91,10 +91,18 @@ COMMENTS = {
 import abc
 
 class LinkableSetting():
+    """
+    XXX IMPLEMENTATION NOTE FOR SUBCLASSES:
+    all python classes must come before c classes (like QWidget) or super calls break.
+    Further reading: https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
+
+    eg, def MyClass(LinkableSetting, QFrame) NOT def MyClass(QFrame, LinkableSetting)
+    """
     registered_classes = []
     def __init__(self, setting):
         self.setting = setting
         self.registered_classes.append(self)
+        self.setting_value = get_setting(setting)
 
     @abc.abstractmethod
     def on_setting_changed(self, new_value):

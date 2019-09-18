@@ -80,17 +80,12 @@ class SetupPage(WizardPage):
         dark_label = QLabel("Choose the look and feel of the application")
         dark_label.setWordWrap(True)
 
-        self.darkmode = OptionWidget("Dark mode", "")
-        self.darkmode.box.setChecked(get_setting("dark_theme"))
+        self.darkmode = OptionWidget("Dark mode", "", "dark_theme")
 
         cache_label = QLabel("Caching reduces downloading time by storing replays when they are first downloaded")
         cache_label.setWordWrap(True)
 
-        self.caching = OptionWidget("Caching", "")
-        self.caching.box.setChecked(get_setting("caching"))
-        # TODO still won't update the settings checkbox because the main window
-        # is loaded before the wizard finishes, so it uses an old setting.
-        self.caching.box.stateChanged.connect(partial(update_default, "caching"))
+        self.caching = OptionWidget("Caching", "", "caching")
 
         layout = QVBoxLayout()
         layout.addWidget(dark_label)

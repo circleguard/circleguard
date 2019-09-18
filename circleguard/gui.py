@@ -861,8 +861,6 @@ class ScrollableSettingsWidget(QFrame):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_color)
         self.welcome = wizard.WelcomeWindow()
-        self.welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
-        self.welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default, "caching"))
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
 
@@ -871,19 +869,12 @@ class ScrollableSettingsWidget(QFrame):
         self.display_thresh = SliderBoxSetting("Display Threshold", "Comparisons that score below this will be printed to the textbox",
                                                 "threshold_display", 100)
 
-        self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
-        self.darkmode.box.stateChanged.connect(switch_theme)
-
-        self.visualizer_info = OptionWidget("Show Visualizer info", "")
-        self.visualizer_info.box.stateChanged.connect(partial(update_default,"visualizer_info"))
-
-        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply")
-        self.visualizer_bg.box.stateChanged.connect(partial(update_default,"visualizer_bg"))
+        self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
+        self.darkmode.box.stateChanged.connect(self.reload_theme)
+        self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
+        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply", "visualizer_bg")
         self.visualizer_bg.box.stateChanged.connect(self.reload_theme)
-
-        self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
-        self.cache.box.stateChanged.connect(partial(update_default, "caching"))
-
+        self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
         self.cache_location = FolderChooser("Cache Location", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
         self.cache_location.path_signal.connect(partial(update_default, "cache_location"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
@@ -898,7 +889,7 @@ class ScrollableSettingsWidget(QFrame):
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
         self.set_loglevel()  # set the default loglevel in cg, not just in gui
 
-        self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!")
+        self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!", "rainbow_accent")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
         self.wizard = ButtonWidget("Run Wizard", "Run", "")
@@ -927,14 +918,11 @@ class ScrollableSettingsWidget(QFrame):
 
         self.setLayout(self.grid)
 
-        old_theme = get_setting("dark_theme")  # this is needed because switch_theme changes the setting
-        self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
-        self.darkmode.box.setChecked(old_theme)
-        self.cache.box.setChecked(get_setting("caching"))
-        self.visualizer_info.box.setChecked(get_setting("visualizer_info"))
-        self.visualizer_bg.box.setChecked(get_setting("visualizer_bg"))
         self.cache_location.switch_enabled(get_setting("caching"))
-        self.rainbow.box.setChecked(get_setting("rainbow_accent"))
+        # we never actually set the theme to dark anywhere
+        # (even if the setting is true), it should really be
+        # in the main application but uh this works too
+        self.reload_theme()
 
     def set_loglevel(self):
         for logger in logging.root.manager.loggerDict:
@@ -1106,8 +1094,6 @@ if __name__ == "__main__":
     WINDOW.show()
     if not get_setting("ran"):
         welcome = wizard.WelcomeWindow()
-        welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
-        welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default,"caching"))
         welcome.show()
         update_default("ran", True)
 
