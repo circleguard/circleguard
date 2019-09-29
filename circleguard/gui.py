@@ -865,6 +865,9 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
         self.darkmode.box.stateChanged.connect(switch_theme)
 
+        self.visualizer_frametime = OptionWidget("Show frametime graph in Visualizer", "")
+        self.visualizer_frametime.box.stateChanged.connect(partial(update_default,"visualizer_frametime"))
+
         self.visualizer_info = OptionWidget("Show Visualizer info", "")
         self.visualizer_info.box.stateChanged.connect(partial(update_default,"visualizer_info"))
 
@@ -907,6 +910,7 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(Separator("Appearance"))
         self.grid.addWidget(self.darkmode)
         self.grid.addWidget(self.visualizer_info)
+        self.grid.addWidget(self.visualizer_frametime)
         self.grid.addWidget(self.visualizer_bg)
         self.grid.addWidget(Separator("Debug"))
         self.grid.addWidget(self.loglevel)
