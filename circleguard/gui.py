@@ -359,7 +359,7 @@ class MainTab(QWidget):
 
         # special case; visualize runs shouldn't get added to queue
         if run_type == "VISUALIZE":
-            self.visualize([replay.data for replay in self.visualize_tab.replays])
+            self.visualize([replay.data for replay in self.visualize_tab.replays], beatmap_id=self.visualize_tab.map_id)
             return
 
         m = self.map_tab
@@ -596,8 +596,8 @@ class MainTab(QWidget):
         except Empty:
             pass
 
-    def visualize(self, replays):
-        self.visualizer_window = VisualizerWindow(replays=replays)
+    def visualize(self, replays, beatmap_id = 0):
+        self.visualizer_window = VisualizerWindow(replays=replays, beatmap_id=beatmap_id)
         self.visualizer_window.show()
 
 
