@@ -264,13 +264,6 @@ class DebugWindow(QMainWindow):
 
     def write(self, message):
         self.terminal.append(message)
-        self.scroll_to_bottom()
-
-    def scroll_to_bottom(self):
-        cursor = QTextCursor(self.terminal.document())
-        cursor.movePosition(QTextCursor.End)
-        self.terminal.setTextCursor(cursor)
-
 
 class MainWindow(QWidget):
     def __init__(self):
