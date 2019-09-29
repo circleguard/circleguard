@@ -191,14 +191,17 @@ def overwrite_with_config_settings():
     config.read(CFG_PATH)
     for section in config.sections():
         for k in config[section]:
-            type_ = TYPES[k][0]
-            if type_ is bool:
-                val = config.getboolean(section, k)
-            elif type_ is int:
-                val = config.getint(section, k)
-            else:
-                val = config.get(section, k)
-            update_default(k, val)
+            try:
+                type_ = TYPES[k][0]
+                if type_ is bool:
+                    val = config.getboolean(section, k)
+                elif type_ is int:
+                    val = config.getint(section, k)
+                else:
+                    val = config.get(section, k)
+                update_default(k, val)
+            except KeyError:  # key was in older version but has been removed, so we just ignore it
+                    pass
 
 def reset_defaults():
     SETTINGS.clear()
