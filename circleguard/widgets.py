@@ -217,14 +217,25 @@ class OptionWidget(QFrame):
         label.setText(title + end)
         label.setToolTip(tooltip)
         self.box = QCheckBox(self)
+        item = CenteredWidget(self.box)
+        item.setFixedWidth(100)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.box, 0, 2, 1, 3)
+        layout.addWidget(item, 0, 1, 1, 1, Qt.AlignRight)
         self.setLayout(layout)
 
+
+class CenteredWidget(QWidget):
+    def __init__(self, widget):
+        super().__init__()
+        layout = QGridLayout()
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setContentsMargins(0,0,0,0)
+        self.setContentsMargins(0,0,0,0)
+        layout.addWidget(widget)
+        self.setLayout(layout)
 
 class ButtonWidget(QFrame):
     """
@@ -305,10 +316,10 @@ class LoglevelWidget(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(level_label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.level_combobox, 0, 2, 1, 3)
+        layout.addWidget(self.level_combobox, 0, 2, 1, 3, Qt.AlignRight)
         layout.addWidget(output_label, 1, 0, 1, 1)
         layout.addItem(SPACER, 1, 1, 1, 1)
-        layout.addWidget(self.output_combobox, 1, 2, 1, 3)
+        layout.addWidget(self.output_combobox, 1, 2, 1, 3, Qt.AlignRight)
         layout.addWidget(save_option, 2, 0, 1, 5)
         layout.addWidget(self.save_folder, 3, 0, 1, 5)
 
