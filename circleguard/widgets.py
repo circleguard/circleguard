@@ -683,17 +683,18 @@ class FolderChooser(QFrame):
         self.switch_enabled(True)
 
     def set_dir(self):
+        parent_path_old = self.path if not isinstance(self.path, list) else str(Path(self.path[0]).parent)
         if self.folder_mode:
             options = QFileDialog.Option()
             options |= QFileDialog.ShowDirsOnly
             options |= QFileDialog.HideNameFilterDetails
-            update_path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=self.path, options=options)
+            update_path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=parent_path_old, options=options)
         elif self.multiple_files:
-            paths = QFileDialog.getOpenFileNames(caption="Select Files", directory=self.path, filter=self.file_ending)
+            paths = QFileDialog.getOpenFileNames(caption="Select Files", directory=parent_path_old, filter=self.file_ending)
             # qt returns a list of ([path, path, ...], filter) when we use a filter
             update_path = paths[0]
         else:
-            paths = QFileDialog.getOpenFileName(caption="Select File", directory=str(Path(self.path).parent), filter=self.file_ending)
+            paths = QFileDialog.getOpenFileName(caption="Select File", directory=parent_path_old, filter=self.file_ending)
             update_path = paths[0]
 
         # dont update path if cancel is pressed
