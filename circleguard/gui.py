@@ -732,6 +732,8 @@ class VisualizeTab(QWidget):
         self.cg = Circleguard(get_setting("api_key"), cache_path)
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
+        self.label_map_id = QLabel(self)
+        self.update_map_id_label()
         self.file_chooser = FolderChooser("Add Replays", folder_mode=False, multiple_files=True,
                                             file_ending="osu! Replayfile (*osr)", display_path=False)
         self.file_chooser.path_signal.connect(self.add_files)
@@ -741,6 +743,7 @@ class VisualizeTab(QWidget):
         layout.addWidget(self.info)
         layout.addWidget(self.file_chooser)
         layout.addWidget(self.folder_chooser)
+        layout.addWidget(self.label_map_id)
         layout.addWidget(self.result_frame)
 
         self.setLayout(layout)
@@ -752,6 +755,9 @@ class VisualizeTab(QWidget):
 
     def run_timer(self):
         self.add_widget()
+    
+    def update_map_id_label(self):
+        self.label_map_id.setText(f"Current beatmap_id: {self.map_id} (It will be attempted to automatically download the beatmap)")
 
     def add_files(self, paths):
         thread = threading.Thread(target=self._parse_replays, args=[paths])
@@ -779,6 +785,7 @@ class VisualizeTab(QWidget):
         if self.map_id == None or len(self.replays) == 0:  # store map_id if nothing stored
             log.info(f"Changing map_id from {self.map_id} to {replay.map_id}")
             self.map_id = replay.map_id
+            self.update_map_id_label()
         elif replay.map_id != self.map_id:  # ignore replay with diffrent map_ids
             log.error(f"replay {replay} doesn't match with current map_id ({replay.map_id} != {self.map_id})")
             return
