@@ -55,6 +55,8 @@ class _Renderer(QWidget):
         self.play_direction = 1
         self.frame_times = []
         self.loading_flag = True
+        self.sliders_total = 0
+        self.sliders_current = 0
         self.last_frame = 0
         self.CURSOR_COLORS = [QPen(QColor().fromHslF(i/self.replay_amount,0.75,0.5)) for i in range(self.replay_amount)]
         
@@ -232,7 +234,7 @@ class _Renderer(QWidget):
             self.clock = clock.Timer()
             return
         # debug stuff
-        self.frame_times.insert(0,self.clock.get_time()-self.last_frame)
+        self.frame_times.insert(0,self.clock.get_time()-self.last_frame)  # TODO remove multiplier or second clock
         self.frame_times = self.frame_times[:120]
         self.last_frame = self.clock.get_time()
         # actual visualizer
@@ -484,11 +486,37 @@ class _Renderer(QWidget):
         painter.setPen(_pen)
         painter.drawPath(sliderbody)
 
+    def draw_progressbar(self, painter, percentage):
+        loading_bg = QPainterPath()
+        loading_bar = QPainterPath()
+        c = painter.pen().color()
+
+        _pen = painter.pen()
+        _pen.setWidth(5)
+        _pen.setCapStyle(Qt.RoundCap)
+        _pen.setJoinStyle(Qt.RoundJoin)
+        _pen.setColor(QColor(c.red(), c.green(), c.blue(), 25))
+        painter.setPen(_pen)
+
+        loading_bg.moveTo(250, 260)
+        loading_bg.lineTo(250 + 150, 260)
+
+        loading_bar.moveTo(250, 260)
+        loading_bar.lineTo(250 + percentage*1.5, 260)
+
+        painter.drawPath(loading_bg)
+        _pen.setColor(QColor(c.red(), c.green(), c.blue(), 255))
+        painter.setPen(_pen)
+        painter.drawPath(loading_bar)
+
     def draw_loading_screen(self, painter):
         painter.drawText(250, 250, f"Calculating Sliders, please wait...")
+        self.draw_progressbar(painter,int((self.sliders_current/self.sliders_total)*100))
 
     def proccess_sliders(self):
+        self.sliders_total = len(self.beatmap.hit_objects)-1
         for index in range(len(self.beatmap.hit_objects)):
+            self.sliders_current = index
             current_hitobj = self.beatmap.hit_objects[index]
             if isinstance(current_hitobj, Slider):
                     try:
@@ -497,7 +525,7 @@ class _Renderer(QWidget):
                         if isinstance(current_hitobj.curve,Bezier):  # unsure if this is needed
                             self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve.at(i/64) for i in range(64)]
                         elif isinstance(current_hitobj.curve,MultiBezier):
-                            self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve(i/64) for i in range(64)]
+                            self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve(i/64) for i in range(64)]  # TODO calc points needed with length
                         else:
                             self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.points
 
