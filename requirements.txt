@@ -1,4 +1,4 @@
 PyQt5<=5.12.2
 circleguard==2.4.0
 packaging>=17.0
-https://github.com/llllllllll/slider/archive/master.zip
+slider>=0.2
