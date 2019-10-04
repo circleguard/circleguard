@@ -101,7 +101,7 @@ class _Renderer(QWidget):
         
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_frame_from_timer)
-        self.timer.start(1000/60)  # 60fps (1000ms/60frames)
+        self.timer.start(0)
         self.frame_time_clock = clock.Timer()
         self.next_frame()
         self.thread = threading.Thread(target=self.proccess_sliders)
