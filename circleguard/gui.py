@@ -222,7 +222,7 @@ class WindowWrapper(QMainWindow):
         # remove info text if shown
         if not self.main_window.results_tab.results.info_label.isHidden():
             self.main_window.results_tab.results.info_label.hide()
-        self.main_window.results_tab.results.layout.addWidget(result_widget)
+        self.main_window.results_tab.results.layout.insertWidget(0,result_widget)
 
     def copy_to_clipboard(self, text):
         self.clipboard.setText(text)
@@ -802,7 +802,7 @@ class VisualizeTab(QWidget):
                 widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id}", "Delete", replay)
                 widget.pressed_signal.connect(self.remove_replay)
                 self.replays.append(widget)
-                self.result_frame.results.layout.addWidget(widget)
+                self.result_frame.results.layout.insertWidget(0,widget)
         except Empty:
             pass
 
