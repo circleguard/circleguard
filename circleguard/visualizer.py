@@ -257,12 +257,18 @@ class _Renderer(QWidget):
             QPainter painter: The painter.
             Integer index: The index of the cursor to be drawn.
         """
-        alpha_step = 255/FRAMES_ON_SCREEN
+        alpha_step = 1/FRAMES_ON_SCREEN
+        _pen = QPen(self.CURSOR_COLORS[index])
+        _pen.setWidth(WIDTH_LINE)
+        painter.setPen(_pen)
         for i in range(len(self.buffer[index])-1):
-            self.draw_line(painter, self.CURSOR_COLORS[index], i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]), (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
-            self.draw_point(painter, self.CURSOR_COLORS[index], i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]))
+            self.draw_line(painter, i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]), (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
+        _pen.setWidth(WIDTH_POINT)
+        painter.setPen(_pen)
+        for i in range(len(self.buffer[index])-1):
+            self.draw_point(painter, i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]))
             if i == len(self.buffer[index])-2:
-                self.draw_point(painter, self.CURSOR_COLORS[index], (i+1)*alpha_step, (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
+                self.draw_point(painter, (i+1)*alpha_step, (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
 
     def paint_beatmap(self, painter):
         for hitobj in self.hitobjs[::-1]:
@@ -326,39 +332,32 @@ class _Renderer(QWidget):
         painter.drawText(640-360+5, 380+12, f"fps:{int(fps)}")
         painter.drawText(640-360+5, 380+22, "{:.2f}ms".format(ms))
 
-    def draw_line(self, painter, pen, alpha, start, end):
+    def draw_line(self, painter, alpha, start, end):
         """
         Draws a line using the given painter, pen, and alpha level from Point start to Point end.
 
         Arguments:
             QPainter painter: The painter.
-            QPen pen: The pen, containing the color of the line.
-            Integer alpha: The alpha level from 0-255 to set the line to.
+            Integer alpha: The alpha level from 0.0-1.0 to set the line to.
                            https://doc.qt.io/qt-5/qcolor.html#alpha-blended-drawing
             List start: The X&Y position of the start of the line.
             List end: The X&Y position of the end of the line.
         """
 
-        c = pen.color()
-        _pen = QPen(QColor(c.red(), c.green(), c.blue(), alpha))
-        _pen.setWidth(WIDTH_LINE)
-        painter.setPen(_pen)
+        painter.setOpacity(alpha)
         painter.drawLine(start[0]+X_OFFSET, start[1]+Y_OFFSET, end[0]+X_OFFSET, end[1]+Y_OFFSET)
 
-    def draw_point(self, painter, pen, alpha, point):
+    def draw_point(self, painter, alpha, point):
         """
         Draws a line using the given painter, pen, and alpha level from Point start to Point end.
 
         Args:
            QPainter painter: The painter.
-           QPen pen: The pen, containing the color of the line.
-           Integer alpha: The alpha level from 0-255 to set the line to.
+           Integer alpha: The alpha level from 0.0-1.0 to set the line to.
            List point: The X&Y position of the point.
         """
-        c = pen.color()
-        _pen = QPen(QColor(c.red(), c.green(), c.blue(), alpha))
-        _pen.setWidth(WIDTH_POINT)
-        painter.setPen(_pen)
+
+        painter.setOpacity(alpha)
         painter.drawPoint(point[0]+X_OFFSET, point[1]+Y_OFFSET)
 
     def draw_hitobject(self, painter, hitobj):
