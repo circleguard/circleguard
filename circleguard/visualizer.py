@@ -197,7 +197,7 @@ class _Renderer(QWidget):
             current_hitobj = self.beatmap.hit_objects[index]
             hit_t = current_hitobj.time.total_seconds() * 1000
             if isinstance(current_hitobj, Slider) or isinstance(current_hitobj, Spinner):
-                hit_end = (current_hitobj.end_time.total_seconds() * 1000) + (self.fade_in)
+                hit_end = self.get_hit_endtime(current_hitobj) + (self.fade_in)
             else:
                 hit_end = hit_t + self.hitwindow + (self.fade_in)
             if hit_t-self.preempt < time < hit_end :
@@ -380,8 +380,8 @@ class _Renderer(QWidget):
             Hitobj hitobj: A Hitobject.
         """
         current_time = self.clock.get_time()
-        fade_out_scale = max(0,((current_time - (hitobj.time.total_seconds() * 1000))/self.hitwindow*0.75))
-        hitcircle_alpha = 255-(((hitobj.time.total_seconds() * 1000) - current_time - (self.preempt-self.fade_in))/self.fade_in)*255
+        fade_out_scale = max(0,((current_time - self.get_hit_time(hitobj))/self.hitwindow*0.75))
+        hitcircle_alpha = 255-((self.get_hit_time(hitobj) - current_time - (self.preempt-self.fade_in))/self.fade_in)*255
         magic = (255*(fade_out_scale))
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
         hitcircle_alpha = hitcircle_alpha - (magic if magic > 0 else 0)
@@ -405,14 +405,14 @@ class _Renderer(QWidget):
         """
         current_time = self.clock.get_time()
         big_circle = (384/2)
-        hitcircle_alpha = 255-(((hitobj.time.total_seconds() * 1000) - current_time - (self.preempt-self.fade_in))/self.fade_in)*255
-        fade_out = max(0,((current_time - (hitobj.end_time.total_seconds() * 1000))/self.hitwindow*0.5))
+        hitcircle_alpha = 255-((self.get_hit_time(hitobj) - current_time - (self.preempt-self.fade_in))/self.fade_in)*255
+        fade_out = max(0,((current_time - self.get_hit_endtime(hitobj))/self.hitwindow*0.5))
         magic = (75*((fade_out)*2))
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
         hitcircle_alpha = hitcircle_alpha - (magic if magic > 0 else 0)
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha > 0 else 0
         
-        spinner_scale = max(1-((hitobj.end_time.total_seconds() * 1000)- current_time)/((hitobj.end_time.total_seconds() * 1000) - (hitobj.time.total_seconds() * 1000)), 0)
+        spinner_scale = max(1-(self.get_hit_endtime(hitobj)- current_time)/(self.get_hit_endtime(hitobj) - self.get_hit_time(hitobj)), 0)
         c = painter.pen().color()
 
         spinner_radius = self.hitcircle_radius+(big_circle*(1-spinner_scale))
@@ -430,10 +430,10 @@ class _Renderer(QWidget):
             Hitobj hitobj: A Hitobject.
         """
         current_time = self.clock.get_time()
-        if (hitobj.time.total_seconds() * 1000) - current_time < 0: return
-        hitcircle_alpha = 255-(((hitobj.time.total_seconds() * 1000) - current_time - (self.preempt-self.fade_in))/self.fade_in)*255
+        if self.get_hit_time(hitobj) - current_time < 0: return
+        hitcircle_alpha = 255-((self.get_hit_time(hitobj) - current_time - (self.preempt-self.fade_in))/self.fade_in)*255
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
-        approachcircle_scale = max((((hitobj.time.total_seconds() * 1000)  - current_time)/self.preempt)*3+1, 1)
+        approachcircle_scale = max(((self.get_hit_time(hitobj)  - current_time)/self.preempt)*3+1, 1)
         c = painter.pen().color()
         p = hitobj.position
         approachcircle_radius = self.hitcircle_radius * approachcircle_scale
@@ -464,8 +464,8 @@ class _Renderer(QWidget):
         """
         sliderbody = QPainterPath()
         current_time = self.clock.get_time()
-        sliderbody_alpha = 75-(((hitobj.time.total_seconds() * 1000) - current_time - (self.preempt-self.fade_in))/self.fade_in)*75
-        fade_out = max(0,((current_time - (hitobj.end_time.total_seconds() * 1000))/self.hitwindow*0.5))
+        sliderbody_alpha = 75-((self.get_hit_time(hitobj) - current_time - (self.preempt-self.fade_in))/self.fade_in)*75
+        fade_out = max(0,((current_time - self.get_hit_endtime(hitobj))/self.hitwindow*0.5))
         magic = (75*((fade_out)*2))
         sliderbody_alpha = sliderbody_alpha if sliderbody_alpha < 75 else 75
         sliderbody_alpha = sliderbody_alpha - (magic if magic > 0 else 0)
@@ -575,6 +575,12 @@ class _Renderer(QWidget):
             self.clock.time_counter = position
             if self.paused:
                 self.next_frame()
+
+    def get_hit_endtime(self, hitobj):
+        return hitobj.end_time.total_seconds() * 1000
+
+    def get_hit_time(self, hitobj):
+        return hitobj.time.total_seconds() * 1000
 
     def pause(self):
         """
