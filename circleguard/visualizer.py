@@ -281,14 +281,14 @@ class _Renderer(QWidget):
             for i in range(self.replay_amount):
                 painter.setPen(self.CURSOR_COLORS[i])
                 if len(self.buffer[i]) > 0:  # skips empty buffers
-                    painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: {int(self.buffer[i][-1][1])}, {int(self.buffer[i][-1][2])}")
+                    painter.drawText(0, 30+(15*i), f"{self.usernames[i]}: {int(self.buffer[i][-1][1])}, {int(self.buffer[i][-1][2])}")
                 else:
-                    painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: Not yet loaded")
+                    painter.drawText(0, 30+(15*i), f"{self.usernames[i]}: Not yet loaded")
             painter.setPen(_pen)
             if self.replay_amount == 2:
                 try:
                     distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
-                    painter.drawText(0, 45 + (15 * i), f"Cursor Distance {self.usernames[i-1]}-{self.usernames[i]}: {int(distance)}px")
+                    painter.drawText(0, 45 + (15 * i), f"Distance {self.usernames[i-1]}-{self.usernames[i]}: {int(distance)}px")
                 except IndexError:  # Edge case where we only have data from one cursor
                     pass
     
