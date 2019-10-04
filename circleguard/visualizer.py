@@ -102,6 +102,7 @@ class _Renderer(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_frame_from_timer)
         self.timer.start(1000/60)  # 60fps (1000ms/60frames)
+        self.frame_time_clock = clock.Timer()
         self.next_frame()
         self.thread = threading.Thread(target=self.proccess_sliders)
         self.thread.start()
@@ -234,9 +235,9 @@ class _Renderer(QWidget):
             self.clock = clock.Timer()
             return
         # debug stuff
-        self.frame_times.insert(0,self.clock.get_time()-self.last_frame)  # TODO remove multiplier or second clock
+        self.frame_times.insert(0,self.frame_time_clock.get_time()-self.last_frame)
         self.frame_times = self.frame_times[:120]
-        self.last_frame = self.clock.get_time()
+        self.last_frame = self.frame_time_clock.get_time()
         # actual visualizer
         if self.beatmap_flag:
             self.paint_beatmap(painter)
@@ -367,7 +368,7 @@ class _Renderer(QWidget):
             self.draw_hitcircle(painter, hitobj)
             self.draw_approachcircle(painter, hitobj)
         if isinstance(hitobj, Slider):
-            self.draw_slider(painter, hitobj) # TODO hitobj.tick_points for sliderball
+            self.draw_slider(painter, hitobj)
         if isinstance(hitobj, Spinner):
             self.draw_spinner(painter, hitobj)
 
