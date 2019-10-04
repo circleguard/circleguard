@@ -320,6 +320,11 @@ class _Renderer(QWidget):
             x_offset -= 3
             frame_path.lineTo(x_offset, max(380,480-(time)))
         painter.drawPath(frame_path)
+        # draw fps & ms
+        ms = sum(self.frame_times)/ len(self.frame_times)
+        fps = 1000/ms
+        painter.drawText(640-360+5, 380+12, f"fps:{int(fps)}")
+        painter.drawText(640-360+5, 380+22, "{:.2f}ms".format(ms))
 
     def draw_line(self, painter, pen, alpha, start, end):
         """
