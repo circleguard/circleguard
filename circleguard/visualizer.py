@@ -563,11 +563,9 @@ class _Renderer(QWidget):
             Boolean reverse: chooses the search direction
         """
         if not reverse:
-            next_frames = [self.data[x][self.pos[x]][0] for x in range(len(self.data))]
-            self.seek_to(min(next_frames))
+            self.seek_to(self.clock.get_time()+16)
         else:
-            previous_frames = [self.data[x][self.pos[x]-1][0] for x in range(len(self.data))]
-            self.seek_to(min(previous_frames)-1)
+            self.seek_to(self.clock.get_time()-16)
 
     def seek_to(self, position):
         """
