@@ -397,7 +397,7 @@ class _Renderer(QWidget):
         _pen.setWidth(WIDTH_CIRCLE_BORDER)
         painter.setPen(_pen)
         painter.setBrush(QBrush(QColor(c.red(),c.green(),c.blue(),int(hitcircle_alpha/4))))  # fill hitcircle
-        painter.drawEllipse(p.x-self.hitcircle_radius+X_OFFSET, p.y-self.hitcircle_radius+Y_OFFSET, self.hitcircle_radius*2, self.hitcircle_radius*2)  # Qpoint placed it at the wrong position, no idea why
+        painter.drawEllipse(QPointF(p.x+X_OFFSET, p.y+Y_OFFSET), self.hitcircle_radius, self.hitcircle_radius)
         painter.setBrush(QBrush(QColor(c.red(),c.green(),c.blue(),0)))
 
     def draw_spinner(self, painter, hitobj):
@@ -424,7 +424,7 @@ class _Renderer(QWidget):
         _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
         _pen.setWidth(int(WIDTH_CIRCLE_BORDER/2))
         painter.setPen(_pen)
-        painter.drawEllipse(512/2-spinner_radius+X_OFFSET, 384/2-spinner_radius+Y_OFFSET, spinner_radius*2, spinner_radius*2)  # Qpoint placed it at the wrong position, no idea why
+        painter.drawEllipse(QPointF(512/2+X_OFFSET,384/2+Y_OFFSET), spinner_radius, spinner_radius)
 
     def draw_approachcircle(self, painter, hitobj):
         """
@@ -445,7 +445,7 @@ class _Renderer(QWidget):
         _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
         _pen.setWidth(int(WIDTH_CIRCLE_BORDER/2))
         painter.setPen(_pen)
-        painter.drawEllipse(p.x-approachcircle_radius+X_OFFSET, p.y-approachcircle_radius+Y_OFFSET, approachcircle_radius*2, approachcircle_radius*2)  # Qpoint placed it at the wrong position, no idea why
+        painter.drawEllipse(QPointF(p.x+X_OFFSET, p.y+Y_OFFSET), approachcircle_radius, approachcircle_radius)
 
     def draw_slider(self, painter, hitobj):
         """
