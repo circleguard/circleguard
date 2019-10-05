@@ -147,8 +147,7 @@ class WindowWrapper(QMainWindow):
         handler.setFormatter(formatter)
         handler.new_message.connect(self.log)
         
-        self.thread = threading.Thread(target=self._change_label_update)
-        self.thread.start()
+        self.update_label(run_update_check())
 
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
@@ -202,9 +201,6 @@ class WindowWrapper(QMainWindow):
 
     def update_label(self, text):
         self.current_state_label.setText(text)
-    
-    def _change_label_update(self):
-        self.update_label(run_update_check())
 
     def increment_progressbar(self, increment):
         self.progressbar.setValue(self.progressbar.value() + increment)
