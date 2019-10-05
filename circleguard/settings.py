@@ -188,7 +188,7 @@ def overwrite_outdated_settings():
         if last_version < version.parse(ver):
             for setting in changed_arr:
                 update_default(setting, DEFAULTS[TYPES[setting][1]][setting])
-    if last_version != version.parse(__version__):
+    if last_version != version.parse(__version__) and last_version != version.parse(DEFAULTS["Core"]["last_version"]):
         update_default("update_available", False)  # reset update flag
     update_default("last_version", __version__)
 
