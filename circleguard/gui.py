@@ -518,6 +518,7 @@ class MainTab(QWidget):
 
                 for check_list in check:
                     for check_ in check_list:
+                        replays = check_.all_replays()
                         num_to_load_map = len(replays)
                         timestamp = datetime.now()
                         self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load_map,
