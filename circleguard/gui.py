@@ -484,22 +484,22 @@ class MainTab(QWidget):
                 check = cg.create_verify_check(run.map_id, run.user_id_1, run.user_id_2, steal_thresh=run.thresh)
 
             if type(run) is ScreenRun:
+                num_to_load = 0
                 # user_check convenience method comes with some caveats; a list
                 # of list of check objects is returned instead of a single Check
                 # because it checks for remodding and replay stealing for
                 # each top play of the user
                 for check_list in check:
                     for check_ in check_list:
-                        num_to_load = 0
                         replays = check_.all_replays()
                         num_to_load += len(replays)
-                        # a compromise between feedback and usefulness of the progressbar. Some users
-                        # may prefer that it shows the progress until the entire check is done, but
-                        # this makes the gui appear sluggish, especially when we emit multiple "done" messages
-                        # (one per map).
-                        self.reset_progressbar_signal.emit(num_to_load)
+                self.reset_progressbar_signal.emit(num_to_load)
+
+                for check_list in check:
+                    for check_ in check_list:
+                        num_to_load_map = len(replays)
                         timestamp = datetime.now()
-                        self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
+                        self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load_map,
                                                                         map_id=replays[0].map_id))
                         for replay in replays:
                             _check_event(event)
@@ -507,7 +507,7 @@ class MainTab(QWidget):
                             self.increment_progressbar_signal.emit(1)
                         check_.loaded = True
 
-                        self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+                        self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load_map))
                         self.update_label_signal.emit("Comparing Replays")
                         self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
                         for result in cg.run(check_):
