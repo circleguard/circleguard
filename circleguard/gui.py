@@ -11,6 +11,7 @@ import threading
 from datetime import datetime
 import math
 import time
+from update_check import run_update_check
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
@@ -109,6 +110,9 @@ class WindowWrapper(QMainWindow):
         self.progressbar = QProgressBar()
         self.progressbar.setFixedWidth(250)
         self.current_state_label = QLabel("Idle")
+        self.current_state_label.setTextFormat(Qt.RichText)
+        self.current_state_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.current_state_label.setOpenExternalLinks(True)
         # statusBar() is a qt function that will create a status bar tied to the window
         # if it doesnt exist, and access the existing one if it does.
         self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label))
@@ -142,6 +146,9 @@ class WindowWrapper(QMainWindow):
         formatter = logging.Formatter("[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)", datefmt="%Y/%m/%d %H:%M:%S")
         handler.setFormatter(formatter)
         handler.new_message.connect(self.log)
+        
+        self.thread = threading.Thread(target=self._change_label_update)
+        self.thread.start()
 
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
@@ -195,6 +202,9 @@ class WindowWrapper(QMainWindow):
 
     def update_label(self, text):
         self.current_state_label.setText(text)
+    
+    def _change_label_update(self):
+        self.update_label(run_update_check())
 
     def increment_progressbar(self, increment):
         self.progressbar.setValue(self.progressbar.value() + increment)
