@@ -86,7 +86,7 @@ COMMENTS = {
         "api_key": "The api key to use in circlecore",
         "timestamp_format": "DONT CHANGE THIS. THIS IS ONLY USED INTERNALLY.",
         "last_update_check": "Last time it was checked for a new version. Only checks once every hour if update_available is False",
-        "update_available": "Is set to True if there is a newer version than the current one available"
+        "update_version": "Which version the next update is. If the user updates to that version or to one higher, update_available will be set to False"
     },
     "Caching": {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
@@ -147,7 +147,7 @@ DEFAULTS = {
         "api_key": "",
         "timestamp_format": "%H:%M:%S %m.%d.%Y",
         "last_update_check": "00:00:00 01.01.1970",  # not the best code
-        "update_available": False
+        "update_version": __version__
     },
     "Caching": {
         "caching": True
@@ -188,8 +188,6 @@ def overwrite_outdated_settings():
         if last_version < version.parse(ver):
             for setting in changed_arr:
                 update_default(setting, DEFAULTS[TYPES[setting][1]][setting])
-    if last_version != version.parse(__version__) and last_version != version.parse(DEFAULTS["Core"]["last_version"]):
-        update_default("update_available", False)  # reset update flag
     update_default("last_version", __version__)
 
 def overwrite_with_config_settings():
