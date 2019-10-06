@@ -84,9 +84,9 @@ COMMENTS = {
         "ran": "Whether Circleguard has been run on this system before. If False, all settings will be reset to their default and the wizard will be displayed",
         "last_version": "The most recent version of Circleguard run on this system. Used to overwrite some settings when they change between versions",
         "api_key": "The api key to use in circlecore",
-        "timestamp_format": "DONT CHANGE THIS. THIS IS ONLY USED INTERNALLY.",
-        "last_update_check": "Last time it was checked for a new version. Only checks once every hour if update_available is False",
-        "update_version": "Which version the next update is. If the user updates to that version or to one higher, update_available will be set to False"
+        "timestamp_format": "DONT CHANGE THIS. THIS IS ONLY USED INTERNALLY",
+        "last_update_check": "Last time it was checked for a new version. Only checks once every hour",
+        "update_version": "Which version the update is"
     },
     "Caching": {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
