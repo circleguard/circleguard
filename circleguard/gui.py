@@ -35,7 +35,7 @@ from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, Wi
                      TopPlays, BeatmapTest, ComparisonResult, LineEditSetting, EntryWidget,
                      RunWidget)
 
-from settings import get_setting, update_default, overwrite_config, overwrite_with_config_settings
+from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
 import wizard
 from version import __version__
 
@@ -871,7 +871,7 @@ class ScrollableSettingsWidget(QFrame):
         self.timer.timeout.connect(self.next_color)
         self.welcome = wizard.WelcomeWindow()
         self.welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
-        self.welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default, "caching"))
+        self.welcome.SetupPage.caching.box.stateChanged.connect(partial(set_setting, "caching"))
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
 
@@ -884,17 +884,17 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode.box.stateChanged.connect(switch_theme)
 
         self.visualizer_info = OptionWidget("Show Visualizer info", "")
-        self.visualizer_info.box.stateChanged.connect(partial(update_default,"visualizer_info"))
+        self.visualizer_info.box.stateChanged.connect(partial(set_setting,"visualizer_info"))
 
         self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply")
-        self.visualizer_bg.box.stateChanged.connect(partial(update_default,"visualizer_bg"))
+        self.visualizer_bg.box.stateChanged.connect(partial(set_setting,"visualizer_bg"))
         self.visualizer_bg.box.stateChanged.connect(self.reload_theme)
 
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
-        self.cache.box.stateChanged.connect(partial(update_default, "caching"))
+        self.cache.box.stateChanged.connect(partial(set_setting, "caching"))
 
         self.cache_location = FolderChooser("Cache Location", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
-        self.cache_location.path_signal.connect(partial(update_default, "cache_location"))
+        self.cache_location.path_signal.connect(partial(set_setting, "cache_location"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
         self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
@@ -958,7 +958,7 @@ class ScrollableSettingsWidget(QFrame):
             self._rainbow_counter = 0
 
     def switch_rainbow(self, state):
-        update_default("rainbow_accent", 1 if state else 0)
+        set_setting("rainbow_accent", 1 if state else 0)
         if get_setting("rainbow_accent"):
             self.timer.start(1000/15)
         else:
@@ -1047,7 +1047,7 @@ class QueueFrame(QFrame):
 
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
-    update_default("dark_theme", dark)
+    set_setting("dark_theme", dark)
     if dark:
         dark_p = QPalette()
 
@@ -1102,9 +1102,9 @@ if __name__ == "__main__":
     if not get_setting("ran"):
         welcome = wizard.WelcomeWindow()
         welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
-        welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default,"caching"))
+        welcome.SetupPage.caching.box.stateChanged.connect(partial(set_setting,"caching"))
         welcome.show()
-        update_default("ran", True)
+        set_setting("ran", True)
 
     app.lastWindowClosed.connect(WINDOW.cancel_all_runs)
     app.aboutToQuit.connect(WINDOW.on_application_quit)

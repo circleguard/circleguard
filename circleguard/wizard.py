@@ -6,7 +6,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
 # pylint: enable=no-name-in-module
 
-from settings import get_setting, update_default
+from settings import get_setting, set_setting
 from widgets import OptionWidget, InputWidget
 from utils import resource_path
 
@@ -90,7 +90,7 @@ class SetupPage(WizardPage):
         self.caching.box.setChecked(get_setting("caching"))
         # TODO still won't update the settings checkbox because the main window
         # is loaded before the wizard finishes, so it uses an old setting.
-        self.caching.box.stateChanged.connect(partial(update_default, "caching"))
+        self.caching.box.stateChanged.connect(partial(set_setting, "caching"))
 
         layout = QVBoxLayout()
         layout.addWidget(dark_label)
@@ -120,7 +120,7 @@ class ApiKeyPage(WizardPage):
 
         apikey_widget = InputWidget("Api Key", "", type_="normal")
         apikey_widget.field.setText(get_setting("api_key"))
-        apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
+        apikey_widget.field.textChanged.connect(partial(set_setting, "api_key"))
 
         layout = QGridLayout()
         layout.addWidget(label, 0, 0, 1, 1)

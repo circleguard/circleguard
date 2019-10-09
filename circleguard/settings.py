@@ -187,8 +187,8 @@ def overwrite_outdated_settings():
     for ver, changed_arr in CHANGED.items():
         if last_version < version.parse(ver):
             for setting in changed_arr:
-                update_default(setting, DEFAULTS[TYPES[setting][1]][setting])
-    update_default("last_version", __version__)
+                set_setting(setting, DEFAULTS[TYPES[setting][1]][setting])
+    set_setting("last_version", __version__)
 
 def overwrite_with_config_settings():
     config = ConfigParser(interpolation=None)
@@ -206,7 +206,7 @@ def overwrite_with_config_settings():
                 val = config.getint(section, k)
             else:
                 val = config.get(section, k)
-            update_default(k, val)
+            set_setting(k, val)
 
 
 def reset_defaults():
@@ -217,7 +217,7 @@ def reset_defaults():
     SETTINGS.sync()
 
 
-def update_default(name, value):
+def set_setting(name, value):
     SETTINGS.setValue(name, TYPES[name][0](value))
 
 # overwrites circleguard.cfg with our settings

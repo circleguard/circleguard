@@ -39,8 +39,8 @@ def run_update_check():
         # check for new version
         git_request = requests.get("https://api.github.com/repos/circleguard/circleguard/releases/latest").json()
         git_version = version.parse(git_request["name"])
-        update_default("latest_version", git_version)
-        update_default("last_update_check", datetime.now().strftime(get_setting("timestamp_format")))
+        set_setting("latest_version", git_version)
+        set_setting("last_update_check", datetime.now().strftime(get_setting("timestamp_format")))
     except:
         # user is propably offline
         pass
