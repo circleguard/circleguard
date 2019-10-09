@@ -49,7 +49,7 @@ def run_update_check():
 
 def get_idle_setting_str():
     current_version = version.parse(__version__)
-    if current_version <= version.parse(get_setting("latest_version")):
+    if current_version < version.parse(get_setting("latest_version")):
         return "<a href=\'https://circleguard.dev/download'>Update available!</a>"
     else:
         return "Idle"
