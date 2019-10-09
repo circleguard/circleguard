@@ -11,7 +11,6 @@ import threading
 from datetime import datetime
 import math
 import time
-from update_check import run_update_check
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl
 from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
@@ -29,7 +28,7 @@ from circleguard import Circleguard, set_options, Loader, Detect, NoInfoAvailabl
 from circleguard import __version__ as cg_version
 from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
-from utils import resource_path, MapRun, ScreenRun, LocalRun, VerifyRun
+from utils import resource_path, run_update_check, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
@@ -146,7 +145,7 @@ class WindowWrapper(QMainWindow):
         formatter = logging.Formatter("[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)", datefmt="%Y/%m/%d %H:%M:%S")
         handler.setFormatter(formatter)
         handler.new_message.connect(self.log)
-        
+
         self.thread = threading.Thread(target=self._change_label_update)
         self.thread.start()
 
@@ -202,7 +201,7 @@ class WindowWrapper(QMainWindow):
 
     def update_label(self, text):
         self.current_state_label.setText(text)
-    
+
     def _change_label_update(self):
         self.update_label(run_update_check())
 
