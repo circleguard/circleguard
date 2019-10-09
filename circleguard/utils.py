@@ -39,7 +39,7 @@ def run_update_check():
         # check for new version
         git_request = requests.get("https://api.github.com/repos/circleguard/circleguard/releases/latest").json()
         git_version = version.parse(git_request["name"])
-        update_default("update_version", git_version)
+        update_default("latest_version", git_version)
         update_default("last_update_check", datetime.now().strftime(get_setting("timestamp_format")))
     except:
         # user is propably offline
@@ -49,7 +49,7 @@ def run_update_check():
 
 def get_idle_setting_str():
     current_version = version.parse(__version__)
-    if current_version <= version.parse(get_setting("update_version")):
+    if current_version <= version.parse(get_setting("latest_version")):
         return "<a href=\'https://circleguard.dev/download'>Update available!</a>"
     else:
         return "Idle"
