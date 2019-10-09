@@ -84,6 +84,8 @@ COMMENTS = {
         "ran": "Whether Circleguard has been run on this system before. If False, all settings will be reset to their default and the wizard will be displayed",
         "last_version": "The most recent version of Circleguard run on this system. Used to overwrite some settings when they change between versions",
         "api_key": "The api key to use in circlecore",
+        "timestamp_format": "The format of last_update_check",
+        "last_update_check": "The last time we checked for a new version. Only checks once every hour",
         "latest_version": "The latest circleguard version available on github"
     },
     "Caching": {
@@ -193,7 +195,11 @@ def overwrite_with_config_settings():
     config.read(CFG_PATH)
     for section in config.sections():
         for k in config[section]:
-            type_ = TYPES[k][0]
+            try:
+                type_ = TYPES[k][0]
+            except KeyError:
+                # there's a key in the .cfg file that we don't have; ignore it
+                continue
             if type_ is bool:
                 val = config.getboolean(section, k)
             elif type_ is int:
