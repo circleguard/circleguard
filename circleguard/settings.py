@@ -1,5 +1,6 @@
 import re
 import os
+from datetime import datetime
 
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import QSettings, QStandardPaths
@@ -82,7 +83,10 @@ COMMENTS = {
         "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing",
         "ran": "Whether Circleguard has been run on this system before. If False, all settings will be reset to their default and the wizard will be displayed",
         "last_version": "The most recent version of Circleguard run on this system. Used to overwrite some settings when they change between versions",
-        "api_key": "The api key to use in circlecore"
+        "api_key": "The api key to use in circlecore",
+        "timestamp_format": "The format of last_update_check",
+        "last_update_check": "The last time we checked for a new version. Only checks once every hour",
+        "latest_version": "The latest circleguard version available on github"
     },
     "Caching": {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
@@ -140,7 +144,10 @@ DEFAULTS = {
     "Core": {
         "ran": False,
         "last_version": "0.0.0",  # force run update_settings if the user previously had a version without this key
-        "api_key": ""
+        "api_key": "",
+        "timestamp_format": "%H:%M:%S %m.%d.%Y",
+        "last_update_check": "00:00:00 01.01.1970",  # not the best code
+        "latest_version": __version__
     },
     "Caching": {
         "caching": True
@@ -183,13 +190,16 @@ def overwrite_outdated_settings():
                 update_default(setting, DEFAULTS[TYPES[setting][1]][setting])
     update_default("last_version", __version__)
 
-
 def overwrite_with_config_settings():
     config = ConfigParser(interpolation=None)
     config.read(CFG_PATH)
     for section in config.sections():
         for k in config[section]:
-            type_ = TYPES[k][0]
+            try:
+                type_ = TYPES[k][0]
+            except KeyError:
+                # there's a key in the .cfg file that we don't have; ignore it
+                continue
             if type_ is bool:
                 val = config.getboolean(section, k)
             elif type_ is int:

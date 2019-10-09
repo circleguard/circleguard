@@ -28,7 +28,7 @@ from circleguard import Circleguard, set_options, Loader, Detect, NoInfoAvailabl
 from circleguard import __version__ as cg_version
 from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
-from utils import resource_path, MapRun, ScreenRun, LocalRun, VerifyRun
+from utils import resource_path, run_update_check, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
@@ -109,6 +109,9 @@ class WindowWrapper(QMainWindow):
         self.progressbar = QProgressBar()
         self.progressbar.setFixedWidth(250)
         self.current_state_label = QLabel("Idle")
+        self.current_state_label.setTextFormat(Qt.RichText)
+        self.current_state_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.current_state_label.setOpenExternalLinks(True)
         # statusBar() is a qt function that will create a status bar tied to the window
         # if it doesnt exist, and access the existing one if it does.
         self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label))
@@ -142,6 +145,9 @@ class WindowWrapper(QMainWindow):
         formatter = logging.Formatter("[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)", datefmt="%Y/%m/%d %H:%M:%S")
         handler.setFormatter(formatter)
         handler.new_message.connect(self.log)
+
+        self.thread = threading.Thread(target=self._change_label_update)
+        self.thread.start()
 
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
@@ -195,6 +201,9 @@ class WindowWrapper(QMainWindow):
 
     def update_label(self, text):
         self.current_state_label.setText(text)
+
+    def _change_label_update(self):
+        self.update_label(run_update_check())
 
     def increment_progressbar(self, increment):
         self.progressbar.setValue(self.progressbar.value() + increment)
