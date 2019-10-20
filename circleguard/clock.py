@@ -36,7 +36,7 @@ class Timer:
         self.time_counter = 0
         self.paused = False
         self.paused_at_run_time = None
-        self.last_run_time = time.time_ns()
+        self.last_run_time = time.perf_counter()
         return self.get_time()
 
     def change_speed(self, speed):
