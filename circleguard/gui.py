@@ -757,7 +757,7 @@ class VisualizeTab(QWidget):
         self.add_widget()
     
     def update_map_id_label(self):
-        self.label_map_id.setText(f"Current beatmap_id: {self.map_id} (It will be attempted to automatically download the beatmap)")
+        self.label_map_id.setText(f"Current beatmap_id: {self.map_id}")
 
     def add_files(self, paths):
         thread = threading.Thread(target=self._parse_replays, args=[paths])

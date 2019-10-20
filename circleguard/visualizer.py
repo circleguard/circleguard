@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 from slider import Beatmap, Library
 from slider.beatmap import Circle, Slider, Spinner
 from slider.curve import Bezier, MultiBezier
+from slider.mod import circle_radius, od_to_ms
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF
 from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QShortcut, QLabel
@@ -41,71 +42,76 @@ class _Renderer(QWidget):
 
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None):
         super(_Renderer, self).__init__(parent)
-        # initialize variables
         self.setFixedSize(640, 480)
-        self.replay_amount = len(replays)
-        self.pos = [0]*self.replay_amount
-        self.buffer = [[[[0, 0, 0]]]*self.replay_amount][0]
+
+        # beatmap init stuff
         self.hitobjs = []
-        self.data = []
-        self.usernames = []
-        self.paused = False
-        self.beatmap_flag = False
-        self.playback_len = 0
-        self.play_direction = 1
-        self.frame_times = []
-        self.loading_flag = True
-        self.sliders_total = 0
-        self.sliders_current = 0
-        self.last_frame = 0
-        self.CURSOR_COLORS = [QPen(QColor().fromHslF(i/self.replay_amount,0.75,0.5)) for i in range(self.replay_amount)]
-        
         if beatmap_path != None:
             self.beatmap = Beatmap.from_path(beatmap_path)
             self.beatmap_flag = True
             self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000+3000
         elif beatmap_id != None:
-            print("beatmap_id passed")
             self.beatmap = SLIDER_LIBARY.lookup_by_id(beatmap_id, download=True, save=True)
             self.beatmap_flag = True
             self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000+3000
         else:
-            print("no beatmap_id passed")
-
-        for replay in replays:
-            self.data.append(replay.as_list_with_timestamps())  # t,x,y
-            self.usernames.append(replay.username)
-
-        # flip all replays with hr
-        try:
-            for replay_index in range(len(replays)):
-                for mods in utils.bits(replays[replay_index].mods):
-                    if Mod.HardRock is Mod(mods):
-                        for d in self.data[replay_index]:
-                            d[2] = 384 - d[2]
-        except ValueError:  # happens on exported auto plays
-            pass
-
-        self.playback_len = max(data[-1][0] for data in self.data) if self.replay_amount > 0 else self.playback_len
-        # calc preempt, fade_in, hitwindow
-        if self.beatmap.approach_rate == 5:
-            self.preempt = 1200
-        elif self.beatmap.approach_rate  < 5:
-            self.preempt = 1200 + 600 * (5 - self.beatmap.approach_rate) / 5
+            self.playback_len = 0
+            self.beatmap_flag = False
+        # beatmap stuff
+        if self.beatmap_flag:
+            if self.beatmap.approach_rate == 5:
+                self.preempt = 1200
+            elif self.beatmap.approach_rate  < 5:
+                self.preempt = 1200 + 600 * (5 - self.beatmap.approach_rate) / 5
+            else:
+                self.preempt = 1200 - 750 * (self.beatmap.approach_rate - 5) / 5
+            self.hitwindow = od_to_ms(self.beatmap.overall_difficulty).hit_50
+            self.fade_in = 400
+            self.hitcircle_radius = circle_radius(self.beatmap.circle_size)-WIDTH_CIRCLE_BORDER/2
+            ## loading stuff
+            self.loading_flag = True
+            self.sliders_total = 0
+            self.sliders_current = 0
+            self.thread = threading.Thread(target=self.proccess_sliders)
+            self.thread.start()
         else:
-            self.preempt = 1200 - 750 * (self.beatmap.approach_rate - 5) / 5
-        self.hitwindow = 150 + 50 * (5 - self.beatmap.overall_difficulty) / 5
-        self.fade_in = 400
-        self.hitcircle_radius = ((109 - 9 * self.beatmap.circle_size)-WIDTH_CIRCLE_BORDER)/2
-        # pre-calculate every slider
+            self.loading_flag = False
+
+        # replay stuff
+        self.replay_amount = len(replays)
+        self.players = []
+        for replay in replays:
+            self.players.append({
+                "data": replay.as_list_with_timestamps(),
+                "replay": replay,
+                "username": replay.username,
+                "mods": replay.mods.short_name(),
+                "buffer": [],
+                "cursor_color": QPen(QColor().fromHslF(replays.index(replay)/self.replay_amount,0.75,0.5)),
+                "pos": 0
+            })
+        self.playback_len = max(player["data"][-1][0] for player in self.players) if self.replay_amount > 0 else self.playback_len        
+        ## flip all replays with hr
+        for player in self.players:
+            if Mod.HardRock in player["replay"].mods:
+                for d in player["data"]:
+                    d[2] = 384 - d[2]
+
+        # clock stuff
+        self.clock = clock.Timer()
+        self.paused = False
+        self.play_direction = 1
+
+        # debug stuff
+        self.frame_time_clock = clock.Timer()
+        self.last_frame = 0
+        self.frame_times = []
         
+        # render stuff
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_frame_from_timer)
-        self.timer.start(0)
-        self.frame_time_clock = clock.Timer()
+        self.timer.start(0)  # unlimited fps
         self.next_frame()
-        self.thread = threading.Thread(target=self.proccess_sliders)
-        self.thread.start()
 
     def next_frame_from_timer(self):
         """
@@ -167,30 +173,29 @@ class _Renderer(QWidget):
         """
         prepares next frame
         """
+        # just update the frame if currently loading
         if self.loading_flag:
             self.update()
             return
-        current_time = self.clock.get_time()
-        if self.replay_amount > 0:
-            if current_time > self.data[0][-1][0] or current_time < 0:  # resets visualizer if at end
-                self.reset(end=True if self.clock.current_speed < 0 else False)
 
         current_time = self.clock.get_time()
-        for replay_index in range(self.replay_amount):
-            self.pos[replay_index] = self.search_timestamp(self.data[replay_index], 0, current_time, self.pos[replay_index])
-            magic = self.pos[replay_index] - FRAMES_ON_SCREEN if self.pos[replay_index] >= FRAMES_ON_SCREEN else 0
-            self.buffer[replay_index] = self.data[replay_index][magic:self.pos[replay_index]]
+        # resets visualizer if at end
+        if current_time > self.playback_len or current_time < 0:
+            self.reset(end=True if self.clock.current_speed < 0 else False)
+
+        for player in self.players:
+            player["pos"] = self.search_timestamp(player["data"], 0, current_time, player["pos"])
+            magic = player["pos"] - FRAMES_ON_SCREEN if player["pos"] >= FRAMES_ON_SCREEN else 0
+            player["buffer"] = player["data"][magic:player["pos"]]
 
         if self.beatmap_flag:
             self.get_hitobjects()
-            if self.beatmap.hit_objects[-1].time.total_seconds() * 1000+3000 < current_time:
-                self.reset()
         self.update_signal.emit(current_time)
         self.update()
 
     def get_hitobjects(self):
         # get current hitobjects
-        time = self.clock.get_time()
+        current_time = self.clock.get_time()
         found_all = False
         index = 0
         self.hitobjs = []
@@ -201,13 +206,13 @@ class _Renderer(QWidget):
                 hit_end = self.get_hit_endtime(current_hitobj) + (self.fade_in)
             else:
                 hit_end = hit_t + self.hitwindow + (self.fade_in)
-            if hit_t-self.preempt < time < hit_end :
+            if hit_t-self.preempt < current_time < hit_end :
                 self.hitobjs.append(current_hitobj)
-            elif hit_t > time:
+            elif hit_t > current_time:
                 found_all = True
-            index += 1
             if index == len(self.beatmap.hit_objects)-1:
                 found_all = True
+            index += 1
 
 
     def paintEvent(self, event):
@@ -232,24 +237,26 @@ class _Renderer(QWidget):
             return
         elif self.loading_flag:
             self.loading_flag = False
-            self.clock = clock.Timer()
+            self.clock.reset()
             return
         # debug stuff
         self.frame_times.insert(0,self.frame_time_clock.get_time()-self.last_frame)
         self.frame_times = self.frame_times[:120]
         self.last_frame = self.frame_time_clock.get_time()
-        # actual visualizer
+        # beatmap
         if self.beatmap_flag:
             self.paint_beatmap(painter)
-        for index in range(self.replay_amount):
-            self.paint_cursor(painter, index)
+        # cursors
+        for player in self.players:
+            self.paint_cursor(painter, player)
+        # other info
         painter.setPen(_pen)
         if get_setting("visualizer_info"):
             self.paint_info(painter)
         if get_setting("visualizer_frametime"):
             self.paint_frametime_graph(painter)
 
-    def paint_cursor(self, painter, index):
+    def paint_cursor(self, painter, player):
         """
         Draws a cursor.
 
@@ -258,17 +265,19 @@ class _Renderer(QWidget):
             Integer index: The index of the cursor to be drawn.
         """
         alpha_step = 1/FRAMES_ON_SCREEN
-        _pen = QPen(self.CURSOR_COLORS[index])
+        _pen = player["cursor_color"]
         _pen.setWidth(WIDTH_LINE)
         painter.setPen(_pen)
-        for i in range(len(self.buffer[index])-1):
-            self.draw_line(painter, i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]), (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
+        for i in range(len(player["buffer"])-1):
+            self.draw_line(painter, i*alpha_step, (player["buffer"][i][1], player["buffer"][i][2]), (player["buffer"][i+1][1], player["buffer"][i+1][2]))
         _pen.setWidth(WIDTH_POINT)
         painter.setPen(_pen)
-        for i in range(len(self.buffer[index])-1):
-            self.draw_point(painter, i*alpha_step, (self.buffer[index][i][1], self.buffer[index][i][2]))
-            if i == len(self.buffer[index])-2:
-                self.draw_point(painter, (i+1)*alpha_step, (self.buffer[index][i+1][1], self.buffer[index][i+1][2]))
+        for i in range(len(player["buffer"])-1):
+            self.draw_point(painter, i*alpha_step, (player["buffer"][i][1], player["buffer"][i][2]))
+            if i == len(player["buffer"])-2:
+                self.draw_point(painter, (i+1)*alpha_step, (player["buffer"][i+1][1], player["buffer"][i+1][2]))
+        # reset alpha
+        painter.setOpacity(255)
 
     def paint_beatmap(self, painter):
         for hitobj in self.hitobjs[::-1]:
@@ -282,19 +291,22 @@ class _Renderer(QWidget):
            QPainter painter: The painter.
         """
         _pen = painter.pen()
-        painter.drawText(0, 15, f"Clock: {round(self.clock.get_time())} ms")
+        painter.drawText(5, 15, f"Clock: {round(self.clock.get_time())} ms")
         if self.replay_amount > 0:
-            for i in range(self.replay_amount):
-                painter.setPen(self.CURSOR_COLORS[i])
-                if len(self.buffer[i]) > 0:  # skips empty buffers
-                    painter.drawText(0, 30+(15*i), f"{self.usernames[i]}: {int(self.buffer[i][-1][1])}, {int(self.buffer[i][-1][2])}")
+            for i in range(len(self.players)):
+                player = self.players[i]
+                painter.setPen(player["cursor_color"])
+                if len(self.players[i]["buffer"]) > 0:  # skips empty buffers
+                    painter.drawText(5, 27+(12 * i), f"{player['username']}: {int(player['buffer'][-1][1])}, {int(player['buffer'][-1][2])}")
                 else:
-                    painter.drawText(0, 30+(15*i), f"{self.usernames[i]}: Not yet loaded")
+                    painter.drawText(5, 27+(12 * i), f"{player['username']}: Not yet loaded")
             painter.setPen(_pen)
             if self.replay_amount == 2:
                 try:
-                    distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
-                    painter.drawText(0, 45 + (15 * i), f"Distance {self.usernames[i-1]}-{self.usernames[i]}: {int(distance)}px")
+                    player = self.players[i]
+                    prev_player = self.players[i-1]
+                    distance = math.sqrt(((prev_player["buffer"][-1][1] - player["buffer"][-1][1]) ** 2) + ((prev_player["buffer"][-1][2] - player["buffer"][-1][2]) ** 2))
+                    painter.drawText(5, 39 + (12 * i), f"Distance {prev_player['username']}-{player['username']}: {int(distance)}px")
                 except IndexError:  # Edge case where we only have data from one cursor
                     pass
     
@@ -543,20 +555,15 @@ class _Renderer(QWidget):
         Args:
             Boolean end: Moves everything to the end of the cursor data.
         """
+        self.clock.reset()
         if end:
-            self.pos = [len(self.data[0])-1, len(self.data[1])-1]
-            self.clock.reset()
-            self.clock.time_counter = int(self.data[0][-1][0])
-        else:
-            self.pos = [0] * self.replay_amount
-            self.clock.reset()
+            self.clock.time_counter = self.playback_len
         if self.paused:
             self.clock.pause()
 
     def search_nearest_frame(self, reverse=False):
         """
-        Searches next frame in the corresponding direction.
-        It gets a list of timestamps at the current position for every cursor and chooses the nearest one.
+        Just skips 16ms, lol. If somebody can fix it, go ahead :thumbsup:
 
         Args:
             Boolean reverse: chooses the search direction
