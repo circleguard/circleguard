@@ -162,8 +162,10 @@ class _Renderer(QWidget):
 
             if array[mid][index] < value:
                 low = mid + 1
+                low = min(max(low, 0), len(array) - 1)
             elif array[mid][index] > value:
                 high = mid - 1
+                high min(max(high, 0), len(array) - 1)
             else:
                 return mid
 
