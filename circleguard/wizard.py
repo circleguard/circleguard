@@ -6,7 +6,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
 # pylint: enable=no-name-in-module
 
-from settings import get_setting, update_default
+from settings import get_setting, set_setting
 from widgets import OptionWidget, InputWidget
 from utils import resource_path
 
@@ -115,7 +115,7 @@ class ApiKeyPage(WizardPage):
 
         apikey_widget = InputWidget("Api Key", "", type_="normal")
         apikey_widget.field.setText(get_setting("api_key"))
-        apikey_widget.field.textChanged.connect(partial(update_default, "api_key"))
+        apikey_widget.field.textChanged.connect(partial(set_setting, "api_key"))
 
         layout = QGridLayout()
         layout.addWidget(label, 0, 0, 1, 1)

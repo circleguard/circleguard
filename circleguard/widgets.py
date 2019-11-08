@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBo
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
-from settings import get_setting, reset_defaults, update_default, LinkableSetting
+from settings import get_setting, reset_defaults, LinkableSetting, set_setting
 from visualizer import VisualizerWindow
 from utils import MapRun, ScreenRun, LocalRun, VerifyRun
 
@@ -298,16 +298,16 @@ class LoglevelWidget(QFrame):
         self.save_folder.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
         self.level_combobox.setCurrentIndex(get_setting("log_mode"))
-        self.level_combobox.currentIndexChanged.connect(partial(update_default, "log_mode"))
+        self.level_combobox.currentIndexChanged.connect(partial(set_setting, "log_mode"))
 
         self.save_option.box.setChecked(get_setting("log_save"))
-        self.save_option.box.stateChanged.connect(partial(update_default, "log_save"))
+        self.save_option.box.stateChanged.connect(partial(set_setting, "log_save"))
 
         self.output_combobox.setCurrentIndex(get_setting("log_output"))
-        self.output_combobox.currentIndexChanged.connect(partial(update_default, "log_output"))
+        self.output_combobox.currentIndexChanged.connect(partial(set_setting, "log_output"))
 
         self.save_folder.switch_enabled(get_setting("log_save"))
-        self.save_folder.path_signal.connect(partial(update_default, "log_dir"))
+        self.save_folder.path_signal.connect(partial(set_setting, "log_dir"))
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -575,7 +575,7 @@ class LineEditSetting(QFrame):
         super().__init__()
         self.input_ = InputWidget(display, tooltip, type_=type_)
         self.input_.field.setText(get_setting(setting_name))
-        self.input_.field.textChanged.connect(partial(update_default, setting_name))
+        self.input_.field.textChanged.connect(partial(set_setting, setting_name))
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.input_)

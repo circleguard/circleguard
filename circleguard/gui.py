@@ -28,14 +28,14 @@ from circleguard import Circleguard, set_options, Loader, Detect, NoInfoAvailabl
 from circleguard import __version__ as cg_version
 from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
-from utils import resource_path, MapRun, ScreenRun, LocalRun, VerifyRun
+from utils import resource_path, run_update_check, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
                      TopPlays, BeatmapTest, ComparisonResult, LineEditSetting, EntryWidget,
                      RunWidget)
 
-from settings import get_setting, update_default, overwrite_config, overwrite_with_config_settings
+from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
 import wizard
 from version import __version__
 
@@ -109,6 +109,9 @@ class WindowWrapper(QMainWindow):
         self.progressbar = QProgressBar()
         self.progressbar.setFixedWidth(250)
         self.current_state_label = QLabel("Idle")
+        self.current_state_label.setTextFormat(Qt.RichText)
+        self.current_state_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.current_state_label.setOpenExternalLinks(True)
         # statusBar() is a qt function that will create a status bar tied to the window
         # if it doesnt exist, and access the existing one if it does.
         self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label))
@@ -142,6 +145,9 @@ class WindowWrapper(QMainWindow):
         formatter = logging.Formatter("[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)", datefmt="%Y/%m/%d %H:%M:%S")
         handler.setFormatter(formatter)
         handler.new_message.connect(self.log)
+
+        self.thread = threading.Thread(target=self._change_label_update)
+        self.thread.start()
 
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
@@ -195,6 +201,9 @@ class WindowWrapper(QMainWindow):
 
     def update_label(self, text):
         self.current_state_label.setText(text)
+
+    def _change_label_update(self):
+        self.update_label(run_update_check())
 
     def increment_progressbar(self, increment):
         self.progressbar.setValue(self.progressbar.value() + increment)
@@ -507,21 +516,23 @@ class MainTab(QWidget):
                 check = cg.create_verify_check(run.map_id, run.user_id_1, run.user_id_2, steal_thresh=run.thresh)
 
             if type(run) is ScreenRun:
+                num_to_load = 0
                 # user_check convenience method comes with some caveats; a list
                 # of list of check objects is returned instead of a single Check
                 # because it checks for remodding and replay stealing for
                 # each top play of the user
                 for check_list in check:
                     for check_ in check_list:
-                        replays = check_.all_loadables()
-                        num_to_load = check_.num_replays()
-                        # a compromise between feedback and usefulness of the progressbar. Some users
-                        # may prefer that it shows the progress until the entire check is done, but
-                        # this makes the gui appear sluggish, especially when we emit multiple "done" messages
-                        # (one per map).
-                        self.reset_progressbar_signal.emit(num_to_load)
+                        replays = check_.all_replays()
+                        num_to_load += len(replays)
+                self.reset_progressbar_signal.emit(num_to_load)
+
+                for check_list in check:
+                    for check_ in check_list:
+                        replays = check_.all_replays()
+                        num_to_load_map = len(replays)
                         timestamp = datetime.now()
-                        self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
+                        self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load_map,
                                                                         map_id=replays[0].map_id))
                         for replay in replays:
                             _check_event(event)
@@ -529,7 +540,7 @@ class MainTab(QWidget):
                             self.increment_progressbar_signal.emit(1)
                         check_.loaded = True
 
-                        self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+                        self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load_map))
                         self.update_label_signal.emit("Comparing Replays")
                         self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
                         for result in cg.run(check_):
@@ -863,7 +874,6 @@ class ScrollableSettingsWidget(QFrame):
         self.welcome = wizard.WelcomeWindow()
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
-
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
         self.darkmode.box.stateChanged.connect(self.reload_theme)
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
@@ -871,7 +881,7 @@ class ScrollableSettingsWidget(QFrame):
         self.visualizer_bg.box.stateChanged.connect(self.reload_theme)
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
         self.cache_location = FolderChooser("Cache Location", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
-        self.cache_location.path_signal.connect(partial(update_default, "cache_location"))
+        self.cache_location.path_signal.connect(partial(set_setting, "cache_location"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
         self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
@@ -930,7 +940,7 @@ class ScrollableSettingsWidget(QFrame):
             self._rainbow_counter = 0
 
     def switch_rainbow(self, state):
-        update_default("rainbow_accent", 1 if state else 0)
+        set_setting("rainbow_accent", 1 if state else 0)
         if get_setting("rainbow_accent"):
             self.timer.start(1000/15)
         else:
@@ -1042,7 +1052,7 @@ class ScrollableThresholdsWidget(QFrame):
         self.setLayout(self.grid)
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
-    update_default("dark_theme", dark)
+    set_setting("dark_theme", dark)
     if dark:
         dark_p = QPalette()
 
@@ -1097,7 +1107,7 @@ if __name__ == "__main__":
     if not get_setting("ran"):
         welcome = wizard.WelcomeWindow()
         welcome.show()
-        update_default("ran", True)
+        set_setting("ran", True)
 
     app.lastWindowClosed.connect(WINDOW.cancel_all_runs)
     app.aboutToQuit.connect(WINDOW.on_application_quit)
