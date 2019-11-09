@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayo
 # pylint: enable=no-name-in-module
 
 from settings import get_setting, set_setting
-from widgets import OptionWidget, InputWidget
+from widgets import OptionWidget, LineEditSetting
 from utils import resource_path
 
 
@@ -113,9 +113,7 @@ class ApiKeyPage(WizardPage):
         label.setOpenExternalLinks(True)
         label.setWordWrap(True)
 
-        apikey_widget = InputWidget("Api Key", "", type_="normal")
-        apikey_widget.field.setText(get_setting("api_key"))
-        apikey_widget.field.textChanged.connect(partial(set_setting, "api_key"))
+        apikey_widget = LineEditSetting("Api Key", "", "normal", "api_key")
 
         layout = QGridLayout()
         layout.addWidget(label, 0, 0, 1, 1)

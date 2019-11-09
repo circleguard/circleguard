@@ -565,21 +565,25 @@ class SliderBoxSetting(LinkableSetting, QFrame):
         self.slider.setValue(new_value)
         self.spinbox.setValue(new_value)
 
-class LineEditSetting(QFrame):
+class LineEditSetting(LinkableSetting, QFrame):
     """
     A container class of a QLabel and InputWidget that links the input widget
     to a setting (ie the default value of the widget will be the value of the
     setting, and changes made to the widget will affect the setting).
     """
-    def __init__(self, display, tooltip, type_, setting_name):
-        super().__init__()
+    def __init__(self, display, tooltip, type_, setting):
+        LinkableSetting.__init__(self, setting)
+        QFrame.__init__(self)
         self.input_ = InputWidget(display, tooltip, type_=type_)
-        self.input_.field.setText(get_setting(setting_name))
-        self.input_.field.textChanged.connect(partial(set_setting, setting_name))
+        self.input_.field.setText(self.setting_value)
+        self.input_.field.textChanged.connect(self.on_setting_changed_from_gui)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.input_)
         self.setLayout(layout)
+
+    def on_setting_changed(self, new_value):
+        self.input_.field.setText(new_value)
 
 class Threshold(LinkableSetting, QFrame):
     """
