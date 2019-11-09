@@ -292,10 +292,12 @@ class MainWindow(QWidget):
         self.main_tab = MainTab()
         self.results_tab = ResultsTab()
         self.queue_tab = QueueTab()
+        self.thresholds_tab = ThresholdsTab()
         self.settings_tab = SettingsTab()
-        self.tab_widget.addTab(self.main_tab, "Main Tab")
+        self.tab_widget.addTab(self.main_tab, "Main")
         self.tab_widget.addTab(self.results_tab, "Results")
         self.tab_widget.addTab(self.queue_tab, "Queue")
+        self.tab_widget.addTab(self.thresholds_tab, "Thresholds")
         self.tab_widget.addTab(self.settings_tab, "Settings")
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
         self.tab_widget.currentChanged.connect(self.main_tab.switch_run_button)
@@ -707,7 +709,7 @@ class LocalTab(QWidget):
         self.folder_chooser = FolderChooser("Replay folder")
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers(1)
-        self.threshold = Threshold()  # ThresholdCombined()
+        self.threshold = Threshold()
         self.id_combined.map_id.field.textChanged.connect(self.switch_compare)
         self.switch_compare()
 
@@ -836,7 +838,7 @@ class VisualizeTab(QWidget):
 
 class SettingsTab(QWidget):
     def __init__(self):
-        super(SettingsTab, self).__init__()
+        super().__init__()
         self.qscrollarea = QScrollArea(self)
         self.qscrollarea.setWidget(ScrollableSettingsWidget())
         self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
@@ -870,29 +872,14 @@ class ScrollableSettingsWidget(QFrame):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_color)
         self.welcome = wizard.WelcomeWindow()
-        self.welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
-        self.welcome.SetupPage.caching.box.stateChanged.connect(partial(set_setting, "caching"))
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
-
-        self.cheat_thresh = SliderBoxSetting("Cheat Threshold", "Comparisons that score below this will be stored so you can view them",
-                                                "threshold_cheat", 30)
-        self.display_thresh = SliderBoxSetting("Display Threshold", "Comparisons that score below this will be printed to the textbox",
-                                                "threshold_display", 100)
-
-        self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
-        self.darkmode.box.stateChanged.connect(switch_theme)
-
-        self.visualizer_info = OptionWidget("Show Visualizer info", "")
-        self.visualizer_info.box.stateChanged.connect(partial(set_setting,"visualizer_info"))
-
-        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply")
-        self.visualizer_bg.box.stateChanged.connect(partial(set_setting,"visualizer_bg"))
+        self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
+        self.darkmode.box.stateChanged.connect(self.reload_theme)
+        self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
+        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply", "visualizer_bg")
         self.visualizer_bg.box.stateChanged.connect(self.reload_theme)
-
-        self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
-        self.cache.box.stateChanged.connect(partial(set_setting, "caching"))
-
+        self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
         self.cache_location = FolderChooser("Cache Location", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
         self.cache_location.path_signal.connect(partial(set_setting, "cache_location"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
@@ -907,7 +894,7 @@ class ScrollableSettingsWidget(QFrame):
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
         self.set_loglevel()  # set the default loglevel in cg, not just in gui
 
-        self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!")
+        self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!", "rainbow_accent")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
         self.wizard = ButtonWidget("Run Wizard", "Run", "")
@@ -916,8 +903,6 @@ class ScrollableSettingsWidget(QFrame):
         self.grid = QVBoxLayout()
         self.grid.addWidget(Separator("General"))
         self.grid.addWidget(self.apikey_widget)
-        self.grid.addWidget(self.cheat_thresh)
-        self.grid.addWidget(self.display_thresh)
         self.grid.addWidget(self.cache)
         self.grid.addWidget(self.cache_location)
         self.grid.addWidget(self.open_settings)
@@ -936,14 +921,11 @@ class ScrollableSettingsWidget(QFrame):
 
         self.setLayout(self.grid)
 
-        old_theme = get_setting("dark_theme")  # this is needed because switch_theme changes the setting
-        self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
-        self.darkmode.box.setChecked(old_theme)
-        self.cache.box.setChecked(get_setting("caching"))
-        self.visualizer_info.box.setChecked(get_setting("visualizer_info"))
-        self.visualizer_bg.box.setChecked(get_setting("visualizer_bg"))
         self.cache_location.switch_enabled(get_setting("caching"))
-        self.rainbow.box.setChecked(get_setting("rainbow_accent"))
+        # we never actually set the theme to dark anywhere
+        # (even if the setting is true), it should really be
+        # in the main application but uh this works too
+        self.reload_theme()
 
     def set_loglevel(self):
         for logger in logging.root.manager.loggerDict:
@@ -1044,7 +1026,30 @@ class QueueFrame(QFrame):
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
+class ThresholdsTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.qscrollarea = QScrollArea(self)
+        self.qscrollarea.setWidget(ScrollableThresholdsWidget())
+        # self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
+        self.qscrollarea.setWidgetResizable(True)
 
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.qscrollarea)
+        self.setLayout(self.layout)
+
+class ScrollableThresholdsWidget(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.threshold_steal = SliderBoxSetting("Stealing", "Comparisons that score below this will be stored so you can view them",
+                "threshold_cheat", 30)
+        self.threshold_display = SliderBoxSetting("Stealing Display", "Comparisons that score below this will be printed to the console",
+                "threshold_display", 100)
+        self.grid = QVBoxLayout()
+        self.grid.addWidget(self.threshold_steal)
+        self.grid.addWidget(self.threshold_display)
+        self.grid.setAlignment(Qt.AlignTop)
+        self.setLayout(self.grid)
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
     set_setting("dark_theme", dark)
@@ -1101,8 +1106,6 @@ if __name__ == "__main__":
     WINDOW.show()
     if not get_setting("ran"):
         welcome = wizard.WelcomeWindow()
-        welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
-        welcome.SetupPage.caching.box.stateChanged.connect(partial(set_setting,"caching"))
         welcome.show()
         set_setting("ran", True)
 

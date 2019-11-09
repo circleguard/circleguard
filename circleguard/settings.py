@@ -3,7 +3,7 @@ import os
 from datetime import datetime
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import QSettings, QStandardPaths
+from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
 # pylint: enable=no-name-in-module
 from packaging import version
 # it's tempting to use QSettings builtin ini file support instead of configparser,
@@ -92,6 +92,45 @@ COMMENTS = {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
     }
 }
+import abc
+
+class LinkableSetting():
+    """
+    XXX IMPLEMENTATION NOTE FOR SUBCLASSES:
+    all python classes must come before c classes (like QWidget) or super calls break.
+    Further reading: https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
+
+    eg, def MyClass(LinkableSetting, QFrame) NOT def MyClass(QFrame, LinkableSetting)
+    """
+    registered_classes = []
+    def __init__(self, setting):
+        self.setting = setting
+        self.registered_classes.append(self)
+        self.setting_value = get_setting(setting)
+
+    @abc.abstractmethod
+    def on_setting_changed(self, new_value):
+        """
+        Called when the internal setting this class is linked to is changed, from
+        a source other than this class. An extremely common use case - and the
+        intended one - is to change the value of a slider/label/other widget to
+        reflect the new setting value, so all settings are in sync (gui and internal).
+        """
+        pass
+
+    def filter(self, setting_changed):
+        """
+        A predicate that returns true if this class should accept signals when the given
+        setting is changed (signals in the form of a call to on_setting_changed)
+        """
+        return self.setting == setting_changed
+
+    def on_setting_changed_from_gui(self, value):
+        """
+        Called when our setting is changed from the gui,
+        and our internal settings need to be updated to reflect that.
+        """
+        set_setting(self.setting, value)
 
 DEFAULTS = {
     "Locations": {
@@ -218,6 +257,10 @@ def reset_defaults():
 
 
 def set_setting(name, value):
+    for linkable_setting in LinkableSetting.registered_classes:
+        if linkable_setting.filter(name):
+            linkable_setting.on_setting_changed(value)
+
     SETTINGS.setValue(name, TYPES[name][0](value))
 
 # overwrites circleguard.cfg with our settings
@@ -244,9 +287,10 @@ def overwrite_config():
 
         config[TYPES[setting][1]][setting] = str(SETTINGS.value(setting))
 
-
     with open(CFG_PATH, "a+") as f:
         config.write(f)
+
+
 
 TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
 SETTINGS = QSettings("Circleguard", "Circleguard")
