@@ -1,5 +1,6 @@
 import re
 import os
+from pathlib import Path
 from datetime import datetime
 
 # pylint: disable=no-name-in-module
@@ -291,6 +292,13 @@ def overwrite_config():
         config.write(f)
 
 
+def initialize_dirs():
+    d_dirs = DEFAULTS["Locations"].keys()
+    for d_dir in d_dirs:
+        parent_path = Path(get_setting(d_dir)).parent
+        if not os.path.exists(parent_path):
+            os.mkdir(parent_path)
+
 
 TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
 SETTINGS = QSettings("Circleguard", "Circleguard")
@@ -303,6 +311,9 @@ for d in DEFAULTS.values():
     for key,value in d.items():
         if not SETTINGS.contains(key):
             SETTINGS.setValue(key, value)
+
+# create folders if they don't exist
+initialize_dirs()
 
 # assemble dict of {key: [type, section]} since we have nested dicts in DEFAULTS
 # double list comprehension feels sooo backwards to write

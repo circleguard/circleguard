@@ -39,8 +39,6 @@ from settings import get_setting, set_setting, overwrite_config, overwrite_with_
 import wizard
 from version import __version__
 
-if not os.path.exists(get_setting("cache_location")):
-    os.mkdir(Path(get_setting("cache_location")).parent)
 
 log = logging.getLogger(__name__)
 
