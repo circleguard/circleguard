@@ -564,7 +564,6 @@ class MainTab(QWidget):
             else:
                 cg.load_info(check)
                 replays = check.all_replays()
-                print("loadables", replays)
                 num_to_load = check.num_replays()
                 self.reset_progressbar_signal.emit(num_to_load)
                 timestamp = datetime.now()
