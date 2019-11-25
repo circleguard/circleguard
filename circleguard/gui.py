@@ -523,7 +523,7 @@ class MainTab(QWidget):
                     steal_check = Check([r, m], d)
                     check.append([remod_check, steal_check])
             elif type(run) is LocalRun:
-                loadables = [ReplayPath(path) for path in os.listdir(run.path)]
+                loadables = [ReplayPath(run.path / path) for path in os.listdir(run.path)]
                 check = Check(loadables, d)
             elif type(run) is VerifyRun:
                 r1 = ReplayMap(run.map_id, run.user_id_1)
