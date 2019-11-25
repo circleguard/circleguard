@@ -24,9 +24,9 @@ app = QApplication([])
 app.setStyle("Fusion")
 app.setApplicationName("Circleguard")
 
-from circleguard import Circleguard, set_options, Loader, Detect, NoInfoAvailableException, Detect
+from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableException,
+                        ReplayMap, ReplayPath, User, Map, Check, MapUser, StealDetect)
 from circleguard import __version__ as cg_version
-from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
 from utils import resource_path, run_update_check, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
@@ -478,9 +478,9 @@ class MainTab(QWidget):
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
         event = run.event
         try:
-            set_options(cache=get_setting("caching"), detect=Detect.STEAL)
             cache_path = resource_path(get_setting("cache_location"))
-            cg = Circleguard(get_setting("api_key"), cache_path, loader=TrackerLoader)
+            should_cache = get_setting("caching")
+            cg = Circleguard(get_setting("api_key"), cache_path, cache=should_cache, loader=TrackerLoader)
             def _ratelimited(length):
                 message = get_setting("message_ratelimited")
                 ts = datetime.now()
@@ -503,36 +503,52 @@ class MainTab(QWidget):
             cg.loader.ratelimit_signal.connect(_ratelimited)
             cg.loader.check_stopped_signal.connect(partial(_check_event, event))
 
-
+            d = StealDetect(run.thresh)
             if type(run) is MapRun:
-                check = cg.create_map_check(run.map_id, u=run.user_id, num=run.num, steal_thresh=run.thresh)
+                m = Map(run.map_id, num=run.num)
+                loadables = [m]
+                if run.user_id:
+                    user_replay = ReplayMap(run.map_id, run.user_id)
+                    loadables.append(user_replay)
+                check = Check(loadables, d)
             elif type(run) is ScreenRun:
-                check = cg.create_user_check(run.user_id, run.num_top, run.num_users, steal_thresh=run.thresh)
+                check = []
+                user = User(run.user_id, run.num_top)
+                cg.load_info(user)
+                for r in user:
+                    # 2-100 because the first one *is* ``r``.
+                    m = Map(r.map_id, num=run.num_users)
+                    remod_replays = MapUser(r.map_id, r.user_id, span="2-100")
+                    remod_check = Check([r, remod_replays], d)
+                    steal_check = Check([r, m], d)
+                    check.append([remod_check, steal_check])
             elif type(run) is LocalRun:
-                check = cg.create_local_check(run.path, map_id=run.map_id, u=run.user_id, num=run.num, steal_thresh=run.thresh)
+                loadables = [ReplayPath(path) for path in os.listdir(run.path)]
+                check = Check(loadables, d)
             elif type(run) is VerifyRun:
-                check = cg.create_verify_check(run.map_id, run.user_id_1, run.user_id_2, steal_thresh=run.thresh)
+                r1 = ReplayMap(run.map_id, run.user_id_1)
+                r2 = ReplayMap(run.map_id, run.user_id_2)
+                check = Check([r1, r2], d)
 
             if type(run) is ScreenRun:
                 num_to_load = 0
-                # user_check convenience method comes with some caveats; a list
-                # of list of check objects is returned instead of a single Check
-                # because it checks for remodding and replay stealing for
-                # each top play of the user
+                # different from other runs; a list of list of check objects is
+                # returned instead of a single Check because it checks for
+                # remodding and replay  stealing for each top play of the user
                 for check_list in check:
                     for check_ in check_list:
-                        replays = check_.all_replays()
-                        num_to_load += len(replays)
+                        loadables = check_.all_replays()
+                        num_to_load += len(loadables)
                 self.reset_progressbar_signal.emit(num_to_load)
 
                 for check_list in check:
                     for check_ in check_list:
-                        replays = check_.all_replays()
-                        num_to_load_map = len(replays)
+                        loadables = check_.all_replays()
+                        num_to_load_map = len(loadables)
                         timestamp = datetime.now()
                         self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load_map,
-                                                                        map_id=replays[0].map_id))
-                        for replay in replays:
+                                                                        map_id=loadables[0].map_id))
+                        for replay in loadables:
                             _check_event(event)
                             cg.load(replay)
                             self.increment_progressbar_signal.emit(1)
@@ -546,29 +562,26 @@ class MainTab(QWidget):
                             self.q.put(result)
 
             else:
-                replays = check.all_loadables()
+                cg.load_info(check)
+                replays = check.all_replays()
+                print("loadables", replays)
                 num_to_load = check.num_replays()
                 self.reset_progressbar_signal.emit(num_to_load)
                 timestamp = datetime.now()
                 if type(replays[0]) is ReplayPath:
+                    cg.load(replays[0])
                     # Not perfect because local checks aren't guaranteed to have the same
                     # map id for every replay, but it's the best we can do right now.
                     # time spent loading one replay is worth getting the map id.
-                    cg.load(replays[0])
                     map_id = replays[0].map_id
                 else:
                     map_id = replays[0].map_id
 
                 self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
                                                                 map_id=map_id))
-                if type(run) is MapRun:
-                    # only a single Map object in check.all_loadables() for a map check
-                    map_ = replays[0]
-                    map_.load_info(cg.loader)
-                    replays = map_.all_replays()
-                for loadable in replays:
+                for replay in replays:
                     _check_event(event)
-                    cg.load(loadable)
+                    cg.load(replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
                 self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
