@@ -543,10 +543,12 @@ class MainTab(QWidget):
 
                 for check_list in check:
                     for check_ in check_list:
+                        cg.load_info(check_)
                         loadables = check_.all_replays()
-                        num_to_load_map = len(loadables)
+
+                        num_to_load = len(loadables)
                         timestamp = datetime.now()
-                        self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load_map,
+                        self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
                                                                         map_id=loadables[0].map_id))
                         for replay in loadables:
                             _check_event(event)
@@ -554,7 +556,7 @@ class MainTab(QWidget):
                             self.increment_progressbar_signal.emit(1)
                         check_.loaded = True
 
-                        self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load_map))
+                        self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
                         self.update_label_signal.emit("Comparing Replays")
                         self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
                         for result in cg.run(check_):
