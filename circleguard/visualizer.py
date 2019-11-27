@@ -90,7 +90,7 @@ class _Renderer(QWidget):
                 "cursor_color": QPen(QColor().fromHslF(replays.index(replay)/self.replay_amount,0.75,0.5)),
                 "pos": 0
             })
-        self.playback_len = max(player["data"][-1][0] for player in self.players) if self.replay_amount > 0 else self.playback_len        
+        self.playback_len = max(player["data"][-1][0] for player in self.players) if self.replay_amount > 0 else self.playback_len
         ## flip all replays with hr
         for player in self.players:
             if Mod.HardRock in player["replay"].mods:
@@ -106,7 +106,7 @@ class _Renderer(QWidget):
         self.frame_time_clock = clock.Timer()
         self.last_frame = 0
         self.frame_times = []
-        
+
         # render stuff
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_frame_from_timer)
@@ -311,7 +311,7 @@ class _Renderer(QWidget):
                     painter.drawText(5, 39 + (12 * i), f"Distance {prev_player['username']}-{player['username']}: {int(distance)}px")
                 except IndexError:  # Edge case where we only have data from one cursor
                     pass
-    
+
     def paint_frametime_graph(self, painter):
         _pen = painter.pen()
         x_offset = 640
@@ -430,7 +430,7 @@ class _Renderer(QWidget):
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
         hitcircle_alpha = hitcircle_alpha - (magic if magic > 0 else 0)
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha > 0 else 0
-        
+
         spinner_scale = max(1-(self.get_hit_endtime(hitobj)- current_time)/(self.get_hit_endtime(hitobj) - self.get_hit_time(hitobj)), 0)
         c = painter.pen().color()
 
@@ -548,7 +548,7 @@ class _Renderer(QWidget):
                         else:
                             self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.points
 
-    
+
     def reset(self, end=False):
         """
         Reset Visualization. If end is passed, the function will reset to the end of the map,
