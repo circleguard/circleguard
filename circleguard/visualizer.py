@@ -1,8 +1,7 @@
 import math
 import time
 
-from circleguard import utils
-from circleguard.enums import Mod
+from circleguard import utils, Mod
 from circleparse.beatmap import Beatmap
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF
@@ -58,11 +57,10 @@ class _Renderer(QWidget):
             self.data.append(replay.as_list_with_timestamps())  # t,x,y
             self.usernames.append(replay.username)
         # flip all replays with hr
-        for replay_index in range(len(replays)):
-            for mods in utils.bits(replays[replay_index].mods):
-                if Mod.HardRock is Mod(mods):
-                    for d in self.data[replay_index]:
-                        d[2] = 384 - d[2]
+        for i, replay in enumerate(replays):
+            if Mod.HR in replay.mods:
+                for d in self.data[i]:
+                    d[2] = 384 - d[2]
 
         self.play_direction = 1
         self.playback_len = max(data[-1][0] for data in self.data) if self.replay_amount > 0 else self.playback_len
@@ -170,7 +168,7 @@ class _Renderer(QWidget):
         self.hitobjs = []
         while not found_all:
             current_hitobj = self.beatmap.hitobjects[index]
-            if current_hitobj.time-preempt < time < current_hitobj.time or ((current_hitobj.time-preempt < time < current_hitobj.time + current_hitobj.duration) if 2 & current_hitobj.type else False):  # 
+            if current_hitobj.time-preempt < time < current_hitobj.time or ((current_hitobj.time-preempt < time < current_hitobj.time + current_hitobj.duration) if 2 & current_hitobj.type else False):  #
                 current_hitobj.preempt = preempt
                 current_hitobj.fade_in = fade_in
                 current_hitobj.hitwindow = hitwindow
