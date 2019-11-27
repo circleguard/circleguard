@@ -170,7 +170,7 @@ class _Renderer(QWidget):
         self.hitobjs = []
         while not found_all:
             current_hitobj = self.beatmap.hitobjects[index]
-            if current_hitobj.time-preempt < time < current_hitobj.time or ((current_hitobj.time-preempt < time < current_hitobj.time + current_hitobj.duration) if 2 & current_hitobj.type else False):  # 
+            if current_hitobj.time-preempt < time < current_hitobj.time or ((current_hitobj.time-preempt < time < current_hitobj.time + current_hitobj.duration) if 2 & current_hitobj.type else False):  #
                 current_hitobj.preempt = preempt
                 current_hitobj.fade_in = fade_in
                 current_hitobj.hitwindow = hitwindow
@@ -428,10 +428,15 @@ class _Renderer(QWidget):
             Boolean reverse: chooses the search direction
         """
         if not reverse:
-            next_frames = [self.data[x][self.pos[x]][0] for x in range(len(self.data))]
+            # len(self.data) is the number of replays being visualized
+            # self.data[0] is for the first replay, as is self.pos[0]
+            # self.pos is a list of current indecies of the replays
+            # self.data[0][self.pos[0]] is the current frame we're on
+            # so seek to the next frame; self.pos[0] + 1
+            next_frames = [self.data[x][self.pos[x] + 1][0] for x in range(len(self.data))]
             self.seek_to(min(next_frames))
         else:
-            previous_frames = [self.data[x][self.pos[x]-1][0] for x in range(len(self.data))]
+            previous_frames = [self.data[x][self.pos[x] - 1][0] for x in range(len(self.data))]
             self.seek_to(min(previous_frames)-1)
 
     def seek_to(self, position):
