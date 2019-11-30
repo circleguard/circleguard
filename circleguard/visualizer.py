@@ -84,7 +84,7 @@ class _Renderer(QWidget):
         self.players = []
         for replay in replays:
             self.players.append({
-                "data": replay.as_list_with_timestamps(),
+                "data": np.array(replay.as_list_with_timestamps()),
                 "replay": replay,
                 "username": replay.username,
                 "mods": replay.mods.short_name(),
@@ -125,54 +125,6 @@ class _Renderer(QWidget):
             return
         self.next_frame()
 
-    def search_timestamp(self, array, index, value, offset):
-        """
-        Searches an (:array:) for a :value: located in column :index:,
-        assuming the data is monotonically increasing.
-
-        Args:
-            list array: A list of List which contain the timestamp at index
-            Integer index: The column index of the timestamp
-            Float value: The value to search for.
-            Integer offset: Position of the timestamp to start the search from.
-        """
-
-        direction = self.play_direction
-
-        if array[offset][index] <= value:
-            high = len(array) - 1
-            low = offset
-            mid = low
-            value = int(math.ceil(value))
-        else:
-            high = offset
-            low = 0
-            mid = high
-            value = int(value)
-
-        while array[high][index] != array[low][index]:
-            if value < array[low][index]:
-                return low if direction > 0 else low - 1
-            elif value > array[high][index]:
-                return high - 1 if direction > 0 else high
-
-            try:
-                mid = low + (value - array[low][index]) * (high - low) // (array[high][index] - array[low][index])
-            except:
-                mid = low + (value - array[low][index]) / (array[high][index] - array[low][index]) * (high - low)
-                mid = int(mid)
-
-            if array[mid][index] < value:
-                low = mid + 1
-                low = min(max(low, 0), len(array) - 1)
-            elif array[mid][index] > value:
-                high = mid - 1
-                high = min(max(high, 0), len(array) - 1)
-            else:
-                return mid
-
-        return low
-
     def next_frame(self):
         """
         prepares next frame
@@ -188,7 +140,7 @@ class _Renderer(QWidget):
             self.reset(end=True if self.clock.current_speed < 0 else False)
 
         for player in self.players:
-            player["pos"] = self.search_timestamp(player["data"], 0, current_time, player["pos"])
+            player["pos"] = np.searchsorted(player["data"].T[0], current_time)
             magic = player["pos"] - FRAMES_ON_SCREEN if player["pos"] >= FRAMES_ON_SCREEN else 0
             player["buffer"] = player["data"][magic:player["pos"]]
 
