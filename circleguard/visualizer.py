@@ -235,15 +235,16 @@ class _Renderer(QWidget):
             self.setAutoFillBackground(True)
             self.setPalette(pal)
         # loading screen
-        if self.thread.is_alive():
-            self.draw_loading_screen()
-            self.painter.end()
-            return
-        elif self.loading_flag:
-            self.loading_flag = False
-            self.clock.reset()
-            self.painter.end()
-            return
+        if self.beatmap_flag:
+            if self.thread.is_alive():
+                self.draw_loading_screen()
+                self.painter.end()
+                return
+            elif self.loading_flag:
+                self.loading_flag = False
+                self.clock.reset()
+                self.painter.end()
+                return
         # debug stuff
         self.frame_times.insert(0, self.frame_time_clock.get_time() - self.last_frame)
         self.frame_times = self.frame_times[:120]
