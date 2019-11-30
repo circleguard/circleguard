@@ -1,8 +1,10 @@
 import re
 import os
+from pathlib import Path
+from datetime import datetime
 
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import QSettings, QStandardPaths
+from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
 # pylint: enable=no-name-in-module
 from packaging import version
 # it's tempting to use QSettings builtin ini file support instead of configparser,
@@ -83,12 +85,54 @@ COMMENTS = {
         "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing",
         "ran": "Whether Circleguard has been run on this system before. If False, all settings will be reset to their default and the wizard will be displayed",
         "last_version": "The most recent version of Circleguard run on this system. Used to overwrite some settings when they change between versions",
-        "api_key": "The api key to use in circlecore"
+        "api_key": "The api key to use in circlecore",
+        "timestamp_format": "The format of last_update_check",
+        "last_update_check": "The last time we checked for a new version. Only checks once every hour",
+        "latest_version": "The latest circleguard version available on github"
     },
     "Caching": {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
     }
 }
+import abc
+
+class LinkableSetting():
+    """
+    XXX IMPLEMENTATION NOTE FOR SUBCLASSES:
+    all python classes must come before c classes (like QWidget) or super calls break.
+    Further reading: https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
+
+    eg, def MyClass(LinkableSetting, QFrame) NOT def MyClass(QFrame, LinkableSetting)
+    """
+    registered_classes = []
+    def __init__(self, setting):
+        self.setting = setting
+        self.registered_classes.append(self)
+        self.setting_value = get_setting(setting)
+
+    @abc.abstractmethod
+    def on_setting_changed(self, new_value):
+        """
+        Called when the internal setting this class is linked to is changed, from
+        a source other than this class. An extremely common use case - and the
+        intended one - is to change the value of a slider/label/other widget to
+        reflect the new setting value, so all settings are in sync (gui and internal).
+        """
+        pass
+
+    def filter(self, setting_changed):
+        """
+        A predicate that returns true if this class should accept signals when the given
+        setting is changed (signals in the form of a call to on_setting_changed)
+        """
+        return self.setting == setting_changed
+
+    def on_setting_changed_from_gui(self, value):
+        """
+        Called when our setting is changed from the gui,
+        and our internal settings need to be updated to reflect that.
+        """
+        set_setting(self.setting, value)
 
 DEFAULTS = {
     "Locations": {
@@ -142,7 +186,10 @@ DEFAULTS = {
     "Core": {
         "ran": False,
         "last_version": "0.0.0",  # force run update_settings if the user previously had a version without this key
-        "api_key": ""
+        "api_key": "",
+        "timestamp_format": "%H:%M:%S %m.%d.%Y",
+        "last_update_check": "00:00:00 01.01.1970",  # not the best code
+        "latest_version": __version__
     },
     "Caching": {
         "caching": True
@@ -182,9 +229,8 @@ def overwrite_outdated_settings():
     for ver, changed_arr in CHANGED.items():
         if last_version < version.parse(ver):
             for setting in changed_arr:
-                update_default(setting, DEFAULTS[TYPES[setting][1]][setting])
-    update_default("last_version", __version__)
-
+                set_setting(setting, DEFAULTS[TYPES[setting][1]][setting])
+    set_setting("last_version", __version__)
 
 def overwrite_with_config_settings():
     config = ConfigParser(interpolation=None)
@@ -193,15 +239,16 @@ def overwrite_with_config_settings():
         for k in config[section]:
             try:
                 type_ = TYPES[k][0]
-                if type_ is bool:
-                    val = config.getboolean(section, k)
-                elif type_ is int:
-                    val = config.getint(section, k)
-                else:
-                    val = config.get(section, k)
-                update_default(k, val)
-            except KeyError:  # key was in older version but has been removed, so we just ignore it
-                    pass
+            except KeyError:
+                # there's a key in the .cfg file that we don't have; ignore it
+                continue
+            if type_ is bool:
+                val = config.getboolean(section, k)
+            elif type_ is int:
+                val = config.getint(section, k)
+            else:
+                val = config.get(section, k)
+            set_setting(k, val)
 
 def reset_defaults():
     SETTINGS.clear()
@@ -210,7 +257,12 @@ def reset_defaults():
             SETTINGS.setValue(key, value)
     SETTINGS.sync()
 
-def update_default(name, value):
+
+def set_setting(name, value):
+    for linkable_setting in LinkableSetting.registered_classes:
+        if linkable_setting.filter(name):
+            linkable_setting.on_setting_changed(value)
+
     SETTINGS.setValue(name, TYPES[name][0](value))
 
 def initialize_dirs():
@@ -243,9 +295,17 @@ def overwrite_config():
 
         config[TYPES[setting][1]][setting] = str(SETTINGS.value(setting))
 
-
     with open(CFG_PATH, "a+") as f:
         config.write(f)
+
+
+def initialize_dirs():
+    d_dirs = DEFAULTS["Locations"].keys()
+    for d_dir in d_dirs:
+        parent_path = Path(get_setting(d_dir)).parent
+        if not os.path.exists(parent_path):
+            os.mkdir(parent_path)
+
 
 TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
 SETTINGS = QSettings("Circleguard", "Circleguard")
@@ -258,6 +318,9 @@ for d in DEFAULTS.values():
     for key,value in d.items():
         if not SETTINGS.contains(key):
             SETTINGS.setValue(key, value)
+
+# create folders if they don't exist
+initialize_dirs()
 
 # assemble dict of {key: [type, section]} since we have nested dicts in DEFAULTS
 # double list comprehension feels sooo backwards to write

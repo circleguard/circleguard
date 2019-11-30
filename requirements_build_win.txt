@@ -1,0 +1,3 @@
+winshell
+pyinstaller
+pypiwin32

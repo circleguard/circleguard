@@ -24,20 +24,21 @@ app = QApplication([])
 app.setStyle("Fusion")
 app.setApplicationName("Circleguard")
 
-from circleguard import Circleguard, set_options, Loader, Detect, NoInfoAvailableException, Detect
+from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableException,
+                        ReplayMap, ReplayPath, User, Map, Check, MapUser, StealDetect)
 from circleguard import __version__ as cg_version
-from circleguard.replay import ReplayPath, Check
 from visualizer import VisualizerWindow
-from utils import resource_path, MapRun, ScreenRun, LocalRun, VerifyRun
+from utils import resource_path, run_update_check, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
                      TopPlays, BeatmapTest, ComparisonResult, LineEditSetting, EntryWidget,
                      RunWidget)
 
-from settings import get_setting, update_default, overwrite_config, overwrite_with_config_settings
+from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
 import wizard
 from version import __version__
+
 
 log = logging.getLogger(__name__)
 
@@ -106,6 +107,9 @@ class WindowWrapper(QMainWindow):
         self.progressbar = QProgressBar()
         self.progressbar.setFixedWidth(250)
         self.current_state_label = QLabel("Idle")
+        self.current_state_label.setTextFormat(Qt.RichText)
+        self.current_state_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.current_state_label.setOpenExternalLinks(True)
         # statusBar() is a qt function that will create a status bar tied to the window
         # if it doesnt exist, and access the existing one if it does.
         self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label))
@@ -139,6 +143,9 @@ class WindowWrapper(QMainWindow):
         formatter = logging.Formatter("[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)", datefmt="%Y/%m/%d %H:%M:%S")
         handler.setFormatter(formatter)
         handler.new_message.connect(self.log)
+
+        self.thread = threading.Thread(target=self._change_label_update)
+        self.thread.start()
 
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
@@ -192,6 +199,9 @@ class WindowWrapper(QMainWindow):
 
     def update_label(self, text):
         self.current_state_label.setText(text)
+
+    def _change_label_update(self):
+        self.update_label(run_update_check())
 
     def increment_progressbar(self, increment):
         self.progressbar.setValue(self.progressbar.value() + increment)
@@ -273,10 +283,12 @@ class MainWindow(QWidget):
         self.main_tab = MainTab()
         self.results_tab = ResultsTab()
         self.queue_tab = QueueTab()
+        self.thresholds_tab = ThresholdsTab()
         self.settings_tab = SettingsTab()
-        self.tab_widget.addTab(self.main_tab, "Main Tab")
+        self.tab_widget.addTab(self.main_tab, "Main")
         self.tab_widget.addTab(self.results_tab, "Results")
         self.tab_widget.addTab(self.queue_tab, "Queue")
+        self.tab_widget.addTab(self.thresholds_tab, "Thresholds")
         self.tab_widget.addTab(self.settings_tab, "Settings")
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
         self.tab_widget.currentChanged.connect(self.main_tab.switch_run_button)
@@ -459,9 +471,9 @@ class MainTab(QWidget):
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
         event = run.event
         try:
-            set_options(cache=get_setting("caching"), detect=Detect.STEAL)
             cache_path = resource_path(Path(get_setting("cache_dir"),".circleguard.db"))
-            cg = Circleguard(get_setting("api_key"), cache_path, loader=TrackerLoader)
+            should_cache = get_setting("caching")
+            cg = Circleguard(get_setting("api_key"), cache_path, cache=should_cache, loader=TrackerLoader)
             def _ratelimited(length):
                 message = get_setting("message_ratelimited")
                 ts = datetime.now()
@@ -484,34 +496,54 @@ class MainTab(QWidget):
             cg.loader.ratelimit_signal.connect(_ratelimited)
             cg.loader.check_stopped_signal.connect(partial(_check_event, event))
 
-
+            d = StealDetect(run.thresh)
             if type(run) is MapRun:
-                check = cg.create_map_check(run.map_id, u=run.user_id, num=run.num, steal_thresh=run.thresh)
+                m = Map(run.map_id, num=run.num)
+                loadables = [m]
+                if run.user_id:
+                    user_replay = ReplayMap(run.map_id, run.user_id)
+                    loadables.append(user_replay)
+                check = Check(loadables, d)
             elif type(run) is ScreenRun:
-                check = cg.create_user_check(run.user_id, run.num_top, run.num_users, steal_thresh=run.thresh)
+                check = []
+                user = User(run.user_id, run.num_top)
+                cg.load_info(user)
+                for r in user:
+                    # 2-100 because the first one *is* ``r``.
+                    m = Map(r.map_id, num=run.num_users)
+                    remod_replays = MapUser(r.map_id, r.user_id, span="2-100")
+                    remod_check = Check([r, remod_replays], d)
+                    steal_check = Check([r, m], d)
+                    check.append([remod_check, steal_check])
             elif type(run) is LocalRun:
-                check = cg.create_local_check(run.path, map_id=run.map_id, u=run.user_id, num=run.num, steal_thresh=run.thresh)
+                loadables = [ReplayPath(run.path / path) for path in os.listdir(run.path)]
+                check = Check(loadables, d)
             elif type(run) is VerifyRun:
-                check = cg.create_verify_check(run.map_id, run.user_id_1, run.user_id_2, steal_thresh=run.thresh)
+                r1 = ReplayMap(run.map_id, run.user_id_1)
+                r2 = ReplayMap(run.map_id, run.user_id_2)
+                check = Check([r1, r2], d)
 
             if type(run) is ScreenRun:
-                # user_check convenience method comes with some caveats; a list
-                # of list of check objects is returned instead of a single Check
-                # because it checks for remodding and replay stealing for
-                # each top play of the user
+                num_to_load = 0
+                # different from other runs; a list of list of check objects is
+                # returned instead of a single Check because it checks for
+                # remodding and replay  stealing for each top play of the user
                 for check_list in check:
                     for check_ in check_list:
-                        replays = check_.all_loadables()
-                        num_to_load = check_.num_replays()
-                        # a compromise between feedback and usefulness of the progressbar. Some users
-                        # may prefer that it shows the progress until the entire check is done, but
-                        # this makes the gui appear sluggish, especially when we emit multiple "done" messages
-                        # (one per map).
-                        self.reset_progressbar_signal.emit(num_to_load)
+                        loadables = check_.all_replays()
+                        num_to_load += len(loadables)
+                self.reset_progressbar_signal.emit(num_to_load)
+
+                for check_list in check:
+                    for check_ in check_list:
+                        cg.load_info(check_)
+                        loadables = check_.all_replays()
+
+                        num_to_load = len(loadables)
                         timestamp = datetime.now()
                         self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
-                                                                        map_id=replays[0].map_id))
-                        for replay in replays:
+                                                                        map_id=loadables[0].map_id))
+                        for replay in loadables:
                             _check_event(event)
                             cg.load(replay)
                             self.increment_progressbar_signal.emit(1)
@@ -525,24 +557,25 @@ class MainTab(QWidget):
                             self.q.put(result)
 
             else:
-                replays = check.all_loadables()
+                cg.load_info(check)
+                replays = check.all_replays()
                 num_to_load = check.num_replays()
                 self.reset_progressbar_signal.emit(num_to_load)
                 timestamp = datetime.now()
                 if type(replays[0]) is ReplayPath:
+                    cg.load(replays[0])
                     # Not perfect because local checks aren't guaranteed to have the same
                     # map id for every replay, but it's the best we can do right now.
                     # time spent loading one replay is worth getting the map id.
-                    cg.load(replays[0])
                     map_id = replays[0].map_id
                 else:
                     map_id = replays[0].map_id
 
                 self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
                                                                 map_id=map_id))
-                for loadable in replays:
+                for replay in replays:
                     _check_event(event)
-                    cg.load(loadable)
+                    cg.load(replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
                 self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
@@ -681,7 +714,7 @@ class LocalTab(QWidget):
         self.folder_chooser = FolderChooser("Replay folder")
         self.id_combined = IdWidgetCombined()
         self.compare_top = CompareTopUsers(1)
-        self.threshold = Threshold()  # ThresholdCombined()
+        self.threshold = Threshold()
         self.id_combined.map_id.field.textChanged.connect(self.switch_compare)
         self.switch_compare()
 
@@ -818,7 +851,7 @@ class VisualizeTab(QWidget):
 
 class SettingsTab(QWidget):
     def __init__(self):
-        super(SettingsTab, self).__init__()
+        super().__init__()
         self.qscrollarea = QScrollArea(self)
         self.qscrollarea.setWidget(ScrollableSettingsWidget())
         self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
@@ -852,34 +885,17 @@ class ScrollableSettingsWidget(QFrame):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_color)
         self.welcome = wizard.WelcomeWindow()
-        self.welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
-        self.welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default, "caching"))
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
-
-        self.cheat_thresh = SliderBoxSetting("Cheat Threshold", "Comparisons that score below this will be stored so you can view them",
-                                                "threshold_cheat", 30)
-        self.display_thresh = SliderBoxSetting("Display Threshold", "Comparisons that score below this will be printed to the textbox",
-                                                "threshold_display", 100)
-
-        self.darkmode = OptionWidget("Dark mode", "Come join the dark side")
-        self.darkmode.box.stateChanged.connect(switch_theme)
-
-        self.visualizer_frametime = OptionWidget("Show frametime graph in Visualizer", "")
-        self.visualizer_frametime.box.stateChanged.connect(partial(update_default,"visualizer_frametime"))
-
-        self.visualizer_info = OptionWidget("Show Visualizer info", "")
-        self.visualizer_info.box.stateChanged.connect(partial(update_default,"visualizer_info"))
-
-        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply")
-        self.visualizer_bg.box.stateChanged.connect(partial(update_default,"visualizer_bg"))
+        self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
+        self.darkmode.box.stateChanged.connect(self.reload_theme)
+        self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
+        self.visualizer_frametime = OptionWidget("Show frametime graph in visualizer", "", "visualizer_frametime")
+        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply", "visualizer_bg")
         self.visualizer_bg.box.stateChanged.connect(self.reload_theme)
-
-        self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally")
-        self.cache.box.stateChanged.connect(partial(update_default, "caching"))
-
-        self.cache_location = FolderChooser("Cache Location", get_setting("cache_dir"), folder_mode=False, file_ending="SQLite db files (*.db)")
-        self.cache_location.path_signal.connect(partial(update_default, "cache_dir"))
+        self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
+        self.cache_location = FolderChooser("Cache Location", get_setting("cache_dir"), folder_mode=True)
+        self.cache_location.path_signal.connect(partial(set_setting, "cache_dir"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
         self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
@@ -892,7 +908,7 @@ class ScrollableSettingsWidget(QFrame):
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
         self.set_loglevel()  # set the default loglevel in cg, not just in gui
 
-        self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!")
+        self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!", "rainbow_accent")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
         self.wizard = ButtonWidget("Run Wizard", "Run", "")
@@ -901,8 +917,6 @@ class ScrollableSettingsWidget(QFrame):
         self.grid = QVBoxLayout()
         self.grid.addWidget(Separator("General"))
         self.grid.addWidget(self.apikey_widget)
-        self.grid.addWidget(self.cheat_thresh)
-        self.grid.addWidget(self.display_thresh)
         self.grid.addWidget(self.cache)
         self.grid.addWidget(self.cache_location)
         self.grid.addWidget(self.open_settings)
@@ -922,14 +936,11 @@ class ScrollableSettingsWidget(QFrame):
 
         self.setLayout(self.grid)
 
-        old_theme = get_setting("dark_theme")  # this is needed because switch_theme changes the setting
-        self.darkmode.box.setChecked(-1)  # force-runs switch_theme if the DARK_THEME is False
-        self.darkmode.box.setChecked(old_theme)
-        self.cache.box.setChecked(get_setting("caching"))
-        self.visualizer_info.box.setChecked(get_setting("visualizer_info"))
-        self.visualizer_bg.box.setChecked(get_setting("visualizer_bg"))
         self.cache_location.switch_enabled(get_setting("caching"))
-        self.rainbow.box.setChecked(get_setting("rainbow_accent"))
+        # we never actually set the theme to dark anywhere
+        # (even if the setting is true), it should really be
+        # in the main application but uh this works too
+        self.reload_theme()
 
     def set_loglevel(self):
         for logger in logging.root.manager.loggerDict:
@@ -944,7 +955,7 @@ class ScrollableSettingsWidget(QFrame):
             self._rainbow_counter = 0
 
     def switch_rainbow(self, state):
-        update_default("rainbow_accent", 1 if state else 0)
+        set_setting("rainbow_accent", 1 if state else 0)
         if get_setting("rainbow_accent"):
             self.timer.start(1000/15)
         else:
@@ -1030,10 +1041,33 @@ class QueueFrame(QFrame):
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
+class ThresholdsTab(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.qscrollarea = QScrollArea(self)
+        self.qscrollarea.setWidget(ScrollableThresholdsWidget())
+        # self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
+        self.qscrollarea.setWidgetResizable(True)
 
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.qscrollarea)
+        self.setLayout(self.layout)
+
+class ScrollableThresholdsWidget(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.threshold_steal = SliderBoxSetting("Stealing", "Comparisons that score below this will be stored so you can view them",
+                "threshold_cheat", 30)
+        self.threshold_display = SliderBoxSetting("Stealing Display", "Comparisons that score below this will be printed to the console",
+                "threshold_display", 100)
+        self.grid = QVBoxLayout()
+        self.grid.addWidget(self.threshold_steal)
+        self.grid.addWidget(self.threshold_display)
+        self.grid.setAlignment(Qt.AlignTop)
+        self.setLayout(self.grid)
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
-    update_default("dark_theme", dark)
+    set_setting("dark_theme", dark)
     if dark:
         dark_p = QPalette()
 
@@ -1087,10 +1121,8 @@ if __name__ == "__main__":
     WINDOW.show()
     if not get_setting("ran"):
         welcome = wizard.WelcomeWindow()
-        welcome.SetupPage.darkmode.box.stateChanged.connect(switch_theme)
-        welcome.SetupPage.caching.box.stateChanged.connect(partial(update_default,"caching"))
         welcome.show()
-        update_default("ran", True)
+        set_setting("ran", True)
 
     app.lastWindowClosed.connect(WINDOW.cancel_all_runs)
     app.aboutToQuit.connect(WINDOW.on_application_quit)

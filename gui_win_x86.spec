@@ -3,7 +3,7 @@
 block_cipher = None
 from os.path import *
 import sys
-import winshell
+import win32com.client
 import zipfile
 import PyInstaller.config
 os.path.expanduser
@@ -50,8 +50,10 @@ coll = COLLECT(
 )
 
 # post-build script
-shortcut = winshell.shortcut(abspath(".\dist\Circleguard_win_x86\Circleguard\Circleguard.exe"))
-shortcut.write(abspath("./dist/Circleguard_win_x86/Circleguard.lnk"))
+shell = win32com.client.Dispatch("WScript.Shell")
+shortcut = shell.CreateShortCut("./dist/Circleguard_win_x64/Circleguard.lnk")
+shortcut.Targetpath = abspath(abspath(".\dist\Circleguard_win_x64\Circleguard\Circleguard.exe"))
+shortcut.save()
 
 print("Creating zip")
 os. chdir("./dist/")

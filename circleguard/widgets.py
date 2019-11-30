@@ -9,7 +9,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBo
 from PyQt5.QtGui import QRegExpValidator
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
-from settings import get_setting, reset_defaults, update_default
+from settings import get_setting, reset_defaults, LinkableSetting, set_setting
 from visualizer import VisualizerWindow
 from utils import MapRun, ScreenRun, LocalRun, VerifyRun
 
@@ -204,28 +204,35 @@ class IdWidgetCombined(QFrame):
         self.user_id.setEnabled(self.map_id.field.text() != "")
 
 
-class OptionWidget(QFrame):
+class OptionWidget(LinkableSetting, QFrame):
     """
     A container class of widgets that represents an option with a boolean state.
     This class holds a Label and CheckBox.
     """
 
-    def __init__(self, title, tooltip, end=":"):
-        super(OptionWidget, self).__init__()
+    def __init__(self, title, tooltip, setting, end=":"):
+        """
+        String setting: The name of the setting to link this OptionWidget to.
+        """
+        LinkableSetting.__init__(self, setting)
+        QFrame.__init__(self)
 
         label = QLabel(self)
         label.setText(title + end)
         label.setToolTip(tooltip)
         self.box = QCheckBox(self)
+        self.box.stateChanged.connect(self.on_setting_changed_from_gui)
+        self.box.setChecked(self.setting_value)
         item = CenteredWidget(self.box)
         item.setFixedWidth(100)
-
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addWidget(item, 0, 1, 1, 1, Qt.AlignRight)
         self.setLayout(layout)
 
+    def on_setting_changed(self, new_value):
+        self.box.setChecked(new_value)
 
 class CenteredWidget(QWidget):
     def __init__(self, widget):
@@ -283,7 +290,7 @@ class LoglevelWidget(QFrame):
         level_combobox.setInsertPolicy(QComboBox.NoInsert)
         self.level_combobox = level_combobox
 
-        save_option = OptionWidget("Save logs?", "", end="")
+        save_option = OptionWidget("Save logs?", "", "log_save", end="")
         save_option.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
         self.save_option = save_option
 
@@ -301,16 +308,16 @@ class LoglevelWidget(QFrame):
         self.save_folder.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
         self.level_combobox.setCurrentIndex(get_setting("log_mode"))
-        self.level_combobox.currentIndexChanged.connect(partial(update_default, "log_mode"))
+        self.level_combobox.currentIndexChanged.connect(partial(set_setting, "log_mode"))
 
         self.save_option.box.setChecked(get_setting("log_save"))
-        self.save_option.box.stateChanged.connect(partial(update_default, "log_save"))
+        self.save_option.box.stateChanged.connect(partial(set_setting, "log_save"))
 
         self.output_combobox.setCurrentIndex(get_setting("log_output"))
-        self.output_combobox.currentIndexChanged.connect(partial(update_default, "log_output"))
+        self.output_combobox.currentIndexChanged.connect(partial(set_setting, "log_output"))
 
         self.save_folder.switch_enabled(get_setting("log_save"))
-        self.save_folder.path_signal.connect(partial(update_default, "log_dir"))
+        self.save_folder.path_signal.connect(partial(set_setting, "log_dir"))
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -521,7 +528,7 @@ class RunWidget(QFrame):
 
 
 
-class SliderBoxSetting(QFrame):
+class SliderBoxSetting(LinkableSetting, QFrame):
     """
     A container class of a QLabel, QSlider, and SpinBox, and links the slider
     and spinbox to a setting (ie the default values of the slider and spinbox
@@ -529,9 +536,9 @@ class SliderBoxSetting(QFrame):
     spinbox will affect the setting).
     """
 
-    def __init__(self, display, tooltip, setting_name, max_):
-        super().__init__()
-        self.setting_name = setting_name
+    def __init__(self, display, tooltip, setting, max_):
+        LinkableSetting.__init__(self, setting)
+        QFrame.__init__(self)
 
         label = QLabel(self)
         label.setText(display)
@@ -541,19 +548,20 @@ class SliderBoxSetting(QFrame):
         slider = QSlider(Qt.Horizontal)
         slider.setFocusPolicy(Qt.ClickFocus)
         slider.setRange(0, max_)
-        slider.setValue(get_setting(setting_name))
-        slider.valueChanged.connect(self.update_spinbox)
+        slider.setValue(self.setting_value)
         self.slider = slider
 
         spinbox = SpinBox(self)
-        spinbox.setValue(get_setting(setting_name))
+        spinbox.setValue(self.setting_value)
         spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(0, max_)
         spinbox.setSingleStep(1)
         spinbox.setFixedWidth(100)
-        spinbox.valueChanged.connect(self.update_slider)
         self.spinbox = spinbox
         self.combined = WidgetCombiner(slider, spinbox)
+
+        self.slider.valueChanged.connect(self.on_setting_changed_from_gui)
+        self.spinbox.valueChanged.connect(self.on_setting_changed_from_gui)
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -563,42 +571,41 @@ class SliderBoxSetting(QFrame):
 
         self.setLayout(layout)
 
-    # keep spinbox and slider in sync
-    def update_spinbox(self, value):
-        self.spinbox.setValue(value)
-        update_default(self.setting_name, value)
+    def on_setting_changed(self, new_value):
+        self.slider.setValue(new_value)
+        self.spinbox.setValue(new_value)
 
-    def update_slider(self, value):
-        self.slider.setValue(value)
-        update_default(self.setting_name, value)
-
-class LineEditSetting(QFrame):
+class LineEditSetting(LinkableSetting, QFrame):
     """
     A container class of a QLabel and InputWidget that links the input widget
     to a setting (ie the default value of the widget will be the value of the
     setting, and changes made to the widget will affect the setting).
     """
-    def __init__(self, display, tooltip, type_, setting_name):
-        super().__init__()
+    def __init__(self, display, tooltip, type_, setting):
+        LinkableSetting.__init__(self, setting)
+        QFrame.__init__(self)
         self.input_ = InputWidget(display, tooltip, type_=type_)
-        self.input_.field.setText(get_setting(setting_name))
-        self.input_.field.textChanged.connect(partial(update_default, setting_name))
+        self.input_.field.setText(self.setting_value)
+        self.input_.field.textChanged.connect(self.on_setting_changed_from_gui)
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.input_)
         self.setLayout(layout)
 
-class Threshold(QFrame):
+    def on_setting_changed(self, new_value):
+        self.input_.field.setText(new_value)
+
+class Threshold(LinkableSetting, QFrame):
     """
     A container class of widgets that represents user input for the threshold to consider a comparison a cheat.
-    This widget is meant to be used in cases where Auto Threshold is not needed, else use ThresholdCombined.
     This class holds a Label, Slider, and SpinBox.
 
     The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
     """
 
     def __init__(self, prefix=""):
-        super(Threshold, self).__init__()
+        LinkableSetting.__init__(self, "threshold_cheat")
+        QFrame.__init__(self)
 
         label = QLabel(self)
         label.setText(prefix + "Threshold:")
@@ -609,7 +616,6 @@ class Threshold(QFrame):
         slider.setFocusPolicy(Qt.ClickFocus)
         slider.setRange(0, 30)
         slider.setValue(get_setting("threshold_cheat"))
-        slider.valueChanged.connect(self.update_spinbox)
         self.slider = slider
 
         spinbox = SpinBox(self)
@@ -618,9 +624,11 @@ class Threshold(QFrame):
         spinbox.setRange(0, 30)
         spinbox.setSingleStep(1)
         spinbox.setFixedWidth(100)
-        spinbox.valueChanged.connect(self.update_slider)
-        self.spinbox = spinbox
+        self.spinbox= spinbox
         self.combined = WidgetCombiner(slider, spinbox)
+
+        self.slider.valueChanged.connect(lambda val: self.spinbox.setValue(val))
+        self.spinbox.valueChanged.connect(lambda val: self.slider.setValue(val))
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -631,13 +639,9 @@ class Threshold(QFrame):
 
         self.setLayout(layout)
 
-    # keep spinbox and slider in sync
-    def update_spinbox(self, value):
-        self.spinbox.setValue(value)
-
-    def update_slider(self, value):
-        self.slider.setValue(value)
-
+    def on_setting_changed(self, new_value):
+        self.slider.setValue(new_value)
+        self.spinbox.setValue(new_value)
 
 
 class WidgetCombiner(QFrame):

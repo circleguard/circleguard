@@ -2,8 +2,7 @@ import math
 import time
 import threading
 
-from circleguard import utils
-from circleguard.enums import Mod
+from circleguard import utils, Mod
 from tempfile import TemporaryDirectory
 from slider import Beatmap, Library
 from slider.beatmap import Circle, Slider, Spinner
