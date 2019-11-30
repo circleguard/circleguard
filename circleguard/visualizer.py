@@ -21,6 +21,7 @@ from settings import get_setting
 import math
 
 import numpy as np
+
 PREVIOUS_ERRSTATE = np.seterr('raise')
 
 WIDTH_LINE = 1
@@ -36,6 +37,7 @@ SPEED_OPTIONS = [0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
 __slider_dir = TemporaryDirectory()
 SLIDER_LIBARY = Library.create_db(get_setting("cache_dir"))
 
+
 class _Renderer(QWidget):
     update_signal = pyqtSignal(int)
 
@@ -49,11 +51,11 @@ class _Renderer(QWidget):
         if beatmap_path != None:
             self.beatmap = Beatmap.from_path(beatmap_path)
             self.beatmap_flag = True
-            self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000+3000
+            self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000 + 3000
         elif beatmap_id != None:
             self.beatmap = SLIDER_LIBARY.lookup_by_id(beatmap_id, download=True, save=True)
             self.beatmap_flag = True
-            self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000+3000
+            self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000 + 3000
         else:
             self.playback_len = 0
             self.beatmap_flag = False
@@ -61,13 +63,13 @@ class _Renderer(QWidget):
         if self.beatmap_flag:
             if self.beatmap.approach_rate == 5:
                 self.preempt = 1200
-            elif self.beatmap.approach_rate  < 5:
+            elif self.beatmap.approach_rate < 5:
                 self.preempt = 1200 + 600 * (5 - self.beatmap.approach_rate) / 5
             else:
                 self.preempt = 1200 - 750 * (self.beatmap.approach_rate - 5) / 5
             self.hitwindow = od_to_ms(self.beatmap.overall_difficulty).hit_50
             self.fade_in = 400
-            self.hitcircle_radius = circle_radius(self.beatmap.circle_size)-WIDTH_CIRCLE_BORDER/2
+            self.hitcircle_radius = circle_radius(self.beatmap.circle_size) - WIDTH_CIRCLE_BORDER / 2
             ## loading stuff
             self.loading_flag = True
             self.sliders_total = 0
@@ -87,7 +89,7 @@ class _Renderer(QWidget):
                 "username": replay.username,
                 "mods": replay.mods.short_name(),
                 "buffer": [],
-                "cursor_color": QPen(QColor().fromHslF(replays.index(replay)/self.replay_amount,0.75,0.5)),
+                "cursor_color": QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),
                 "pos": 0
             })
         self.playback_len = max(player["data"][-1][0] for player in self.players) if self.replay_amount > 0 else self.playback_len
@@ -208,14 +210,13 @@ class _Renderer(QWidget):
                 hit_end = self.get_hit_endtime(current_hitobj) + (self.fade_in)
             else:
                 hit_end = hit_t + self.hitwindow + (self.fade_in)
-            if hit_t-self.preempt < current_time < hit_end :
+            if hit_t - self.preempt < current_time < hit_end:
                 self.hitobjs.append(current_hitobj)
             elif hit_t > current_time:
                 found_all = True
-            if index == len(self.beatmap.hit_objects)-1:
+            if index == len(self.beatmap.hit_objects) - 1:
                 found_all = True
             index += 1
-
 
     def paintEvent(self, event):
         """
@@ -244,7 +245,7 @@ class _Renderer(QWidget):
             self.painter.end()
             return
         # debug stuff
-        self.frame_times.insert(0,self.frame_time_clock.get_time()-self.last_frame)
+        self.frame_times.insert(0, self.frame_time_clock.get_time() - self.last_frame)
         self.frame_times = self.frame_times[:120]
         self.last_frame = self.frame_time_clock.get_time()
         # beatmap
@@ -269,7 +270,7 @@ class _Renderer(QWidget):
             QPainter painter: The painter.
             Integer index: The index of the cursor to be drawn.
         """
-        alpha_step = 1/FRAMES_ON_SCREEN
+        alpha_step = 1 / FRAMES_ON_SCREEN
         _pen = player["cursor_color"]
         _pen.setWidth(WIDTH_LINE)
         self.painter.setPen(_pen)
@@ -278,9 +279,9 @@ class _Renderer(QWidget):
                                            (player["buffer"][i + 1][1], player["buffer"][i + 1][2]))
         _pen.setWidth(WIDTH_POINT)
         self.painter.setPen(_pen)
-        for i in range(len(player["buffer"])-1):
+        for i in range(len(player["buffer"]) - 1):
             self.draw_point(i * alpha_step, (player["buffer"][i][1], player["buffer"][i][2]))
-            if i == len(player["buffer"])-2:
+            if i == len(player["buffer"]) - 2:
                 self.draw_point((i + 1) * alpha_step, (player["buffer"][i + 1][1], player["buffer"][i + 1][2]))
         # reset alpha
         self.painter.setOpacity(255)
@@ -310,8 +311,8 @@ class _Renderer(QWidget):
             if self.replay_amount == 2:
                 try:
                     player = self.players[i]
-                    prev_player = self.players[i-1]
-                    distance = math.sqrt(((prev_player["buffer"][-1][1] - player["buffer"][-1][1]) ** 2) + ((prev_player["buffer"][-1][2] - player["buffer"][-1][2]) ** 2))
+                    prev_player = self.players[i - 1]
+                    distance = math.sqrt(((prev_player["buffer"][-1][1] - player["buffer"][-1][1]) ** 2) +
                                          ((prev_player["buffer"][-1][2] - player["buffer"][-1][2]) ** 2))
                     self.painter.drawText(5, 39 + (12 * i), f"Distance {prev_player['username']}-{player['username']}: {int(distance)}px")
                 except IndexError:  # Edge case where we only have data from one cursor
@@ -326,28 +327,28 @@ class _Renderer(QWidget):
         self.painter.setBrush(QColor(255 - c.red(), 255 - c.green(), 255 - c.blue(), 0))
         # line routine, draws 60/30/15 fps lines
         c = _pen.color()
-        _pen.setColor(QColor(c.red(), c.green(), c.blue(), c.alpha()/2))
+        _pen.setColor(QColor(c.red(), c.green(), c.blue(), c.alpha() / 2))
         self.painter.setPen(_pen)
         ref_path = QPainterPath()
-        ref_path.moveTo(x_offset-360, 480-17)
-        ref_path.lineTo(x_offset, 480-17)
-        ref_path.moveTo(x_offset-360, 480-33)
-        ref_path.lineTo(x_offset, 480-33)
-        ref_path.moveTo(x_offset-360, 480-67)
-        ref_path.lineTo(x_offset, 480-67)
+        ref_path.moveTo(x_offset - 360, 480 - 17)
+        ref_path.lineTo(x_offset, 480 - 17)
+        ref_path.moveTo(x_offset - 360, 480 - 33)
+        ref_path.lineTo(x_offset, 480 - 33)
+        ref_path.moveTo(x_offset - 360, 480 - 67)
+        ref_path.lineTo(x_offset, 480 - 67)
         self.painter.drawPath(ref_path)
         # draw frame time graph
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), c.alpha()))
         self.painter.setPen(_pen)
         frame_path = QPainterPath()
-        frame_path.moveTo(x_offset, max(380,480-(self.frame_times[0])))
+        frame_path.moveTo(x_offset, max(380, 480 - (self.frame_times[0])))
         for time in self.frame_times:
             x_offset -= 3
-            frame_path.lineTo(x_offset, max(380,480-(time)))
+            frame_path.lineTo(x_offset, max(380, 480 - (time)))
         self.painter.drawPath(frame_path)
         # draw fps & ms
-        ms = sum(self.frame_times)/ len(self.frame_times)
-        fps = 1000/ms
+        ms = sum(self.frame_times) / len(self.frame_times)
+        fps = 1000 / ms
         self.painter.drawText(640 - 360 + 5, 380 + 12, f"fps:{int(fps)}")
         self.painter.drawText(640 - 360 + 5, 380 + 22, "{:.2f}ms".format(ms))
 
@@ -404,9 +405,9 @@ class _Renderer(QWidget):
             Hitobj hitobj: A Hitobject.
         """
         current_time = self.clock.get_time()
-        fade_out_scale = max(0,((current_time - self.get_hit_time(hitobj))/self.hitwindow*0.75))
-        hitcircle_alpha = 255-((self.get_hit_time(hitobj) - current_time - (self.preempt-self.fade_in))/self.fade_in)*255
-        magic = (255*(fade_out_scale))
+        fade_out_scale = max(0, ((current_time - self.get_hit_time(hitobj)) / self.hitwindow * 0.75))
+        hitcircle_alpha = 255 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 255
+        magic = (255 * (fade_out_scale))
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
         hitcircle_alpha = hitcircle_alpha - (magic if magic > 0 else 0)
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha > 0 else 0
@@ -428,20 +429,20 @@ class _Renderer(QWidget):
             Hitobj hitobj: A Hitobject.
         """
         current_time = self.clock.get_time()
-        big_circle = (384/2)
-        hitcircle_alpha = 255-((self.get_hit_time(hitobj) - current_time - (self.preempt-self.fade_in))/self.fade_in)*255
-        fade_out = max(0,((current_time - self.get_hit_endtime(hitobj))/self.hitwindow*0.5))
-        magic = (75*((fade_out)*2))
+        big_circle = (384 / 2)
+        hitcircle_alpha = 255 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 255
+        fade_out = max(0, ((current_time - self.get_hit_endtime(hitobj)) / self.hitwindow * 0.5))
+        magic = (75 * ((fade_out) * 2))
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
         hitcircle_alpha = hitcircle_alpha - (magic if magic > 0 else 0)
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha > 0 else 0
 
-        spinner_scale = max(1-(self.get_hit_endtime(hitobj)- current_time)/(self.get_hit_endtime(hitobj) - self.get_hit_time(hitobj)), 0)
+        spinner_scale = max(1 - (self.get_hit_endtime(hitobj) - current_time) / (self.get_hit_endtime(hitobj) - self.get_hit_time(hitobj)), 0)
         c = self.painter.pen().color()
 
-        spinner_radius = self.hitcircle_radius+(big_circle*(1-spinner_scale))
+        spinner_radius = self.hitcircle_radius + (big_circle * (1 - spinner_scale))
         _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
-        _pen.setWidth(int(WIDTH_CIRCLE_BORDER/2))
+        _pen.setWidth(int(WIDTH_CIRCLE_BORDER / 2))
         self.painter.setPen(_pen)
         self.painter.drawEllipse(QPointF(512 / 2 + X_OFFSET, 384 / 2 + Y_OFFSET), spinner_radius, spinner_radius)
 
@@ -455,14 +456,14 @@ class _Renderer(QWidget):
         """
         current_time = self.clock.get_time()
         if self.get_hit_time(hitobj) - current_time < 0: return
-        hitcircle_alpha = 255-((self.get_hit_time(hitobj) - current_time - (self.preempt-self.fade_in))/self.fade_in)*255
+        hitcircle_alpha = 255 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 255
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
-        approachcircle_scale = max(((self.get_hit_time(hitobj)  - current_time)/self.preempt)*3+1, 1)
+        approachcircle_scale = max(((self.get_hit_time(hitobj) - current_time) / self.preempt) * 3 + 1, 1)
         c = self.painter.pen().color()
         p = hitobj.position
         approachcircle_radius = self.hitcircle_radius * approachcircle_scale
         _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
-        _pen.setWidth(int(WIDTH_CIRCLE_BORDER/2))
+        _pen.setWidth(int(WIDTH_CIRCLE_BORDER / 2))
         self.painter.setPen(_pen)
         self.painter.drawEllipse(QPointF(p.x + X_OFFSET, p.y + Y_OFFSET), approachcircle_radius, approachcircle_radius)
 
@@ -488,24 +489,24 @@ class _Renderer(QWidget):
         """
         sliderbody = QPainterPath()
         current_time = self.clock.get_time()
-        sliderbody_alpha = 75-((self.get_hit_time(hitobj) - current_time - (self.preempt-self.fade_in))/self.fade_in)*75
-        fade_out = max(0,((current_time - self.get_hit_endtime(hitobj))/self.hitwindow*0.5))
-        magic = (75*((fade_out)*2))
+        sliderbody_alpha = 75 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 75
+        fade_out = max(0, ((current_time - self.get_hit_endtime(hitobj)) / self.hitwindow * 0.5))
+        magic = (75 * ((fade_out) * 2))
         sliderbody_alpha = sliderbody_alpha if sliderbody_alpha < 75 else 75
         sliderbody_alpha = sliderbody_alpha - (magic if magic > 0 else 0)
         sliderbody_alpha = sliderbody_alpha if sliderbody_alpha > 0 else 0
         c = self.painter.pen().color()
 
         _pen = self.painter.pen()
-        _pen.setWidth(self.hitcircle_radius*2+WIDTH_CIRCLE_BORDER)
+        _pen.setWidth(self.hitcircle_radius * 2 + WIDTH_CIRCLE_BORDER)
         _pen.setCapStyle(Qt.RoundCap)
         _pen.setJoinStyle(Qt.RoundJoin)
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), sliderbody_alpha))
 
         p = hitobj.position
-        sliderbody.moveTo(p.x+X_OFFSET, p.y+Y_OFFSET)
+        sliderbody.moveTo(p.x + X_OFFSET, p.y + Y_OFFSET)
         for i in hitobj.slider_body:
-            sliderbody.lineTo(i.x+X_OFFSET, i.y+Y_OFFSET)
+            sliderbody.lineTo(i.x + X_OFFSET, i.y + Y_OFFSET)
 
         self.painter.setPen(_pen)
         self.painter.drawPath(sliderbody)
@@ -526,7 +527,7 @@ class _Renderer(QWidget):
         loading_bg.lineTo(250 + 150, 260)
 
         loading_bar.moveTo(250, 260)
-        loading_bar.lineTo(250 + percentage*1.5, 260)
+        loading_bar.lineTo(250 + percentage * 1.5, 260)
 
         self.painter.drawPath(loading_bg)
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), 255))
@@ -538,21 +539,20 @@ class _Renderer(QWidget):
         self.draw_progressbar(int((self.sliders_current / self.sliders_total) * 100))
 
     def proccess_sliders(self):
-        self.sliders_total = len(self.beatmap.hit_objects)-1
+        self.sliders_total = len(self.beatmap.hit_objects) - 1
         for index in range(len(self.beatmap.hit_objects)):
             self.sliders_current = index
             current_hitobj = self.beatmap.hit_objects[index]
             if isinstance(current_hitobj, Slider):
-                    try:
-                        current_hitobj.slider_body
-                    except:
-                        if isinstance(current_hitobj.curve,Bezier):  # unsure if this is needed
-                            self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve.at(i/64) for i in range(64)]
-                        elif isinstance(current_hitobj.curve,MultiBezier):
-                            self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve(i/64) for i in range(64)]  # TODO calc points needed with length
-                        else:
-                            self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.points
-
+                try:
+                    current_hitobj.slider_body
+                except:
+                    if isinstance(current_hitobj.curve, Bezier):  # unsure if this is needed
+                        self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve.at(i / 64) for i in range(64)]
+                    elif isinstance(current_hitobj.curve, MultiBezier):
+                        self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve(i / 64) for i in range(64)]  # TODO calc points needed with length
+                    else:
+                        self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.points
 
     def reset(self, end=False):
         """
@@ -576,9 +576,9 @@ class _Renderer(QWidget):
             Boolean reverse: chooses the search direction
         """
         if not reverse:
-            self.seek_to(self.clock.get_time()+16)
+            self.seek_to(self.clock.get_time() + 16)
         else:
-            self.seek_to(self.clock.get_time()-16)
+            self.seek_to(self.clock.get_time() - 16)
 
     def seek_to(self, position):
         """
@@ -588,7 +588,7 @@ class _Renderer(QWidget):
         Args:
             Integer position: position to seek to in ms
         """
-        if not position-10 < self.clock.time_counter < position+10:
+        if not position - 10 < self.clock.time_counter < position + 10:
             self.clock.time_counter = position
             if self.paused:
                 self.next_frame()
@@ -701,7 +701,7 @@ class _Interface(QWidget):
         self._update_speed()
 
     def _update_speed(self):
-        self.renderer.clock.change_speed(float(self.speed_label.text())*self.renderer.play_direction)
+        self.renderer.clock.change_speed(float(self.speed_label.text()) * self.renderer.play_direction)
 
     def previous_frame(self):
         self.renderer.pause()
@@ -712,7 +712,7 @@ class _Interface(QWidget):
         self.renderer.search_nearest_frame(reverse=False)
 
     def pause(self):
-        if(self.renderer.paused):
+        if (self.renderer.paused):
             self.renderer.resume()
         else:
             self.renderer.pause()
@@ -720,13 +720,13 @@ class _Interface(QWidget):
     def lower_speed(self):
         index = SPEED_OPTIONS.index(float(self.speed_label.text()))
         if index != 0:
-            self.speed_label.setText(str(SPEED_OPTIONS[index-1]))
+            self.speed_label.setText(str(SPEED_OPTIONS[index - 1]))
             self._update_speed()
 
     def increase_speed(self):
         index = SPEED_OPTIONS.index(float(self.speed_label.text()))
-        if index != len(SPEED_OPTIONS)-1:
-            self.speed_label.setText(str(SPEED_OPTIONS[index+1]))
+        if index != len(SPEED_OPTIONS) - 1:
+            self.speed_label.setText(str(SPEED_OPTIONS[index + 1]))
             self._update_speed()
 
 
