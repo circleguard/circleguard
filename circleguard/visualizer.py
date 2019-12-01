@@ -2,7 +2,7 @@ import math
 import time
 import threading
 
-from circleguard import utils, Mod
+from circleguard import utils, Mod, Keys
 from tempfile import TemporaryDirectory
 from slider import Beatmap, Library
 from slider.beatmap import Circle, Slider, Spinner
@@ -255,11 +255,19 @@ class _Renderer(QWidget):
         if self.replay_amount > 0:
             for i in range(len(self.players)):
                 player = self.players[i]
-                self.painter.setPen(player["cursor_color"])
+                p = player["cursor_color"]
+                self.painter.setPen(QColor(0, 0, 0, 0))
+                self.painter.setBrush(QBrush(p.color()))
                 if len(self.players[i]["buffer"]) > 0:  # skips empty buffers
-                    self.painter.drawText(5, 27 + (12 * i), f"{player['username']} {player['mods']}: {int(player['buffer'][-1][1])}, {int(player['buffer'][-1][2])}")
+                    self.painter.setOpacity(1 if Keys.M1 in Keys(int(player["buffer"][-1][3])) else 0.3)
+                    self.painter.drawRect(5, 27-9 + (12 * i), 10, 10)
+                    self.painter.setOpacity(1 if Keys.M2 in Keys(int(player["buffer"][-1][3])) else 0.3)
+                    self.painter.drawRect(18, 27-9 + (12 * i), 10, 10)
+                    self.painter.setOpacity(1)
+                    self.painter.setPen(p)
+                    self.painter.drawText(31, 27 + (12 * i), f"{player['username']} {player['mods']}: {int(player['buffer'][-1][1])}, {int(player['buffer'][-1][2])}")
                 else:
-                    self.painter.drawText(5, 27 + (12 * i), f"{player['username']} {player['mods']}: Not yet loaded")
+                    self.painter.drawText(35, 27 + (12 * i), f"{player['username']} {player['mods']}: Not yet loaded")
             self.painter.setPen(_pen)
             if self.replay_amount == 2:
                 try:
