@@ -257,9 +257,9 @@ class _Renderer(QWidget):
                 player = self.players[i]
                 self.painter.setPen(player["cursor_color"])
                 if len(self.players[i]["buffer"]) > 0:  # skips empty buffers
-                    self.painter.drawText(5, 27 + (12 * i), f"{player['username']}: {int(player['buffer'][-1][1])}, {int(player['buffer'][-1][2])}")
+                    self.painter.drawText(5, 27 + (12 * i), f"{player['username']} {player['mods']}: {int(player['buffer'][-1][1])}, {int(player['buffer'][-1][2])}")
                 else:
-                    self.painter.drawText(5, 27 + (12 * i), f"{player['username']}: Not yet loaded")
+                    self.painter.drawText(5, 27 + (12 * i), f"{player['username']} {player['mods']}: Not yet loaded")
             self.painter.setPen(_pen)
             if self.replay_amount == 2:
                 try:
