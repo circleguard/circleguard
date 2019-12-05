@@ -30,9 +30,11 @@ WIDTH_CIRCLE_BORDER = 8
 FRAMES_ON_SCREEN = 15  # how many frames for each replay to draw on screen at a time
 PEN_BLACK = QPen(QColor(17, 17, 17))
 PEN_WHITE = QPen(QColor(255, 255, 255))
-X_OFFSET = 64
-Y_OFFSET = 48
-SPEED_OPTIONS = [0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
+X_OFFSET = 64+192
+Y_OFFSET = 48+60
+SPEED_OPTIONS = [0.01, 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
+SCREEN_WIDTH = 640+384
+SCREEN_HEIGHT = 480+120
 
 __slider_dir = TemporaryDirectory()
 SLIDER_LIBARY = Library.create_db(get_setting("cache_dir"))
@@ -43,7 +45,7 @@ class _Renderer(QWidget):
 
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None):
         super(_Renderer, self).__init__(parent)
-        self.setFixedSize(640, 480)
+        self.setMinimumSize(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.painter = QPainter()
 
         # beatmap init stuff
@@ -237,7 +239,7 @@ class _Renderer(QWidget):
             if i == len(player["buffer"]) - 2:
                 self.draw_point((i + 1) * alpha_step, (player["buffer"][i + 1][1], player["buffer"][i + 1][2]))
         # reset alpha
-        self.painter.setOpacity(255)
+        self.painter.setOpacity(1)
 
     def paint_beatmap(self):
         for hitobj in self.hitobjs[::-1]:
@@ -251,7 +253,10 @@ class _Renderer(QWidget):
            QPainter painter: The painter.
         """
         _pen = self.painter.pen()
-        self.painter.drawText(5, 15, f"Clock: {round(self.clock.get_time())} ms")
+        self.painter.setOpacity(0.25)
+        self.painter.drawRect(X_OFFSET, Y_OFFSET, 512, 384)
+        self.painter.setOpacity(1)
+        self.painter.drawText(5, 15, f"Clock: {round(self.clock.get_time())} ms | Cursor count: {len(self.players)}")
         if self.replay_amount > 0:
             for i in range(len(self.players)):
                 player = self.players[i]
@@ -260,14 +265,14 @@ class _Renderer(QWidget):
                 self.painter.setBrush(QBrush(p.color()))
                 if len(self.players[i]["buffer"]) > 0:  # skips empty buffers
                     self.painter.setOpacity(1 if Keys.M1 in Keys(int(player["buffer"][-1][3])) else 0.3)
-                    self.painter.drawRect(5, 27-9 + (12 * i), 10, 10)
+                    self.painter.drawRect(5, 27-9 + (11 * i), 10, 10)
                     self.painter.setOpacity(1 if Keys.M2 in Keys(int(player["buffer"][-1][3])) else 0.3)
-                    self.painter.drawRect(18, 27-9 + (12 * i), 10, 10)
+                    self.painter.drawRect(18, 27-9 + (11 * i), 10, 10)
                     self.painter.setOpacity(1)
                     self.painter.setPen(p)
-                    self.painter.drawText(31, 27 + (12 * i), f"{player['username']} {player['mods']}: {int(player['buffer'][-1][1])}, {int(player['buffer'][-1][2])}")
+                    self.painter.drawText(31, 27 + (11 * i), f"{player['username']} {player['mods']}: {int(player['buffer'][-1][1])}, {int(player['buffer'][-1][2])}")
                 else:
-                    self.painter.drawText(35, 27 + (12 * i), f"{player['username']} {player['mods']}: Not yet loaded")
+                    self.painter.drawText(35, 27 + (11 * i), f"{player['username']} {player['mods']}: Not yet loaded")
             self.painter.setPen(_pen)
             if self.replay_amount == 2:
                 try:
@@ -281,37 +286,37 @@ class _Renderer(QWidget):
 
     def paint_frametime_graph(self):
         _pen = self.painter.pen()
-        x_offset = 640
+        x_offset = SCREEN_WIDTH
         c = _pen.color()
         self.painter.setBrush(QColor(255 - c.red(), 255 - c.green(), 255 - c.blue(), 180))
-        self.painter.drawRect(640 - 360, 480 - 100, 360, 100)
+        self.painter.drawRect(SCREEN_WIDTH - 360, SCREEN_HEIGHT - 100, 360, 100)
         self.painter.setBrush(QColor(255 - c.red(), 255 - c.green(), 255 - c.blue(), 0))
         # line routine, draws 60/30/15 fps lines
         c = _pen.color()
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), c.alpha() / 2))
         self.painter.setPen(_pen)
         ref_path = QPainterPath()
-        ref_path.moveTo(x_offset - 360, 480 - 17)
-        ref_path.lineTo(x_offset, 480 - 17)
-        ref_path.moveTo(x_offset - 360, 480 - 33)
-        ref_path.lineTo(x_offset, 480 - 33)
-        ref_path.moveTo(x_offset - 360, 480 - 67)
-        ref_path.lineTo(x_offset, 480 - 67)
+        ref_path.moveTo(SCREEN_WIDTH - 360, SCREEN_HEIGHT - 17)
+        ref_path.lineTo(SCREEN_WIDTH,  SCREEN_HEIGHT - 17)
+        ref_path.moveTo(SCREEN_WIDTH - 360, SCREEN_HEIGHT - 33)
+        ref_path.lineTo(SCREEN_WIDTH, SCREEN_HEIGHT - 33)
+        ref_path.moveTo(SCREEN_WIDTH - 360, SCREEN_HEIGHT - 67)
+        ref_path.lineTo(SCREEN_WIDTH, SCREEN_HEIGHT - 67)
         self.painter.drawPath(ref_path)
         # draw frame time graph
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), c.alpha()))
         self.painter.setPen(_pen)
         frame_path = QPainterPath()
-        frame_path.moveTo(x_offset, max(380, 480 - (self.frame_times[0])))
+        frame_path.moveTo(x_offset, max(SCREEN_HEIGHT - 100, SCREEN_HEIGHT - (self.frame_times[0])))
         for time in self.frame_times:
             x_offset -= 3
-            frame_path.lineTo(x_offset, max(380, 480 - (time)))
+            frame_path.lineTo(x_offset, max(SCREEN_HEIGHT - 100, SCREEN_HEIGHT - (time)))
         self.painter.drawPath(frame_path)
         # draw fps & ms
         ms = sum(self.frame_times) / len(self.frame_times)
         fps = 1000 / ms
-        self.painter.drawText(640 - 360 + 5, 380 + 12, f"fps:{int(fps)}")
-        self.painter.drawText(640 - 360 + 5, 380 + 22, "{:.2f}ms".format(ms))
+        self.painter.drawText(SCREEN_WIDTH - 360 + 5, SCREEN_HEIGHT - 100 + 12, f"fps:{int(fps)}")
+        self.painter.drawText(SCREEN_WIDTH - 360 + 5, SCREEN_HEIGHT - 100 + 22, "{:.2f}ms".format(ms))
 
     def draw_line(self, alpha, start, end):
         """
@@ -484,11 +489,11 @@ class _Renderer(QWidget):
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), 25))
         self.painter.setPen(_pen)
 
-        loading_bg.moveTo(250, 260)
-        loading_bg.lineTo(250 + 150, 260)
+        loading_bg.moveTo(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2)
+        loading_bg.lineTo(SCREEN_WIDTH/2 - 75 + 150, SCREEN_HEIGHT/2)
 
-        loading_bar.moveTo(250, 260)
-        loading_bar.lineTo(250 + percentage * 1.5, 260)
+        loading_bar.moveTo(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2)
+        loading_bar.lineTo(SCREEN_WIDTH/2 - 75 + percentage * 1.5, SCREEN_HEIGHT/2)
 
         self.painter.drawPath(loading_bg)
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), 255))
@@ -496,7 +501,7 @@ class _Renderer(QWidget):
         self.painter.drawPath(loading_bar)
 
     def draw_loading_screen(self):
-        self.painter.drawText(250, 250, f"Calculating Sliders, please wait...")
+        self.painter.drawText(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2 - 10, f"Calculating Sliders, please wait...")
         self.draw_progressbar(int((self.sliders_current / self.sliders_total) * 100))
 
     def proccess_sliders(self):
