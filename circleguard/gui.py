@@ -788,7 +788,7 @@ class VisualizeTab(QWidget):
 
     def run_timer(self):
         self.add_widget()
-    
+
     def update_map_id_label(self):
         self.label_map_id.setText(f"Current beatmap_id: {self.map_id}")
 
@@ -838,7 +838,6 @@ class VisualizeTab(QWidget):
                 self.result_frame.results.layout.insertWidget(0,widget)
         except Empty:
             pass
-
 
     def remove_replay(self, data):
         replay_ids = [replay.data.replay_id for replay in self.replays]

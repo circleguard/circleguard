@@ -702,9 +702,8 @@ class FolderChooser(QFrame):
             update_path = paths[0]
 
         # dont update path if cancel is pressed
-        if update_path != "":
+        if update_path != [] and update_path != "":
             self.update_dir(update_path)
-
 
     def update_dir(self, path):
         self.path = path if path != "" else self.path
