@@ -520,7 +520,7 @@ class _Interface(QWidget):
         self.slider.setStyleSheet("outline: none;")
         self.renderer.update_signal.connect(self.update_slider)
         # don't want to use valueChanged because we change the value
-        # programatically and valueChanged would cuase a feedback loop.
+        # programatically and valueChanged would cause a feedback loop.
         # sliderMoved only activated on true user action, where we actually
         # want to seek.
         self.slider.sliderMoved.connect(self.renderer.seek_to)
