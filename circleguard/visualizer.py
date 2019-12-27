@@ -519,7 +519,11 @@ class _Interface(QWidget):
         self.slider.setFixedHeight(20)
         self.slider.setStyleSheet("outline: none;")
         self.renderer.update_signal.connect(self.update_slider)
-        self.slider.valueChanged.connect(self.renderer.seek_to)
+        # don't want to use valueChanged because we change the value
+        # programatically and valueChanged would cuase a feedback loop.
+        # sliderMoved only activated on true user action, where we actually
+        # want to seek.
+        self.slider.sliderMoved.connect(self.renderer.seek_to)
 
         self.speed_label = QLabel("1.00")
         self.speed_label.setFixedSize(40, 20)
