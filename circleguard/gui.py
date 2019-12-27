@@ -117,7 +117,7 @@ class WindowWrapper(QMainWindow):
         self.statusBar().setContentsMargins(8, 2, 10, 2)
 
         self.main_window = MainWindow()
-        self.main_window.main_tab.reset_progressbar_signal.connect(self.reset_progressbar)
+        self.main_window.main_tab.set_progressbar_signal.connect(self.set_progressbar)
         self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
         self.main_window.main_tab.update_label_signal.connect(self.update_label)
         self.main_window.main_tab.add_comparison_result_signal.connect(self.add_comparison_result)
@@ -206,13 +206,9 @@ class WindowWrapper(QMainWindow):
     def increment_progressbar(self, increment):
         self.progressbar.setValue(self.progressbar.value() + increment)
 
-    def reset_progressbar(self, max_value):
-        if not max_value == -1:
-            self.progressbar.setValue(0)
-            self.progressbar.setRange(0, max_value)
-        else:
-            self.progressbar.setRange(0, 100)
-            self.progressbar.reset()
+    def set_progressbar(self, max_value):
+        self.progressbar.setValue(0)
+        self.progressbar.setRange(0, max_value)
 
     def add_comparison_result(self, result):
         # this right here could very well lead to some memory issues. I tried to avoid
@@ -307,7 +303,7 @@ class MainWindow(QWidget):
 
 
 class MainTab(QWidget):
-    reset_progressbar_signal = pyqtSignal(int)  # max progress
+    set_progressbar_signal = pyqtSignal(int)  # max progress
     increment_progressbar_signal = pyqtSignal(int)  # increment value
     update_label_signal = pyqtSignal(str)
     write_to_terminal_signal = pyqtSignal(str)
@@ -495,7 +491,7 @@ class MainTab(QWidget):
                 """
                 if event.wait(0):
                     self.update_label_signal.emit("Canceled")
-                    self.reset_progressbar_signal.emit(-1)
+                    self.set_progressbar_signal.emit(1)
                     # may seem dirty, but actually relatively clean since it only affects this thread.
                     # Any cleanup we may want to do later can occur here as well
                     sys.exit(0)
@@ -539,7 +535,7 @@ class MainTab(QWidget):
                     for check_ in check_list:
                         loadables = check_.all_replays()
                         num_to_load += len(loadables)
-                self.reset_progressbar_signal.emit(num_to_load)
+                self.set_progressbar_signal.emit(num_to_load)
 
                 for check_list in check:
                     for check_ in check_list:
@@ -567,7 +563,7 @@ class MainTab(QWidget):
                 cg.load_info(check)
                 replays = check.all_replays()
                 num_to_load = check.num_replays()
-                self.reset_progressbar_signal.emit(num_to_load)
+                self.set_progressbar_signal.emit(num_to_load)
                 timestamp = datetime.now()
                 if type(replays[0]) is ReplayPath:
                     cg.load(replays[0])
@@ -585,7 +581,6 @@ class MainTab(QWidget):
                     cg.load(replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
-                self.reset_progressbar_signal.emit(0)  # changes progressbar into a "progressing" state
                 timestamp = datetime.now()
                 self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
                 self.update_label_signal.emit("Comparing Replays")
@@ -594,13 +589,13 @@ class MainTab(QWidget):
                     _check_event(event)
                     self.q.put(result)
 
-            self.reset_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
+            self.set_progressbar_signal.emit(1)  # resets progressbar so it's empty again
             timestamp = datetime.now()
             self.write_to_terminal_signal.emit(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
 
         except NoInfoAvailableException:
             self.write_to_terminal_signal.emit("No information found for those arguments. Please recheck your map/user id")
-            self.reset_progressbar_signal.emit(-1)
+            self.set_progressbar_signal.emit(1)
 
         except Exception:
             log.exception("Error while running circlecore. Please "
