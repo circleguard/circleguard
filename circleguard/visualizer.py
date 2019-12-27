@@ -431,11 +431,11 @@ class _Renderer(QWidget):
             # self.pos is a list of current indecies of the replays
             # self.data[0][self.pos[0]] is the current frame we're on
             # so seek to the next frame; self.pos[0] + 1
-            next_frames = [self.data[x][self.pos[x] + 1][0] for x in range(len(self.data))]
-            self.seek_to(min(next_frames))
+            next_frame_times = [self.data[x][self.pos[x] + 1][0] for x in range(len(self.data))]
+            self.seek_to(min(next_frame_times))
         else:
-            previous_frames = [self.data[x][self.pos[x] - 1][0] for x in range(len(self.data))]
-            self.seek_to(min(previous_frames)-1)
+            previous_frame_times = [self.data[x][self.pos[x] - 1][0] for x in range(len(self.data))]
+            self.seek_to(min(previous_frame_times)-1)
 
     def seek_to(self, position):
         """
