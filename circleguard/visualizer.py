@@ -567,8 +567,10 @@ class _Interface(QWidget):
 
     def pause(self):
         if(self.renderer.paused):
+            self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
             self.renderer.resume()
         else:
+            self.pause_button.setIcon(QIcon(str(resource_path("./resources/play.png"))))
             self.renderer.pause()
 
     def lower_speed(self):
