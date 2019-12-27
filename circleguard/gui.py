@@ -581,6 +581,10 @@ class MainTab(QWidget):
                     cg.load(replay)
                     self.increment_progressbar_signal.emit(1)
                 check.loaded = True
+                # change progressbar into an undetermined state
+                # (animation with stripes sliding horizontally)
+                # to indicate we're processing the data
+                self.set_progressbar_signal.emit(0)
                 timestamp = datetime.now()
                 self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
                 self.update_label_signal.emit("Comparing Replays")
