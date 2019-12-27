@@ -207,8 +207,16 @@ class WindowWrapper(QMainWindow):
         self.progressbar.setValue(self.progressbar.value() + increment)
 
     def set_progressbar(self, max_value):
+        # if -1, reset progressbar and remove its text
+        if max_value == -1:
+            # removes cases where range was set to (0,0)
+            self.progressbar.setRange(0, 1)
+            # remove ``0%`` text on the progressbar (doesn't look good)
+            self.progressbar.reset()
+            return
         self.progressbar.setValue(0)
         self.progressbar.setRange(0, max_value)
+
 
     def add_comparison_result(self, result):
         # this right here could very well lead to some memory issues. I tried to avoid
@@ -491,7 +499,7 @@ class MainTab(QWidget):
                 """
                 if event.wait(0):
                     self.update_label_signal.emit("Canceled")
-                    self.set_progressbar_signal.emit(1)
+                    self.set_progressbar_signal.emit(-1)
                     # may seem dirty, but actually relatively clean since it only affects this thread.
                     # Any cleanup we may want to do later can occur here as well
                     sys.exit(0)
@@ -593,13 +601,13 @@ class MainTab(QWidget):
                     _check_event(event)
                     self.q.put(result)
 
-            self.set_progressbar_signal.emit(1)  # resets progressbar so it's empty again
+            self.set_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
             timestamp = datetime.now()
             self.write_to_terminal_signal.emit(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
 
         except NoInfoAvailableException:
             self.write_to_terminal_signal.emit("No information found for those arguments. Please recheck your map/user id")
-            self.set_progressbar_signal.emit(1)
+            self.set_progressbar_signal.emit(-1)
 
         except Exception:
             log.exception("Error while running circlecore. Please "
