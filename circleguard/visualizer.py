@@ -445,10 +445,9 @@ class _Renderer(QWidget):
         Args:
             Integer position: position to seek to in ms
         """
-        if not position-10 < self.clock.time_counter < position+10:
-            self.clock.time_counter = position
-            if self.paused:
-                self.next_frame()
+        self.clock.time_counter = position
+        if self.paused:
+            self.next_frame()
 
     def pause(self):
         """
