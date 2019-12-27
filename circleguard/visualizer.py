@@ -426,11 +426,16 @@ class _Renderer(QWidget):
             Boolean reverse: chooses the search direction
         """
         if not reverse:
-            next_frames = [self.data[x][self.pos[x]][0] for x in range(len(self.data))]
-            self.seek_to(min(next_frames))
+            # len(self.data) is the number of replays being visualized
+            # self.data[0] is for the first replay, as is self.pos[0]
+            # self.pos is a list of current indecies of the replays
+            # self.data[0][self.pos[0]] is the current frame we're on
+            # so seek to the next frame; self.pos[0] + 1
+            next_frame_times = [self.data[x][self.pos[x] + 1][0] for x in range(len(self.data))]
+            self.seek_to(min(next_frame_times))
         else:
-            previous_frames = [self.data[x][self.pos[x]-1][0] for x in range(len(self.data))]
-            self.seek_to(min(previous_frames)-1)
+            previous_frame_times = [self.data[x][self.pos[x] - 1][0] for x in range(len(self.data))]
+            self.seek_to(min(previous_frame_times)-1)
 
     def seek_to(self, position):
         """
@@ -440,10 +445,9 @@ class _Renderer(QWidget):
         Args:
             Integer position: position to seek to in ms
         """
-        if not position-10 < self.clock.time_counter < position+10:
-            self.clock.time_counter = position
-            if self.paused:
-                self.next_frame()
+        self.clock.time_counter = position
+        if self.paused:
+            self.next_frame()
 
     def pause(self):
         """
@@ -515,7 +519,11 @@ class _Interface(QWidget):
         self.slider.setFixedHeight(20)
         self.slider.setStyleSheet("outline: none;")
         self.renderer.update_signal.connect(self.update_slider)
-        self.slider.valueChanged.connect(self.renderer.seek_to)
+        # don't want to use valueChanged because we change the value
+        # programatically and valueChanged would cause a feedback loop.
+        # sliderMoved only activates on true user action, when we actually
+        # want to seek.
+        self.slider.sliderMoved.connect(self.renderer.seek_to)
 
         self.speed_label = QLabel("1.00")
         self.speed_label.setFixedSize(40, 20)
