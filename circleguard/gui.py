@@ -304,10 +304,10 @@ class MainWindow(QWidget):
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
         self.tab_widget.currentChanged.connect(self.main_tab.switch_run_button)
 
-        self.main_layout = QVBoxLayout()
-        self.main_layout.addWidget(self.tab_widget)
-        self.main_layout.setContentsMargins(10, 10, 10, 0)
-        self.setLayout(self.main_layout)
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(self.tab_widget)
+        self.layout.setContentsMargins(10, 10, 10, 0)
+        self.setLayout(self.layout)
 
 
 class MainTab(QWidget):
