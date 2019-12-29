@@ -358,17 +358,89 @@ class ReplayMapW(LoadableW):
     """
     W standing for Widget.
     """
-
     def __init__(self):
         super().__init__()
 
         self.info = QLabel(self)
-        self.info.setText("ReplayMap {}".format(self.ID))
+        self.info.setText("ReplayMap\t(Id: {})".format(self.ID))
 
+        self.map_id_input = InputWidget("Map id", "", "id")
+        self.user_id_input = InputWidget("User id", "", "id")
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
         layout = QVBoxLayout()
         layout.addWidget(self.info)
+        layout.addWidget(self.map_id_input)
+        layout.addWidget(self.user_id_input)
+        layout.addWidget(self.mods_input)
         self.setLayout(layout)
 
+
+class ReplayPathW(LoadableW):
+    def __init__(self):
+        super().__init__()
+
+        self.info = QLabel(self)
+        self.info.setText("ReplayPath\t(Id: {})".format(self.ID))
+
+        self.path_input = FolderChooser(".osr path", folder_mode=False, file_ending="osu! Replayfile (*.osr)")
+        layout = QVBoxLayout()
+        layout.addWidget(self.info)
+        layout.addWidget(self.path_input)
+        self.setLayout(layout)
+
+class MapW(LoadableW):
+    def __init__(self):
+        super().__init__()
+
+        self.info = QLabel(self)
+        # two tabs to align with other (longer) LoadableW's
+        self.info.setText("Map\t\t(Id: {})".format(self.ID))
+
+        self.map_id_input = InputWidget("Map id", "", "id")
+        self.span_input = InputWidget("Span", "", "normal")
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+        layout = QVBoxLayout()
+        layout.addWidget(self.info)
+        layout.addWidget(self.map_id_input)
+        layout.addWidget(self.span_input)
+        layout.addWidget(self.mods_input)
+        self.setLayout(layout)
+
+class UserW(LoadableW):
+    def __init__(self):
+        super().__init__()
+
+        self.info = QLabel(self)
+        self.info.setText("User\t\t(Id: {})".format(self.ID))
+
+        self.user_id_input = InputWidget("User id", "", "id")
+        self.span_input = InputWidget("Span", "", "id")
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+        layout = QVBoxLayout()
+        layout.addWidget(self.info)
+        layout.addWidget(self.user_id_input)
+        layout.addWidget(self.span_input)
+        layout.addWidget(self.mods_input)
+        self.setLayout(layout)
+
+class MapUserW(LoadableW):
+    def __init__(self):
+        super().__init__()
+
+        self.info = QLabel(self)
+        self.info.setText("MapUser\t(Id: {})".format(self.ID))
+
+        self.map_id_input = InputWidget("Map id", "", "id")
+        self.user_id_input = InputWidget("User id", "", "id")
+        self.span_input = InputWidget("Span", "", "normal")
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+        layout = QVBoxLayout()
+        layout.addWidget(self.info)
+        layout.addWidget(self.map_id_input)
+        layout.addWidget(self.user_id_input)
+        layout.addWidget(self.span_input)
+        layout.addWidget(self.mods_input)
+        self.setLayout(layout)
 
 class MainTab(QFrame):
     set_progressbar_signal = pyqtSignal(int)  # max progress
@@ -440,7 +512,16 @@ class MainTab(QFrame):
         button_data = self.loadables_combobox.currentData()
         if button_data == "ReplayMap":
             w = ReplayMapW()
-            self.loadables_scrollarea.widget().layout.addWidget(w)
+        if button_data == "ReplayPath":
+            w = ReplayPathW()
+        if button_data == "Map":
+            w = MapW()
+        if button_data == "User":
+            w = UserW()
+        if button_data == "MapUser":
+            w = MapUserW()
+        self.loadables_scrollarea.widget().layout.addWidget(w)
+
 
     def write(self, message):
         self.terminal.append(str(message).strip())
