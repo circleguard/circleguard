@@ -405,12 +405,10 @@ class MainTab(QFrame):
             self.detects_combobox.addItem(detect, detect)
         self.detects_button = QPushButton(self)
 
-        self.loadables_scrollarea = QScrollArea(self)
-        self.loadables_scrollarea.setWidget(LoadableScrollArea())
+        self.loadables_scrollarea = ScrollableLayoutContainer(LoadableScrollArea())
         # self.loadables_scrollarea.setAlignment(Qt.AlignCenter) # center in scroll area
 
-        self.detects_scrollarea = QScrollArea(self)
-        self.detects_scrollarea.setWidget(DetectScrollArea())
+        self.detects_scrollarea = ScrollableLayoutContainer(DetectScrollArea())
         # self.detects_scrollarea.setAlignment(Qt.AlignCenter) # center in scroll area
 
         self.q = Queue()
