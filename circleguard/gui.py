@@ -446,10 +446,7 @@ class MainTab(QFrame):
         button_data = self.loadables_combobox.currentData()
         if button_data == "ReplayMap":
             w = ReplayMapW()
-            self.loadables_scrollarea.widget().layout.addWidget(w)
-            w.show() # https://stackoverflow.com/a/1889665/12164878
-
-        print(self.loadables_scrollarea.widget().children())
+            self.loadables_scrollarea.widget.layout.addWidget(w)
 
     def write(self, message):
         self.terminal.append(str(message).strip())
