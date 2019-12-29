@@ -311,6 +311,13 @@ class MainWindow(QFrame):
 
 
 class BorderWidget(QFrame):
+    """
+    For debugging classes that don't seem to be appearing. Adds a white border
+    around the QFrame.
+
+    To use, replace the inheritence of QFrame with BorderWidget. Possibly works
+    with multiple inheritence (using this as a mixin), but I'm not sure.
+    """
     def __init__(self):
         super().__init__()
         self.setFrameStyle(QFrame.Box)
