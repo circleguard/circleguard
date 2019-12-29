@@ -1121,7 +1121,7 @@ if __name__ == "__main__":
     # app is initialized at the top of the file
     WINDOW = WindowWrapper(app.clipboard())
     set_event_window(WINDOW)
-    WINDOW.resize(600, 500)
+    WINDOW.resize(900, 750)
     WINDOW.show()
     if not get_setting("ran"):
         welcome = wizard.WelcomeWindow()
