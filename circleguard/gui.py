@@ -330,7 +330,7 @@ class ScrollableLayoutContainer(QFrame):
         self.setLayout(layout)
 
 
-class LoadableScrollArea(QFrame):
+class LoadableLayout(QFrame):
     def __init__(self):
         super().__init__()
         # needs to be an attribute to programatically add widgets
@@ -340,7 +340,8 @@ class LoadableScrollArea(QFrame):
         self.layout.addWidget(ReplayMapW())
         self.setLayout(self.layout)
 
-class DetectScrollArea(QFrame):
+
+class DetectLayout(QFrame):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
