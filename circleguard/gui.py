@@ -350,97 +350,78 @@ class LoadableW(BorderWidget):
     W standing for widget.
     """
     ID = 0
-    def __init__(self):
+    def __init__(self, name):
         super().__init__()
         LoadableW.ID += 1
+        self.layout = QVBoxLayout()
+        title = QLabel(self)
+        t = "\t" # https://stackoverflow.com/a/44780467/12164878
+        # double tabs on short names to align with longer ones
+        title.setText(f"{name}{t+t if len(name) < 5 else t}(Id: {self.ID})")
+        self.layout.addWidget(title)
+        self.setLayout(self.layout)
 
 class ReplayMapW(LoadableW):
     """
     W standing for Widget.
     """
     def __init__(self):
-        super().__init__()
-
-        self.info = QLabel(self)
-        self.info.setText("ReplayMap\t(Id: {})".format(self.ID))
+        super().__init__("ReplayMap")
 
         self.map_id_input = InputWidget("Map id", "", "id")
         self.user_id_input = InputWidget("User id", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
-        layout = QVBoxLayout()
-        layout.addWidget(self.info)
-        layout.addWidget(self.map_id_input)
-        layout.addWidget(self.user_id_input)
-        layout.addWidget(self.mods_input)
-        self.setLayout(layout)
+
+        self.layout.addWidget(self.map_id_input)
+        self.layout.addWidget(self.user_id_input)
+        self.layout.addWidget(self.mods_input)
 
 
 class ReplayPathW(LoadableW):
     def __init__(self):
-        super().__init__()
-
-        self.info = QLabel(self)
-        self.info.setText("ReplayPath\t(Id: {})".format(self.ID))
+        super().__init__("ReplayPath")
 
         self.path_input = FolderChooser(".osr path", folder_mode=False, file_ending="osu! Replayfile (*.osr)")
-        layout = QVBoxLayout()
-        layout.addWidget(self.info)
-        layout.addWidget(self.path_input)
-        self.setLayout(layout)
+
+        self.layout.addWidget(self.path_input)
 
 class MapW(LoadableW):
     def __init__(self):
-        super().__init__()
-
-        self.info = QLabel(self)
-        # two tabs to align with other (longer) LoadableW's
-        self.info.setText("Map\t\t(Id: {})".format(self.ID))
+        super().__init__("Map")
 
         self.map_id_input = InputWidget("Map id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
-        layout = QVBoxLayout()
-        layout.addWidget(self.info)
-        layout.addWidget(self.map_id_input)
-        layout.addWidget(self.span_input)
-        layout.addWidget(self.mods_input)
-        self.setLayout(layout)
+
+        self.layout.addWidget(self.map_id_input)
+        self.layout.addWidget(self.span_input)
+        self.layout.addWidget(self.mods_input)
 
 class UserW(LoadableW):
     def __init__(self):
-        super().__init__()
-
-        self.info = QLabel(self)
-        self.info.setText("User\t\t(Id: {})".format(self.ID))
+        super().__init__("User")
 
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
-        layout = QVBoxLayout()
-        layout.addWidget(self.info)
-        layout.addWidget(self.user_id_input)
-        layout.addWidget(self.span_input)
-        layout.addWidget(self.mods_input)
-        self.setLayout(layout)
+
+        self.layout.addWidget(self.user_id_input)
+        self.layout.addWidget(self.span_input)
+        self.layout.addWidget(self.mods_input)
 
 class MapUserW(LoadableW):
     def __init__(self):
-        super().__init__()
-
-        self.info = QLabel(self)
-        self.info.setText("MapUser\t(Id: {})".format(self.ID))
+        super().__init__("MapUser")
 
         self.map_id_input = InputWidget("Map id", "", "id")
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
-        layout = QVBoxLayout()
-        layout.addWidget(self.info)
-        layout.addWidget(self.map_id_input)
-        layout.addWidget(self.user_id_input)
-        layout.addWidget(self.span_input)
-        layout.addWidget(self.mods_input)
-        self.setLayout(layout)
+
+        self.layout.addWidget(self.map_id_input)
+        self.layout.addWidget(self.user_id_input)
+        self.layout.addWidget(self.span_input)
+        self.layout.addWidget(self.mods_input)
 
 class MainTab(QFrame):
     set_progressbar_signal = pyqtSignal(int)  # max progress
