@@ -350,6 +350,7 @@ class LoadableW(BorderWidget):
     W standing for widget.
     """
     ID = 0
+    remove_loadable_signal = pyqtSignal(int) # id of loadable to remove
     def __init__(self, name):
         super().__init__()
         LoadableW.ID += 1
@@ -357,12 +358,13 @@ class LoadableW(BorderWidget):
         self.layout = QGridLayout()
 
         title = QLabel(self)
+        self.loadable_id = LoadableW.ID
         t = "\t" # https://stackoverflow.com/a/44780467/12164878
         # double tabs on short names to align with longer ones
-        title.setText(f"{name}{t+t if len(name) < 5 else t}(Id: {self.ID})")
+        title.setText(f"{name}{t+t if len(name) < 5 else t}(Id: {self.loadable_id})")
 
         self.cancel_button = QPushButton() # TODO add x icon
-
+        self.cancel_button.pressed.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
         self.layout.addWidget(title, 0, 0, 1, 7)
         self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
         self.setLayout(self.layout)
@@ -465,6 +467,8 @@ class MainTab(QFrame):
         self.loadables_scrollarea.setWidget(ScrollableDetectsWidget())
         self.detects_scrollarea.setWidgetResizable(True)
 
+        self.loadables = [] # for deleting later
+
         self.q = Queue()
         self.cg_q = Queue()
         self.helper_thread_running = False
@@ -495,6 +499,29 @@ class MainTab(QFrame):
         self.setLayout(layout)
         self.check_run_button() # disable run button if there is no api key
 
+    def remove_loadable(self, loadable_id):
+        # should only ever be one occurence, a comp + index works well enough
+        loadables = [l for l in self.loadables if l.loadable_id == loadable_id]
+        if not loadables: # sometimes an empty list, I don't know how if you need a loadable to click the delete button...
+            return
+        loadable = loadables[0]
+        self.loadables.remove(loadable)
+        self.loadables_scrollarea.widget().layout.removeWidget(loadable)
+        # TODO
+        # doing deleteLater here like we do in other places where we want to remove a
+        # widget either segfaults or throws a very scary malloc memory error.
+        #
+        #  EX:
+        # Python(62285,0x10a9635c0) malloc: *** error for object 0x7fa589402890: pointer being freed was not allocated
+        # Python(62285,0x10a9635c0) malloc: *** set a breakpoint in malloc_error_break to debug
+        #
+        # I think we're still leaving a reference to it somewhere,
+        # but I don't know where - we remove it from the layout above.
+        #
+        # Hide is recommend by qt ("if necessary") https://doc.qt.io/qt-5/qlayout.html#removeWidget
+        # but I'd feel better deleting it.
+        loadable.hide()
+
     def add_loadable(self):
         button_data = self.loadables_combobox.currentData()
         if button_data == "ReplayMap":
@@ -508,6 +535,8 @@ class MainTab(QFrame):
         if button_data == "MapUser":
             w = MapUserW()
         self.loadables_scrollarea.widget().layout.addWidget(w)
+        self.loadables.append(w) # for deleting it later
+        w.remove_loadable_signal.connect(self.remove_loadable)
 
 
     def write(self, message):
