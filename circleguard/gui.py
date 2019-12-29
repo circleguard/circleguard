@@ -511,7 +511,7 @@ class MainTab(QFrame):
         # doing deleteLater here like we do in other places where we want to remove a
         # widget either segfaults or throws a very scary malloc memory error.
         #
-        #  EX:
+        # EX:
         # Python(62285,0x10a9635c0) malloc: *** error for object 0x7fa589402890: pointer being freed was not allocated
         # Python(62285,0x10a9635c0) malloc: *** set a breakpoint in malloc_error_break to debug
         #
