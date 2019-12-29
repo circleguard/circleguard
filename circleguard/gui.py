@@ -13,8 +13,8 @@ import math
 import time
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl
-from PyQt5.QtWidgets import (QWidget, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
-                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy)
+from PyQt5.QtWidgets import (QWidget, QFrame, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
+                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy, QComboBox)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices
 # pylint: enable=no-name-in-module
 
@@ -286,7 +286,7 @@ class DebugWindow(QMainWindow):
         self.terminal.setTextCursor(cursor)
 
 
-class MainWindow(QWidget):
+class MainWindow(QFrame):
     def __init__(self):
         super().__init__()
 
@@ -310,7 +310,59 @@ class MainWindow(QWidget):
         self.setLayout(self.layout)
 
 
-class MainTab(QWidget):
+class BorderWidget(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.setFrameStyle(QFrame.Box)
+
+class LoadableScrollArea(QFrame):
+    def __init__(self):
+        super().__init__()
+        # needs to be an attribute to programatically add widgets
+        self.layout = QVBoxLayout()
+        # fill top-down
+        self.layout.setAlignment(Qt.AlignTop)
+        self.layout.addWidget(ReplayMapW())
+        self.setLayout(self.layout)
+
+class DetectScrollArea(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
+
+
+class LoadableW(BorderWidget):
+    """
+    A widget representing a circleguard.Loadable, which can be dragged onto
+    a DetectWidget. Keeps track of how many LoadableWidgets have been created
+    as a static ID attribute.
+
+    W standing for widget.
+    """
+    ID = 0
+    def __init__(self):
+        super().__init__()
+        LoadableW.ID += 1
+
+class ReplayMapW(LoadableW):
+    """
+    W standing for Widget.
+    """
+
+    def __init__(self):
+        super().__init__()
+
+        self.info = QLabel(self)
+        self.info.setText("ReplayMap {}".format(self.ID))
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.info)
+        self.setLayout(layout)
+
+
+class MainTab(QFrame):
     set_progressbar_signal = pyqtSignal(int)  # max progress
     increment_progressbar_signal = pyqtSignal(int)  # increment value
     update_label_signal = pyqtSignal(str)
@@ -319,16 +371,32 @@ class MainTab(QWidget):
     add_run_to_queue_signal = pyqtSignal(object) # Run object (or a subclass)
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
 
-    TAB_REGISTRY = [
-        {"name": "MAP"},
-        {"name": "SCREEN"},
-        {"name": "LOCAL"},
-        {"name": "VERIFY"},
-        {"name": "VISUALIZE"}
-    ]
+    LOADABLES_COMBOBOX_REGISTRY = ["ReplayMap", "ReplayPath", "Map", "User", "MapUser"]
+    DETECTS_COMBOBOX_REGISTRY = ["Steal", "Relax", "Correction"]
 
     def __init__(self):
         super().__init__()
+
+        self.loadables_combobox = QComboBox(self)
+        self.loadables_combobox.setInsertPolicy(QComboBox.NoInsert)
+        for loadable in MainTab.LOADABLES_COMBOBOX_REGISTRY:
+            self.loadables_combobox.addItem(loadable, loadable)
+        self.loadables_button = QPushButton(self)
+        self.loadables_button.pressed.connect(self.add_loadable)
+
+        self.detects_combobox = QComboBox(self)
+        self.detects_combobox.setInsertPolicy(QComboBox.NoInsert)
+        for detect in MainTab.DETECTS_COMBOBOX_REGISTRY:
+            self.detects_combobox.addItem(detect, detect)
+        self.detects_button = QPushButton(self)
+
+        self.loadables_scrollarea = QScrollArea(self)
+        self.loadables_scrollarea.setWidget(LoadableScrollArea())
+        # self.loadables_scrollarea.setAlignment(Qt.AlignCenter) # center in scroll area
+
+        self.detects_scrollarea = QScrollArea(self)
+        self.detects_scrollarea.setWidget(DetectScrollArea())
+        # self.detects_scrollarea.setAlignment(Qt.AlignCenter) # center in scroll area
 
         self.q = Queue()
         self.cg_q = Queue()
@@ -336,19 +404,6 @@ class MainTab(QWidget):
         self.runs = [] # Run objects for canceling runs
         self.run_id = 0
         self.visualizer_window = None
-        tabs = QTabWidget()
-        self.map_tab = MapTab()
-        self.screen_tab = ScreenTab()
-        self.local_tab = LocalTab()
-        self.verify_tab = VerifyTab()
-        self.visualize_tab = VisualizeTab()
-        tabs.addTab(self.map_tab, "Check Map")
-        tabs.addTab(self.screen_tab, "Screen User")
-        tabs.addTab(self.local_tab, "Check Local")
-        tabs.addTab(self.verify_tab, "Verify")
-        tabs.addTab(self.visualize_tab, "Visualize")
-        self.tabs = tabs
-        self.tabs.currentChanged.connect(self.switch_run_button)
 
         terminal = QTextEdit()
         terminal.setFocusPolicy(Qt.ClickFocus)
@@ -360,12 +415,27 @@ class MainTab(QWidget):
         self.run_button.setText("Run")
         self.run_button.clicked.connect(self.add_circleguard_run)
 
-        layout = QVBoxLayout()
-        layout.addWidget(tabs)
-        layout.addWidget(self.terminal)
-        layout.addWidget(self.run_button)
+        layout = QGridLayout()
+        layout.addWidget(self.loadables_combobox, 0, 0, 1, 7)
+        layout.addWidget(self.loadables_button, 0, 7, 1, 1)
+        layout.addWidget(self.detects_combobox, 0, 8, 1, 7)
+        layout.addWidget(self.detects_button, 0, 15, 1, 1)
+        layout.addWidget(self.loadables_scrollarea, 1, 0, 4, 8)
+        layout.addWidget(self.detects_scrollarea, 1, 8, 4, 8)
+        layout.addWidget(self.terminal, 5, 0, 2, 16)
+        layout.addWidget(self.run_button, 6, 0, 1, 16)
+
         self.setLayout(layout)
         self.check_run_button() # disable run button if there is no api key
+
+    def add_loadable(self):
+        button_data = self.loadables_combobox.currentData()
+        if button_data == "ReplayMap":
+            w = ReplayMapW()
+            self.loadables_scrollarea.widget().layout.addWidget(w)
+            w.show() # https://stackoverflow.com/a/1889665/12164878
+
+        print(self.loadables_scrollarea.widget().children())
 
     def write(self, message):
         self.terminal.append(str(message).strip())
@@ -674,100 +744,7 @@ class TrackerLoader(Loader, QObject):
             self.check_stopped_signal.emit()
 
 
-class MapTab(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        self.info = QLabel(self)
-        self.info.setText("Compares the top plays on a Map's leaderboard.\nIf a user is given, "
-                          "it will compare that user's play on the map against the other top plays of the map.")
-
-        self.id_combined = IdWidgetCombined()
-        self.compare_top = CompareTopUsers(2)
-
-        self.threshold = Threshold()  # ThresholdCombined()
-        layout = QGridLayout()
-        layout.addWidget(self.info, 0, 0, 1, 1)
-        layout.addWidget(self.id_combined, 1, 0, 2, 1)
-        layout.addWidget(self.compare_top, 4, 0, 1, 1)
-        layout.addWidget(self.threshold, 5, 0, 1, 1)
-
-        self.setLayout(layout)
-
-
-class ScreenTab(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.info = QLabel(self)
-        self.info.setText("Compares each of a user's top plays against that map's leaderboard.")
-
-        self.user_id = InputWidget("User Id", "User id, as seen in the profile url", type_="id")
-        self.compare_top_users = CompareTopUsers(1)
-        self.compare_top_map = CompareTopPlays()
-        self.threshold = Threshold()  # ThresholdCombined()
-
-        layout = QGridLayout()
-        layout.addWidget(self.info, 0, 0, 1, 1)
-        layout.addWidget(self.user_id, 1, 0, 1, 1)
-        # leave space for inserting the user user top plays widget
-        layout.addWidget(self.compare_top_map, 3, 0, 1, 1)
-        layout.addWidget(self.compare_top_users, 4, 0, 1, 1)
-        layout.addWidget(self.threshold, 5, 0, 1, 1)
-        self.layout = layout
-        self.setLayout(self.layout)
-
-
-class LocalTab(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.info = QLabel(self)
-        self.info.setText("Compares osr files in a given folder.\n"
-                          "If a Map is given, it will compare the osrs against the leaderboard of that map.\n"
-                          "If both a user and a map are given, it will compare the osrs against the user's "
-                          "score on that map.")
-        self.folder_chooser = FolderChooser("Replay folder")
-        self.id_combined = IdWidgetCombined()
-        self.compare_top = CompareTopUsers(1)
-        self.threshold = Threshold()
-        self.id_combined.map_id.field.textChanged.connect(self.switch_compare)
-        self.switch_compare()
-
-        self.grid = QGridLayout()
-        self.grid.addWidget(self.info, 0, 0, 1, 1)
-        self.grid.addWidget(self.folder_chooser, 1, 0, 1, 1)
-        self.grid.addWidget(self.id_combined, 2, 0, 2, 1)
-        self.grid.addWidget(self.compare_top, 4, 0, 1, 1)
-        self.grid.addWidget(self.threshold, 5, 0, 1, 1)
-
-        self.setLayout(self.grid)
-
-    def switch_compare(self):
-        self.compare_top.update_user(self.id_combined.map_id.field.text() != "")
-
-
-class VerifyTab(QWidget):
-    def __init__(self):
-        super().__init__()
-        self.info = QLabel(self)
-        self.info.setText("Checks if the given user's replays on a map are steals of each other.")
-
-        self.map_id = InputWidget("Map Id", "Beatmap id, not the mapset id!", type_="id")
-        self.user_id_1 = InputWidget("User Id #1", "User id, as seen in the profile url", type_="id")
-        self.user_id_2 = InputWidget("User Id #2", "User id, as seen in the profile url", type_="id")
-
-        self.threshold = Threshold()  # ThresholdCombined()
-
-        layout = QGridLayout()
-        layout.addWidget(self.info, 0, 0, 1, 1)
-        layout.addWidget(self.map_id, 1, 0, 1, 1)
-        layout.addWidget(self.user_id_1, 2, 0, 1, 1)
-        layout.addWidget(self.user_id_2, 3, 0, 1, 1)
-        layout.addWidget(self.threshold, 4, 0, 1, 1)
-
-        self.setLayout(layout)
-
-
-class VisualizeTab(QWidget):
+class VisualizeTab(QFrame):
     def __init__(self):
         super().__init__()
         self.result_frame = ResultsTab()
@@ -855,7 +832,7 @@ class VisualizeTab(QWidget):
         self.replays.pop(index)
 
 
-class SettingsTab(QWidget):
+class SettingsTab(QFrame):
     def __init__(self):
         super().__init__()
         self.qscrollarea = QScrollArea(self)
@@ -919,26 +896,26 @@ class ScrollableSettingsWidget(QFrame):
         self.wizard = ButtonWidget("Run Wizard", "Run", "")
         self.wizard.button.clicked.connect(self.show_wizard)
 
-        self.grid = QVBoxLayout()
-        self.grid.addWidget(Separator("General"))
-        self.grid.addWidget(self.apikey_widget)
-        self.grid.addWidget(self.cache)
-        self.grid.addWidget(self.cache_location)
-        self.grid.addWidget(self.open_settings)
-        self.grid.addWidget(self.sync_settings)
-        self.grid.addWidget(Separator("Appearance"))
-        self.grid.addWidget(self.darkmode)
-        self.grid.addWidget(self.visualizer_info)
-        self.grid.addWidget(self.visualizer_bg)
-        self.grid.addWidget(Separator("Debug"))
-        self.grid.addWidget(self.loglevel)
-        self.grid.addWidget(ResetSettings())
-        self.grid.addWidget(Separator("Dev"))
-        self.grid.addWidget(self.rainbow)
-        self.grid.addWidget(self.wizard)
-        self.grid.addWidget(BeatmapTest())
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(Separator("General"))
+        self.layout.addWidget(self.apikey_widget)
+        self.layout.addWidget(self.cache)
+        self.layout.addWidget(self.cache_location)
+        self.layout.addWidget(self.open_settings)
+        self.layout.addWidget(self.sync_settings)
+        self.layout.addWidget(Separator("Appearance"))
+        self.layout.addWidget(self.darkmode)
+        self.layout.addWidget(self.visualizer_info)
+        self.layout.addWidget(self.visualizer_bg)
+        self.layout.addWidget(Separator("Debug"))
+        self.layout.addWidget(self.loglevel)
+        self.layout.addWidget(ResetSettings())
+        self.layout.addWidget(Separator("Dev"))
+        self.layout.addWidget(self.rainbow)
+        self.layout.addWidget(self.wizard)
+        self.layout.addWidget(BeatmapTest())
 
-        self.setLayout(self.grid)
+        self.setLayout(self.layout)
 
         self.cache_location.switch_enabled(get_setting("caching"))
         # we never actually set the theme to dark anywhere
@@ -980,7 +957,7 @@ class ScrollableSettingsWidget(QFrame):
         overwrite_with_config_settings()
 
 
-class ResultsTab(QWidget):
+class ResultsTab(QFrame):
     def __init__(self):
         super().__init__()
 
@@ -1045,7 +1022,7 @@ class QueueFrame(QFrame):
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
-class ThresholdsTab(QWidget):
+class ThresholdsTab(QFrame):
     def __init__(self):
         super().__init__()
         self.qscrollarea = QScrollArea(self)

@@ -3,7 +3,7 @@ import ntpath
 from pathlib import Path
 # pylint: disable=no-name-in-module
 from functools import partial
-from PyQt5.QtWidgets import (QWidget, QGridLayout, QLabel, QLineEdit, QMessageBox,
+from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit, QMessageBox,
                              QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
                              QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout)
 from PyQt5.QtGui import QRegExpValidator

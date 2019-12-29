@@ -5,7 +5,7 @@ from circleguard import utils, Mod
 from circleparse.beatmap import Beatmap
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF
-from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QShortcut, QLabel
+from PyQt5.QtWidgets import QWidget, QFrame, QMainWindow, QGridLayout, QSlider, QPushButton, QShortcut, QLabel
 from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIcon, QPalette, QBrush
 # pylint: enable=no-name-in-module
 
@@ -29,7 +29,7 @@ Y_OFFSET = 48
 SPEED_OPTIONS = [0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
 
 
-class _Renderer(QWidget):
+class _Renderer(QFrame):
     update_signal = pyqtSignal(int)
 
     def __init__(self, replays=[], beatmap_path="", parent=None):
@@ -464,7 +464,7 @@ class _Renderer(QWidget):
         self.clock.resume()
 
 
-class _Interface(QWidget):
+class _Interface(QFrame):
     def __init__(self, replays=[], beatmap_path=""):
         super(_Interface, self).__init__()
         self.renderer = _Renderer(replays, beatmap_path)
