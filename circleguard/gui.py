@@ -319,7 +319,7 @@ class MainTab(QWidget):
     add_run_to_queue_signal = pyqtSignal(object) # Run object (or a subclass)
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
 
-    TAB_REGISTER = [
+    TAB_REGISTRY = [
         {"name": "MAP"},
         {"name": "SCREEN"},
         {"name": "LOCAL"},
@@ -378,7 +378,7 @@ class MainTab(QWidget):
 
     def add_circleguard_run(self):
         current_tab = self.tabs.currentIndex()
-        run_type = MainTab.TAB_REGISTER[current_tab]["name"]
+        run_type = MainTab.TAB_REGISTRY[current_tab]["name"]
 
         # special case; visualize runs shouldn't get added to queue
         if run_type == "VISUALIZE":
