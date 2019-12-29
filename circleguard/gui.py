@@ -354,12 +354,17 @@ class LoadableW(BorderWidget):
         super().__init__()
         LoadableW.ID += 1
 
-        self.layout = QVBoxLayout()
+        self.layout = QGridLayout()
+
         title = QLabel(self)
         t = "\t" # https://stackoverflow.com/a/44780467/12164878
         # double tabs on short names to align with longer ones
         title.setText(f"{name}{t+t if len(name) < 5 else t}(Id: {self.ID})")
-        self.layout.addWidget(title)
+
+        self.cancel_button = QPushButton() # TODO add x icon
+
+        self.layout.addWidget(title, 0, 0, 1, 7)
+        self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
         self.setLayout(self.layout)
 
 class ReplayMapW(LoadableW):
@@ -373,9 +378,9 @@ class ReplayMapW(LoadableW):
         self.user_id_input = InputWidget("User id", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
 
-        self.layout.addWidget(self.map_id_input)
-        self.layout.addWidget(self.user_id_input)
-        self.layout.addWidget(self.mods_input)
+        self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+        self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
+        self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
 
 
 class ReplayPathW(LoadableW):
@@ -394,9 +399,9 @@ class MapW(LoadableW):
         self.span_input = InputWidget("Span", "", "normal")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
 
-        self.layout.addWidget(self.map_id_input)
-        self.layout.addWidget(self.span_input)
-        self.layout.addWidget(self.mods_input)
+        self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+        self.layout.addWidget(self.span_input, 2, 0, 1, 8)
+        self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
 
 class UserW(LoadableW):
     def __init__(self):
@@ -406,9 +411,9 @@ class UserW(LoadableW):
         self.span_input = InputWidget("Span", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
 
-        self.layout.addWidget(self.user_id_input)
-        self.layout.addWidget(self.span_input)
-        self.layout.addWidget(self.mods_input)
+        self.layout.addWidget(self.user_id_input, 1, 0, 1, 8)
+        self.layout.addWidget(self.span_input, 2, 0, 1, 8)
+        self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
 
 class MapUserW(LoadableW):
     def __init__(self):
@@ -419,10 +424,10 @@ class MapUserW(LoadableW):
         self.span_input = InputWidget("Span", "", "normal")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
 
-        self.layout.addWidget(self.map_id_input)
-        self.layout.addWidget(self.user_id_input)
-        self.layout.addWidget(self.span_input)
-        self.layout.addWidget(self.mods_input)
+        self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+        self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
+        self.layout.addWidget(self.span_input, 3, 0, 1, 8)
+        self.layout.addWidget(self.mods_input, 4, 0, 1, 8)
 
 class MainTab(QFrame):
     set_progressbar_signal = pyqtSignal(int)  # max progress
