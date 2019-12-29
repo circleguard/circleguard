@@ -316,32 +316,17 @@ class BorderWidget(QFrame):
         self.setFrameStyle(QFrame.Box)
 
 
-class ScrollableLayoutContainer(QFrame):
-    def __init__(self, widget):
-        super().__init__()
-
-        layout = QVBoxLayout()
-        self.qscrollarea = QScrollArea(self)
-        self.widget = widget
-        self.qscrollarea.setWidget(self.widget)
-        self.qscrollarea.setWidgetResizable(True)
-
-        layout.addWidget(self.qscrollarea)
-        self.setLayout(layout)
-
-
-class LoadableLayout(QFrame):
+class ScrollableLoadablesWidget(QFrame):
     def __init__(self):
         super().__init__()
         # needs to be an attribute to programatically add widgets
         self.layout = QVBoxLayout()
         # fill top-down
         self.layout.setAlignment(Qt.AlignTop)
-        self.layout.addWidget(ReplayMapW())
         self.setLayout(self.layout)
 
 
-class DetectLayout(QFrame):
+class ScrollableDetectsWidget(QFrame):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
@@ -406,11 +391,13 @@ class MainTab(QFrame):
             self.detects_combobox.addItem(detect, detect)
         self.detects_button = QPushButton(self)
 
-        self.loadables_scrollarea = ScrollableLayoutContainer(LoadableLayout())
-        # self.loadables_scrollarea.setAlignment(Qt.AlignCenter) # center in scroll area
+        self.loadables_scrollarea = QScrollArea(self)
+        self.loadables_scrollarea.setWidget(ScrollableLoadablesWidget())
+        self.loadables_scrollarea.setWidgetResizable(True)
 
-        self.detects_scrollarea = ScrollableLayoutContainer(DetectLayout())
-        # self.detects_scrollarea.setAlignment(Qt.AlignCenter) # center in scroll area
+        self.detects_scrollarea = QScrollArea(self)
+        self.loadables_scrollarea.setWidget(ScrollableDetectsWidget())
+        self.detects_scrollarea.setWidgetResizable(True)
 
         self.q = Queue()
         self.cg_q = Queue()
@@ -446,7 +433,7 @@ class MainTab(QFrame):
         button_data = self.loadables_combobox.currentData()
         if button_data == "ReplayMap":
             w = ReplayMapW()
-            self.loadables_scrollarea.widget.layout.addWidget(w)
+            self.loadables_scrollarea.widget().layout.addWidget(w)
 
     def write(self, message):
         self.terminal.append(str(message).strip())
