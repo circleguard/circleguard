@@ -315,6 +315,21 @@ class BorderWidget(QFrame):
         super().__init__()
         self.setFrameStyle(QFrame.Box)
 
+
+class ScrollableLayoutContainer(QFrame):
+    def __init__(self, widget):
+        super().__init__()
+
+        layout = QVBoxLayout()
+        self.qscrollarea = QScrollArea(self)
+        self.widget = widget
+        self.qscrollarea.setWidget(self.widget)
+        self.qscrollarea.setWidgetResizable(True)
+
+        layout.addWidget(self.qscrollarea)
+        self.setLayout(layout)
+
+
 class LoadableScrollArea(QFrame):
     def __init__(self):
         super().__init__()
