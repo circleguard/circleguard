@@ -353,6 +353,7 @@ class LoadableW(BorderWidget):
     def __init__(self, name):
         super().__init__()
         LoadableW.ID += 1
+
         self.layout = QVBoxLayout()
         title = QLabel(self)
         t = "\t" # https://stackoverflow.com/a/44780467/12164878
