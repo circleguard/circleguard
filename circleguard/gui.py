@@ -302,7 +302,7 @@ class MainWindow(QWidget):
         self.tab_widget.addTab(self.thresholds_tab, "Thresholds")
         self.tab_widget.addTab(self.settings_tab, "Settings")
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
-        self.tab_widget.currentChanged.connect(self.main_tab.switch_run_button)
+        self.tab_widget.currentChanged.connect(self.main_tab.check_run_button)
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.tab_widget)
@@ -365,7 +365,7 @@ class MainTab(QWidget):
         layout.addWidget(self.terminal)
         layout.addWidget(self.run_button)
         self.setLayout(layout)
-        self.switch_run_button()  # disable run button if there is no api key
+        self.check_run_button() # disable run button if there is no api key
 
     def write(self, message):
         self.terminal.append(str(message).strip())
@@ -441,7 +441,7 @@ class MainTab(QWidget):
         # called every 1/4 seconds by timer, but force a recheck to not wait for that delay
         self.check_circleguard_queue()
 
-    def switch_run_button(self):
+    def check_run_button(self):
         # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
         # statement even though no timer interaction is going on; not sure why it happens but it doesn't
         # impact functionality. Still might be worth looking into
