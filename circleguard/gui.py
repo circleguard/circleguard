@@ -12,10 +12,10 @@ from datetime import datetime
 import math
 import time
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl
+from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl, QMimeData
 from PyQt5.QtWidgets import (QWidget, QFrame, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
                              QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy, QComboBox)
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices, QDrag
 # pylint: enable=no-name-in-module
 
 # app needs to be initialized before settings is imported so QStandardPaths resolves
@@ -389,6 +389,23 @@ class LoadableW(BorderWidget):
         self.layout.addWidget(title, 0, 0, 1, 7)
         self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
         self.setLayout(self.layout)
+
+    # Resources for drag and drop operations:
+    # qt tutorial           https://doc.qt.io/qt-5/qtwidgets-draganddrop-draggableicons-example.html
+    # qdrag docs            https://doc.qt.io/qt-5/qdrag.html
+    # real example code     https://lists.qt-project.org/pipermail/qt-interest-old/2011-June/034531.html
+    # bad example code      https://stackoverflow.com/q/7737913/12164878
+    def mouseMoveEvent(self, event):
+        print(event.pos())
+        self.drag = QDrag(self)
+        self.drag.setHotSpot(event.pos())
+        # https://stackoverflow.com/a/53538805/12164878
+        pixmap = self.grab()
+        # set pixmap as this widget so it looks like we're dragging it
+        self.drag.setPixmap(pixmap)
+        mime_data = QMimeData()
+        self.drag.setMimeData(mime_data) # TODO fill with id
+        self.drag.exec() # start the drag
 
 class ReplayMapW(LoadableW):
     """
