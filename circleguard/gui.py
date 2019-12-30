@@ -340,6 +340,27 @@ class ScrollableDetectsWidget(QFrame):
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
+class DetectW(BorderWidget):
+    def __init__(self, name):
+        super().__init__()
+        self.layout = QGridLayout()
+
+        title = QLabel()
+        title.setText(f"{name}")
+        self.layout.addWidget(title)
+        self.setLayout(self.layout)
+
+class StealDetectW(DetectW):
+    def __init__(self):
+        super().__init__("Replay Stealing Check")
+
+class RelaxDetectW(DetectW):
+    def __init__(self):
+        super().__init__("Relax Check")
+
+class CorrectionDetectW(DetectW):
+    def __init__(self):
+        super().__init__("Aim Correction Check")
 
 class LoadableW(BorderWidget):
     """
@@ -458,6 +479,7 @@ class MainTab(QFrame):
         for detect in MainTab.DETECTS_COMBOBOX_REGISTRY:
             self.detects_combobox.addItem(detect, detect)
         self.detects_button = QPushButton(self)
+        self.detects_button.pressed.connect(self.add_detect)
 
         self.loadables_scrollarea = QScrollArea(self)
         self.loadables_scrollarea.setWidget(ScrollableLoadablesWidget())
@@ -538,6 +560,15 @@ class MainTab(QFrame):
         self.loadables.append(w) # for deleting it later
         w.remove_loadable_signal.connect(self.remove_loadable)
 
+    def add_detect(self):
+        button_data = self.detects_combobox.currentData()
+        if button_data == "Steal":
+            w = StealDetectW()
+        if button_data == "Relax":
+            w = RelaxDetectW()
+        if button_data == "Correction":
+            w = CorrectionDetectW()
+        self.detects_scrollarea.widget().layout.addWidget(w)
 
     def write(self, message):
         self.terminal.append(str(message).strip())
