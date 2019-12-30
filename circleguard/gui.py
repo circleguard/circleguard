@@ -464,7 +464,7 @@ class MainTab(QFrame):
         self.loadables_scrollarea.setWidgetResizable(True)
 
         self.detects_scrollarea = QScrollArea(self)
-        self.loadables_scrollarea.setWidget(ScrollableDetectsWidget())
+        self.detects_scrollarea.setWidget(ScrollableDetectsWidget())
         self.detects_scrollarea.setWidgetResizable(True)
 
         self.loadables = [] # for deleting later
