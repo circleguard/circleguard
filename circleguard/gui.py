@@ -12,10 +12,10 @@ from datetime import datetime
 import math
 import time
 # pylint: disable=no-name-in-module
-from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl, QMimeData
+from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl, QMimeData, QPoint
 from PyQt5.QtWidgets import (QWidget, QFrame, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
                              QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy, QComboBox)
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices, QDrag
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices, QDrag, QPixmap
 # pylint: enable=no-name-in-module
 
 # app needs to be initialized before settings is imported so QStandardPaths resolves
@@ -413,10 +413,11 @@ class LoadableW(BorderWidget):
     def mouseMoveEvent(self, event):
         print(event.pos())
         self.drag = QDrag(self)
-        self.drag.setHotSpot(event.pos())
         # https://stackoverflow.com/a/53538805/12164878
-        pixmap = self.grab()
-        # set pixmap as this widget so it looks like we're dragging it
+        pixmap = DragWidget(f"{self.name} (Id: {self.ID})").grab()
+
+        # removing 5 so the cursor is a bit inside the label
+        self.drag.setHotSpot(QPoint(pixmap.width() - 5, pixmap.height() - 5))
         self.drag.setPixmap(pixmap)
         mime_data = QMimeData()
         self.drag.setMimeData(mime_data) # TODO fill with id
