@@ -344,19 +344,23 @@ class DetectW(BorderWidget):
     def __init__(self, name):
         super().__init__()
         self.layout = QGridLayout()
+        self.name = name
 
         title = QLabel()
         title.setText(f"{name}")
         self.layout.addWidget(title)
         self.setLayout(self.layout)
 
+
 class StealDetectW(DetectW):
     def __init__(self):
         super().__init__("Replay Stealing Check")
 
+
 class RelaxDetectW(DetectW):
     def __init__(self):
         super().__init__("Relax Check")
+
 
 class CorrectionDetectW(DetectW):
     def __init__(self):
@@ -375,6 +379,7 @@ class LoadableW(BorderWidget):
     def __init__(self, name):
         super().__init__()
         LoadableW.ID += 1
+        self.name = name
 
         self.layout = QGridLayout()
 
