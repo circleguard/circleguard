@@ -366,6 +366,16 @@ class CorrectionDetectW(DetectW):
     def __init__(self):
         super().__init__("Aim Correction Check")
 
+
+class DragWidget(BorderWidget):
+    def __init__(self, text):
+        super().__init__()
+        self.text = QLabel(text)
+        layout = QVBoxLayout()
+        layout.addWidget(self.text)
+        self.setLayout(layout)
+
+
 class LoadableW(BorderWidget):
     """
     A widget representing a circleguard.Loadable, which can be dragged onto
