@@ -420,8 +420,10 @@ class LoadableW(BorderWidget):
         self.drag.setHotSpot(QPoint(pixmap.width() - 5, pixmap.height() - 5))
         self.drag.setPixmap(pixmap)
         mime_data = QMimeData()
-        self.drag.setMimeData(mime_data) # TODO fill with id
-        self.drag.exec() # start the drag
+        mime_data.setText(str(self.ID))
+        self.drag.setMimeData(mime_data)
+        self.drag.exec()  # start the drag
+
 
 class ReplayMapW(LoadableW):
     """
