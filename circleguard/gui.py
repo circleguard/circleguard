@@ -623,6 +623,9 @@ class MainTab(QFrame):
         self.setLayout(layout)
         self.check_run_button() # disable run button if there is no api key
 
+    # am well aware that there's much duplicated code between remove_loadable,
+    # remove_check, add_loadable, and add_check. Don't feel like writing
+    # more generic functions for them right now.
     def remove_loadable(self, loadable_id):
         # should only ever be one occurence, a comp + index works well enough
         loadables = [l for l in self.loadables if l.loadable_id == loadable_id]
