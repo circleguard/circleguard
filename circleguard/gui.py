@@ -340,29 +340,75 @@ class ScrollableDetectsWidget(QFrame):
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
-class DetectW(BorderWidget):
+
+class DropArea(QFrame):
+    # style largely taken from
+    # https://doc.qt.io/qt-5/qtwidgets-draganddrop-dropsite-example.html
+    # (we use a QFrame instead of a QLabel so we can have a layout and
+    # add new items to it)
+    def __init__(self):
+        super().__init__()
+
+        self.loadable_ids = [] # ids of loadables already in this drop area
+        # minimum height of 100 px, don't care about minimum width, it will stretch to fit as necessary
+        self.setMinimumSize(0, 100)
+        self.setFrameStyle(QFrame.Sunken | QFrame.StyledPanel)
+        self.setAcceptDrops(True)
+        self.setAutoFillBackground(True)
+
+        self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
+
+    def dragEnterEvent(self, event):
+        # need to accept the event so qt gives us the DropEvent
+        # https://doc.qt.io/qt-5/qdropevent.html#details
+        event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        event.acceptProposedAction()
+        data = event.mimeData().text() # get data as text
+        # we use pipe as a delimiter for data instead
+        # of dealing with passing an array as json, which would be the cleaner/proper way
+        parts = data.split("|")
+        id_ = parts[0]
+        name = parts[1]
+        if id_ in self.loadable_ids:
+            return
+        self.loadable_ids.append(id_)
+        self.layout.addWidget(QLabel(name + f" (id: {id_})"))
+
+
+class CheckW(BorderWidget):
     def __init__(self, name):
         super().__init__()
+        # so we get the DropEvent
+        # https://doc.qt.io/qt-5/qdropevent.html#details
+        self.setAcceptDrops(True)
         self.layout = QGridLayout()
         self.name = name
+        self.loadable_ids = []
 
+        self.drop_area = DropArea()
         title = QLabel()
         title.setText(f"{name}")
         self.layout.addWidget(title)
+        self.layout.addWidget(self.drop_area)
         self.setLayout(self.layout)
 
 
-class StealDetectW(DetectW):
+
+class StealCheckW(CheckW):
     def __init__(self):
         super().__init__("Replay Stealing Check")
 
 
-class RelaxDetectW(DetectW):
+class RelaxCheckW(CheckW):
     def __init__(self):
         super().__init__("Relax Check")
 
 
-class CorrectionDetectW(DetectW):
+class CorrectionCheckW(CheckW):
     def __init__(self):
         super().__init__("Aim Correction Check")
 
@@ -395,7 +441,6 @@ class LoadableW(BorderWidget):
         super().__init__()
         LoadableW.ID += 1
         self.name = name
-
         self.layout = QGridLayout()
 
         title = QLabel(self)
@@ -404,7 +449,7 @@ class LoadableW(BorderWidget):
         # double tabs on short names to align with longer ones
         title.setText(f"{name}{t+t if len(name) < 5 else t}(Id: {self.loadable_id})")
 
-        self.cancel_button = QPushButton() # TODO add x icon
+        self.cancel_button = QPushButton(self) # TODO add x icon
         self.cancel_button.pressed.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
         self.layout.addWidget(title, 0, 0, 1, 7)
         self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
@@ -416,19 +461,26 @@ class LoadableW(BorderWidget):
     # real example code     https://lists.qt-project.org/pipermail/qt-interest-old/2011-June/034531.html
     # bad example code      https://stackoverflow.com/q/7737913/12164878
     def mouseMoveEvent(self, event):
-        print(event.pos())
+        event.pos()
         self.drag = QDrag(self)
-        # https://stackoverflow.com/a/53538805/12164878
+        # https://stackoverflow.com/a/53538806/12164878
         pixmap = DragWidget(f"{self.name} (Id: {self.ID})").grab()
-
-        # removing 5 so the cursor is a bit inside the label
-        self.drag.setHotSpot(QPoint(pixmap.width() - 5, pixmap.height() - 5))
+        # put cursor in the middle width-wise and a bit below so it properly
+        # looks like it's dragging the pixmap.
+        # pixmap.width() is printing a ridiculously high 262 which is why
+        # this is over 4 and not over 2. I don't know why its size is twice
+        # what is should be.
+        # setHotSpot takes relative arguments, offseting that amount
+        # from the upper left corner of the pixmap.
+        self.drag.setHotSpot(QPoint(pixmap.width() / 4, 6))
         self.drag.setPixmap(pixmap)
         mime_data = QMimeData()
-        mime_data.setText(str(self.ID))
+        # pretty sure the proper way to do this is
+        # setData("application/json", convert_to_json_and_qbytearray_somehow([self.ID, self.name]))
+        # to send the name as well but we'll use a special delimiter (pipe)
+        mime_data.setText(str(self.ID) + "|" + self.name)
         self.drag.setMimeData(mime_data)
         self.drag.exec()  # start the drag
-
 
 class ReplayMapW(LoadableW):
     """
@@ -511,14 +563,14 @@ class MainTab(QFrame):
         self.loadables_combobox.setInsertPolicy(QComboBox.NoInsert)
         for loadable in MainTab.LOADABLES_COMBOBOX_REGISTRY:
             self.loadables_combobox.addItem(loadable, loadable)
-        self.loadables_button = QPushButton(self)
+        self.loadables_button = QPushButton("Add", self)
         self.loadables_button.pressed.connect(self.add_loadable)
 
         self.detects_combobox = QComboBox(self)
         self.detects_combobox.setInsertPolicy(QComboBox.NoInsert)
         for detect in MainTab.DETECTS_COMBOBOX_REGISTRY:
             self.detects_combobox.addItem(detect, detect)
-        self.detects_button = QPushButton(self)
+        self.detects_button = QPushButton("Add", self)
         self.detects_button.pressed.connect(self.add_detect)
 
         self.loadables_scrollarea = QScrollArea(self)
@@ -603,11 +655,11 @@ class MainTab(QFrame):
     def add_detect(self):
         button_data = self.detects_combobox.currentData()
         if button_data == "Steal":
-            w = StealDetectW()
+            w = StealCheckW()
         if button_data == "Relax":
-            w = RelaxDetectW()
+            w = RelaxCheckW()
         if button_data == "Correction":
-            w = CorrectionDetectW()
+            w = CorrectionCheckW()
         self.detects_scrollarea.widget().layout.addWidget(w)
 
     def write(self, message):
