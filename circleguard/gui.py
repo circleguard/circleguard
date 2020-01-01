@@ -368,6 +368,11 @@ class CorrectionDetectW(DetectW):
 
 
 class DragWidget(BorderWidget):
+    """
+    A widget not meant to be displayed, but rendered into a pixmap with
+    #grab and stuck onto a QDrag with setPixmap to give the illusion of
+    dragging another widget.
+    """
     def __init__(self, text):
         super().__init__()
         self.text = QLabel(text)
