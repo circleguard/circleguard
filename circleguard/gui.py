@@ -463,7 +463,7 @@ class LoadableW(BorderWidget):
     def mouseMoveEvent(self, event):
         event.pos()
         self.drag = QDrag(self)
-        # https://stackoverflow.com/a/53538806/12164878
+        # https://stackoverflow.com/a/53538805/12164878
         pixmap = DragWidget(f"{self.name} (Id: {self.ID})").grab()
         # put cursor in the middle width-wise and a bit below so it properly
         # looks like it's dragging the pixmap.
