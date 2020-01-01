@@ -333,7 +333,7 @@ class ScrollableLoadablesWidget(QFrame):
         self.setLayout(self.layout)
 
 
-class ScrollableDetectsWidget(QFrame):
+class ScrollableChecksWidget(QFrame):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
@@ -380,20 +380,29 @@ class DropArea(QFrame):
 
 
 class CheckW(BorderWidget):
+    remove_check_signal = pyqtSignal(int) # check id
+    ID = 0
     def __init__(self, name):
         super().__init__()
+        CheckW.ID += 1
         # so we get the DropEvent
         # https://doc.qt.io/qt-5/qdropevent.html#details
         self.setAcceptDrops(True)
-        self.layout = QGridLayout()
+
         self.name = name
+        self.check_id = CheckW.ID
         self.loadable_ids = []
 
+        self.layout = QGridLayout()
+
         self.drop_area = DropArea()
+        self.cancel_button = QPushButton(self)
+        self.cancel_button.pressed.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
         title = QLabel()
         title.setText(f"{name}")
-        self.layout.addWidget(title)
-        self.layout.addWidget(self.drop_area)
+        self.layout.addWidget(title, 0, 0, 1, 7)
+        self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
+        self.layout.addWidget(self.drop_area, 1, 0, 1, 8)
         self.setLayout(self.layout)
 
 
@@ -554,7 +563,7 @@ class MainTab(QFrame):
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
 
     LOADABLES_COMBOBOX_REGISTRY = ["ReplayMap", "ReplayPath", "Map", "User", "MapUser"]
-    DETECTS_COMBOBOX_REGISTRY = ["Steal", "Relax", "Correction"]
+    CHECKS_COMBOBOX_REGISTRY = ["Steal", "Relax", "Correction"]
 
     def __init__(self):
         super().__init__()
@@ -566,22 +575,23 @@ class MainTab(QFrame):
         self.loadables_button = QPushButton("Add", self)
         self.loadables_button.pressed.connect(self.add_loadable)
 
-        self.detects_combobox = QComboBox(self)
-        self.detects_combobox.setInsertPolicy(QComboBox.NoInsert)
-        for detect in MainTab.DETECTS_COMBOBOX_REGISTRY:
-            self.detects_combobox.addItem(detect, detect)
-        self.detects_button = QPushButton("Add", self)
-        self.detects_button.pressed.connect(self.add_detect)
+        self.checks_combobox = QComboBox(self)
+        self.checks_combobox.setInsertPolicy(QComboBox.NoInsert)
+        for check in MainTab.CHECKS_COMBOBOX_REGISTRY:
+            self.checks_combobox.addItem(check, check)
+        self.checks_button = QPushButton("Add", self)
+        self.checks_button.pressed.connect(self.add_check)
 
         self.loadables_scrollarea = QScrollArea(self)
         self.loadables_scrollarea.setWidget(ScrollableLoadablesWidget())
         self.loadables_scrollarea.setWidgetResizable(True)
 
-        self.detects_scrollarea = QScrollArea(self)
-        self.detects_scrollarea.setWidget(ScrollableDetectsWidget())
-        self.detects_scrollarea.setWidgetResizable(True)
+        self.checks_scrollarea = QScrollArea(self)
+        self.checks_scrollarea.setWidget(ScrollableChecksWidget())
+        self.checks_scrollarea.setWidgetResizable(True)
 
         self.loadables = [] # for deleting later
+        self.checks = [] # for deleting later
 
         self.q = Queue()
         self.cg_q = Queue()
@@ -603,10 +613,10 @@ class MainTab(QFrame):
         layout = QGridLayout()
         layout.addWidget(self.loadables_combobox, 0, 0, 1, 7)
         layout.addWidget(self.loadables_button, 0, 7, 1, 1)
-        layout.addWidget(self.detects_combobox, 0, 8, 1, 7)
-        layout.addWidget(self.detects_button, 0, 15, 1, 1)
+        layout.addWidget(self.checks_combobox, 0, 8, 1, 7)
+        layout.addWidget(self.checks_button, 0, 15, 1, 1)
         layout.addWidget(self.loadables_scrollarea, 1, 0, 4, 8)
-        layout.addWidget(self.detects_scrollarea, 1, 8, 4, 8)
+        layout.addWidget(self.checks_scrollarea, 1, 8, 4, 8)
         layout.addWidget(self.terminal, 5, 0, 2, 16)
         layout.addWidget(self.run_button, 6, 0, 1, 16)
 
@@ -636,6 +646,16 @@ class MainTab(QFrame):
         # but I'd feel better deleting it.
         loadable.hide()
 
+    def remove_check(self, check_id):
+        # see above method for comments
+        checks = [c for c in self.checks if c.check_id == check_id]
+        if not checks:
+            return
+        check = checks[0]
+        self.checks.remove(check)
+        self.checks_scrollarea.widget().layout.removeWidget(check)
+        check.hide()
+
     def add_loadable(self):
         button_data = self.loadables_combobox.currentData()
         if button_data == "ReplayMap":
@@ -652,15 +672,17 @@ class MainTab(QFrame):
         self.loadables.append(w) # for deleting it later
         w.remove_loadable_signal.connect(self.remove_loadable)
 
-    def add_detect(self):
-        button_data = self.detects_combobox.currentData()
+    def add_check(self):
+        button_data = self.checks_combobox.currentData()
         if button_data == "Steal":
             w = StealCheckW()
         if button_data == "Relax":
             w = RelaxCheckW()
         if button_data == "Correction":
             w = CorrectionCheckW()
-        self.detects_scrollarea.widget().layout.addWidget(w)
+        self.checks_scrollarea.widget().layout.addWidget(w)
+        self.checks.append(w)
+        w.remove_check_signal.connect(self.remove_check)
 
     def write(self, message):
         self.terminal.append(str(message).strip())
