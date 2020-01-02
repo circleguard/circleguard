@@ -274,7 +274,12 @@ def overwrite_config():
     config.optionxform = str # preserve case in setting keys
     for section in DEFAULTS.keys():
         config[section] = {}
-    for setting in SETTINGS.allKeys():
+
+    keys = SETTINGS.allKeys()
+    # QSettings#allKeys returns a list of keys sorted alphabetically. We want
+    # to sort per section by an entry's order in the DEFAULTS dict.
+    keys = sorted(keys, key=_index_by_defaults_dict)
+    for setting in keys:
         if setting not in TYPES:
             continue
         section = TYPES[setting][1]
@@ -284,13 +289,47 @@ def overwrite_config():
             config[section][comment] = None
         if section in COMMENTS and setting in COMMENTS[section]:
             comment = "# " + COMMENTS[section][setting].replace("\n", "\n# ") # comment out each newline
-            config[section][comment] = None # slightly hacky but setting a configparser key to None writes it as is, without a trailing = for the val
+            config[section][comment] = None # setting a configparser key to None writes it as is, without a trailing = for the val
 
-        config[TYPES[setting][1]][setting] = str(SETTINGS.value(setting))
+        config[section][setting] = str(SETTINGS.value(setting))
 
     with open(CFG_PATH, "a+") as f:
         config.write(f)
 
+def _index_by_defaults_dict(key):
+    """
+    Returns the index of the key in its respective section in the DEFAULTS dict.
+    Used to sort a QSettings#allKeys call by each key's position in DEFAULTS.
+
+    Examples
+    --------
+    DEFAULTS = {
+        "category1": {
+            "item1": 0
+            "item2": 1
+        }
+    }
+
+    item1 would have an index in category1 of 0, and item2 would have an index
+    of 1, so item1 gets sorted above item2 (ie _index_bu_defaults_dict(item1))
+    returns 0 and _index_bu_defaults_dict(item2) returns 1.
+
+    Notes
+    -----
+    Index relative to keys in other sections is not defined. Neither is the
+    index if a key in the list does not appear in TYPES (ie, we don't have
+    an entry for it in DEFAULTS). This is fine for our purposes, since this is
+    only used in overwrite_config and the latter values get thrown out, and for
+    the former we segregate keys by setting so only position relative to other
+    keys in the section matters.
+    """
+    if key not in TYPES:
+        return 0
+    section = TYPES[key][1]
+    keys = DEFAULTS[section].keys()
+    # https://stackoverflow.com/a/14539017/12164878 for the list cast
+    index = list(keys).index(key)
+    return index
 
 def initialize_dirs():
     d_dirs = DEFAULTS["Locations"].keys()
@@ -299,7 +338,9 @@ def initialize_dirs():
         if not os.path.exists(parent_path):
             os.mkdir(parent_path)
 
-
+# assemble dict of {key: [type, section], ...} since we have nested dicts in DEFAULTS
+# double list comprehension feels sooo backwards to write
+# eg {"cache_location": [<class "str">, "Locations"], ...}
 TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
 SETTINGS = QSettings("Circleguard", "Circleguard")
 # see third bullet here https://doc.qt.io/qt-5/qsettings.html#platform-limitations,
@@ -315,8 +356,7 @@ for d in DEFAULTS.values():
 # create folders if they don't exist
 initialize_dirs()
 
-# assemble dict of {key: [type, section]} since we have nested dicts in DEFAULTS
-# double list comprehension feels sooo backwards to write
+
 CFG_PATH = get_setting("config_location")
 
 # create cfg file if it doesn't exist
