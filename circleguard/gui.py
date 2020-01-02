@@ -618,7 +618,7 @@ class MainTab(QFrame):
         layout.addWidget(self.loadables_scrollarea, 1, 0, 4, 8)
         layout.addWidget(self.checks_scrollarea, 1, 8, 4, 8)
         layout.addWidget(self.terminal, 5, 0, 2, 16)
-        layout.addWidget(self.run_button, 6, 0, 1, 16)
+        layout.addWidget(self.run_button, 7, 0, 1, 16)
 
         self.setLayout(layout)
         self.check_run_button() # disable run button if there is no api key
