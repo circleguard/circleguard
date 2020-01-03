@@ -25,28 +25,6 @@ def set_event_window(window):
     WINDOW = window
 
 
-class IDLineEdit(QLineEdit):
-    r"""
-    A QLineEdit that does not allow anything but digits to be entered.
-    Specifically, anything not matched by the \d* regex is not registered.
-
-    This class also overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being used only by the LineEdit.
-    """
-
-    def __init__(self, parent):
-        super(IDLineEdit, self).__init__(parent)
-        # r prefix isn't necessary but pylint was annoying
-        validator = QRegExpValidator(QRegExp(r"\d*"))
-        self.setValidator(validator)
-
-    def keyPressEvent(self, event):
-        key = event.key()
-        if key == Qt.Key_Left or key == Qt.Key_Right:
-            QCoreApplication.sendEvent(WINDOW, event)
-        super().keyPressEvent(event)
-
-
 class LineEdit(QLineEdit):
     r"""
     A QLineEdit that overrides the keyPressEvent to allow the left and right
@@ -60,11 +38,9 @@ class LineEdit(QLineEdit):
         super().keyPressEvent(event)
 
 
-class PasswordEdit(QLineEdit):
+class PasswordEdit(LineEdit):
     r"""
-    A QLineEdit that overrides focusInEvent and focusOutEven to show/hide the password on focus.
-    It also overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being used only by the LineEdit.
+    A LineEdit that overrides focusInEvent and focusOutEven to show/hide the password on focus.
     """
 
     def __init__(self, parent):
@@ -79,11 +55,17 @@ class PasswordEdit(QLineEdit):
         self.setEchoMode(QLineEdit.Password)
         super().focusOutEvent(event)
 
-    def keyPressEvent(self, event):
-        key = event.key()
-        if key == Qt.Key_Left or key == Qt.Key_Right:
-            QCoreApplication.sendEvent(WINDOW, event)
-        super().keyPressEvent(event)
+class IDLineEdit(LineEdit):
+    r"""
+    A LineEdit that does not allow anything but digits to be entered.
+    Specifically, anything not matched by the \d* regex is not registered.
+    """
+
+    def __init__(self, parent):
+        super(IDLineEdit, self).__init__(parent)
+        # r prefix isn't necessary but pylint was annoying
+        validator = QRegExpValidator(QRegExp(r"\d*"))
+        self.setValidator(validator)
 
 
 class SpinBox(QSpinBox):
