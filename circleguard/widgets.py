@@ -11,7 +11,6 @@ from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
 # pylint: enable=no-name-in-module
 from settings import get_setting, reset_defaults, LinkableSetting, set_setting
 from visualizer import VisualizerWindow
-from utils import MapRun, ScreenRun, LocalRun, VerifyRun
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
@@ -30,12 +29,34 @@ class LineEdit(QLineEdit):
     A QLineEdit that overrides the keyPressEvent to allow the left and right
     keys to be sent to our window that controls shortcuts, instead of being used only by the LineEdit.
     """
+    def __init__(self, parent):
+        super().__init__(parent)
+        # it's an empty string right now but depending on how qt stylesheet
+        # cascading works it might not always be empty. Don't want to cause
+        # headaches in the future by reverting to an empty stylesheet when
+        # we really want a cascaded stylesheet which was set higher up.
+        # Used in #focusInEvent to reset the stylesheet if self.highlighted
+        # is True (removes the red border).
+        self.old_stylesheet = self.styleSheet()
+        self.highlighted = False
 
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_Left or key == Qt.Key_Right:
             QCoreApplication.sendEvent(WINDOW, event)
         super().keyPressEvent(event)
+
+    def focusInEvent(self, event):
+        super().focusInEvent(event)
+        if self.highlighted:
+            self.setStyleSheet(self.old_stylesheet)
+            self.highlighted = False
+
+
+    def show_required(self):
+        self.setStyleSheet("QLineEdit { border: 2px solid red }")
+        self.highlighted = True
+
 
 
 class PasswordEdit(LineEdit):
@@ -44,16 +65,16 @@ class PasswordEdit(LineEdit):
     """
 
     def __init__(self, parent):
-        super(PasswordEdit, self).__init__(parent)
+        super().__init__(parent)
         self.setEchoMode(QLineEdit.Password)
 
     def focusInEvent(self, event):
-        self.setEchoMode(QLineEdit.Normal)
         super().focusInEvent(event)
+        self.setEchoMode(QLineEdit.Normal)
 
     def focusOutEvent(self, event):
-        self.setEchoMode(QLineEdit.Password)
         super().focusOutEvent(event)
+        self.setEchoMode(QLineEdit.Password)
 
 class IDLineEdit(LineEdit):
     r"""
@@ -62,7 +83,7 @@ class IDLineEdit(LineEdit):
     """
 
     def __init__(self, parent):
-        super(IDLineEdit, self).__init__(parent)
+        super().__init__(parent)
         # r prefix isn't necessary but pylint was annoying
         validator = QRegExpValidator(QRegExp(r"\d*"))
         self.setValidator(validator)
@@ -132,7 +153,8 @@ class Separator(QFrame):
 class InputWidget(QFrame):
     """
     A container class of widgets that represents user input for an id. This class
-    holds a Label and either a PasswordEdit, IDLineEdit, or LineEdit, depending on the constructor call.
+    holds a Label and either a PasswordEdit, IDLineEdit, or LineEdit, depending
+    on the constructor call. The former two inherit from LineEdit.
     """
 
     def __init__(self, title, tooltip, type_):
@@ -154,6 +176,13 @@ class InputWidget(QFrame):
         layout.addItem(SPACER, 0, 1, 1, 1)
         layout.addWidget(self.field, 0, 2, 1, 3)
         self.setLayout(layout)
+
+    def show_required(self):
+        """
+        Shows a red border around the LineEdit to indicate a field that must be
+        filled in. This border is removed when the LineEdit receieves focus again.
+        """
+        self.field.show_required()
 
 
 class IdWidgetCombined(QFrame):
@@ -454,17 +483,7 @@ class RunWidget(QFrame):
 
         self.status = "Queued"
         self.label = QLabel(self)
-        self.text = ""
-        if type(run) is MapRun:
-            self.text = f"Map check on map {run.map_id}'s top {run.num} plays with thresh {run.thresh}."
-        if type(run) is ScreenRun:
-            self.text = f"User screen on user {run.user_id}'s top {run.num_top} plays with thresh {run.thresh}."
-        if type(run) is LocalRun:
-            self.text = f"Local check on folder {run.path}."
-        if type(run) is VerifyRun:
-            self.text = f"Verify check on {run.user_id_1} and {run.user_id_2}'s plays on map {run.map_id}."
-
-
+        self.text = f"Run with {len(run.checks)} Checks"
         self.label.setText(self.text)
 
         self.status_label = QLabel(self)

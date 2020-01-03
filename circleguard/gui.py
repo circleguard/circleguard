@@ -25,10 +25,11 @@ app.setStyle("Fusion")
 app.setApplicationName("Circleguard")
 
 from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableException,
-                        ReplayMap, ReplayPath, User, Map, Check, MapUser, StealDetect)
+                        ReplayMap, ReplayPath, User, Map, Check, MapUser, StealDetect,
+                        RelaxDetect, CorrectionDetect)
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
-from utils import resource_path, run_update_check, MapRun, ScreenRun, LocalRun, VerifyRun
+from utils import resource_path, run_update_check, Run, parse_mod_string
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
@@ -87,7 +88,7 @@ def init(self, *args, **kwargs):
 threading.Thread.__init__ = init
 
 
-# logging methodology heavily adapted from https://stackoverflow.com/questions/28655198/best-way-to-display-logs-in-pyqt
+# logging methodology heavily adapted from https://stackoverflow.com/q/28655198/12164878
 class Handler(QObject, logging.Handler):
     new_message = pyqtSignal(object)
 
@@ -150,11 +151,11 @@ class WindowWrapper(QMainWindow):
     # I know, I know...we have a stupid amount of layers.
     # WindowWrapper -> MainWindow -> MainTab -> Tabs
     def tab_right(self):
-        tabs = self.main_window.main_tab.tabs
+        tabs = self.main_window.tabs
         tabs.setCurrentIndex(tabs.currentIndex() + 1)
 
     def tab_left(self):
-        tabs = self.main_window.main_tab.tabs
+        tabs = self.main_window.tabs
         tabs.setCurrentIndex(tabs.currentIndex() - 1)
 
     def mousePressEvent(self, event):
@@ -290,22 +291,22 @@ class MainWindow(QFrame):
     def __init__(self):
         super().__init__()
 
-        self.tab_widget = QTabWidget()
+        self.tabs = QTabWidget()
         self.main_tab = MainTab()
         self.results_tab = ResultsTab()
         self.queue_tab = QueueTab()
         self.thresholds_tab = ThresholdsTab()
         self.settings_tab = SettingsTab()
-        self.tab_widget.addTab(self.main_tab, "Main")
-        self.tab_widget.addTab(self.results_tab, "Results")
-        self.tab_widget.addTab(self.queue_tab, "Queue")
-        self.tab_widget.addTab(self.thresholds_tab, "Thresholds")
-        self.tab_widget.addTab(self.settings_tab, "Settings")
+        self.tabs.addTab(self.main_tab, "Main")
+        self.tabs.addTab(self.results_tab, "Results")
+        self.tabs.addTab(self.queue_tab, "Queue")
+        self.tabs.addTab(self.thresholds_tab, "Thresholds")
+        self.tabs.addTab(self.settings_tab, "Settings")
         # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
-        self.tab_widget.currentChanged.connect(self.main_tab.check_run_button)
+        self.tabs.currentChanged.connect(self.main_tab.check_run_button)
 
         self.layout = QVBoxLayout()
-        self.layout.addWidget(self.tab_widget)
+        self.layout.addWidget(self.tabs)
         self.layout.setContentsMargins(10, 10, 10, 0)
         self.setLayout(self.layout)
 
@@ -371,7 +372,7 @@ class DropArea(QFrame):
         # we use pipe as a delimiter for data instead
         # of dealing with passing an array as json, which would be the cleaner/proper way
         parts = data.split("|")
-        id_ = parts[0]
+        id_ = int(parts[0])
         name = parts[1]
         if id_ in self.loadable_ids:
             return
@@ -391,7 +392,10 @@ class CheckW(BorderWidget):
 
         self.name = name
         self.check_id = CheckW.ID
-        self.loadable_ids = []
+        # will have LoadableW objects added to it once this Check is
+        # run by the main tab run button, so that cg.Check objects can
+        # be easily constructed with loadables
+        self.loadables = []
 
         self.layout = QGridLayout()
 
@@ -446,12 +450,13 @@ class LoadableW(BorderWidget):
     """
     ID = 0
     remove_loadable_signal = pyqtSignal(int) # id of loadable to remove
-    def __init__(self, name):
+    def __init__(self, name, required_input_widgets):
         super().__init__()
         LoadableW.ID += 1
         self.name = name
-        self.layout = QGridLayout()
+        self.required_input_widgets = required_input_widgets
 
+        self.layout = QGridLayout()
         title = QLabel(self)
         self.loadable_id = LoadableW.ID
         t = "\t" # https://stackoverflow.com/a/44780467/12164878
@@ -473,7 +478,7 @@ class LoadableW(BorderWidget):
         event.pos()
         self.drag = QDrag(self)
         # https://stackoverflow.com/a/53538805/12164878
-        pixmap = DragWidget(f"{self.name} (Id: {self.ID})").grab()
+        pixmap = DragWidget(f"{self.name} (Id: {self.loadable_id})").grab()
         # put cursor in the middle width-wise and a bit below so it properly
         # looks like it's dragging the pixmap.
         # pixmap.width() is printing a ridiculously high 262 which is why
@@ -487,20 +492,33 @@ class LoadableW(BorderWidget):
         # pretty sure the proper way to do this is
         # setData("application/json", convert_to_json_and_qbytearray_somehow([self.ID, self.name]))
         # to send the name as well but we'll use a special delimiter (pipe)
-        mime_data.setText(str(self.ID) + "|" + self.name)
+        mime_data.setText(str(self.loadable_id) + "|" + self.name)
         self.drag.setMimeData(mime_data)
         self.drag.exec()  # start the drag
+
+    def check_required_fields(self):
+        """
+        Checks the required fields of this LoadableW. If any are empty, show
+        a red border around them (see InputWidget#show_required) and return
+        False. Otherwise, return True.
+        """
+        for input_widget in self.required_input_widgets:
+            all_filled = True
+            if input_widget.field.text() == "":
+                input_widget.show_required()
+                all_filled = False
+        return all_filled
 
 class ReplayMapW(LoadableW):
     """
     W standing for Widget.
     """
     def __init__(self):
-        super().__init__("ReplayMap")
-
         self.map_id_input = InputWidget("Map id", "", "id")
         self.user_id_input = InputWidget("User id", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+        super().__init__("ReplayMap", [self.map_id_input, self.user_id_input])
 
         self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
@@ -509,19 +527,20 @@ class ReplayMapW(LoadableW):
 
 class ReplayPathW(LoadableW):
     def __init__(self):
-        super().__init__("ReplayPath")
-
         self.path_input = FolderChooser(".osr path", folder_mode=False, file_ending="osu! Replayfile (*.osr)")
+
+        super().__init__("ReplayPath", [self.path_input])
 
         self.layout.addWidget(self.path_input)
 
 class MapW(LoadableW):
     def __init__(self):
-        super().__init__("Map")
 
         self.map_id_input = InputWidget("Map id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+        super().__init__("Map", [self.map_id_input, self.span_input])
 
         self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         self.layout.addWidget(self.span_input, 2, 0, 1, 8)
@@ -529,11 +548,12 @@ class MapW(LoadableW):
 
 class UserW(LoadableW):
     def __init__(self):
-        super().__init__("User")
 
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+        super().__init__("User", [self.user_id_input, self.span_input])
 
         self.layout.addWidget(self.user_id_input, 1, 0, 1, 8)
         self.layout.addWidget(self.span_input, 2, 0, 1, 8)
@@ -541,17 +561,15 @@ class UserW(LoadableW):
 
 class MapUserW(LoadableW):
     def __init__(self):
-        super().__init__("MapUser")
-
         self.map_id_input = InputWidget("Map id", "", "id")
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
-        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+        super().__init__("MapUser", [self.map_id_input, self.user_id_input, self.span_input])
 
         self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
         self.layout.addWidget(self.span_input, 3, 0, 1, 8)
-        self.layout.addWidget(self.mods_input, 4, 0, 1, 8)
 
 class MainTab(QFrame):
     set_progressbar_signal = pyqtSignal(int)  # max progress
@@ -697,62 +715,39 @@ class MainTab(QFrame):
         self.terminal.setTextCursor(cursor)
 
     def add_circleguard_run(self):
-        current_tab = self.tabs.currentIndex()
-        run_type = MainTab.TAB_REGISTRY[current_tab]["name"]
+        checks = self.checks
+        if not checks:
+            # no checks added
+            return
+        for check in checks:
+            # all loadable objects in this check
+            # (the check only stores the loadable ids, not the objects themselves)
+            # TODO
+            # this is a ridiculous way to do it, but the alternative would involve serializing
+            # the class into a QByteArray and passing it through the QMimeData of the QDrag,
+            # then converting it back to a class on the other side, so we'll stick with this for now.
+            loadables = [l for l in self.loadables if l.loadable_id in check.drop_area.loadable_ids]
+            check.loadables = loadables
 
-        # special case; visualize runs shouldn't get added to queue
-        if run_type == "VISUALIZE":
-            self.visualize([replay.data for replay in self.visualize_tab.replays])
+        # would use any() but it short circuts and doesn't call on all loadables
+        all_filled = True
+        for check in checks:
+            for loadable in check.loadables:
+                # don't assign to all_filled if all_filled is already False
+                all_filled = loadable.check_required_fields() if all_filled else all_filled
+
+        if not all_filled:
+            # no more feedback necessary like printing to console (probably)
+            # because the check_required_fields method already highlights
+            # empty QLineEdits in red
+            return
+        checks = [check for check in checks if check.loadables]
+        if not checks:
+            # loadables haven't been dragged to any of the checks, just return
+            # so we don't have prints to the console for no reason
             return
 
-        m = self.map_tab
-        s = self.screen_tab
-        l = self.local_tab
-        v = self.verify_tab
-
-        # retrieve every possible variable to avoid nasty indentation (and we might
-        # use it for something later). Shouldn't cause any performance issues.
-
-        m_map_id = m.id_combined.map_id.field.text()
-        m_map_id = int(m_map_id) if m_map_id != "" else None
-        m_user_id = m.id_combined.user_id.field.text()
-        m_user_id = int(m_user_id) if m_user_id != "" else None
-        m_num = m.compare_top.slider.value()
-        m_thresh = m.threshold.slider.value()
-
-        s_user_id = s.user_id.field.text()
-        s_user_id = int(s_user_id) if s_user_id != "" else None
-        s_num_top = s.compare_top_map.slider.value()
-        s_num_users = s.compare_top_users.slider.value()
-        s_thresh = s.threshold.slider.value()
-
-        l_path = resource_path(Path(l.folder_chooser.path))
-        l_map_id = l.id_combined.map_id.field.text()
-        l_map_id = int(l_map_id) if l_map_id != "" else None
-        l_user_id = l.id_combined.user_id.field.text()
-        l_user_id = int(l_user_id) if l_user_id != "" else None
-        l_num = l.compare_top.slider.value()
-        l_thresh = l.threshold.slider.value()
-
-        v_map_id = v.map_id.field.text()
-        v_map_id = int(v_map_id) if v_map_id != "" else None
-        v_user_id_1 = v.user_id_1.field.text()
-        v_user_id_1 = int(v_user_id_1) if v_user_id_1 != "" else None
-        v_user_id_2 = v.user_id_2.field.text()
-        v_user_id_2 = int(v_user_id_2) if v_user_id_2 != "" else None
-        v_thresh = v.threshold.slider.value()
-
-        event = threading.Event()
-
-        if run_type == "MAP":
-            run = MapRun(self.run_id, event, m_map_id, m_user_id, m_num, m_thresh)
-        elif run_type == "SCREEN":
-            run = ScreenRun(self.run_id, event, s_user_id, s_num_top, s_num_users, s_thresh)
-        elif run_type == "LOCAL":
-            run = LocalRun(self.run_id, event, l_path, l_map_id, l_user_id, l_num, l_thresh)
-        elif run_type == "VERIFY":
-            run = VerifyRun(self.run_id, event, v_map_id, v_user_id_1, v_user_id_2, v_thresh)
-
+        run = Run(checks, self.run_id, threading.Event())
         self.runs.append(run)
         self.add_run_to_queue_signal.emit(run)
         self.cg_q.put(run)
@@ -827,88 +822,53 @@ class MainTab(QFrame):
             cg.loader.ratelimit_signal.connect(_ratelimited)
             cg.loader.check_stopped_signal.connect(partial(_check_event, event))
 
-            d = StealDetect(run.thresh)
-            if type(run) is MapRun:
-                m = Map(run.map_id, num=run.num)
-                loadables = [m]
-                if run.user_id:
-                    user_replay = ReplayMap(run.map_id, run.user_id)
-                    loadables.append(user_replay)
-                check = Check(loadables, d)
-            elif type(run) is ScreenRun:
-                check = []
-                user = User(run.user_id, run.num_top)
-                cg.load_info(user)
-                for r in user:
-                    # 2-100 because the first one *is* ``r``.
-                    m = Map(r.map_id, num=run.num_users)
-                    remod_replays = MapUser(r.map_id, r.user_id, span="2-100")
-                    remod_check = Check([r, remod_replays], d)
-                    steal_check = Check([r, m], d)
-                    check.append([remod_check, steal_check])
-            elif type(run) is LocalRun:
-                loadables = [ReplayPath(run.path / path) for path in os.listdir(run.path)]
-                check = Check(loadables, d)
-            elif type(run) is VerifyRun:
-                r1 = ReplayMap(run.map_id, run.user_id_1)
-                r2 = ReplayMap(run.map_id, run.user_id_2)
-                check = Check([r1, r2], d)
+            # TODO aggregate loadables before iterating over checks so that we don't
+            # double load loadables. Will require filtering by id again
+            for checkW in run.checks:
+                d = None
+                if type(checkW) is StealCheckW:
+                    steal_thresh = get_setting("threshold_cheat")
+                    d = StealDetect(steal_thresh)
+                if type(checkW) is RelaxCheckW:
+                    # relax_thresh = get_setting("threshold_relax_cheat") # TODO add new settings
+                    d = RelaxDetect(10)
+                if type(checkW) is CorrectionCheckW:
+                    correction_thresh = get_setting("")
+                    d = CorrectionDetect() # TODO hm this one needs two settings, maybe rethink the threshold_* naming scheme
 
-            if type(run) is ScreenRun:
-                num_to_load = 0
-                # different from other runs; a list of list of check objects is
-                # returned instead of a single Check because it checks for
-                # remodding and replay  stealing for each top play of the user
-                for check_list in check:
-                    for check_ in check_list:
-                        loadables = check_.all_replays()
-                        num_to_load += len(loadables)
-                self.set_progressbar_signal.emit(num_to_load)
+                loadables = []
+                for loadableW in checkW.loadables:
+                    loadable = None
+                    if type(loadableW) is ReplayPathW:
+                        loadable = ReplayPath(checkW.path_input.path)
+                    if type(loadableW) is ReplayMapW:
+                        loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
+                                             mods=parse_mod_string(loadableW.mods_input.field.text())) # TODO process a mod string (HDHR) to a circlecore ModCombination
+                    if type(loadableW) is MapW:
+                        loadable = Map(int(loadableW.map_id_input.field.text()), span=loadableW.span_input.field.text(),
+                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                    if type(loadableW) is UserW:
+                        loadable = User(int(loadableW.user_id_input.field.text()), span=loadableW.span_input.field.text(),
+                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                    if type(loadableW) is MapUserW:
+                        loadable = MapUser(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
+                                           span=loadableW.span_input.field.text())
+                    loadables.append(loadable)
 
-                for check_list in check:
-                    for check_ in check_list:
-                        cg.load_info(check_)
-                        loadables = check_.all_replays()
-
-                        num_to_load = len(loadables)
-                        timestamp = datetime.now()
-                        self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
-                                                                        map_id=loadables[0].map_id))
-                        for replay in loadables:
-                            _check_event(event)
-                            cg.load(replay)
-                            self.increment_progressbar_signal.emit(1)
-                        check_.loaded = True
-
-                        self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
-                        self.update_label_signal.emit("Comparing Replays")
-                        self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
-                        for result in cg.run(check_):
-                            _check_event(event)
-                            self.q.put(result)
-
-            else:
-                cg.load_info(check)
-                replays = check.all_replays()
-                num_to_load = check.num_replays()
+                c = Check(loadables, d)
+                cg.load_info(c)
+                replays = c.all_replays()
+                num_to_load = c.num_replays()
                 self.set_progressbar_signal.emit(num_to_load)
                 timestamp = datetime.now()
-                if type(replays[0]) is ReplayPath:
-                    cg.load(replays[0])
-                    # Not perfect because local checks aren't guaranteed to have the same
-                    # map id for every replay, but it's the best we can do right now.
-                    # time spent loading one replay is worth getting the map id.
-                    map_id = replays[0].map_id
-                else:
-                    map_id = replays[0].map_id
-
-                self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load,
-                                                                map_id=map_id))
+                # TODO change message_loading_replays; we've removed the map_id parameter
+                # probably have a distinct message for each type of check (ie each type of detect)
+                self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load, map_id=1))
                 for replay in replays:
                     _check_event(event)
                     cg.load(replay)
                     self.increment_progressbar_signal.emit(1)
-                check.loaded = True
+                c.loaded = True
                 # change progressbar into an undetermined state
                 # (animation with stripes sliding horizontally)
                 # to indicate we're processing the data
@@ -917,7 +877,7 @@ class MainTab(QFrame):
                 self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
                 self.update_label_signal.emit("Comparing Replays")
                 self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
-                for result in cg.run(check):
+                for result in cg.run(c):
                     _check_event(event)
                     self.q.put(result)
 
@@ -1291,11 +1251,13 @@ class ScrollableThresholdsWidget(QFrame):
                 "threshold_cheat", 30)
         self.threshold_display = SliderBoxSetting("Stealing Display", "Comparisons that score below this will be printed to the console",
                 "threshold_display", 100)
-        self.grid = QVBoxLayout()
-        self.grid.addWidget(self.threshold_steal)
-        self.grid.addWidget(self.threshold_display)
-        self.grid.setAlignment(Qt.AlignTop)
-        self.setLayout(self.grid)
+        self.layout = QVBoxLayout()
+        self.layout.addWidget(Separator("Replay Stealing"))
+        self.layout.addWidget(self.threshold_steal)
+        self.layout.addWidget(self.threshold_display)
+        self.layout.addWidget(Separator("Relax"))
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
 
 def switch_theme(dark, accent=QColor(71, 174, 247)):
     set_setting("dark_theme", dark)
