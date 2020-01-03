@@ -58,7 +58,7 @@ class PasswordEdit(LineEdit):
 class IDLineEdit(LineEdit):
     r"""
     A LineEdit that does not allow anything but digits to be entered.
-    Specifically, anything not matched by the \d* regex is not registered.
+    Specifically, anything not matched by regex ``\d*`` is not registered.
     """
 
     def __init__(self, parent):
