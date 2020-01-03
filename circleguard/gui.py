@@ -827,15 +827,15 @@ class MainTab(QFrame):
             for checkW in run.checks:
                 d = None
                 if type(checkW) is StealCheckW:
-                    steal_thresh = get_setting("threshold_cheat")
+                    steal_thresh = get_setting("steal_max_sim")
                     d = StealDetect(steal_thresh)
                 if type(checkW) is RelaxCheckW:
-                    # relax_thresh = get_setting("threshold_relax_cheat") # TODO add new settings
-                    d = RelaxDetect(10)
+                    relax_thresh = get_setting("relax_max_ur")
+                    d = RelaxDetect(relax_thresh)
                 if type(checkW) is CorrectionCheckW:
-                    correction_thresh = get_setting("")
-                    d = CorrectionDetect() # TODO hm this one needs two settings, maybe rethink the threshold_* naming scheme
-
+                    max_angle = get_setting("correction_max_angle")
+                    min_distance = get_setting("correction_min_distance")
+                    d = CorrectionDetect(max_angle, min_distance)
                 loadables = []
                 for loadableW in checkW.loadables:
                     loadable = None
@@ -1248,9 +1248,9 @@ class ScrollableThresholdsWidget(QFrame):
     def __init__(self):
         super().__init__()
         self.threshold_steal = SliderBoxSetting("Stealing", "Comparisons that score below this will be stored so you can view them",
-                "threshold_cheat", 30)
+                "steal_max_sim", 30)
         self.threshold_display = SliderBoxSetting("Stealing Display", "Comparisons that score below this will be printed to the console",
-                "threshold_display", 100)
+                "steal_max_sim_display", 100)
         self.layout = QVBoxLayout()
         self.layout.addWidget(Separator("Replay Stealing"))
         self.layout.addWidget(self.threshold_steal)

@@ -165,8 +165,12 @@ DEFAULTS = {
                              "{r.similarity:.2f} similarity according to [circleguard](https://github.com/circleguard/circleguard) (higher is less similar)")
     },
     "Thresholds": {
-        "threshold_cheat": 18,
-        "threshold_display": 25
+        "steal_max_sim": 18,
+        "steal_max_sim_display": 25,
+        "relax_max_ur": 50,
+        "relax_max_ur_display": 90,
+        "correction_max_angle": 10,
+        "correction_min_distance": 8
     },
     "Appearance": {
         "dark_theme": False,
@@ -206,7 +210,13 @@ CHANGED = {
     "1.3.0": [
         "cache_location",
         "log_dir",
-        "message_loading_replays"
+        "message_loading_replays",
+        "steal_max_sim",
+        "steal_max_sim_display",
+        "relax_max_ur",
+        "relax_max_ur_display",
+        "correction_max_angle",
+        "correction_min_distance"
     ]
 }
 

@@ -52,7 +52,6 @@ class LineEdit(QLineEdit):
             self.setStyleSheet(self.old_stylesheet)
             self.highlighted = False
 
-
     def show_required(self):
         self.setStyleSheet("QLineEdit { border: 2px solid red }")
         self.highlighted = True
