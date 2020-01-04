@@ -53,9 +53,8 @@ class LineEdit(QLineEdit):
             self.highlighted = False
 
     def show_required(self):
-        self.setStyleSheet("QLineEdit { border: 2px solid red }")
+        self.setStyleSheet(get_setting("required_style"))
         self.highlighted = True
-
 
 
 class PasswordEdit(LineEdit):
@@ -650,6 +649,9 @@ class FolderChooser(QFrame):
 
     def __init__(self, title, path=str(Path.home()), folder_mode=True, multiple_files=False, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
         super(FolderChooser, self).__init__()
+        self.highlighted = False # for show_required
+        self.changed = False # if the selection currently differs from the default path
+        self.default_path = path
         self.path = path
         self.display_path = display_path
         self.folder_mode = folder_mode
@@ -661,13 +663,18 @@ class FolderChooser(QFrame):
         self.file_chooser_button = QPushButton(self)
         type_ = "Folder" if self.folder_mode else "Files" if self.multiple_files else "File"
         self.file_chooser_button.setText("Choose " + type_)
+        # if we didn't have this line only clicking on the label would unhighlight,
+        # since the button steals the mouse clicked event
+        self.file_chooser_button.clicked.connect(self.reset_highlight)
         self.file_chooser_button.clicked.connect(self.set_dir)
+
         self.file_chooser_button.setFixedWidth(100)
 
         self.path_label = QLabel(self)
         if self.display_path:
             self.path_label.setText(self.path)
         self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
+        self.old_stylesheet = self.combined.styleSheet() # for mousePressedEvent / show_required
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -695,19 +702,33 @@ class FolderChooser(QFrame):
         if update_path != "":
             self.update_dir(update_path)
 
-
     def update_dir(self, path):
         self.path = path if path != "" else self.path
+        self.changed = True if self.path != self.default_path else False
+        print(self.changed)
         if self.display_path:
             label = path if len(self.path) < 64 else ntpath.basename(path)
             self.path_label.setText(label)
         self.path_signal.emit(self.path)
 
-
     def switch_enabled(self, state):
         self.label.setStyleSheet("color:grey" if not state else "")
         self.path_label.setStyleSheet("color:grey" if not state else "")
         self.file_chooser_button.setEnabled(state)
+
+    def show_required(self):
+        self.combined.setStyleSheet(get_setting("required_style"))
+        self.highlighted = True
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        self.reset_highlight()
+
+    # separate function so we can call this method outside of mousePressEvent
+    def reset_highlight(self):
+        if self.highlighted:
+            self.combined.setStyleSheet(self.old_stylesheet)
+            self.highlighted = False
 
 
 class ResetSettings(QFrame):

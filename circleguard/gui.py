@@ -504,7 +504,13 @@ class LoadableW(BorderWidget):
         """
         for input_widget in self.required_input_widgets:
             all_filled = True
-            if input_widget.field.text() == "":
+            # everything else is an InputWidget except the FolderChooser
+            # (ReplayPath) unfortunately
+            if type(input_widget) is FolderChooser:
+                filled = input_widget.changed
+            else:
+                filled = input_widget.field.text() != ""
+            if not filled:
                 input_widget.show_required()
                 all_filled = False
         return all_filled
@@ -840,7 +846,7 @@ class MainTab(QFrame):
                 for loadableW in checkW.loadables:
                     loadable = None
                     if type(loadableW) is ReplayPathW:
-                        loadable = ReplayPath(checkW.path_input.path)
+                        loadable = ReplayPath(loadableW.path_input.path)
                     if type(loadableW) is ReplayMapW:
                         loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
                                              mods=parse_mod_string(loadableW.mods_input.field.text()))
