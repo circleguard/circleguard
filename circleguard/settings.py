@@ -140,13 +140,15 @@ DEFAULTS = {
         "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
     },
     "Messages": {
-        "message_loading_replays": "[{ts:%X}] Loading {num_replays} replays on map {map_id}",
+        "message_loading_replays": "[{ts:%X}] Loading {num_replays} replays",
         "message_ratelimited": "[{ts:%X}] Ratelimited, waiting for {s} seconds",
-        "message_starting_comparing": "[{ts:%X}] Comparing Replays",
-        "message_finished_comparing": "[{ts:%X}] Done",
+        "message_starting_investigation": "[{ts:%X}] Started investigation into replays",
+        "message_finished_investigation": "[{ts:%X}] Done",
         # it is possible though extremely unusual for the replays to have different map ids. This is good enough
-        "message_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}, {r.later_replay.username} set later. Extremely similar replays; look at the visualization to investigate further.",
-        "message_no_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}. Replays likely not stolen."
+        "message_steal_found": "[{ts:%X}] {sim:.1f} similarity. {replay1.username} vs {replay2.username} on map {replay1.map_id}, {r.later_replay.username} set later. Extremely similar replays; look at the visualization to investigate further.",
+        "message_steal_found_display": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}. Replays likely not stolen.",
+        "message_relax_found": "ya you got a relax'd play with ur {ur}",
+        "message_relax_found_display": "possibly cheated play with ur {ur}"
     },
     "Strings": {
         "string_result_text": "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} (set later) vs {r.earlier_replay.username} on map {r1.map_id}",
@@ -216,7 +218,9 @@ CHANGED = {
         "relax_max_ur",
         "relax_max_ur_display",
         "correction_max_angle",
-        "correction_min_distance"
+        "correction_min_distance",
+        "message_starting_investigation",
+        "message_finished_investigation"
     ]
 }
 

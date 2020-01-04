@@ -26,7 +26,7 @@ app.setApplicationName("Circleguard")
 
 from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableException,
                         ReplayMap, ReplayPath, User, Map, Check, MapUser, StealDetect,
-                        RelaxDetect, CorrectionDetect)
+                        RelaxDetect, CorrectionDetect, ReplayStealingResult, RelaxResult, CorrectionResult)
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
 from utils import resource_path, run_update_check, Run, parse_mod_string
@@ -121,7 +121,7 @@ class WindowWrapper(QMainWindow):
         self.main_window.main_tab.set_progressbar_signal.connect(self.set_progressbar)
         self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
         self.main_window.main_tab.update_label_signal.connect(self.update_label)
-        self.main_window.main_tab.add_comparison_result_signal.connect(self.add_comparison_result)
+        self.main_window.main_tab.add_result_signal.connect(self.add_result)
         self.main_window.main_tab.write_to_terminal_signal.connect(self.main_window.main_tab.write)
         self.main_window.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
         self.main_window.main_tab.update_run_status_signal.connect(self.update_run_status)
@@ -219,7 +219,7 @@ class WindowWrapper(QMainWindow):
         self.progressbar.setRange(0, max_value)
 
 
-    def add_comparison_result(self, result):
+    def add_result(self, result):
         # this right here could very well lead to some memory issues. I tried to avoid
         # leaving a reference to the replays in this method, but it's quite possible
         # things are still not very clean. Ideally only ComparisonResult would have a
@@ -576,7 +576,7 @@ class MainTab(QFrame):
     increment_progressbar_signal = pyqtSignal(int)  # increment value
     update_label_signal = pyqtSignal(str)
     write_to_terminal_signal = pyqtSignal(str)
-    add_comparison_result_signal = pyqtSignal(object)  # Result
+    add_result_signal = pyqtSignal(object)  # Result
     add_run_to_queue_signal = pyqtSignal(object) # Run object (or a subclass)
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
 
@@ -874,7 +874,7 @@ class MainTab(QFrame):
                 # to indicate we're processing the data
                 self.set_progressbar_signal.emit(0)
                 timestamp = datetime.now()
-                self.write_to_terminal_signal.emit(get_setting("message_starting_comparing").format(ts=timestamp, num_replays=num_to_load))
+                self.write_to_terminal_signal.emit(get_setting("message_starting_investigation").format(ts=timestamp, num_replays=num_to_load))
                 self.update_label_signal.emit("Comparing Replays")
                 self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
                 for result in cg.run(c):
@@ -883,7 +883,7 @@ class MainTab(QFrame):
 
             self.set_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
             timestamp = datetime.now()
-            self.write_to_terminal_signal.emit(get_setting("message_finished_comparing").format(ts=timestamp, num_replays=num_to_load))
+            self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=timestamp, num_replays=num_to_load))
 
         except NoInfoAvailableException:
             self.write_to_terminal_signal.emit("No information found for those arguments. Please recheck your map/user id")
@@ -900,26 +900,37 @@ class MainTab(QFrame):
         try:
             while True:
                 result = self.q.get_nowait()
-                # self.visualize(result.replay1, result.replay2)
+                # self.visualize(result.replay1, result.replay2)]
+                ts = datetime.now() # ts = timestamp
+                message = None
+                if type(result) is ReplayStealingResult:
+                    if result.ischeat:
+                        message = get_setting("message_steal_found").format(ts=ts, sim=result.similarity, r=result, r1=result.r1, r2=result.r2)
+                    elif result.similarity < get_setting("steal_max_sim_display"):
+                        message = get_setting("message_steal_found_display").format(ts=ts, sim=result.similarity, r=result, replay1=result.r1, replay2=result.r2)
+
+                if type(result) is RelaxResult:
+                    if result.ischeat:
+                        message = get_setting("message_relax_found").format(ts=ts, r=result, replay=result.replay, ur=result.ur)
+                    elif result.ur < get_setting("relax_max_ur_display"):
+                        message = get_setting("message_relax_found_display").format(ts=ts, r=result, replay=result.replay, ur=result.ur)
+
+                if type(result) is CorrectionResult:
+                    if result.ischeat:
+                        message = get_setting("message_correction_found").format(ts=ts, r=result, replay=result.replay) # TODO deal with Snaps somehow, yuck
+                    # elif result.snaps.????
+                    # TODO don't get enough information to deal with message_correction_found_display here.
+                    # Pass the less strict requirements to circlecore and filter them here to check if it passes ischeat maybe?
+                # message is None if the result isn't a cheat and doesn't
+                # satisfy its display threshold
+                if message:
+                    self.write(message)
                 if result.ischeat:
-                    timestamp = datetime.now()
-                    r1 = result.replay1
-                    r2 = result.replay2
-                    msg = get_setting("message_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                                                                      r=result, r1=r1, r2=r2)
-                    self.write(msg)
                     QApplication.beep()
                     QApplication.alert(self)
                     # add to Results Tab so it can be played back on demand
-                    self.add_comparison_result_signal.emit(result)
+                    self.add_result_signal.emit(result)
 
-                elif result.similarity < get_setting("threshold_display"):
-                    timestamp = datetime.now()
-                    r1 = result.replay1
-                    r2 = result.replay2
-                    msg = get_setting("message_no_cheater_found").format(ts=timestamp, similarity=result.similarity,
-                                                                      r=result, r1=r1, r2=r2)
-                    self.write(msg)
         except Empty:
             pass
 
@@ -1247,15 +1258,27 @@ class ThresholdsTab(QFrame):
 class ScrollableThresholdsWidget(QFrame):
     def __init__(self):
         super().__init__()
-        self.threshold_steal = SliderBoxSetting("Stealing", "Comparisons that score below this will be stored so you can view them",
-                "steal_max_sim", 30)
-        self.threshold_display = SliderBoxSetting("Stealing Display", "Comparisons that score below this will be printed to the console",
-                "steal_max_sim_display", 100)
+        self.steal_max_sim = SliderBoxSetting("Similarity threshold", "ReplaySteal comparisons that score below this "
+                "will be stored so you can view them, and printed to the console", "steal_max_sim", 100)
+        self.steal_max_sim_display = SliderBoxSetting("Similarity display threshold", "ReplaySteal comparisons that "
+                "score below this will be printed to the console", "steal_max_sim_display", 100)
+        self.relax_max_ur = SliderBoxSetting("ur threshold", "Replays that have a ur lower than this will be stored "
+                "so you can view them, and printed to the console", "relax_max_ur", 300)
+        self.relax_max_ur_display = SliderBoxSetting("ur display threshold", "Replays with a ur lower than this "
+                "will be printed to the console", "relax_max_ur_display", 300)
+        self.correction_max_angle = SliderBoxSetting("Max correction angle", "Replays with a set of three points "
+                "making an angle less than this (*and* also satisfying correction_min_distance) will be stored so "
+                "you can view them, and printed to the console. ", "correction_max_angle", 360)
+        # TODO rest of correction widgets (4 total)
         self.layout = QVBoxLayout()
         self.layout.addWidget(Separator("Replay Stealing"))
-        self.layout.addWidget(self.threshold_steal)
-        self.layout.addWidget(self.threshold_display)
+        self.layout.addWidget(self.steal_max_sim)
+        self.layout.addWidget(self.steal_max_sim_display)
         self.layout.addWidget(Separator("Relax"))
+        self.layout.addWidget(self.relax_max_ur)
+        self.layout.addWidget(self.relax_max_ur_display)
+        self.layout.addWidget(Separator("Aim Correction"))
+        self.layout.addWidget(self.correction_max_angle)
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
