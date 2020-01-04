@@ -843,7 +843,7 @@ class MainTab(QFrame):
                         loadable = ReplayPath(checkW.path_input.path)
                     if type(loadableW) is ReplayMapW:
                         loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                             mods=parse_mod_string(loadableW.mods_input.field.text())) # TODO process a mod string (HDHR) to a circlecore ModCombination
+                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
                     if type(loadableW) is MapW:
                         loadable = Map(int(loadableW.map_id_input.field.text()), span=loadableW.span_input.field.text(),
                                              mods=parse_mod_string(loadableW.mods_input.field.text()))
