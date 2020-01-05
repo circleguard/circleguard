@@ -911,11 +911,13 @@ class MainTab(QFrame):
                 message = None
                 if type(result) is ReplayStealingResult:
                     if result.ischeat:
-                        message = get_setting("message_steal_found").format(ts=ts, sim=result.similarity, r=result, r1=result.r1, r2=result.r2)
+                        message = get_setting("message_steal_found").format(ts=ts, sim=result.similarity, r=result, replay1=result.replay1, replay2=result.replay2,
+                                                replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
+                                                replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
                     elif result.similarity < get_setting("steal_max_sim_display"):
-                        message = get_setting("message_steal_found_display").format(ts=ts, sim=result.similarity, r=result, replay1=result.r1,
-                                                replay2=result.r2, replay1_mods_short_name=result.r1.mods.short_name(), replay1_mods_long_name=result.r1.mods.long_name(),
-                                                replay2_mods_short_name=result.r2.mods.short_name(), replay2_mods_long_name=result.r2.mods.long_name())
+                        message = get_setting("message_steal_found_display").format(ts=ts, sim=result.similarity, r=result, replay1=result.replay1,
+                                                replay2=result.replay2, replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
+                                                replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
 
                 if type(result) is RelaxResult:
                     if result.ischeat:
