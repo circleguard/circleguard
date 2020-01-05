@@ -140,15 +140,16 @@ DEFAULTS = {
         "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
     },
     "Messages": {
-        "message_loading_replays": "[{ts:%X}] Loading {num_replays} replays",
-        "message_ratelimited": "[{ts:%X}] Ratelimited, waiting for {s} seconds",
-        "message_starting_investigation": "[{ts:%X}] Started investigation into replays",
-        "message_finished_investigation": "[{ts:%X}] Done",
+        "message_loading_replays":         "[{ts:%X}] Loading {num} replays",
+        "message_ratelimited":             "[{ts:%X}] Ratelimited, waiting for {s} seconds",
+        "message_starting_investigation":  "[{ts:%X}] Started investigation into replays",
+        "message_finished_investigation":  "[{ts:%X}] Done",
         # it is possible though extremely unusual for the replays to have different map ids. This is good enough
-        "message_steal_found": "[{ts:%X}] {sim:.1f} similarity. {replay1.username} vs {replay2.username} on map {replay1.map_id}, {r.later_replay.username} set later. Extremely similar replays; look at the visualization to investigate further.",
-        "message_steal_found_display": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}. Replays likely not stolen.",
-        "message_relax_found": "[{ts:%X}] {ur:.2f} ur. {replay.username} +{replay.mods.short_name} on map {replay.map_id}", # TODO make ModCombination short_name and long_name be @property's so we can reference them here and still keep them as function's in circlecore.
-        "message_relax_found_display": "[{ts:%X}] {ur:.2f} ur. {replay.username} +{replay.mods.short_name} on map {replay.map_id} "
+        # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
+        "message_steal_found":             "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later.",
+        "message_steal_found_display":     "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later. Not below threshold",
+        "message_relax_found":             "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "message_relax_found_display":     "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold"
     },
     "Strings": {
         "string_result_text": "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} (set later) vs {r.earlier_replay.username} on map {r1.map_id}",
@@ -243,6 +244,10 @@ def overwrite_outdated_settings():
     for ver, changed_arr in CHANGED.items():
         if last_version < version.parse(ver):
             for setting in changed_arr:
+                if setting not in TYPES:
+                    # happens if the key is in CHANGED but was deleted in a later version,
+                    # like message_cheater_found.
+                    continue
                 set_setting(setting, DEFAULTS[TYPES[setting][1]][setting])
     set_setting("last_version", __version__)
 

@@ -869,7 +869,7 @@ class MainTab(QFrame):
                 timestamp = datetime.now()
                 # TODO change message_loading_replays; we've removed the map_id parameter
                 # probably have a distinct message for each type of check (ie each type of detect)
-                self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num_replays=num_to_load, map_id=1))
+                self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num=num_to_load, map_id=1))
                 for replay in replays:
                     _check_event(event)
                     cg.load(replay)
@@ -880,7 +880,7 @@ class MainTab(QFrame):
                 # to indicate we're processing the data
                 self.set_progressbar_signal.emit(0)
                 timestamp = datetime.now()
-                self.write_to_terminal_signal.emit(get_setting("message_starting_investigation").format(ts=timestamp, num_replays=num_to_load))
+                self.write_to_terminal_signal.emit(get_setting("message_starting_investigation").format(ts=timestamp, num=num_to_load))
                 self.update_label_signal.emit("Comparing Replays")
                 self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
                 for result in cg.run(c):
@@ -889,7 +889,7 @@ class MainTab(QFrame):
 
             self.set_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
             timestamp = datetime.now()
-            self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=timestamp, num_replays=num_to_load))
+            self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=timestamp, num=num_to_load))
 
         except NoInfoAvailableException:
             self.write_to_terminal_signal.emit("No information found for those arguments. Please recheck your map/user id")
@@ -913,13 +913,17 @@ class MainTab(QFrame):
                     if result.ischeat:
                         message = get_setting("message_steal_found").format(ts=ts, sim=result.similarity, r=result, r1=result.r1, r2=result.r2)
                     elif result.similarity < get_setting("steal_max_sim_display"):
-                        message = get_setting("message_steal_found_display").format(ts=ts, sim=result.similarity, r=result, replay1=result.r1, replay2=result.r2)
+                        message = get_setting("message_steal_found_display").format(ts=ts, sim=result.similarity, r=result, replay1=result.r1,
+                                                replay2=result.r2, replay1_mods_short_name=result.r1.mods.short_name(), replay1_mods_long_name=result.r1.mods.long_name(),
+                                                replay2_mods_short_name=result.r2.mods.short_name(), replay2_mods_long_name=result.r2.mods.long_name())
 
                 if type(result) is RelaxResult:
                     if result.ischeat:
-                        message = get_setting("message_relax_found").format(ts=ts, r=result, replay=result.replay, ur=result.ur)
+                        message = get_setting("message_relax_found").format(ts=ts, r=result, replay=result.replay, ur=result.ur,
+                                                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
                     elif result.ur < get_setting("relax_max_ur_display"):
-                        message = get_setting("message_relax_found_display").format(ts=ts, r=result, replay=result.replay, ur=result.ur)
+                        message = get_setting("message_relax_found_display").format(ts=ts, r=result, replay=result.replay, ur=result.ur,
+                                                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
                 if type(result) is CorrectionResult:
                     if result.ischeat:
