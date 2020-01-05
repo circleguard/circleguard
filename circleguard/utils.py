@@ -6,10 +6,11 @@ from datetime import datetime, timedelta
 from circleguard import Mod
 from packaging import version
 import requests
+from requests import RequestException
 
 # placeholder imports to have all imports at the top of the file. Imported for
 # real farther below
-#from settings import get_setting
+#from settings import get_setting, set_setting
 #from version import __version__
 
 # placed above local imports to avoid circular import errors
@@ -27,14 +28,14 @@ def resource_path(str_path):
     return ROOT_PATH / Path(str_path)
 
 
-from settings import get_setting
+from settings import get_setting, set_setting
 from version import __version__
 
 
 def run_update_check():
     last_check = datetime.strptime(get_setting("last_update_check"), get_setting("timestamp_format"))
     next_check = last_check + timedelta(hours=1)
-    if not next_check < datetime.now():
+    if next_check > datetime.now():
         return get_idle_setting_str()
     try:
         # check for new version
@@ -42,8 +43,8 @@ def run_update_check():
         git_version = version.parse(git_request["name"])
         set_setting("latest_version", git_version)
         set_setting("last_update_check", datetime.now().strftime(get_setting("timestamp_format")))
-    except:
-        # user is propably offline
+    except RequestException:
+        # user is probably offline
         pass
     return get_idle_setting_str()
 
