@@ -198,7 +198,7 @@ DEFAULTS = {
         "last_version": "0.0.0",  # force run update_settings if the user previously had a version without this key
         "api_key": "",
         "timestamp_format": "%H:%M:%S %m.%d.%Y",
-        "last_update_check": datetime.now().strftime("%H:%M:%S %m.%d.%Y"), # TODO deal with using timestamp_format here but not being able to use get_setting. Why did we need a format setting in the first place?
+        "last_update_check": "00:00:00 01.01.1970", # aka datetime.min, but formatted
         "latest_version": __version__
     },
     "Caching": {
