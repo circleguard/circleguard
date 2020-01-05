@@ -1,7 +1,7 @@
 import re
 import os
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 import abc
 
 # pylint: disable=no-name-in-module
@@ -28,26 +28,28 @@ COMMENTS = {
             "The `ts` seen in many of the settings is a datetime.datetime object, representing the timestamp at that time.\n"
             "You may of course use any formatting directive in the settings (instead of the default %X) that datetime supports.\n\n"
             "After you change settings, you must press the \"sync\" button on the settings tab for them to take effect.\n\n"
-            "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard.",
+            "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard",
     "Locations": {
         "section": "The path to various file or directories used by the program",
         "cache_location": "Where the cache to read and write replays to is.\n"
                 "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
-        "config_location": "Where the circelguard.cfg file (this very file) resides.",
+        "config_location": "Where the circelguard.cfg file (this very file) resides",
         "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
     },
     "Messages": {
-        "section": "Messages written to the terminal at various times",
-        "message_loading_replays": "Displayed just before we begin loading replays",
-        "message_ratelimited": "Displayed when the api returns a response telling us our key is ratelimited",
-        "message_starting_comparing": "Displayed just before replays are compared for replay stealing",
-        "message_finished_comparing": "Displayed when all replays have finished being compared",
-        "message_cheater_found": "Displayed when a comparison scores below the cheat threshold",
-        "message_no_cheater_found": "Displayed when a comparison scores above the cheat threshold, but below the display threshold"
+        "section": "Messages written to the terminal (the text box at the bottom of the Main tab) at various times",
+        "message_loading_replays": "Displayed when we begin loading replays",
+        "message_ratelimited": "Displayed when the api key gets ratelimited",
+        "message_starting_investigation": "Displayed when we start to investigate the loaded replays",
+        "message_finished_investigation": "Displayed when we have finished investigating all replays",
+        "message_steal_found": "Displayed when an investigation for replay stealing has a similarity below Thresholds/steal_max_sim",
+        "message_steal_found_display": "Displayed when an investigation for replay stealing has a similarity below Thresholds/steal_max_sim_display",
+        "message_relax_found": "Displayed when an investigation for relax has a ur below Thresholds/relax_max_ur",
+        "message_relax_found_display": "Displayed when an investigation for relax has a ur below Thresholds/relax_max_ur_display"
     },
     "Strings": {
-        "section": "Labels seen on widgets",
-        "string_result_text": "Text displayed on a row on the Results tab when a result is added"
+        "section": "Labels seen on various widgets",
+        "string_result_text": "Text displayed on a row in the Results tab when a result is added"
     },
     "Templates": {
         "section": "The templates that can be copied from the Results tab for easy reddit reporting",
@@ -60,7 +62,8 @@ COMMENTS = {
     "Appearance": {
         "dark_theme": "Dark theme skins the application to be a bit easier on the eyes. The gui is developed with a dark theme in mind first, light theme second",
         "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
-        "visualizer_bg": "If True, uses a pure black background for the visualizer (emulates osu client gameplay). If False, uses the default background of the current theme (recommended)"
+        "visualizer_bg": "If True, uses a pure black background for the visualizer (emulates osu client gameplay). If False, uses the default background of the current theme (black for dark and white for light)",
+        "required_style": "The css to apply to a widget if it is required to be filled in to complete an action. This is applied if a required field in a Loadable is empty when you click run, for instance"
     },
     "Experimental": {
         "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk",
@@ -146,7 +149,7 @@ DEFAULTS = {
         "message_finished_investigation":  "[{ts:%X}] Done",
         # it is possible though extremely unusual for the replays to have different map ids. This is good enough
         # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
-        "message_steal_found":             "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later.",
+        "message_steal_found":             "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later",
         "message_steal_found_display":     "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later. Not below threshold",
         "message_relax_found":             "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
         "message_relax_found_display":     "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold"
