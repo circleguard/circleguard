@@ -892,7 +892,7 @@ class MainTab(QFrame):
             self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=timestamp, num=num_to_load))
 
         except NoInfoAvailableException:
-            self.write_to_terminal_signal.emit("No information found for those arguments. Please recheck your map/user id")
+            self.write_to_terminal_signal.emit("No information found for those arguments. Please check your inputs and make sure the given user/map exists")
             self.set_progressbar_signal.emit(-1)
 
         except Exception:
