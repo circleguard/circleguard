@@ -1364,7 +1364,6 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
                           "QLabel {\n"
                             "\tfont-weight: Normal;\n"
                           "}")
-        print(app.styleSheet())
 
 
 if __name__ == "__main__":
