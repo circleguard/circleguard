@@ -270,7 +270,7 @@ class DebugWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Debug Output")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
-        terminal = QTextEdit()
+        terminal = QTextEdit(self)
         terminal.setReadOnly(True)
         terminal.ensureCursorVisible()
         self.terminal = terminal
@@ -585,6 +585,7 @@ class MainTab(QFrame):
     add_result_signal = pyqtSignal(object)  # Result
     add_run_to_queue_signal = pyqtSignal(object) # Run object (or a subclass)
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
+    print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
     LOADABLES_COMBOBOX_REGISTRY = ["ReplayMap", "ReplayPath", "Map", "User", "MapUser"]
     CHECKS_COMBOBOX_REGISTRY = ["Steal", "Relax", "Correction"]
@@ -617,6 +618,8 @@ class MainTab(QFrame):
         self.loadables = [] # for deleting later
         self.checks = [] # for deleting later
 
+        self.print_results_signal.connect(self.print_results)
+
         self.q = Queue()
         self.cg_q = Queue()
         self.helper_thread_running = False
@@ -624,7 +627,7 @@ class MainTab(QFrame):
         self.run_id = 0
         self.visualizer_window = None
 
-        terminal = QTextEdit()
+        terminal = QTextEdit(self)
         terminal.setFocusPolicy(Qt.ClickFocus)
         terminal.setReadOnly(True)
         terminal.ensureCursorVisible()
@@ -832,16 +835,20 @@ class MainTab(QFrame):
             # double load loadables. Will require filtering by id again
             for checkW in run.checks:
                 d = None
+                check_type = None
                 if type(checkW) is StealCheckW:
                     steal_thresh = get_setting("steal_max_sim")
                     d = StealDetect(steal_thresh)
+                    check_type = "Steal"
                 if type(checkW) is RelaxCheckW:
                     relax_thresh = get_setting("relax_max_ur")
+                    check_type = "Relax"
                     d = RelaxDetect(relax_thresh)
                 if type(checkW) is CorrectionCheckW:
                     max_angle = get_setting("correction_max_angle")
                     min_distance = get_setting("correction_min_distance")
                     d = CorrectionDetect(max_angle, min_distance)
+                    check_type = "Correction"
                 loadables = []
                 for loadableW in checkW.loadables:
                     loadable = None
@@ -864,12 +871,10 @@ class MainTab(QFrame):
                 c = Check(loadables, d)
                 cg.load_info(c)
                 replays = c.all_replays()
-                num_to_load = c.num_replays()
-                self.set_progressbar_signal.emit(num_to_load)
-                timestamp = datetime.now()
-                # TODO change message_loading_replays; we've removed the map_id parameter
-                # probably have a distinct message for each type of check (ie each type of detect)
-                self.write_to_terminal_signal.emit(get_setting("message_loading_replays").format(ts=timestamp, num=num_to_load, map_id=1))
+                num_replays = c.num_replays()
+                self.set_progressbar_signal.emit(num_replays)
+                message_loading_replays = get_setting("message_loading_replays").format(ts=datetime.now(), num=num_replays)
+                self.write_to_terminal_signal.emit(message_loading_replays)
                 for replay in replays:
                     _check_event(event)
                     cg.load(replay)
@@ -879,8 +884,8 @@ class MainTab(QFrame):
                 # (animation with stripes sliding horizontally)
                 # to indicate we're processing the data
                 self.set_progressbar_signal.emit(0)
-                timestamp = datetime.now()
-                self.write_to_terminal_signal.emit(get_setting("message_starting_investigation").format(ts=timestamp, num=num_to_load))
+                message_starting_investigation = get_setting("message_starting_investigation").format(ts=datetime.now(), check_type=check_type, num=num_replays)
+                self.write_to_terminal_signal.emit(message_starting_investigation)
                 self.update_label_signal.emit("Comparing Replays")
                 self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
                 for result in cg.run(c):
@@ -888,8 +893,16 @@ class MainTab(QFrame):
                     self.q.put(result)
 
             self.set_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
-            timestamp = datetime.now()
-            self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=timestamp, num=num_to_load))
+            # 'flush' self.q so there's no more results left and message_finished_investigation
+            # won't print before results from that investigation which looks strange
+            # signal instead of call to be threadsafe and avoid
+            # ```
+            # QObject::connect: Cannot queue arguments of type 'QTextCursor'
+            # (Make sure 'QTextCursor' is registered using qRegisterMetaType().)
+            # ```
+            # warning
+            self.print_results_signal.emit()
+            self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=datetime.now(), num=num_replays))
 
         except NoInfoAvailableException:
             self.write_to_terminal_signal.emit("No information found for those arguments. Please check your inputs and make sure the given user/map exists")

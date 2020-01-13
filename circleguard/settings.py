@@ -144,7 +144,7 @@ DEFAULTS = {
     "Messages": {
         "message_loading_replays":         "[{ts:%X}] Loading {num} replays",
         "message_ratelimited":             "[{ts:%X}] Ratelimited, waiting for {s} seconds",
-        "message_starting_investigation":  "[{ts:%X}] Started investigation into replays",
+        "message_starting_investigation":  "[{ts:%X}] Running {check_type} check",
         "message_finished_investigation":  "[{ts:%X}] Done",
         # it is possible though extremely unusual for the replays to have different map ids. This is good enough
         # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
