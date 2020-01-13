@@ -1321,10 +1321,17 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
         dark_p.setColor(QPalette.LinkVisited, accent)
 
         app.setPalette(dark_p)
-        app.setStyleSheet("QToolTip { color: #ffffff; "
-                          "background-color: #2a2a2a; "
-                          "border: 1px solid white; }"
-                          "QLabel {font-weight: Normal; }")
+        app.setStyleSheet("QToolTip {\n"
+                            "\tcolor: #ffffff;\n"
+                            "\tbackground-color: #2a2a2a;\n"
+                            "\tborder: 1px solid white;\n"
+                          "}\n"
+                          "QLabel {\n"
+                            "\tfont-weight: Normal;\n"
+                          "}\n"
+                          "QTextEdit {\n"
+                            "\tbackground-color: #212121;\n" # my vscode terminal color (33, 33, 33) in rgb
+                          "}\n")
     else:
         app.setPalette(app.style().standardPalette())
         updated_palette = QPalette()
@@ -1336,10 +1343,15 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
         updated_palette.setColor(QPalette.Link, accent)
         updated_palette.setColor(QPalette.LinkVisited, accent)
         app.setPalette(updated_palette)
-        app.setStyleSheet("QToolTip { color: #000000; "
-                          "background-color: #D5D5D5; "
-                          "border: 1px solid white; }"
-                          "QLabel {font-weight: Normal; }")
+        app.setStyleSheet("QToolTip {\n"
+                            "\tcolor: #000000;\n"
+                            "\tbackground-color: #D5D5D5;\n"
+                            "\tborder: 1px solid white;\n"
+                          "}\n"
+                          "QLabel {\n"
+                            "\tfont-weight: Normal;\n"
+                          "}")
+        print(app.styleSheet())
 
 
 if __name__ == "__main__":
