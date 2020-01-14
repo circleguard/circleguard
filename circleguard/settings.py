@@ -154,20 +154,24 @@ DEFAULTS = {
         "message_relax_found_display":     "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold"
     },
     "Strings": {
-        "string_result_text": "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} (set later) vs {r.earlier_replay.username} on map {r1.map_id}",
+        "string_result_steal":       "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{replay1_mods_short_name} (set later) vs {r.earlier_replay.username} +{replay2_mods_short_name} on map {r1.map_id}",
+        "string_result_relax":       "[{ts:%x %H:%M}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "string_result_correction":  "[{ts:%x %H:%M}] TODO figure out how to communicate aim correction"
     },
     "Templates": {
-        "template_replay_steal": ("[osu!std] {r.later_replay.username} | Replay Stealing"
-                             "\n\n"
-                             "Profile: https://osu.ppy.sh/users/{r.later_replay.user_id}"
-                             "\n\n"
-                             "Map: https://osu.ppy.sh/b/{r.later_replay.map_id}"
-                             "\n\n"
-                             "{r.later_replay.username}'s replay (cheated): https://osu.ppy.sh/scores/osu/{r.later_replay.replay_id}/download"
-                             "\n\n"
-                             "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}/download"
-                             "\n\n"
-                             "{r.similarity:.2f} similarity according to [circleguard](https://github.com/circleguard/circleguard) (higher is less similar)")
+        "template_steal":      ("[osu!std] {r.later_replay.username} | Replay Stealing"
+                                "\n\n"
+                                "Profile: https://osu.ppy.sh/users/{r.later_replay.user_id}"
+                                "\n\n"
+                                "Map: https://osu.ppy.sh/b/{r.later_replay.map_id}"
+                                "\n\n"
+                                "{r.later_replay.username}'s replay (cheated): https://osu.ppy.sh/scores/osu/{r.later_replay.replay_id}/download"
+                                "\n\n"
+                                "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}/download"
+                                "\n\n"
+                                "{r.similarity:.2f} similarity according to [circleguard](https://github.com/circleguard/circleguard) (higher is less similar)"),
+        "template_relax":       "",
+        "template_correction":  "",
     },
     "Thresholds": {
         "steal_max_sim": 18,

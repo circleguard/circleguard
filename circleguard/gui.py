@@ -33,7 +33,7 @@ from utils import resource_path, run_update_check, Run, parse_mod_string
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
-                     TopPlays, BeatmapTest, ComparisonResult, LineEditSetting, EntryWidget,
+                     TopPlays, BeatmapTest, ResultW, LineEditSetting, EntryWidget,
                      RunWidget)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
@@ -220,20 +220,37 @@ class WindowWrapper(QMainWindow):
 
 
     def add_result(self, result):
-        # this right here could very well lead to some memory issues. I tried to avoid
-        # leaving a reference to the replays in this method, but it's quite possible
-        # things are still not very clean. Ideally only ComparisonResult would have a
-        # reference to the two replays, and result should have no references left.
-        r1 = result.replay1
-        r2 = result.replay2
+        # this function right here could very well lead to some memory issues.
+        # I tried to avoid leaving a reference to result's replays in this
+        # method, but it's quite possible things are still not very clean.
+        # Ideally only ResultW would have a reference to the two replays, and
+        # nothing else.
         timestamp = datetime.now()
-        text = get_setting("string_result_text").format(ts=timestamp, similarity=result.similarity,
-                                                        r=result, r1=r1, r2=r2)
-        result_widget = ComparisonResult(text, result, r1, r2)
+        label_text = None
+        template_text = None
+
+        if type(result) is ReplayStealingResult:
+            label_text = get_setting("string_result_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
+                                        replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
+                                        replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
+            template_text = get_setting("template_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
+                                        replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
+                                        replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
+            replays = [result.replay1, result.replay2]
+
+        elif type(result) is RelaxResult:
+            label_text = get_setting("string_result_relax").format(ts=timestamp, ur=result.ur, r=result,
+                                                     replay=result.replay, mods_short_name=result.replay.mods.short_name(),
+                                                     mods_long_name=result.replay.mods.long_name())
+            template_text = get_setting("template_relax").format(ts=timestamp, ur=result.ur, r=result,
+                                                     replay=result.replay, mods_short_name=result.replay.mods.short_name(),
+                                                     mods_long_name=result.replay.mods.long_name())
+            replays = [result.replay]
+
+        result_widget = ResultW(label_text, result, replays)
         # set button signal connections (visualize and copy template to clipboard)
-        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, [result_widget.replay1, result_widget.replay2]))
-        result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard,
-                get_setting("template_replay_steal").format(r=result_widget.result, r1=result_widget.replay1, r2=result_widget.replay2)))
+        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replays))
+        result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard, template_text))
         # remove info text if shown
         if not self.main_window.results_tab.results.info_label.isHidden():
             self.main_window.results_tab.results.info_label.hide()

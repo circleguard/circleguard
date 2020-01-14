@@ -440,17 +440,16 @@ class CompareTopPlays(QFrame):
         self.slider.setValue(value)
 
 
-class ComparisonResult(QFrame):
+class ResultW(QFrame):
     """
     Stores the result of a comparison that can be replayed at any time.
     Contains a QLabel, QPushButton (visualize) and QPushButton (copy to clipboard).
     """
 
-    def __init__(self, text, result, replay1, replay2):
+    def __init__(self, text, result, replays):
         super().__init__()
         self.result = result
-        self.replay1 = replay1
-        self.replay2 = replay2
+        self.replays = replays
         self.label = QLabel(self)
         self.label.setText(text)
 
