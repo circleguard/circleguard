@@ -1285,7 +1285,6 @@ class ThresholdsTab(QFrame):
         super().__init__()
         self.qscrollarea = QScrollArea(self)
         self.qscrollarea.setWidget(ScrollableThresholdsWidget())
-        # self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
         self.qscrollarea.setWidgetResizable(True)
 
         self.layout = QVBoxLayout()
