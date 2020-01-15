@@ -327,20 +327,6 @@ class MainWindow(QFrame):
         self.layout.setContentsMargins(10, 10, 10, 0)
         self.setLayout(self.layout)
 
-
-class BorderWidget(QFrame):
-    """
-    For debugging classes that don't seem to be appearing. Adds a white border
-    around the QFrame.
-
-    To use, replace the inheritence of QFrame with BorderWidget. Possibly works
-    with multiple inheritence (using this as a mixin), but I'm not sure.
-    """
-    def __init__(self):
-        super().__init__()
-        self.setFrameStyle(QFrame.Box)
-
-
 class ScrollableLoadablesWidget(QFrame):
     def __init__(self):
         super().__init__()
@@ -397,7 +383,7 @@ class DropArea(QFrame):
         self.layout.addWidget(QLabel(name + f" (id: {id_})"))
 
 
-class CheckW(BorderWidget):
+class CheckW(QFrame):
     remove_check_signal = pyqtSignal(int) # check id
     ID = 0
     def __init__(self, name):
@@ -418,6 +404,10 @@ class CheckW(BorderWidget):
 
         self.drop_area = DropArea()
         self.cancel_button = QPushButton(self)
+        self.cancel_button.setText("X")
+        # qt has reasonable button padding normally but not when there's only
+        # one character of text like this. Makes the button reasonably small.
+        self.cancel_button.setStyleSheet("padding: 2px 5px 2px 5px")
         self.cancel_button.pressed.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
         title = QLabel()
         title.setText(f"{name}")
@@ -443,7 +433,7 @@ class CorrectionCheckW(CheckW):
         super().__init__("Aim Correction Check")
 
 
-class DragWidget(BorderWidget):
+class DragWidget(QFrame):
     """
     A widget not meant to be displayed, but rendered into a pixmap with
     #grab and stuck onto a QDrag with setPixmap to give the illusion of
@@ -457,7 +447,7 @@ class DragWidget(BorderWidget):
         self.setLayout(layout)
 
 
-class LoadableW(BorderWidget):
+class LoadableW(QFrame):
     """
     A widget representing a circleguard.Loadable, which can be dragged onto
     a DetectWidget. Keeps track of how many LoadableWidgets have been created
@@ -481,6 +471,10 @@ class LoadableW(BorderWidget):
         title.setText(f"{name}{t+t if len(name) < 5 else t}(Id: {self.loadable_id})")
 
         self.cancel_button = QPushButton(self) # TODO add x icon
+        self.cancel_button.setText("X")
+        # qt has reasonable button padding normally but not when there's only
+        # one character of text like this. Makes the button reasonably small.
+        self.cancel_button.setStyleSheet("padding: 2px 5px 2px 5px")
         self.cancel_button.pressed.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
         self.layout.addWidget(title, 0, 0, 1, 7)
         self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
@@ -1361,6 +1355,15 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
                           "}\n"
                           "QTextEdit {\n"
                             "\tbackground-color: #212121;\n" # my vscode terminal color (33, 33, 33) in rgb
+                          "}\n"
+                          "LoadableW {\n"
+                            "\tborder: 1.5px solid #272727\n"
+                          "}\n"
+                          "CheckW {\n"
+                            "\tborder: 1.5px solid #272727\n"
+                          "}\n"
+                          "DragWidget {\n"
+                            "\tborder: 1.5px solid #272727\n"
                           "}\n")
     else:
         app.setPalette(app.style().standardPalette())
@@ -1380,7 +1383,16 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
                           "}\n"
                           "QLabel {\n"
                             "\tfont-weight: Normal;\n"
-                          "}")
+                          "}\n"
+                          "LoadableW {\n"
+                            "\tborder: 1.5px solid #bfbfbf\n"
+                          "}\n"
+                          "CheckW {\n"
+                            "\tborder: 1.5px solid #bfbfbf\n"
+                          "}\n"
+                          "DragWidget {\n"
+                            "\tborder: 1.5px solid #bfbfbf\n"
+                          "}\n")
 
 
 if __name__ == "__main__":

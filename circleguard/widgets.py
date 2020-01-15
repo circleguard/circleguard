@@ -729,6 +729,19 @@ class FolderChooser(QFrame):
             self.combined.setStyleSheet(self.old_stylesheet)
             self.highlighted = False
 
+class BorderWidget(QFrame):
+    """
+    For debugging widgets that don't seem to be appearing. Adds a white border
+    around the QFrame.
+
+    To use on a class, replace the inheritence of QFrame with BorderWidget.
+    Possibly works with multiple inheritence (using this as a mixin), but I'm
+    not sure about that.
+    """
+    def __init__(self):
+        super().__init__()
+        self.setFrameStyle(QFrame.Box)
+
 
 class ResetSettings(QFrame):
     def __init__(self):
