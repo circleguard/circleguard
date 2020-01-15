@@ -185,8 +185,8 @@ DEFAULTS = {
         "dark_theme": False,
         "visualizer_info": True,
         "visualizer_bg": False,
-        "required_style": "QLineEdit { border: 2px solid red }\n"
-                          "WidgetCombiner { border: 2px solid red }"
+        "required_style": "QLineEdit { border: 1px solid red }\n"
+                          "WidgetCombiner { border: 1px solid red }"
     },
     "Experimental": {
         "rainbow_accent": False
