@@ -1354,7 +1354,7 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
                             "\tfont-weight: Normal;\n"
                           "}\n"
                           "QTextEdit {\n"
-                            "\tbackground-color: #212121;\n" # my vscode terminal color (33, 33, 33) in hex
+                            "\tbackground-color: #212121;\n" # my vscode terminal color
                           "}\n"
                           "LoadableW {\n"
                             "\tborder: 1.5px solid #272727\n"
