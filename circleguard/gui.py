@@ -548,7 +548,7 @@ class ReplayPathW(LoadableW):
 
         super().__init__("ReplayPath", [self.path_input])
 
-        self.layout.addWidget(self.path_input)
+        self.layout.addWidget(self.path_input, 1, 0, 1, 8)
 
 class MapW(LoadableW):
     def __init__(self):
