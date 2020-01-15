@@ -1302,7 +1302,7 @@ class ScrollableThresholdsWidget(QFrame):
                 "so you can view them, and printed to the console", "relax_max_ur", 300)
         self.relax_max_ur_display = SliderBoxSetting("ur display threshold", "Replays with a ur lower than this "
                 "will be printed to the console", "relax_max_ur_display", 300)
-        self.correction_max_angle = SliderBoxSetting("Max correction angle", "Replays with a set of three points "
+        self.correction_max_angle = SliderBoxSetting("Correction angle threshold", "Replays with a set of three points "
                 "making an angle less than this (*and* also satisfying correction_min_distance) will be stored so "
                 "you can view them, and printed to the console. ", "correction_max_angle", 360)
         # TODO rest of correction widgets (4 total)
