@@ -240,11 +240,20 @@ class WindowWrapper(QMainWindow):
 
         elif type(result) is RelaxResult:
             label_text = get_setting("string_result_relax").format(ts=timestamp, ur=result.ur, r=result,
-                                                     replay=result.replay, mods_short_name=result.replay.mods.short_name(),
-                                                     mods_long_name=result.replay.mods.long_name())
+                                        replay=result.replay, mods_short_name=result.replay.mods.short_name(),
+                                        mods_long_name=result.replay.mods.long_name())
             template_text = get_setting("template_relax").format(ts=timestamp, ur=result.ur, r=result,
-                                                     replay=result.replay, mods_short_name=result.replay.mods.short_name(),
-                                                     mods_long_name=result.replay.mods.long_name())
+                                        replay=result.replay, mods_short_name=result.replay.mods.short_name(),
+                                        mods_long_name=result.replay.mods.long_name())
+            replays = [result.replay]
+        elif type(result) is CorrectionResult:
+            snap_message = get_setting("message_correction_snaps")
+            snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
+
+            label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, replay=result.replay, snaps=snap_text,
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+            template_text = get_setting("template_correction").format(ts=timestamp, r=result, replay=result.replay, snaps=snap_text,
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
             replays = [result.replay]
 
         result_widget = ResultW(label_text, result, replays)
@@ -953,7 +962,10 @@ class MainTab(QFrame):
 
                 if type(result) is CorrectionResult:
                     if result.ischeat:
-                        message = get_setting("message_correction_found").format(ts=ts, r=result, replay=result.replay) # TODO deal with Snaps somehow, yuck
+                        snap_message = get_setting("message_correction_snaps")
+                        snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
+                        message = get_setting("message_correction_found").format(ts=ts, r=result, replay=result.replay, snaps=snap_text,
+                                                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
                     # elif result.snaps.????
                     # TODO don't get enough information to deal with message_correction_found_display here.
                     # Pass the less strict requirements to circlecore and filter them here to check if it passes ischeat maybe?
@@ -1237,7 +1249,7 @@ class ResultsFrame(QFrame):
         # being vertically centered looks weird
         self.layout.setAlignment(Qt.AlignTop)
         self.info_label = QLabel("After running checks, this tab will fill up "
-                                 "with results that can be played back")
+                                 "with replays that can be played back.")
         self.layout.addWidget(self.info_label)
         self.setLayout(self.layout)
 
@@ -1294,18 +1306,31 @@ class ThresholdsTab(QFrame):
 class ScrollableThresholdsWidget(QFrame):
     def __init__(self):
         super().__init__()
-        self.steal_max_sim = SliderBoxSetting("Similarity threshold", "ReplaySteal comparisons that score below this "
+        self.steal_max_sim = SliderBoxSetting("Max similarity", "ReplaySteal comparisons that score below this "
                 "will be stored so you can view them, and printed to the console", "steal_max_sim", 100)
-        self.steal_max_sim_display = SliderBoxSetting("Similarity display threshold", "ReplaySteal comparisons that "
+        self.steal_max_sim_display = SliderBoxSetting("Max similarity display", "ReplaySteal comparisons that "
                 "score below this will be printed to the console", "steal_max_sim_display", 100)
-        self.relax_max_ur = SliderBoxSetting("ur threshold", "Replays that have a ur lower than this will be stored "
+        self.relax_max_ur = SliderBoxSetting("Max ur", "Replays that have a ur lower than this will be stored "
                 "so you can view them, and printed to the console", "relax_max_ur", 300)
-        self.relax_max_ur_display = SliderBoxSetting("ur display threshold", "Replays with a ur lower than this "
+        self.relax_max_ur_display = SliderBoxSetting("Max ur display", "Replays with a ur lower than this "
                 "will be printed to the console", "relax_max_ur_display", 300)
-        self.correction_max_angle = SliderBoxSetting("Correction angle threshold", "Replays with a set of three points "
+        self.correction_max_angle = SliderBoxSetting("Max angle", "Replays with a set of three points "
                 "making an angle less than this (*and* also satisfying correction_min_distance) will be stored so "
-                "you can view them, and printed to the console. ", "correction_max_angle", 360)
-        # TODO rest of correction widgets (4 total)
+                "you can view them, and printed to the console.", "correction_max_angle", 360)
+        # display options for correction are more confusing than they're worth, especially
+        # when we don't have a good mechanism for storing Snaps in the Result tab
+        # or visualizer support for the Snap timestamps. TODO potentially add back
+        # if we can provide good support for them.
+        # self.correction_max_angle_display = SliderBoxSetting("Max angle display ", "Replays with a set of "
+        #         "three points making an angle less than this (*and* also satisfying correction_min_distance_display) will be printed "
+        #         "to the console.", "correction_max_angle_display", 360)
+        self.correction_min_distance = SliderBoxSetting("Min distance", "Replays with a set of three points "
+                "where either the distance from AB or BC is greater than this (*and* also satisfying correction_max_angle) "
+                "will be stored so you can view them, and printed to the console.", "correction_min_distance", 100)
+        # self.correction_min_distance_display = SliderBoxSetting("Min distance display", "Replays with a set of "
+        #         "three points where either the distance from AB or BC is greater than this (*and* also satisfying "
+        #         "correction_max_angle_display) will be printed to the console.", "correction_min_distance_display", 100)
+
         self.layout = QVBoxLayout()
         self.layout.addWidget(Separator("Replay Stealing"))
         self.layout.addWidget(self.steal_max_sim)
@@ -1315,6 +1340,10 @@ class ScrollableThresholdsWidget(QFrame):
         self.layout.addWidget(self.relax_max_ur_display)
         self.layout.addWidget(Separator("Aim Correction"))
         self.layout.addWidget(self.correction_max_angle)
+        # self.layout.addWidget(self.correction_max_angle_display)
+        self.layout.addWidget(self.correction_min_distance)
+        # self.layout.addWidget(self.correction_min_distance_display)
+
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 

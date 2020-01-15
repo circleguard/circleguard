@@ -148,15 +148,22 @@ DEFAULTS = {
         "message_finished_investigation":  "[{ts:%X}] Done",
         # it is possible though extremely unusual for the replays to have different map ids. This is good enough
         # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
-        "message_steal_found":             "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later",
-        "message_steal_found_display":     "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later. Not below threshold",
-        "message_relax_found":             "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "message_relax_found_display":     "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold"
+        "message_steal_found":              "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later",
+        "message_steal_found_display":      "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later. Not below threshold",
+        "message_relax_found":              "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "message_relax_found_display":      "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
+        "message_correction_found":         "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
+        "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
+        # have to use a separate message here because we can't loop in ``.format`` strings, can only loop in f strings which only work in a
+        # local context and aren't usable for us. Passed as ``snaps=snaps`` in message_correction_found, once formatted. Each snap formats
+        # this setting and does a ``"\n".join(snap_message)`` to create ``snaps``.
+        "message_correction_snaps":         "Time (ms): {time:.0f}\tAngle (deg): {angle:.2f}\tDistance (px): {distance:.2f}"
+
     },
     "Strings": {
         "string_result_steal":       "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{replay1_mods_short_name} (set later) vs {r.earlier_replay.username} +{replay2_mods_short_name} on map {r1.map_id}",
         "string_result_relax":       "[{ts:%x %H:%M}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "string_result_correction":  "[{ts:%x %H:%M}] TODO figure out how to communicate aim correction"
+        "string_result_correction":  "[{ts:%x %H:%M}] {replay.username} +{mods_short_name} on map {replay.map_id}"
     },
     "Templates": {
         "template_steal":      ("[osu!std] {r.later_replay.username} | Replay Stealing"
@@ -179,7 +186,9 @@ DEFAULTS = {
         "relax_max_ur": 50,
         "relax_max_ur_display": 90,
         "correction_max_angle": 10,
-        "correction_min_distance": 8
+        "correction_max_angle_display": 10,
+        "correction_min_distance": 8,
+        "correction_min_distance_display": 8
     },
     "Appearance": {
         "dark_theme": False,
