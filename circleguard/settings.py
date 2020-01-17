@@ -265,11 +265,6 @@ def set_setting(name, value):
 
     SETTINGS.setValue(name, TYPES[name][0](value))
 
-def initialize_dirs():
-    d_dirs = DEFAULTS["Locations"].keys()
-    for d_dir in d_dirs:
-        if not os.path.exists(get_setting(d_dir)):
-            os.mkdir(get_setting(d_dir))
 
 # overwrites circleguard.cfg with our settings
 def overwrite_config():
