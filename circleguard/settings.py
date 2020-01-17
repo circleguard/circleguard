@@ -331,7 +331,6 @@ overwrite_with_config_settings()
 # overwrite our changes here since it's not synced to the file
 overwrite_outdated_settings()
 
-initialize_dirs()
 
 if not get_setting("ran"):
     reset_defaults()
