@@ -299,14 +299,6 @@ def overwrite_config():
         config.write(f)
 
 
-def initialize_dirs():
-    d_dirs = DEFAULTS["Locations"].keys()
-    for d_dir in d_dirs:
-        parent_path = Path(get_setting(d_dir)).parent
-        if not os.path.exists(parent_path):
-            os.mkdir(parent_path)
-
-
 TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
 SETTINGS = QSettings("Circleguard", "Circleguard")
 # see third bullet here https://doc.qt.io/qt-5/qsettings.html#platform-limitations,
