@@ -173,7 +173,8 @@ DEFAULTS = {
         "dark_theme": False,
         "visualizer_info": True,
         "visualizer_bg": False,
-        "visualizer_frametime": False
+        "visualizer_frametime": False,
+        "render_beatmap": True
     },
     "Experimental": {
         "rainbow_accent": False

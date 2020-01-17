@@ -61,6 +61,8 @@ class _Renderer(QWidget):
         else:
             self.playback_len = 0
             self.beatmap_flag = False
+        if not get_setting("render_beatmap"):
+            self.beatmap_flag = False
         # beatmap stuff
         if self.beatmap_flag:
             if self.beatmap.approach_rate == 5:
