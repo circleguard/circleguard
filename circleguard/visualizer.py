@@ -116,7 +116,7 @@ class _Renderer(QWidget):
         # render stuff
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_frame_from_timer)
-        self.timer.start(0)  # unlimited fps
+        self.timer.start(1000/60)  # unlimited fps
         self.next_frame()
 
     def next_frame_from_timer(self):
