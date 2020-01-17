@@ -2,6 +2,7 @@ import re
 import os
 from pathlib import Path
 from datetime import datetime
+import abc
 
 # pylint: disable=no-name-in-module
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
@@ -94,7 +95,6 @@ COMMENTS = {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
     }
 }
-import abc
 
 class LinkableSetting():
     """
