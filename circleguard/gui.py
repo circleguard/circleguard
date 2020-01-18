@@ -218,7 +218,6 @@ class WindowWrapper(QMainWindow):
         self.progressbar.setValue(0)
         self.progressbar.setRange(0, max_value)
 
-
     def add_result(self, result):
         # this function right here could very well lead to some memory issues.
         # I tried to avoid leaving a reference to result's replays in this
@@ -291,6 +290,7 @@ class WindowWrapper(QMainWindow):
             self.main_window.main_tab.visualizer_window.close()
         overwrite_config()
 
+
 class DebugWindow(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -336,6 +336,7 @@ class MainWindow(QFrame):
         self.layout.setContentsMargins(10, 10, 10, 0)
         self.setLayout(self.layout)
 
+
 class ScrollableLoadablesWidget(QFrame):
     def __init__(self):
         super().__init__()
@@ -380,12 +381,8 @@ class DropArea(QFrame):
 
     def dropEvent(self, event):
         event.acceptProposedAction()
-        data = event.mimeData().text() # get data as text
-        # we use pipe as a delimiter for data instead
-        # of dealing with passing an array as json, which would be the cleaner/proper way
-        parts = data.split("|")
-        id_ = int(parts[0])
-        name = parts[1]
+        id_ = int(event.mimeData().data("circleguard/loadable_id").data().decode("utf-8"))
+        name = event.mimeData().data("circleguard/loadable_name").data().decode("utf-8")
         if id_ in self.loadable_ids:
             return
         self.loadable_ids.append(id_)
@@ -395,6 +392,7 @@ class DropArea(QFrame):
 class CheckW(QFrame):
     remove_check_signal = pyqtSignal(int) # check id
     ID = 0
+
     def __init__(self, name):
         super().__init__()
         CheckW.ID += 1
@@ -424,7 +422,6 @@ class CheckW(QFrame):
         self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
         self.layout.addWidget(self.drop_area, 1, 0, 1, 8)
         self.setLayout(self.layout)
-
 
 
 class StealCheckW(CheckW):
@@ -466,6 +463,7 @@ class LoadableW(QFrame):
     """
     ID = 0
     remove_loadable_signal = pyqtSignal(int) # id of loadable to remove
+
     def __init__(self, name, required_input_widgets):
         super().__init__()
         LoadableW.ID += 1
@@ -509,10 +507,9 @@ class LoadableW(QFrame):
         self.drag.setHotSpot(QPoint(pixmap.width() / 4, 6))
         self.drag.setPixmap(pixmap)
         mime_data = QMimeData()
-        # pretty sure the proper way to do this is
-        # setData("application/json", convert_to_json_and_qbytearray_somehow([self.ID, self.name]))
-        # to send the name as well but we'll use a special delimiter (pipe)
-        mime_data.setText(str(self.loadable_id) + "|" + self.name)
+
+        mime_data.setData("circleguard/loadable_id", bytes(str(self.loadable_id), "utf-8"))
+        mime_data.setData("circleguard/loadable_name", bytes(self.name, "utf-8"))
         self.drag.setMimeData(mime_data)
         self.drag.exec()  # start the drag
 
@@ -534,6 +531,7 @@ class LoadableW(QFrame):
                 input_widget.show_required()
                 all_filled = False
         return all_filled
+
 
 class ReplayMapW(LoadableW):
     """
@@ -559,6 +557,7 @@ class ReplayPathW(LoadableW):
 
         self.layout.addWidget(self.path_input, 1, 0, 1, 8)
 
+
 class MapW(LoadableW):
     def __init__(self):
 
@@ -571,6 +570,7 @@ class MapW(LoadableW):
         self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         self.layout.addWidget(self.span_input, 2, 0, 1, 8)
         self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
+
 
 class UserW(LoadableW):
     def __init__(self):
@@ -585,6 +585,7 @@ class UserW(LoadableW):
         self.layout.addWidget(self.span_input, 2, 0, 1, 8)
         self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
 
+
 class MapUserW(LoadableW):
     def __init__(self):
         self.map_id_input = InputWidget("Map id", "", "id")
@@ -596,6 +597,7 @@ class MapUserW(LoadableW):
         self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
         self.layout.addWidget(self.span_input, 3, 0, 1, 8)
+
 
 class MainTab(QFrame):
     set_progressbar_signal = pyqtSignal(int)  # max progress
