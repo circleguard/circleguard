@@ -411,7 +411,7 @@ class CheckW(QFrame):
 
         self.drop_area = DropArea()
         self.cancel_button = QPushButton(self)
-        self.cancel_button.setText("X")
+        self.cancel_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
         # qt has reasonable button padding normally but not when there's only
         # one character of text like this. Makes the button reasonably small.
         self.cancel_button.setStyleSheet("padding: 2px 5px 2px 5px")
@@ -477,11 +477,10 @@ class LoadableW(QFrame):
         # double tabs on short names to align with longer ones
         title.setText(f"{name}{t+t if len(name) < 5 else t}(Id: {self.loadable_id})")
 
-        self.cancel_button = QPushButton(self) # TODO add x icon
-        self.cancel_button.setText("X")
+        self.cancel_button = QPushButton(self)
+        self.cancel_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
         # qt has reasonable button padding normally but not when there's only
         # one character of text like this. Makes the button reasonably small.
-        self.cancel_button.setStyleSheet("padding: 2px 5px 2px 5px")
         self.cancel_button.clicked.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
         self.layout.addWidget(title, 0, 0, 1, 7)
         self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
