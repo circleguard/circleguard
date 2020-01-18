@@ -417,7 +417,7 @@ class CheckW(QFrame):
         # qt has reasonable button padding normally but not when there's only
         # one character of text like this. Makes the button reasonably small.
         self.cancel_button.setStyleSheet("padding: 2px 5px 2px 5px")
-        self.cancel_button.pressed.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
+        self.cancel_button.clicked.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
         title = QLabel()
         title.setText(f"{name}")
         self.layout.addWidget(title, 0, 0, 1, 7)
@@ -484,7 +484,7 @@ class LoadableW(QFrame):
         # qt has reasonable button padding normally but not when there's only
         # one character of text like this. Makes the button reasonably small.
         self.cancel_button.setStyleSheet("padding: 2px 5px 2px 5px")
-        self.cancel_button.pressed.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
+        self.cancel_button.clicked.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
         self.layout.addWidget(title, 0, 0, 1, 7)
         self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
         self.setLayout(self.layout)
