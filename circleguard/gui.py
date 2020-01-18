@@ -410,16 +410,16 @@ class CheckW(QFrame):
         self.layout = QGridLayout()
 
         self.drop_area = DropArea()
-        self.cancel_button = QPushButton(self)
-        self.cancel_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button = QPushButton(self)
+        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
         # qt has reasonable button padding normally but not when there's only
         # one character of text like this. Makes the button reasonably small.
-        self.cancel_button.setStyleSheet("padding: 2px 5px 2px 5px")
-        self.cancel_button.clicked.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
+        self.delete_button.setMaximumWidth(30)
+        self.delete_button.clicked.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
         title = QLabel()
         title.setText(f"{name}")
         self.layout.addWidget(title, 0, 0, 1, 7)
-        self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
+        self.layout.addWidget(self.delete_button, 0, 7, 1, 1)
         self.layout.addWidget(self.drop_area, 1, 0, 1, 8)
         self.setLayout(self.layout)
 
@@ -477,13 +477,14 @@ class LoadableW(QFrame):
         # double tabs on short names to align with longer ones
         title.setText(f"{name}{t+t if len(name) < 5 else t}(Id: {self.loadable_id})")
 
-        self.cancel_button = QPushButton(self)
-        self.cancel_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button = QPushButton(self)
+        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setMaximumWidth(30)
         # qt has reasonable button padding normally but not when there's only
         # one character of text like this. Makes the button reasonably small.
-        self.cancel_button.clicked.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
+        self.delete_button.clicked.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
         self.layout.addWidget(title, 0, 0, 1, 7)
-        self.layout.addWidget(self.cancel_button, 0, 7, 1, 1)
+        self.layout.addWidget(self.delete_button, 0, 7, 1, 1)
         self.setLayout(self.layout)
 
     # Resources for drag and drop operations:
@@ -492,7 +493,7 @@ class LoadableW(QFrame):
     # real example code     https://lists.qt-project.org/pipermail/qt-interest-old/2011-June/034531.html
     # bad example code      https://stackoverflow.com/q/7737913/12164878
     def mouseMoveEvent(self, event):
-        event.pos()
+        print(event.pos())
         self.drag = QDrag(self)
         # https://stackoverflow.com/a/53538805/12164878
         pixmap = DragWidget(f"{self.name} (Id: {self.loadable_id})").grab()
