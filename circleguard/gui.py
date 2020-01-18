@@ -619,14 +619,14 @@ class MainTab(QFrame):
         for loadable in MainTab.LOADABLES_COMBOBOX_REGISTRY:
             self.loadables_combobox.addItem(loadable, loadable)
         self.loadables_button = QPushButton("Add", self)
-        self.loadables_button.pressed.connect(self.add_loadable)
+        self.loadables_button.clicked.connect(self.add_loadable)
 
         self.checks_combobox = QComboBox(self)
         self.checks_combobox.setInsertPolicy(QComboBox.NoInsert)
         for check in MainTab.CHECKS_COMBOBOX_REGISTRY:
             self.checks_combobox.addItem(check, check)
         self.checks_button = QPushButton("Add", self)
-        self.checks_button.pressed.connect(self.add_check)
+        self.checks_button.clicked.connect(self.add_check)
 
         self.loadables_scrollarea = QScrollArea(self)
         self.loadables_scrollarea.setWidget(ScrollableLoadablesWidget())
@@ -1086,7 +1086,7 @@ class VisualizeTab(QFrame):
             while True:
                 replay = self.q.get(block=False)
                 widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id}", "Delete", replay)
-                widget.pressed_signal.connect(self.remove_replay)
+                widget.clicked_signal.connect(self.remove_replay)
                 self.replays.append(widget)
                 self.result_frame.results.layout.addWidget(widget)
         except Empty:
@@ -1272,7 +1272,7 @@ class QueueTab(QFrame):
 
     def add_run(self, run):
         run_w = RunWidget(run)
-        run_w.button.pressed.connect(partial(self.cancel_run, run.run_id))
+        run_w.button.clicked.connect(partial(self.cancel_run, run.run_id))
         self.run_widgets.append(run_w)
         self.queue.layout.addWidget(run_w)
 
