@@ -493,7 +493,10 @@ class LoadableW(QFrame):
     # real example code     https://lists.qt-project.org/pipermail/qt-interest-old/2011-June/034531.html
     # bad example code      https://stackoverflow.com/q/7737913/12164878
     def mouseMoveEvent(self, event):
-        print(event.pos())
+        # 1=all the way to the right (or down),
+        # 0=all the way to the left (or up)
+        x_ratio = event.pos().x() / self.width()
+        y_ratio = event.pos().y() / self.height()
         self.drag = QDrag(self)
         # https://stackoverflow.com/a/53538805/12164878
         pixmap = DragWidget(f"{self.name} (Id: {self.loadable_id})").grab()
@@ -504,7 +507,7 @@ class LoadableW(QFrame):
         # what is should be.
         # setHotSpot takes relative arguments, offseting that amount
         # from the upper left corner of the pixmap.
-        self.drag.setHotSpot(QPoint(pixmap.width() / 4, 6))
+        self.drag.setHotSpot(QPoint(pixmap.width() * x_ratio, pixmap.height() * y_ratio))
         self.drag.setPixmap(pixmap)
         mime_data = QMimeData()
 
