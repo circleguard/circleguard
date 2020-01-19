@@ -60,7 +60,7 @@ COMMENTS = {
     "Appearance": {
         "dark_theme": "Dark theme skins the application to be a bit easier on the eyes. The gui is developed with a dark theme in mind first, light theme second",
         "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
-        "visualizer_bg": "If True, uses a pure black background for the visualizer (emulates osu client gameplay). If False, uses the default background of the current theme (recommended)",
+        "visualizer_bg": "If True, uses a pure black background for the visualizer. If False, uses the default background of the current theme",
         "visualizer_frametime": "If True, displays a frametime graph at the bottom right"
     },
     "Experimental": {
