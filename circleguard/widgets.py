@@ -693,7 +693,7 @@ class FolderChooser(QFrame):
         self.switch_enabled(True)
 
     def set_dir(self):
-        parent_path_old = self.path if not isinstance(self.path, list) else str(Path(self.path[0]).parent)
+        parent_path_old = self.path if self.folder_mode else str(Path(self.path[0]).parent)
         if self.folder_mode:
             options = QFileDialog.Option()
             options |= QFileDialog.ShowDirsOnly
