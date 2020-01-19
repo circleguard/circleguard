@@ -500,13 +500,11 @@ class LoadableW(QFrame):
         self.drag = QDrag(self)
         # https://stackoverflow.com/a/53538805/12164878
         pixmap = DragWidget(f"{self.name} (Id: {self.loadable_id})").grab()
-        # put cursor in the middle width-wise and a bit below so it properly
-        # looks like it's dragging the pixmap.
-        # pixmap.width() is printing a ridiculously high 262 which is why
-        # this is over 4 and not over 2. I don't know why its size is twice
-        # what is should be.
-        # setHotSpot takes relative arguments, offseting that amount
-        # from the upper left corner of the pixmap.
+        # put cursor in the same relative position on the dragwidget as
+        # it clicked on the real Loadable widget. For instance, if the user
+        # started the drag halfway to the right and three quarters of the way
+        # down, put the cursor halfway to the right and three quarters of the
+        # way down on the newly created dragwidget.
         self.drag.setHotSpot(QPoint(pixmap.width() * x_ratio, pixmap.height() * y_ratio))
         self.drag.setPixmap(pixmap)
         mime_data = QMimeData()
