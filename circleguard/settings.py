@@ -251,13 +251,13 @@ def overwrite_with_config_settings():
                 val = config.get(section, k)
             set_setting(k, val)
 
+
 def reset_defaults():
     SETTINGS.clear()
     for d in DEFAULTS.values():
         for key,value in d.items():
             SETTINGS.setValue(key, value)
     SETTINGS.sync()
-
 
 def set_setting(name, value):
     for linkable_setting in LinkableSetting.registered_classes:
