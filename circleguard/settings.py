@@ -209,7 +209,9 @@ CHANGED = {
     "1.3.0": [
         "cache_dir",
         "log_dir",
-        "message_loading_replays"
+        "message_loading_replays",
+        "visualizer_frametime",
+        "render_beatmap"
     ]
 }
 
