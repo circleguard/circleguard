@@ -475,7 +475,7 @@ class MainTab(QWidget):
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
         event = run.event
         try:
-            cache_path = resource_path(Path(get_setting("cache_dir"),".circleguard.db"))
+            cache_path = resource_path(get_setting("cache_dir") + "circleguard.db")
             should_cache = get_setting("caching")
             cg = Circleguard(get_setting("api_key"), cache_path, cache=should_cache, loader=TrackerLoader)
             def _ratelimited(length):
@@ -768,7 +768,7 @@ class VisualizeTab(QWidget):
         self.map_id = None
         self.q = Queue()
         self.replays = []
-        cache_path = resource_path(Path(get_setting("cache_dir"),".circleguard.db"))
+        cache_path = resource_path(get_setting("cache_dir") + "circleguard.db")
         self.cg = Circleguard(get_setting("api_key"), cache_path)
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
