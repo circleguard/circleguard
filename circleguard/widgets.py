@@ -234,7 +234,12 @@ class OptionWidget(LinkableSetting, QFrame):
     def on_setting_changed(self, new_value):
         self.box.setChecked(new_value)
 
+
 class CenteredWidget(QWidget):
+    """
+    Turns a widget with a fixed size (for example a QCheckBox) into an flexible one which can be affected by the layout.
+    """
+
     def __init__(self, widget):
         super().__init__()
         layout = QGridLayout()
@@ -243,6 +248,7 @@ class CenteredWidget(QWidget):
         self.setContentsMargins(0,0,0,0)
         layout.addWidget(widget)
         self.setLayout(layout)
+
 
 class ButtonWidget(QFrame):
     """
