@@ -31,7 +31,7 @@ COMMENTS = {
             "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard.",
     "Locations": {
         "section": "The path to various file or directories used by the program",
-        "cache_dir": "Where the cache to read and write replays to is.\n"
+        "cache_dir": "Where we store caches for circlecore (replays) and slider (beatmaps).\n"
                 "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
         "config_location": "Where the circelguard.cfg file (this very file) resides.",
         "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
