@@ -665,7 +665,7 @@ class FolderChooser(QFrame):
 
     def __init__(self, title, path=str(Path.home()), folder_mode=True, multiple_files=False, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
         super(FolderChooser, self).__init__()
-        self.path = path
+        self.path = path if folder_mode else [path]
         self.display_path = display_path
         self.folder_mode = folder_mode
         self.multiple_files = multiple_files
@@ -681,7 +681,7 @@ class FolderChooser(QFrame):
 
         self.path_label = QLabel(self)
         if self.display_path:
-            self.path_label.setText(self.path)
+            self.path_label.setText(path)
         self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
 
         layout = QGridLayout()
@@ -712,12 +712,17 @@ class FolderChooser(QFrame):
             self.update_dir(update_path)
 
     def update_dir(self, path):
-        self.path = path if path != "" else self.path
+        self.path = path
         if self.display_path:
-            label = path if len(self.path) < 64 else ntpath.basename(path)
+            if self.multiple_files:
+                label = str(Path(self.path[0]).parent)
+            elif self.folder_mode:
+                label = str(self.path)
+            else:
+                label = str(ntpath.basename(self.path))
+            label = label[:50] + '...' if len(label) > 50 else label
             self.path_label.setText(label)
         self.path_signal.emit(self.path)
-
 
     def switch_enabled(self, state):
         self.label.setStyleSheet("color:grey" if not state else "")
