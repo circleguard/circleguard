@@ -78,7 +78,7 @@ class _Renderer(QWidget):
             self.loading_flag = True
             self.sliders_total = 0
             self.sliders_current = 0
-            self.thread = threading.Thread(target=self.proccess_sliders)
+            self.thread = threading.Thread(target=self.process_sliders)
             self.thread.start()
         else:
             self.loading_flag = False
@@ -506,21 +506,19 @@ class _Renderer(QWidget):
         self.painter.drawText(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2 - 10, f"Calculating Sliders, please wait...")
         self.draw_progressbar(int((self.sliders_current / self.sliders_total) * 100))
 
-    def proccess_sliders(self):
+    def process_sliders(self):
         self.sliders_total = len(self.beatmap.hit_objects) - 1
         for index in range(len(self.beatmap.hit_objects)):
             self.sliders_current = index
             current_hitobj = self.beatmap.hit_objects[index]
             if isinstance(current_hitobj, Slider):
-                try:
-                    current_hitobj.slider_body
-                except:
-                    if isinstance(current_hitobj.curve, Bezier):  # unsure if this is needed
-                        self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve.at(i / 64) for i in range(64)]
-                    elif isinstance(current_hitobj.curve, MultiBezier):
-                        self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve(i / 64) for i in range(64)]  # TODO calc points needed with length
-                    else:
-                        self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.points
+                steps = max(1, int((self.beatmap.hit_objects[index].end_time - self.beatmap.hit_objects[index].time).total_seconds() * 50))+1
+                if isinstance(current_hitobj.curve, Bezier):
+                    self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.at(np.array([i / steps for i in range(steps)]))
+                elif isinstance(current_hitobj.curve, MultiBezier):
+                    self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve(i / steps) for i in range(steps)]
+                else:
+                    self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.points
 
     def reset(self, end=False):
         """
