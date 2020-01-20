@@ -52,19 +52,19 @@ class _Renderer(QWidget):
         self.hitobjs = []
         if beatmap_path != None:
             self.beatmap = Beatmap.from_path(beatmap_path)
-            self.beatmap_flag = True
+            self.has_beatmap = True
             self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000 + 3000
         elif beatmap_id != None:
             self.beatmap = SLIDER_LIBARY.lookup_by_id(beatmap_id, download=True, save=True)
-            self.beatmap_flag = True
+            self.has_beatmap = True
             self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000 + 3000
         else:
             self.playback_len = 0
-            self.beatmap_flag = False
+            self.has_beatmap = False
         if not get_setting("render_beatmap"):
-            self.beatmap_flag = False
+            self.has_beatmap = False
         # beatmap stuff
-        if self.beatmap_flag:
+        if self.has_beatmap:
             if self.beatmap.approach_rate == 5:
                 self.preempt = 1200
             elif self.beatmap.approach_rate < 5:
@@ -75,13 +75,13 @@ class _Renderer(QWidget):
             self.fade_in = 400
             self.hitcircle_radius = circle_radius(self.beatmap.circle_size) - WIDTH_CIRCLE_BORDER / 2
             ## loading stuff
-            self.loading_flag = True
+            self.is_loading = True
             self.sliders_total = 0
             self.sliders_current = 0
             self.thread = threading.Thread(target=self.process_sliders)
             self.thread.start()
         else:
-            self.loading_flag = False
+            self.is_loading = False
 
         # replay stuff
         self.replay_amount = len(replays)
@@ -134,7 +134,7 @@ class _Renderer(QWidget):
         prepares next frame
         """
         # just update the frame if currently loading
-        if self.loading_flag:
+        if self.is_loading:
             self.update()
             return
 
@@ -148,7 +148,7 @@ class _Renderer(QWidget):
             magic = player["pos"] - FRAMES_ON_SCREEN if player["pos"] >= FRAMES_ON_SCREEN else 0
             player["buffer"] = player["data"][magic:player["pos"]]
 
-        if self.beatmap_flag:
+        if self.has_beatmap:
             self.get_hitobjects()
         self.update_signal.emit(current_time)
         self.update()
@@ -191,13 +191,13 @@ class _Renderer(QWidget):
             self.setAutoFillBackground(True)
             self.setPalette(pal)
         # loading screen
-        if self.loading_flag:
+        if self.is_loading:
             if self.thread.is_alive():
                 self.draw_loading_screen()
                 self.painter.end()
                 return
             else:
-                self.loading_flag = False
+                self.is_loading = False
                 self.clock.reset()
                 self.painter.end()
                 return
@@ -206,7 +206,7 @@ class _Renderer(QWidget):
         self.frame_times = self.frame_times[:120]
         self.last_frame = self.frame_time_clock.get_time()
         # beatmap
-        if self.beatmap_flag:
+        if self.has_beatmap:
             self.paint_beatmap()
         # cursors
         for player in self.players:
