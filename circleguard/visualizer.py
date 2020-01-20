@@ -350,7 +350,7 @@ class _Renderer(QWidget):
 
     def draw_hitobject(self, hitobj):
         """
-        Calls corresponding functions to draw a Hitobjecz.
+        Calls corresponding functions to draw a Hitobject.
 
         Args:
             QPainter painter: The painter.
