@@ -246,17 +246,33 @@ CHANGED = {
         "message_loading_replays"
     ],
     "1.3.0": [
-        "cache_location",
-        "log_dir",
         "message_loading_replays",
+        "message_starting_investigation",
+        "message_finished_investigation",
+        "message_steal_found",
+        "message_steal_found_display",
+        "message_relax_found",
+        "message_relax_found_display",
+        "message_correction_found",
+        "message_correction_found_display",
+        "message_correction_snaps",
+        "string_result_steal",
+        "string_result_relax",
+        "string_result_correction",
+        "template_steal",
+        "template_relax",
+        "template_correction",
         "steal_max_sim",
         "steal_max_sim_display",
         "relax_max_ur",
         "relax_max_ur_display",
         "correction_max_angle",
+        "correction_max_angle_display",
         "correction_min_distance",
-        "message_starting_investigation",
-        "message_finished_investigation"
+        "correction_min_distance_display",
+        "required_style",
+        "cache_location",
+        "log_dir"
     ]
 }
 
