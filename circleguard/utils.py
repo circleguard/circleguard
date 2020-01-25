@@ -67,16 +67,16 @@ def parse_mod_string(mod_string):
         return None
     if len(mod_string) % 2 != 0:
         raise ValueError(f"Invalid mod string {mod_string} (not of even length)")
-    mods = []
-    for i in range(2, len(mod_string), step=2):
+    # slightly hacky, using ``Mod.NM`` our "no mod present" mod
+    mod = Mod.NM
+    for i in range(2, len(mod_string) + 1, 2):
         single_mod_string = mod_string[i - 2: i]
         # there better only be one Mod that has an acronym matching ours, but a comp + 0 index works too
         matching_mods = [mod for mod in Mod.ORDER if mod.short_name() == single_mod_string]
         if not matching_mods:
             raise ValueError(f"Invalid mod string (no matching mod found for {single_mod_string})")
-        mod = matching_mods[0]
-        mods.append(mod)
-    return mods
+        mod += matching_mods[0]
+    return mod
 
 class Run():
     """
