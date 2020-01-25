@@ -1159,7 +1159,7 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
         self.darkmode.box.stateChanged.connect(self.reload_theme)
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
-        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply", "visualizer_bg")
+        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply", "visualizer_black_bg")
         self.visualizer_bg.box.stateChanged.connect(self.reload_theme)
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
         self.cache_location = FolderChooser("Cache Location", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
