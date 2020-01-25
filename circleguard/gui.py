@@ -246,12 +246,14 @@ class WindowWrapper(QMainWindow):
                                         mods_long_name=result.replay.mods.long_name())
             replays = [result.replay]
         elif type(result) is CorrectionResult:
-            snap_message = get_setting("message_correction_snaps")
-            snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
-
-            label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, replay=result.replay, snaps=snap_text,
+            label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, replay=result.replay,
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
-            template_text = get_setting("template_correction").format(ts=timestamp, r=result, replay=result.replay, snaps=snap_text,
+
+            snap_table = ("| Time (ms) | Angle (°) | Distance (px) |\n"
+                            "| :-: | :-: | :-: |\n")
+            for snap in result.snaps:
+                snap_table += "| {:.0f} | {:.2f} | {:.2f} |\n".format(snap.time, snap.angle, snap.distance)
+            template_text = get_setting("template_correction").format(ts=timestamp, r=result, replay=result.replay, snap_table=snap_table,
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
             replays = [result.replay]
 
@@ -854,8 +856,35 @@ class MainTab(QFrame):
             cg.loader.ratelimit_signal.connect(_ratelimited)
             cg.loader.check_stopped_signal.connect(partial(_check_event, event))
 
-            # TODO aggregate loadables before iterating over checks so that we don't
-            # double load loadables. Will require filtering by id again
+            # aggreagte loadables from all of the checks so we don't create
+            # separate instances per check and double load the (otherwise)
+            # identical loadable
+
+            # discard duplicate loadableWs
+            loadableWs = {loadableW for checkW in run.checks for loadableW in checkW.loadables}
+            # mapping of loadableW id to loadable object so each check can
+            # replace its loadableWs with the same loadable object and avoid
+            # double loading
+            loadableW_id_to_loadable = {}
+
+            for loadableW in loadableWs:
+                loadable = None
+                if type(loadableW) is ReplayPathW:
+                    loadable = ReplayPath(loadableW.path_input.path)
+                if type(loadableW) is ReplayMapW:
+                    loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
+                                         mods=parse_mod_string(loadableW.mods_input.field.text()))
+                if type(loadableW) is MapW:
+                    loadable = Map(int(loadableW.map_id_input.field.text()), span=loadableW.span_input.field.text(),
+                                         mods=parse_mod_string(loadableW.mods_input.field.text()))
+                if type(loadableW) is UserW:
+                    loadable = User(int(loadableW.user_id_input.field.text()), span=loadableW.span_input.field.text(),
+                                         mods=parse_mod_string(loadableW.mods_input.field.text()))
+                if type(loadableW) is MapUserW:
+                    loadable = MapUser(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
+                                       span=loadableW.span_input.field.text())
+                loadableW_id_to_loadable[loadableW.loadable_id] = loadable
+
             for checkW in run.checks:
                 d = None
                 check_type = None
@@ -872,60 +901,55 @@ class MainTab(QFrame):
                     min_distance = get_setting("correction_min_distance")
                     d = CorrectionDetect(max_angle, min_distance)
                     check_type = "Correction"
-                loadables = []
-                for loadableW in checkW.loadables:
-                    loadable = None
-                    if type(loadableW) is ReplayPathW:
-                        loadable = ReplayPath(loadableW.path_input.path)
-                    if type(loadableW) is ReplayMapW:
-                        loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
-                    if type(loadableW) is MapW:
-                        loadable = Map(int(loadableW.map_id_input.field.text()), span=loadableW.span_input.field.text(),
-                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
-                    if type(loadableW) is UserW:
-                        loadable = User(int(loadableW.user_id_input.field.text()), span=loadableW.span_input.field.text(),
-                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
-                    if type(loadableW) is MapUserW:
-                        loadable = MapUser(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                           span=loadableW.span_input.field.text())
-                    loadables.append(loadable)
-
+                # retrieve loadable objects from loadableW ids
+                loadables = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables]
                 c = Check(loadables, d)
                 cg.load_info(c)
                 replays = c.all_replays()
-                num_replays = c.num_replays()
-                self.set_progressbar_signal.emit(num_replays)
-                message_loading_replays = get_setting("message_loading_replays").format(ts=datetime.now(), num=num_replays)
+                # don't show "loading 2 replays" if they were already loaded
+                # by a previous check, misleading
+                num_unloaded = 0
+                num_total = c.num_replays()
+                for r in c.all_replays():
+                    if not r.loaded:
+                        num_unloaded += 1
+                if num_unloaded != 0:
+                    self.set_progressbar_signal.emit(num_unloaded)
+                else:
+                    self.set_progressbar_signal.emit(1)
+                message_loading_replays = get_setting("message_loading_replays").format(ts=datetime.now(),
+                                num_unloaded=num_unloaded, num_total=num_total)
                 self.write_to_terminal_signal.emit(message_loading_replays)
                 for replay in replays:
                     _check_event(event)
                     cg.load(replay)
                     self.increment_progressbar_signal.emit(1)
                 c.loaded = True
-                # change progressbar into an undetermined state
-                # (animation with stripes sliding horizontally)
-                # to indicate we're processing the data
+                # change progressbar into an undetermined state (animation with
+                # stripes sliding horizontally) to indicate we're processing
+                # the data
                 self.set_progressbar_signal.emit(0)
-                message_starting_investigation = get_setting("message_starting_investigation").format(ts=datetime.now(), check_type=check_type, num=num_replays)
+                message_starting_investigation = get_setting("message_starting_investigation").format(ts=datetime.now(),
+                                check_type=check_type, num_unloaded=num_unloaded, num_total=num_total)
                 self.write_to_terminal_signal.emit(message_starting_investigation)
-                self.update_label_signal.emit("Comparing Replays")
-                self.update_run_status_signal.emit(run.run_id, "Comparing Replays")
+                self.update_label_signal.emit("Investigating Replays")
+                self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
                 for result in cg.run(c):
                     _check_event(event)
                     self.q.put(result)
+                self.print_results_signal.emit() # flush self.q
 
-            self.set_progressbar_signal.emit(-1)  # resets progressbar so it's empty again
+            self.set_progressbar_signal.emit(-1) # empty progressbar
             # 'flush' self.q so there's no more results left and message_finished_investigation
-            # won't print before results from that investigation which looks strange
-            # signal instead of call to be threadsafe and avoid
+            # won't print before results from that investigation which looks strange.
+            # Signal instead of call to be threadsafe and avoid
             # ```
             # QObject::connect: Cannot queue arguments of type 'QTextCursor'
             # (Make sure 'QTextCursor' is registered using qRegisterMetaType().)
             # ```
             # warning
             self.print_results_signal.emit()
-            self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=datetime.now(), num=num_replays))
+            self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=datetime.now()))
 
         except NoInfoAvailableException:
             self.write_to_terminal_signal.emit("No information found for those arguments. Please check your inputs and make sure the given user/map exists")

@@ -142,7 +142,7 @@ DEFAULTS = {
         "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
     },
     "Messages": {
-        "message_loading_replays":         "[{ts:%X}] Loading {num} replays",
+        "message_loading_replays":         "[{ts:%X}] Loading {num_unloaded} of {num_total} replays",
         "message_ratelimited":             "[{ts:%X}] Ratelimited, waiting for {s} seconds",
         "message_starting_investigation":  "[{ts:%X}] Running {check_type} check",
         "message_finished_investigation":  "[{ts:%X}] Done",
@@ -177,8 +177,26 @@ DEFAULTS = {
                                 "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}/download"
                                 "\n\n"
                                 "{r.similarity:.2f} similarity according to [circleguard](https://github.com/circleguard/circleguard) (higher is less similar)"),
-        "template_relax":       "",
-        "template_correction":  "",
+        "template_relax":      ("[osu!std] {r.replay.username} | Relax"
+                                "\n\n"
+                                "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
+                                "\n\n"
+                                "Map: https://osu.ppy.sh/b/{r.replay.map_id}"
+                                "\n\n"
+                                "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
+                                "\n\n"
+                                "ur (ucv): {r.ur:.2f} according to [circleguard](https://github.com/circleguard/circleguard)"),
+        "template_correction": ("[osu!std] {r.replay.username} | Aim Correction"
+                                "\n\n"
+                                "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
+                                "\n\n"
+                                "Map: https://osu.ppy.sh/b/{r.replay.map_id}"
+                                "\n\n"
+                                "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
+                                "\n\n"
+                                "Snaps according to [circleguard](https://github.com/circleguard/circleguard):"
+                                "\n\n"
+                                "{snap_table}")
     },
     "Thresholds": {
         "steal_max_sim": 18,
