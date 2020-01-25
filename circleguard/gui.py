@@ -284,9 +284,9 @@ class WindowWrapper(QMainWindow):
 
     def on_application_quit(self):
         """Called when the app.aboutToQuit signal is emitted"""
-        if self.debug_window != None:
+        if self.debug_window is not None:
             self.debug_window.close()
-        if self.main_window.main_tab.visualizer_window != None:
+        if self.main_window.main_tab.visualizer_window is not None:
             self.main_window.main_tab.visualizer_window.close()
         overwrite_config()
 
@@ -1097,7 +1097,7 @@ class VisualizeTab(QFrame):
     def _parse_replay(self, path):
         replay = ReplayPath(path)
         self.cg.load(replay)
-        if self.map_id == None or len(self.replays) == 0:  # store map_id if nothing stored
+        if self.map_id is None or len(self.replays) == 0:  # store map_id if nothing stored
             log.info(f"Changing map_id from {self.map_id} to {replay.map_id}")
             self.map_id = replay.map_id
         elif replay.map_id != self.map_id:  # ignore replay with diffrent map_ids
