@@ -186,7 +186,7 @@ class _Renderer(QFrame):
         """
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
-        black_bg = get_setting("visualizer_bg")
+        black_bg = get_setting("visualizer_black_bg")
         painter.setPen(PEN_WHITE if (get_setting("dark_theme") or black_bg) else PEN_BLACK)
         if black_bg:
             pal = QPalette()

@@ -27,7 +27,7 @@ COMMENTS = {
             "The `ts` seen in many of the settings is a datetime.datetime object, representing the timestamp at that time.\n"
             "You may of course use any formatting directive in the settings (instead of the default %X) that datetime supports.\n\n"
             "After you change settings, you must press the \"sync\" button on the settings tab for them to take effect.\n\n"
-            "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard",
+            "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard.",
     "Locations": {
         "section": "The path to various file or directories used by the program",
         "cache_location": "Where the cache to read and write replays to is.\n"
@@ -44,24 +44,39 @@ COMMENTS = {
         "message_steal_found": "Displayed when an investigation for replay stealing has a similarity below Thresholds/steal_max_sim",
         "message_steal_found_display": "Displayed when an investigation for replay stealing has a similarity below Thresholds/steal_max_sim_display",
         "message_relax_found": "Displayed when an investigation for relax has a ur below Thresholds/relax_max_ur",
-        "message_relax_found_display": "Displayed when an investigation for relax has a ur below Thresholds/relax_max_ur_display"
+        "message_relax_found_display": "Displayed when an investigation for relax has a ur below Thresholds/relax_max_ur_display",
+        "message_correction_found": "Displayed when an investigation for aim correction satisfies both Thresholds/correction_max_angle and correction_min_distance",
+        "message_correction_found_display": "Displayed when an investigation for aim correction satisfies both Thresholds/correction_max_angle_display and correction_min_distance_display",
+        "message_correction_snaps": "How to represent a snap for aim correction. The result is passed to message_correction_found and message_correction_found_display as `snaps`"
     },
     "Strings": {
         "section": "Labels seen on various widgets",
-        "string_result_text": "Text displayed on a row in the Results tab when a result is added"
+        "string_result_steal": "Displayed on the Results tab for a replay stealing result",
+        "string_result_relax": "Displayed on the Results tab for a relax result",
+        "string_result_correction": "Displayed on the Results tab for an aim correction result"
     },
     "Templates": {
-        "section": "The templates that can be copied from the Results tab for easy reddit reporting",
-        "template_replay_steal": "Template for replay stealing"
+        "section": "The templates that are copied to your clipboard from the Results tab \"copy template\" button",
+        "template_steal": "Available for copying for replay stealing results",
+        "template_relax": "Available for copying for relax results",
+        "template_correction": "Available for copying for aim correction results"
     },
     "Thresholds": {
         "section": "Thresholds for when to store results and when to display results for various types of cheats.\n"
-                "Although possible to set _display settings lower than their respective _cheat setting, it is not advised"
+                "Although possible to set _display settings lower than their respective _cheat setting, it is not advised",
+        "steal_max_sim": "The max similarity for a replay stealing comparison to be counted as cheated",
+        "steal_max_sim_display": "The max similarity for a replay stealing comparison to be printed to the terminal",
+        "relax_max_ur": "The max ur for a replay to be counted as cheated",
+        "relax_max_ur_display": "The max ur for a replay to be printed to the terminal",
+        "correction_max_angle": "For any thee points in a replay, if the angle between them (in degrees) is smaller than this value, the points are counted as a Snap (indicative of aim correction). Note that the three points must also satisfy correction_min_distance",
+        "correction_max_angle_display": "Unused. Aim Correction does not currently have display options",
+        "correction_min_distance": "For any three points A B C in a replay, if the distance between AB or BC is greater than this value, the points are counted as a Snap (indicative of aim correction). Note that the three points must also satisfy correction_max_angle",
+        "correction_min_distance_display": "Unused. Aim Correction does not currently have display options"
     },
     "Appearance": {
-        "dark_theme": "Dark theme skins the application to be a bit easier on the eyes. The gui is developed with a dark theme in mind first, light theme second",
-        "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
-        "visualizer_bg": "If True, uses a pure black background for the visualizer (emulates osu client gameplay). If False, uses the default background of the current theme (black for dark and white for light)",
+        "dark_theme": "If True, uses a dark theme for the application",
+        "visualizer_info": "If True, info about the players is displayed on the visualizer",
+        "visualizer_black_bg": "If True, uses a pure black background for the visualizer. Otherwise uses the background of the current theme",
         "required_style": "The css to apply to a widget if it is required to be filled in to complete an action. This is applied if a required field in a Loadable is empty when you click run, for instance"
     },
     "Experimental": {
@@ -85,12 +100,12 @@ COMMENTS = {
     },
     "Core": {
         "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing",
-        "ran": "Whether Circleguard has been run on this system before. If False, all settings will be reset to their default and the wizard will be displayed",
-        "last_version": "The most recent version of Circleguard run on this system. Used to overwrite some settings when they change between versions",
+        "ran": "Whether Circleguard has been run on this system before. If False when Circleguard is launched, all settings will be reset to their default and the wizard will be displayed",
+        "last_version": "The most recent version of Circleguard run on this system. Used to overwrite settings when they change between versions",
         "api_key": "The api key to use in circlecore",
         "timestamp_format": "The format of last_update_check",
         "last_update_check": "The last time we checked for a new version. Only checks once every hour",
-        "latest_version": "The latest circleguard version available on github"
+        "latest_version": "The latest Circleguard version available on github"
     },
     "Caching": {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
@@ -211,7 +226,7 @@ DEFAULTS = {
     "Appearance": {
         "dark_theme": False,
         "visualizer_info": True,
-        "visualizer_bg": False,
+        "visualizer_black_bg": False,
         "required_style": "QLineEdit { border: 1px solid red }\n"
                           "WidgetCombiner { border: 1px solid red }"
     },
@@ -246,17 +261,34 @@ CHANGED = {
         "message_loading_replays"
     ],
     "1.3.0": [
-        "cache_location",
-        "log_dir",
         "message_loading_replays",
+        "message_starting_investigation",
+        "message_finished_investigation",
+        "message_steal_found",
+        "message_steal_found_display",
+        "message_relax_found",
+        "message_relax_found_display",
+        "message_correction_found",
+        "message_correction_found_display",
+        "message_correction_snaps",
+        "string_result_steal",
+        "string_result_relax",
+        "string_result_correction",
+        "template_steal",
+        "template_relax",
+        "template_correction",
         "steal_max_sim",
         "steal_max_sim_display",
         "relax_max_ur",
         "relax_max_ur_display",
         "correction_max_angle",
+        "correction_max_angle_display",
         "correction_min_distance",
-        "message_starting_investigation",
-        "message_finished_investigation"
+        "correction_min_distance_display",
+        "visualizer_black_bg",
+        "required_style",
+        "cache_location",
+        "log_dir"
     ]
 }
 
