@@ -482,7 +482,7 @@ class LoadableW(QFrame):
         self.loadable_id = LoadableW.ID
         t = "\t" # https://stackoverflow.com/a/44780467/12164878
         # double tabs on short names to align with longer ones
-        title.setText(f"{name}{t+t if len(name) < 5 else t}(Id: {self.loadable_id})")
+        title.setText(f"{name}{t+t if len(name) < 5 else t}(id: {self.loadable_id})")
 
         self.delete_button = QPushButton(self)
         self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
