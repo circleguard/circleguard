@@ -56,6 +56,11 @@ def get_idle_setting_str():
     else:
         return "Idle"
 
+class InvalidModException(Exception):
+    """
+    We were asked to parse an invalid mod string.
+    """
+
 def parse_mod_string(mod_string):
     """
     Takes a string made up of two letter mod names and converts them
@@ -66,7 +71,7 @@ def parse_mod_string(mod_string):
     if mod_string == "":
         return None
     if len(mod_string) % 2 != 0:
-        raise ValueError(f"Invalid mod string {mod_string} (not of even length)")
+        raise InvalidModException(f"Invalid mod string {mod_string} (not of even length)")
     # slightly hacky, using ``Mod.NM`` our "no mod present" mod
     mod = Mod.NM
     for i in range(2, len(mod_string) + 1, 2):
@@ -74,7 +79,7 @@ def parse_mod_string(mod_string):
         # there better only be one Mod that has an acronym matching ours, but a comp + 0 index works too
         matching_mods = [mod for mod in Mod.ORDER if mod.short_name() == single_mod_string]
         if not matching_mods:
-            raise ValueError(f"Invalid mod string (no matching mod found for {single_mod_string})")
+            raise InvalidModException(f"Invalid mod string (no matching mod found for {single_mod_string})")
         mod += matching_mods[0]
     return mod
 

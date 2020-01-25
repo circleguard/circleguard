@@ -503,7 +503,7 @@ class RunWidget(QFrame):
         self.setLayout(layout)
 
     def update_status(self, status):
-        if status == "Finished":
+        if status in ["Finished", "Invalid arguments"]:
             # not a qt function, pyqt's implementation of deleting a widget
             self.button.deleteLater()
 

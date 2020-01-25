@@ -29,7 +29,7 @@ from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableExcept
                         RelaxDetect, CorrectionDetect, ReplayStealingResult, RelaxResult, CorrectionResult)
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
-from utils import resource_path, run_update_check, Run, parse_mod_string
+from utils import resource_path, run_update_check, Run, parse_mod_string, InvalidModException
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
@@ -856,22 +856,28 @@ class MainTab(QFrame):
 
             for loadableW in loadableWs:
                 loadable = None
-                if type(loadableW) is ReplayPathW:
-                    loadable = ReplayPath(loadableW.path_input.path)
-                if type(loadableW) is ReplayMapW:
-                    loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                         mods=parse_mod_string(loadableW.mods_input.field.text()))
-                if type(loadableW) is MapW:
-                    loadable = Map(int(loadableW.map_id_input.field.text()), span=loadableW.span_input.field.text(),
-                                         mods=parse_mod_string(loadableW.mods_input.field.text()))
-                if type(loadableW) is UserW:
-                    loadable = User(int(loadableW.user_id_input.field.text()), span=loadableW.span_input.field.text(),
-                                         mods=parse_mod_string(loadableW.mods_input.field.text()))
-                if type(loadableW) is MapUserW:
-                    loadable = MapUser(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                       span=loadableW.span_input.field.text())
-                loadableW_id_to_loadable[loadableW.loadable_id] = loadable
-
+                try:
+                    if type(loadableW) is ReplayPathW:
+                        loadable = ReplayPath(loadableW.path_input.path)
+                    if type(loadableW) is ReplayMapW:
+                        loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
+                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                    if type(loadableW) is MapW:
+                        loadable = Map(int(loadableW.map_id_input.field.text()), span=loadableW.span_input.field.text(),
+                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                    if type(loadableW) is UserW:
+                        loadable = User(int(loadableW.user_id_input.field.text()), span=loadableW.span_input.field.text(),
+                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                    if type(loadableW) is MapUserW:
+                        loadable = MapUser(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
+                                           span=loadableW.span_input.field.text())
+                    loadableW_id_to_loadable[loadableW.loadable_id] = loadable
+                except InvalidModException as e:
+                    self.write_to_terminal_signal.emit(str(e))
+                    self.update_label_signal.emit("Invalid arguments")
+                    self.update_run_status_signal.emit(run.run_id, "Invalid arguments")
+                    self.set_progressbar_signal.emit(-1)
+                    sys.exit(0)
             for checkW in run.checks:
                 d = None
                 check_type = None
