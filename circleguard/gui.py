@@ -148,8 +148,6 @@ class WindowWrapper(QMainWindow):
         self.thread = threading.Thread(target=self._change_label_update)
         self.thread.start()
 
-    # I know, I know...we have a stupid amount of layers.
-    # WindowWrapper -> MainWindow -> MainTab -> Tabs
     def tab_right(self):
         tabs = self.main_window.tabs
         tabs.setCurrentIndex(tabs.currentIndex() + 1)
@@ -342,9 +340,7 @@ class MainWindow(QFrame):
 class ScrollableLoadablesWidget(QFrame):
     def __init__(self):
         super().__init__()
-        # needs to be an attribute to programatically add widgets
         self.layout = QVBoxLayout()
-        # fill top-down
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
@@ -366,7 +362,6 @@ class DropArea(QFrame):
         super().__init__()
 
         self.loadable_ids = [] # ids of loadables already in this drop area
-        # minimum height of 100 px, don't care about minimum width, it will stretch to fit as necessary
         self.setMinimumSize(0, 100)
         self.setFrameStyle(QFrame.Sunken | QFrame.StyledPanel)
         self.setAcceptDrops(True)
@@ -414,8 +409,6 @@ class CheckW(QFrame):
         self.drop_area = DropArea()
         self.delete_button = QPushButton(self)
         self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
-        # qt has reasonable button padding normally but not when there's only
-        # one character of text like this. Makes the button reasonably small.
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
         title = QLabel()
@@ -482,8 +475,6 @@ class LoadableW(QFrame):
         self.delete_button = QPushButton(self)
         self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
         self.delete_button.setMaximumWidth(30)
-        # qt has reasonable button padding normally but not when there's only
-        # one character of text like this. Makes the button reasonably small.
         self.delete_button.clicked.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
         self.layout.addWidget(title, 0, 0, 1, 7)
         self.layout.addWidget(self.delete_button, 0, 7, 1, 1)
@@ -495,18 +486,14 @@ class LoadableW(QFrame):
     # real example code     https://lists.qt-project.org/pipermail/qt-interest-old/2011-June/034531.html
     # bad example code      https://stackoverflow.com/q/7737913/12164878
     def mouseMoveEvent(self, event):
-        # 1=all the way to the right (or down),
-        # 0=all the way to the left (or up)
+        # 1=all the way to the right/down, 0=all the way to the left/up
         x_ratio = event.pos().x() / self.width()
         y_ratio = event.pos().y() / self.height()
         self.drag = QDrag(self)
         # https://stackoverflow.com/a/53538805/12164878
         pixmap = DragWidget(f"{self.name} (Id: {self.loadable_id})").grab()
         # put cursor in the same relative position on the dragwidget as
-        # it clicked on the real Loadable widget. For instance, if the user
-        # started the drag halfway to the right and three quarters of the way
-        # down, put the cursor halfway to the right and three quarters of the
-        # way down on the newly created dragwidget.
+        # it clicked on the real Loadable widget.
         self.drag.setHotSpot(QPoint(pixmap.width() * x_ratio, pixmap.height() * y_ratio))
         self.drag.setPixmap(pixmap)
         mime_data = QMimeData()
@@ -907,7 +894,7 @@ class MainTab(QFrame):
                 cg.load_info(c)
                 replays = c.all_replays()
                 # don't show "loading 2 replays" if they were already loaded
-                # by a previous check, misleading
+                # by a previous check, would be misleading
                 num_unloaded = 0
                 num_total = c.num_replays()
                 for r in c.all_replays():
@@ -1130,7 +1117,7 @@ class SettingsTab(QFrame):
         super().__init__()
         self.qscrollarea = QScrollArea(self)
         self.qscrollarea.setWidget(ScrollableSettingsWidget())
-        self.qscrollarea.setAlignment(Qt.AlignCenter)  # center in scroll area - maybe undesirable
+        self.qscrollarea.setAlignment(Qt.AlignCenter)
         self.qscrollarea.setWidgetResizable(True)
 
         self.info = QLabel(self)
@@ -1181,7 +1168,7 @@ class ScrollableSettingsWidget(QFrame):
 
         self.loglevel = LoglevelWidget("")
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
-        self.set_loglevel()  # set the default loglevel in cg, not just in gui
+        self.set_loglevel() # set the default loglevel in cg, not just in gui
 
         self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!", "rainbow_accent")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
@@ -1243,7 +1230,7 @@ class ScrollableSettingsWidget(QFrame):
         switch_theme(get_setting("dark_theme"))
 
     def _open_settings(self):
-        overwrite_config()  # generate file with latest changes
+        overwrite_config() # generate file with latest changes
         QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location")))
 
     def _sync_settings(self):
@@ -1311,8 +1298,6 @@ class QueueFrame(QFrame):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
-        # we want widgets to fill from top down,
-        # being vertically centered looks weird
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
