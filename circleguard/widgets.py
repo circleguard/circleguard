@@ -655,7 +655,6 @@ class FolderChooser(QFrame):
     def update_dir(self, path):
         self.path = path if path != "" else self.path
         self.changed = True if self.path != self.default_path else False
-        print(self.changed)
         if self.display_path:
             label = path if len(self.path) < 64 else ntpath.basename(path)
             self.path_label.setText(label)
