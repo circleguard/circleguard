@@ -30,7 +30,7 @@ from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableExcept
 from circleguard import __version__ as cg_version
 from visualizer import VisualizerWindow
 from utils import resource_path, run_update_check, Run, parse_mod_string, InvalidModException
-from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
+from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
                      TopPlays, BeatmapTest, ResultW, LineEditSetting, EntryWidget,

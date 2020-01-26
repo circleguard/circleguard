@@ -584,55 +584,6 @@ class LineEditSetting(LinkableSetting, QFrame):
     def on_setting_changed(self, new_value):
         self.input_.field.setText(new_value)
 
-class Threshold(LinkableSetting, QFrame):
-    """
-    A container class of widgets that represents user input for the threshold to consider a comparison a cheat.
-    This class holds a Label, Slider, and SpinBox.
-
-    The SpinBox and Slider are linked internally by this class, so when one changes, so does the other.
-    """
-
-    def __init__(self, prefix=""):
-        LinkableSetting.__init__(self, "threshold_cheat")
-        QFrame.__init__(self)
-
-        label = QLabel(self)
-        label.setText(prefix + "Threshold:")
-        label.setToolTip("Cutoff for how similar two replays must be to be printed")
-        self.label = label
-
-        slider = QSlider(Qt.Horizontal)
-        slider.setFocusPolicy(Qt.ClickFocus)
-        slider.setRange(0, 30)
-        slider.setValue(get_setting("threshold_cheat"))
-        self.slider = slider
-
-        spinbox = SpinBox(self)
-        spinbox.setValue(get_setting("threshold_cheat"))
-        spinbox.setAlignment(Qt.AlignCenter)
-        spinbox.setRange(0, 30)
-        spinbox.setSingleStep(1)
-        spinbox.setFixedWidth(100)
-        self.spinbox= spinbox
-        self.combined = WidgetCombiner(slider, spinbox)
-
-        self.slider.valueChanged.connect(lambda val: self.spinbox.setValue(val))
-        self.spinbox.valueChanged.connect(lambda val: self.slider.setValue(val))
-
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.combined, 0, 2, 1, 3)
-
-        self.setLayout(layout)
-
-    def on_setting_changed(self, new_value):
-        self.slider.setValue(new_value)
-        self.spinbox.setValue(new_value)
-
-
 class WidgetCombiner(QFrame):
     def __init__(self, widget1, widget2):
         super(WidgetCombiner, self).__init__()
