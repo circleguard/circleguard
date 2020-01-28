@@ -31,12 +31,9 @@ class LineEdit(QLineEdit):
     """
     def __init__(self, parent):
         super().__init__(parent)
-        # this is an empty string right now but depending on how qt stylesheet
-        # cascading works it might not always be empty. Don't want to cause
-        # headaches in the future by reverting to an empty stylesheet when
-        # we really want a cascaded stylesheet which was set higher up.
-        # Used in #focusInEvent to reset the stylesheet if self.highlighted
-        # is True (removes the red border).
+        # save current stylesheet for resetting highlighted style. Don't
+        # want to reset to an empty string because our stylesheet may cascade
+        # down to here in the future instead of being empty
         self.old_stylesheet = self.styleSheet()
         self.highlighted = False
 
@@ -599,7 +596,7 @@ class FolderChooser(QFrame):
 
     def __init__(self, title, path=str(Path.home()), folder_mode=True, multiple_files=False, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
         super(FolderChooser, self).__init__()
-        self.highlighted = False # for show_required
+        self.highlighted = False
         self.changed = False # if the selection currently differs from the default path
         self.default_path = path
         self.path = path
