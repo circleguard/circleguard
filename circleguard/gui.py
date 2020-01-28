@@ -750,7 +750,6 @@ class MainTab(QFrame):
     def add_circleguard_run(self):
         checks = self.checks
         if not checks:
-            # no checks added
             return
         for check in checks:
             # all loadable objects in this check
@@ -1341,22 +1340,16 @@ class ScrollableThresholdsWidget(QFrame):
                 "so you can view them, and printed to the console", "relax_max_ur", 300)
         self.relax_max_ur_display = SliderBoxSetting("Max ur display", "Replays with a ur lower than this "
                 "will be printed to the console", "relax_max_ur_display", 300)
+        # display options for correction are more confusing than they're worth,
+        # especially when we don't have a good mechanism for storing Snaps in
+        # the Result tab or visualizer support for the Snap timestamps. TODO
+        # potentially add back if we can provide good support for them.
         self.correction_max_angle = SliderBoxSetting("Max angle", "Replays with a set of three points "
                 "making an angle less than this (*and* also satisfying correction_min_distance) will be stored so "
                 "you can view them, and printed to the console.", "correction_max_angle", 360)
-        # display options for correction are more confusing than they're worth, especially
-        # when we don't have a good mechanism for storing Snaps in the Result tab
-        # or visualizer support for the Snap timestamps. TODO potentially add back
-        # if we can provide good support for them.
-        # self.correction_max_angle_display = SliderBoxSetting("Max angle display ", "Replays with a set of "
-        #         "three points making an angle less than this (*and* also satisfying correction_min_distance_display) will be printed "
-        #         "to the console.", "correction_max_angle_display", 360)
         self.correction_min_distance = SliderBoxSetting("Min distance", "Replays with a set of three points "
                 "where either the distance from AB or BC is greater than this (*and* also satisfying correction_max_angle) "
                 "will be stored so you can view them, and printed to the console.", "correction_min_distance", 100)
-        # self.correction_min_distance_display = SliderBoxSetting("Min distance display", "Replays with a set of "
-        #         "three points where either the distance from AB or BC is greater than this (*and* also satisfying "
-        #         "correction_max_angle_display) will be printed to the console.", "correction_min_distance_display", 100)
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(Separator("Replay Stealing"))
@@ -1367,9 +1360,7 @@ class ScrollableThresholdsWidget(QFrame):
         self.layout.addWidget(self.relax_max_ur_display)
         self.layout.addWidget(Separator("Aim Correction"))
         self.layout.addWidget(self.correction_max_angle)
-        # self.layout.addWidget(self.correction_max_angle_display)
         self.layout.addWidget(self.correction_min_distance)
-        # self.layout.addWidget(self.correction_min_distance_display)
 
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
