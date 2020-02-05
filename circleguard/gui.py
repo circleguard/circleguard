@@ -463,7 +463,7 @@ class DragWidget(QFrame):
 class LoadableW(QFrame):
     """
     A widget representing a circleguard.Loadable, which can be dragged onto
-    a DetectWidget. Keeps track of how many LoadableWidgets have been created
+    a CheckW. Keeps track of how many LoadableWs have been created
     as a static ID attribute.
 
     W standing for widget.
