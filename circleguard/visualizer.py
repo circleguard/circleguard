@@ -21,7 +21,7 @@ PREVIOUS_ERRSTATE = np.seterr('raise')
 WIDTH_LINE = 1
 WIDTH_POINT = 3
 WIDTH_CIRCLE_BORDER = 8
-FRAMES_ON_SCREEN = 15  # how many frames for each replay to draw on screen at a time
+FRAMES_ON_SCREEN = 15 # how many frames for each replay to draw on screen at a time
 PEN_BLACK = QPen(QColor(17, 17, 17))
 PEN_WHITE = QPen(QColor(255, 255, 255))
 X_OFFSET = 64
@@ -38,7 +38,7 @@ class _Renderer(QFrame):
         self.setFixedSize(640, 480)
         self.replay_amount = len(replays)
         self.current_time = 0
-        self.pos = [1]*self.replay_amount  # so our first frame is at data[0] since we do pos + 1
+        self.pos = [1]*self.replay_amount # so our first frame is at data[0] since we do pos + 1
         self.buffer = [[[[0, 0, 0]]]*self.replay_amount][0]
         self.buffer_additions = [[[[0, 0, 0]]]*self.replay_amount][0]
         self.clock = clock.Timer()
@@ -54,7 +54,7 @@ class _Renderer(QFrame):
         self.data = []
         self.usernames = []
         for replay in replays:
-            self.data.append(replay.as_list_with_timestamps())  # t,x,y
+            self.data.append(replay.as_list_with_timestamps()) # t,x,y
             self.usernames.append(replay.username)
         # flip all replays with hr
         for i, replay in enumerate(replays):
@@ -68,7 +68,7 @@ class _Renderer(QFrame):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_frame_from_timer)
-        self.timer.start(1000/60)  # 60fps (1000ms/60frames)
+        self.timer.start(1000/60) # 60fps (1000ms/60frames)
 
     def next_frame_from_timer(self):
         """
@@ -132,7 +132,7 @@ class _Renderer(QFrame):
         """
         current_time = self.clock.get_time()
         if self.replay_amount > 0:
-            if current_time > self.data[0][-1][0] or current_time < 0:  # resets visualizer if at end
+            if current_time > self.data[0][-1][0] or current_time < 0: # resets visualizer if at end
                 self.reset(end=True if self.clock.current_speed < 0 else False)
 
         current_time = self.clock.get_time()
@@ -168,7 +168,7 @@ class _Renderer(QFrame):
         self.hitobjs = []
         while not found_all:
             current_hitobj = self.beatmap.hitobjects[index]
-            if current_hitobj.time-preempt < time < current_hitobj.time or ((current_hitobj.time-preempt < time < current_hitobj.time + current_hitobj.duration) if 2 & current_hitobj.type else False):  #
+            if current_hitobj.time-preempt < time < current_hitobj.time or ((current_hitobj.time-preempt < time < current_hitobj.time + current_hitobj.duration) if 2 & current_hitobj.type else False): #
                 current_hitobj.preempt = preempt
                 current_hitobj.fade_in = fade_in
                 current_hitobj.hitwindow = hitwindow
@@ -231,7 +231,7 @@ class _Renderer(QFrame):
         if self.replay_amount > 0:
             for i in range(self.replay_amount):
                 painter.setPen(self.CURSOR_COLORS[i])
-                if len(self.buffer[i]) > 0:  # skips empty buffers
+                if len(self.buffer[i]) > 0: # skips empty buffers
                     painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: {int(self.buffer[i][-1][1])}, {int(self.buffer[i][-1][2])}")
                 else:
                     painter.drawText(0, 30+(15*i), f"Cursor {self.usernames[i]}: Not yet loaded")
@@ -240,7 +240,7 @@ class _Renderer(QFrame):
                 try:
                     distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
                     painter.drawText(0, 45 + (15 * i), f"Cursor Distance {self.usernames[i-1]}-{self.usernames[i]}: {int(distance)}px")
-                except IndexError:  # Edge case where we only have data from one cursor
+                except IndexError: # Edge case where we only have data from one cursor
                     pass
 
     def draw_line(self, painter, pen, alpha, start, end):
@@ -309,8 +309,8 @@ class _Renderer(QFrame):
         _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
         _pen.setWidth(WIDTH_CIRCLE_BORDER)
         painter.setPen(_pen)
-        painter.setBrush(QBrush(QColor(c.red(),c.green(),c.blue(),int(hitcircle_alpha/4))))  # fill hitcircle
-        painter.drawEllipse(hitobj.x-hircircle_radius+X_OFFSET, hitobj.y-hircircle_radius+Y_OFFSET, hircircle_radius*2, hircircle_radius*2)  # Qpoint placed it at the wrong position, no idea why
+        painter.setBrush(QBrush(QColor(c.red(),c.green(),c.blue(),int(hitcircle_alpha/4)))) # fill hitcircle
+        painter.drawEllipse(hitobj.x-hircircle_radius+X_OFFSET, hitobj.y-hircircle_radius+Y_OFFSET, hircircle_radius*2, hircircle_radius*2) # Qpoint placed it at the wrong position, no idea why
         painter.setBrush(QBrush(QColor(c.red(),c.green(),c.blue(),0)))
 
     def draw_spinner(self, painter, hitobj):
@@ -335,7 +335,7 @@ class _Renderer(QFrame):
         _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
         _pen.setWidth(int(WIDTH_CIRCLE_BORDER/2))
         painter.setPen(_pen)
-        painter.drawEllipse(512/2-spinner_radius+X_OFFSET, 384/2-spinner_radius+Y_OFFSET, spinner_radius*2, spinner_radius*2)  # Qpoint placed it at the wrong position, no idea why
+        painter.drawEllipse(512/2-spinner_radius+X_OFFSET, 384/2-spinner_radius+Y_OFFSET, spinner_radius*2, spinner_radius*2) # Qpoint placed it at the wrong position, no idea why
 
     def draw_approachcircle(self, painter, hitobj):
         """
@@ -355,7 +355,7 @@ class _Renderer(QFrame):
         _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
         _pen.setWidth(int(WIDTH_CIRCLE_BORDER/2))
         painter.setPen(_pen)
-        painter.drawEllipse(hitobj.x-approachcircle_radius+X_OFFSET, hitobj.y-approachcircle_radius+Y_OFFSET, approachcircle_radius*2, approachcircle_radius*2)  # Qpoint placed it at the wrong position, no idea why
+        painter.drawEllipse(hitobj.x-approachcircle_radius+X_OFFSET, hitobj.y-approachcircle_radius+Y_OFFSET, approachcircle_radius*2, approachcircle_radius*2) # Qpoint placed it at the wrong position, no idea why
 
     def draw_slider(self, painter, hitobj):
         """
@@ -593,7 +593,7 @@ class VisualizerWindow(QMainWindow):
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.interface = _Interface(replays, beatmap_path)
         self.setCentralWidget(self.interface)
-        self.setWindowFlag(Qt.MSWindowsFixedSizeDialogHint)  # resizing is not important rn
+        self.setWindowFlag(Qt.MSWindowsFixedSizeDialogHint) # resizing is not important rn
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
         QShortcut(QKeySequence(Qt.Key_Left), self, self.interface.previous_frame)
         QShortcut(QKeySequence(Qt.Key_Right), self, self.interface.next_frame)

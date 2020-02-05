@@ -298,7 +298,7 @@ class LoglevelWidget(QFrame):
         output_combobox.addItem("NEW WINDOW")
         output_combobox.addItem("BOTH")
         output_combobox.setInsertPolicy(QComboBox.NoInsert)
-        output_combobox.setCurrentIndex(0)  # NONE by default
+        output_combobox.setCurrentIndex(0) # NONE by default
         self.output_combobox = output_combobox
         self.save_folder = FolderChooser("Log Folder", get_setting("log_dir"))
         save_option.box.stateChanged.connect(self.save_folder.switch_enabled)

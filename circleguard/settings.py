@@ -240,7 +240,7 @@ DEFAULTS = {
     },
     "Core": {
         "ran": False,
-        "last_version": "0.0.0",  # force run update_settings if the user previously had a version without this key
+        "last_version": "0.0.0", # force run update_settings if the user previously had a version without this key
         "api_key": "",
         "timestamp_format": "%H:%M:%S %m.%d.%Y",
         "last_update_check": "00:00:00 01.01.1970", # aka datetime.min, but formatted
@@ -305,7 +305,7 @@ def get_setting(name):
 
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
-    last_version = version.parse(last_version.base_version)  # remove dev stuff
+    last_version = version.parse(last_version.base_version) # remove dev stuff
     for ver, changed_arr in CHANGED.items():
         if last_version < version.parse(ver):
             for setting in changed_arr:

@@ -48,15 +48,15 @@ sys._excepthook = sys.excepthook
 
 def write_log(message):
     log_dir = resource_path(get_setting("log_dir"))
-    if not os.path.exists(log_dir):  # create dir if nonexistent
+    if not os.path.exists(log_dir): # create dir if nonexistent
         os.makedirs(log_dir)
     directory = os.path.join(log_dir, "circleguard.log")
-    with open(directory, 'a+') as f:  # append so it creates a file if it doesn't exist
+    with open(directory, 'a+') as f: # append so it creates a file if it doesn't exist
         f.seek(0)
         data = f.read().splitlines(True)
     data.append(message+"\n")
     with open(directory, 'w+') as f:
-        f.writelines(data[-1000:])  # keep file at 1000 lines
+        f.writelines(data[-1000:]) # keep file at 1000 lines
 
 # this allows us to log any and all exceptions thrown to a log file -
 # pyqt likes to eat exceptions and quit silently
@@ -442,7 +442,7 @@ class DragWidget(QFrame):
     #grab and stuck onto a QDrag with setPixmap to give the illusion of
     dragging another widget.
     """
-    remove_signal = pyqtSignal(int)  # drag id
+    remove_signal = pyqtSignal(int) # drag id
 
     def __init__(self, name, id, dragging=True):
         super().__init__()
@@ -513,7 +513,7 @@ class LoadableW(QFrame):
         mime_data.setData("circleguard/loadable_id", bytes(str(self.loadable_id), "utf-8"))
         mime_data.setData("circleguard/loadable_name", bytes(self.name, "utf-8"))
         self.drag.setMimeData(mime_data)
-        self.drag.exec()  # start the drag
+        self.drag.exec() # start the drag
 
     def check_required_fields(self):
         """
@@ -602,11 +602,11 @@ class MapUserW(LoadableW):
 
 
 class MainTab(QFrame):
-    set_progressbar_signal = pyqtSignal(int)  # max progress
-    increment_progressbar_signal = pyqtSignal(int)  # increment value
+    set_progressbar_signal = pyqtSignal(int) # max progress
+    increment_progressbar_signal = pyqtSignal(int) # increment value
     update_label_signal = pyqtSignal(str)
     write_to_terminal_signal = pyqtSignal(str)
-    add_result_signal = pyqtSignal(object)  # Result
+    add_result_signal = pyqtSignal(object) # Result
     add_run_to_queue_signal = pyqtSignal(object) # Run object (or a subclass)
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
@@ -1089,20 +1089,20 @@ class VisualizeTab(QFrame):
             self._parse_replay(path)
 
     def _parse_folder(self, path):
-        for f in os.listdir(path):  # os.walk seems unnecessary
+        for f in os.listdir(path): # os.walk seems unnecessary
             if f.endswith(".osr"):
                 self._parse_replay(os.path.join(path, f))
 
     def _parse_replay(self, path):
         replay = ReplayPath(path)
         self.cg.load(replay)
-        if self.map_id is None or len(self.replays) == 0:  # store map_id if nothing stored
+        if self.map_id is None or len(self.replays) == 0: # store map_id if nothing stored
             log.info(f"Changing map_id from {self.map_id} to {replay.map_id}")
             self.map_id = replay.map_id
-        elif replay.map_id != self.map_id:  # ignore replay with diffrent map_ids
+        elif replay.map_id != self.map_id: # ignore replay with diffrent map_ids
             log.error(f"replay {replay} doesn't match with current map_id ({replay.map_id} != {self.map_id})")
             return
-        if not any(replay.replay_id == r.data.replay_id for r in self.replays):  # check if already stored
+        if not any(replay.replay_id == r.data.replay_id for r in self.replays): # check if already stored
             log.info(f"adding new replay {replay} with replay id {replay.replay_id} on map {replay.map_id}")
             self.q.put(replay)
         else:
