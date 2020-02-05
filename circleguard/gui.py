@@ -1391,26 +1391,27 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
         dark_p.setColor(QPalette.LinkVisited, accent)
 
         app.setPalette(dark_p)
-        app.setStyleSheet("QToolTip {\n"
-                            "\tcolor: #ffffff;\n"
-                            "\tbackground-color: #2a2a2a;\n"
-                            "\tborder: 1px solid white;\n"
-                          "}\n"
-                          "QLabel {\n"
-                            "\tfont-weight: Normal;\n"
-                          "}\n"
-                          "QTextEdit {\n"
-                            "\tbackground-color: #212121;\n" # my vscode terminal color
-                          "}\n"
-                          "LoadableW {\n"
-                            "\tborder: 1.5px solid #272727\n"
-                          "}\n"
-                          "CheckW {\n"
-                            "\tborder: 1.5px solid #272727\n"
-                          "}\n"
-                          "DragWidget {\n"
-                            "\tborder: 1.5px solid #272727\n"
-                          "}\n")
+        app.setStyleSheet("""
+                QToolTip {
+                    color: #ffffff;
+                    background-color: #2a2a2a;
+                    border: 1px solid white;
+                }
+                QLabel {
+                        font-weight: Normal;
+                }
+                QTextEdit {
+                        background-color: #212121;
+                }
+                LoadableW {
+                        border: 1.5px solid #272727;
+                }
+                CheckW {
+                        border: 1.5px solid #272727;
+                }
+                DragWidget {
+                        border: 1.5px solid #272727;
+                }""")
     else:
         app.setPalette(app.style().standardPalette())
         updated_palette = QPalette()
@@ -1422,23 +1423,24 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
         updated_palette.setColor(QPalette.Link, accent)
         updated_palette.setColor(QPalette.LinkVisited, accent)
         app.setPalette(updated_palette)
-        app.setStyleSheet("QToolTip {\n"
-                            "\tcolor: #000000;\n"
-                            "\tbackground-color: #D5D5D5;\n"
-                            "\tborder: 1px solid white;\n"
-                          "}\n"
-                          "QLabel {\n"
-                            "\tfont-weight: Normal;\n"
-                          "}\n"
-                          "LoadableW {\n"
-                            "\tborder: 1.5px solid #bfbfbf\n"
-                          "}\n"
-                          "CheckW {\n"
-                            "\tborder: 1.5px solid #bfbfbf\n"
-                          "}\n"
-                          "DragWidget {\n"
-                            "\tborder: 1.5px solid #bfbfbf\n"
-                          "}\n")
+        app.setStyleSheet("""
+                QToolTip {
+                    color: #000000;
+                    background-color: #D5D5D5;
+                    border: 1px solid white;
+                }
+                QLabel {
+                    font-weight: Normal;
+                }
+                LoadableW {
+                    border: 1.5px solid #bfbfbf;
+                }
+                CheckW {
+                    border: 1.5px solid #bfbfbf;
+                }
+                DragWidget {
+                    border: 1.5px solid #bfbfbf;
+                }""")
 
 
 if __name__ == "__main__":
