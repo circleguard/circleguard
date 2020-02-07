@@ -362,6 +362,7 @@ class DropArea(QFrame):
         super().__init__()
 
         self.loadable_ids = [] # ids of loadables already in this drop area
+        self.loadables = [] # LoadableInChecks in this DropArea
         self.setMinimumSize(0, 100)
         self.setFrameStyle(QFrame.Sunken | QFrame.StyledPanel)
         self.setAcceptDrops(True)
@@ -382,7 +383,20 @@ class DropArea(QFrame):
         if id_ in self.loadable_ids:
             return
         self.loadable_ids.append(id_)
-        self.layout.addWidget(QLabel(name + f" (id: {id_})"))
+        loadable = LoadableInCheck(name + f" (id: {id_})", id_)
+        self.layout.addWidget(loadable)
+        self.loadables.append(loadable)
+        loadable.remove_loadableincheck_signal.connect(self.remove_loadable)
+
+    def remove_loadable(self, loadable_id):
+        loadables = [l for l in self.loadables if l.loadable_in_check_id == loadable_id]
+        if not loadables:
+            return
+        loadable = loadables[0]
+        self.loadables.remove(loadable)
+        self.loadable_ids.remove(loadable.loadable_id)
+        self.layout.removeWidget(loadable)
+        loadable.hide()
 
 
 class CheckW(QFrame):
@@ -403,8 +417,6 @@ class CheckW(QFrame):
         # be easily constructed with loadables
         self.loadables = []
 
-        self.layout = QGridLayout()
-
         self.drop_area = DropArea()
         self.delete_button = QPushButton(self)
         self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
@@ -412,6 +424,8 @@ class CheckW(QFrame):
         self.delete_button.clicked.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
         title = QLabel()
         title.setText(f"{name}")
+
+        self.layout = QGridLayout()
         self.layout.addWidget(title, 0, 0, 1, 7)
         self.layout.addWidget(self.delete_button, 0, 7, 1, 1)
         self.layout.addWidget(self.drop_area, 1, 0, 1, 8)
@@ -445,6 +459,31 @@ class DragWidget(QFrame):
         layout = QVBoxLayout()
         layout.addWidget(self.text)
         self.setLayout(layout)
+
+
+class LoadableInCheck(QFrame):
+    """
+    Represents a LoadableW inside a CheckW.
+    """
+    remove_loadableincheck_signal = pyqtSignal(int)
+    ID = 0
+    def __init__(self, text, loadable_id):
+        super().__init__()
+        LoadableInCheck.ID += 1
+        self.text = QLabel(text)
+        self.loadable_in_check_id = LoadableInCheck.ID
+        self.loadable_id = loadable_id
+
+        self.delete_button = QPushButton(self)
+        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setMaximumWidth(30)
+        self.delete_button.clicked.connect(partial(lambda id_: self.remove_loadableincheck_signal.emit(id_), self.loadable_in_check_id))
+
+        self.layout = QGridLayout()
+        self.layout.addWidget(self.text, 0, 0, 1, 7)
+        self.layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.layout)
 
 
 class LoadableW(QFrame):
