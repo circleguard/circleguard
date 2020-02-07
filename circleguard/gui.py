@@ -388,8 +388,15 @@ class DropArea(QFrame):
         self.loadables.append(loadable)
         loadable.remove_loadableincheck_signal.connect(self.remove_loadable)
 
-    def remove_loadable(self, loadable_id):
-        loadables = [l for l in self.loadables if l.loadable_in_check_id == loadable_id]
+    def remove_loadable(self, loadable_id, loadableincheck=True):
+        """
+        loadableincheck will be True if loadable_id is a LoadableInCheck id,
+        otherwise if loadableincheck is False it is a Loadable id.
+        """
+        if loadableincheck:
+            loadables = [l for l in self.loadables if l.loadable_in_check_id == loadable_id]
+        else:
+            loadables = [l for l in self.loadables if l.loadable_id == loadable_id]
         if not loadables:
             return
         loadable = loadables[0]
@@ -711,6 +718,10 @@ class MainTab(QFrame):
         loadable = loadables[0]
         self.loadables.remove(loadable)
         self.loadables_scrollarea.widget().layout.removeWidget(loadable)
+        # remove deleted loadables from Checks as well
+        for check in self.checks:
+            check.drop_area.remove_loadable(loadable_id, loadableincheck=False)
+
         # TODO
         # doing deleteLater here like we do in other places where we want to remove a
         # widget either segfaults or throws a very scary malloc memory error.
