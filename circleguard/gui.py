@@ -410,21 +410,24 @@ class CheckW(QFrame):
     remove_check_signal = pyqtSignal(int) # check id
     ID = 0
 
-    def __init__(self, name):
+    def __init__(self, name, double_drop_area=False):
         super().__init__()
         CheckW.ID += 1
         # so we get the DropEvent
         # https://doc.qt.io/qt-5/qdropevent.html#details
         self.setAcceptDrops(True)
-
         self.name = name
+        self.double_drop_area = double_drop_area
         self.check_id = CheckW.ID
         # will have LoadableW objects added to it once this Check is
         # run by the main tab run button, so that cg.Check objects can
         # be easily constructed with loadables
-        self.loadables = []
+        if double_drop_area:
+            self.loadables1 = []
+            self.loadables2 = []
+        else:
+            self.loadables = []
 
-        self.drop_area = DropArea()
         self.delete_button = QPushButton(self)
         self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
         self.delete_button.setMaximumWidth(30)
@@ -435,13 +438,36 @@ class CheckW(QFrame):
         self.layout = QGridLayout()
         self.layout.addWidget(title, 0, 0, 1, 7)
         self.layout.addWidget(self.delete_button, 0, 7, 1, 1)
-        self.layout.addWidget(self.drop_area, 1, 0, 1, 8)
+        if double_drop_area:
+            self.drop_area1 = DropArea()
+            self.drop_area2 = DropArea()
+            self.layout.addWidget(self.drop_area1, 1, 0, 1, 4)
+            self.layout.addWidget(self.drop_area2, 1, 4, 1, 4)
+        else:
+            self.drop_area = DropArea()
+            self.layout.addWidget(self.drop_area, 1, 0, 1, 8)
         self.setLayout(self.layout)
 
+    def remove_loadable(self, loadable_id):
+        if self.double_drop_area:
+            self.drop_area1.remove_loadable(loadable_id, loadableincheck=False)
+            self.drop_area2.remove_loadable(loadable_id, loadableincheck=False)
+        else:
+            self.drop_area.remove_loadable(loadable_id, loadableincheck=False)
+
+    def all_loadable_ids(self):
+        if self.double_drop_area:
+            return self.drop_area1.loadable_ids + self.drop_area2.loadable_ids
+        return self.drop_area.loadable_ids
+
+    def all_loadables(self):
+        if self.double_drop_area:
+            return self.loadables1 + self.loadables2
+        return self.loadables
 
 class StealCheckW(CheckW):
     def __init__(self):
-        super().__init__("Replay Stealing Check")
+        super().__init__("Replay Stealing Check", double_drop_area=True)
 
 
 class RelaxCheckW(CheckW):
@@ -720,7 +746,7 @@ class MainTab(QFrame):
         self.loadables_scrollarea.widget().layout.removeWidget(loadable)
         # remove deleted loadables from Checks as well
         for check in self.checks:
-            check.drop_area.remove_loadable(loadable_id, loadableincheck=False)
+            check.remove_loadable(loadable_id)
 
         # TODO
         # doing deleteLater here like we do in other places where we want to remove a
@@ -795,13 +821,21 @@ class MainTab(QFrame):
             # this is a ridiculous way to do it, but the alternative would involve serializing
             # the class into a QByteArray and passing it through the QMimeData of the QDrag,
             # then converting it back to a class on the other side, so we'll stick with this for now.
-            loadables = [l for l in self.loadables if l.loadable_id in check.drop_area.loadable_ids]
-            check.loadables = loadables
+
+            # aka ``isinstance(check, StealCheckW)``
+            if check.double_drop_area:
+                loadables1 = [l for l in self.loadables if l.loadable_id in check.drop_area1.loadable_ids]
+                loadables2 = [l for l in self.loadables if l.loadable_id in check.drop_area2.loadable_ids]
+                check.loadables1 = loadables1
+                check.loadables2 = loadables2
+            else:
+                loadables = [l for l in self.loadables if l.loadable_id in check.all_loadable_ids()]
+                check.loadables = loadables
 
         # would use any() but it short circuts and doesn't call on all loadables
         all_filled = True
         for check in checks:
-            for loadable in check.loadables:
+            for loadable in check.all_loadables():
                 # don't assign to all_filled if all_filled is already False
                 all_filled = loadable.check_required_fields() if all_filled else all_filled
 
@@ -810,7 +844,7 @@ class MainTab(QFrame):
             # because the check_required_fields method already highlights
             # empty QLineEdits in red
             return
-        checks = [check for check in checks if check.loadables]
+        checks = [check for check in checks if check.all_loadables()]
         if not checks:
             # loadables haven't been dragged to any of the checks, just return
             # so we don't have prints to the console for no reason
@@ -896,7 +930,7 @@ class MainTab(QFrame):
             # identical loadable
 
             # discard duplicate loadableWs
-            loadableWs = {loadableW for checkW in run.checks for loadableW in checkW.loadables}
+            loadableWs = {loadableW for checkW in run.checks for loadableW in checkW.all_loadables()}
             # mapping of loadableW id to loadable object so each check can
             # replace its loadableWs with the same loadable object and avoid
             # double loading
@@ -943,15 +977,20 @@ class MainTab(QFrame):
                     d = CorrectionDetect(max_angle, min_distance)
                     check_type = "Correction"
                 # retrieve loadable objects from loadableW ids
-                loadables = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables]
-                c = Check(loadables, d)
+                if isinstance(checkW, StealCheckW):
+                    loadables1 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables1]
+                    loadables2 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables2]
+                    c = Check(loadables1, loadables2=loadables2, detect=d)
+                else:
+                    loadables1 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables]
+                    c = Check(loadables1, loadables2=loadables2, detect=d)
                 cg.load_info(c)
-                replays = c.all_replays()
+                replays = c.all_replays() + c.all_replays2()
                 # don't show "loading 2 replays" if they were already loaded
                 # by a previous check, would be misleading
                 num_unloaded = 0
                 num_total = c.num_replays()
-                for r in c.all_replays():
+                for r in replays:
                     if not r.loaded:
                         num_unloaded += 1
                 if num_unloaded != 0:
