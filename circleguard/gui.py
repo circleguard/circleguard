@@ -363,7 +363,7 @@ class DropArea(QFrame):
 
         self.loadable_ids = [] # ids of loadables already in this drop area
         self.setMinimumSize(0, 100)
-        self.setFrameShape(QFrame.NoFrame)
+        self.setFrameStyle(QFrame.Sunken | QFrame.StyledPanel)
         self.setAcceptDrops(True)
         self.setAutoFillBackground(True)
 
@@ -383,9 +383,7 @@ class DropArea(QFrame):
         if id_ in self.loadable_ids:
             return
         self.loadable_ids.append(id_)
-        self.layout.addWidget(DragWidget(name, id_, dragging=False))
-
-
+        self.layout.addWidget(QLabel(name + f" (id: {id_})"))
 
 
 class CheckW(QFrame):
@@ -442,21 +440,11 @@ class DragWidget(QFrame):
     #grab and stuck onto a QDrag with setPixmap to give the illusion of
     dragging another widget.
     """
-    remove_signal = pyqtSignal(int) # drag id
-
-    def __init__(self, name, id, dragging=True):
+    def __init__(self, text):
         super().__init__()
-        self.name = name
-        self.id = id
-        self.text = QLabel(name + f" (id: {self.id})")
-        layout = QGridLayout()
-        layout.addWidget(self.text, 0, 0, 1, 7)
-        if not dragging:
-            self.delete_button = QPushButton(self)
-            self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
-            self.delete_button.setMaximumWidth(30)
-            self.delete_button.clicked.connect(partial(lambda check_id: self.remove_signal.emit(check_id), self.id))
-            layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        self.text = QLabel(text)
+        layout = QVBoxLayout()
+        layout.addWidget(self.text)
         self.setLayout(layout)
 
 
@@ -503,7 +491,7 @@ class LoadableW(QFrame):
         y_ratio = event.pos().y() / self.height()
         self.drag = QDrag(self)
         # https://stackoverflow.com/a/53538805/12164878
-        pixmap = DragWidget(self.name, self.loadable_id).grab()
+        pixmap = DragWidget(f"{self.name} (Id: {self.loadable_id})").grab()
         # put cursor in the same relative position on the dragwidget as
         # it clicked on the real Loadable widget.
         self.drag.setHotSpot(QPoint(pixmap.width() * x_ratio, pixmap.height() * y_ratio))
