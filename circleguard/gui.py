@@ -365,7 +365,6 @@ class DropArea(QFrame):
         self.setMinimumSize(0, 100)
         self.setFrameStyle(QFrame.Sunken | QFrame.StyledPanel)
         self.setAcceptDrops(True)
-        self.setAutoFillBackground(True)
 
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignTop)
