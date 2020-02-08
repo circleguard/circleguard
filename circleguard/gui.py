@@ -982,8 +982,8 @@ class MainTab(QFrame):
                     loadables2 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables2]
                     c = Check(loadables1, loadables2=loadables2, detect=d)
                 else:
-                    loadables1 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables]
-                    c = Check(loadables1, loadables2=loadables2, detect=d)
+                    loadables = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables]
+                    c = Check(loadables, detect=d)
                 cg.load_info(c)
                 replays = c.all_replays() + c.all_replays2()
                 # don't show "loading 2 replays" if they were already loaded
