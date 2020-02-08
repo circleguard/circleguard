@@ -997,8 +997,9 @@ class MainTab(QFrame):
                     self.set_progressbar_signal.emit(num_unloaded)
                 else:
                     self.set_progressbar_signal.emit(1)
+                num_loaded = num_total - num_unloaded
                 message_loading_replays = get_setting("message_loading_replays").format(ts=datetime.now(),
-                                num_unloaded=num_unloaded, num_total=num_total)
+                                num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded)
                 self.write_to_terminal_signal.emit(message_loading_replays)
                 for replay in replays:
                     _check_event(event)
