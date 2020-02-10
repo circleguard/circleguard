@@ -582,17 +582,11 @@ class LoadableW(QFrame):
         """
         for input_widget in self.required_input_widgets:
             all_filled = True
-            # everything else is an InputWidget except the FolderChooser
-            # (ReplayPath) unfortunately
-            if type(input_widget) is FolderChooser:
-                filled = input_widget.changed
-            else:
-                filled = input_widget.field.text() != ""
+            filled = input_widget.field.text() != ""
             if not filled:
                 input_widget.show_required()
                 all_filled = False
         return all_filled
-
 
 class ReplayMapW(LoadableW):
     """
@@ -618,12 +612,21 @@ class ReplayPathW(LoadableW):
 
         self.layout.addWidget(self.path_input, 1, 0, 1, 8)
 
+    def check_required_fields(self):
+        for input_widget in self.required_input_widgets:
+            all_filled = True
+            filled = input_widget.field.text() != ""
+            if not filled:
+                input_widget.show_required()
+                all_filled = False
+        return all_filled
 
 class MapW(LoadableW):
     def __init__(self):
 
         self.map_id_input = InputWidget("Map id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
+        self.span_input.field.setPlaceholderText("1-50")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
 
         super().__init__("Map", [self.map_id_input, self.span_input])
@@ -632,6 +635,15 @@ class MapW(LoadableW):
         self.layout.addWidget(self.span_input, 2, 0, 1, 8)
         self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
 
+    def check_required_fields(self):
+        for input_widget in self.required_input_widgets:
+            all_filled = True
+            # don't count span_input as empty when it has placeholder text
+            filled = input_widget.field.text() != "" or input_widget.field.placeholderText() != ""
+            if not filled:
+                input_widget.show_required()
+                all_filled = False
+        return all_filled
 
 class UserW(LoadableW):
     def __init__(self):
@@ -945,7 +957,9 @@ class MainTab(QFrame):
                         loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
                                              mods=parse_mod_string(loadableW.mods_input.field.text()))
                     if type(loadableW) is MapW:
-                        loadable = Map(int(loadableW.map_id_input.field.text()), span=loadableW.span_input.field.text(),
+                        # use placeholder text (1-50) if the user inputted span is empty
+                        span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
+                        loadable = Map(int(loadableW.map_id_input.field.text()), span=span,
                                              mods=parse_mod_string(loadableW.mods_input.field.text()))
                     if type(loadableW) is UserW:
                         loadable = User(int(loadableW.user_id_input.field.text()), span=loadableW.span_input.field.text(),
