@@ -615,7 +615,7 @@ class ReplayPathW(LoadableW):
     def check_required_fields(self):
         for input_widget in self.required_input_widgets:
             all_filled = True
-            filled = input_widget.field.text() != ""
+            filled = input_widget.changed
             if not filled:
                 input_widget.show_required()
                 all_filled = False
