@@ -3,11 +3,9 @@ import time
 
 from circleguard import utils, Mod
 from circleparse.beatmap import Beatmap
-# pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF
 from PyQt5.QtWidgets import QWidget, QFrame, QMainWindow, QGridLayout, QSlider, QPushButton, QShortcut, QLabel
 from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIcon, QPalette, QBrush
-# pylint: enable=no-name-in-module
 
 import clock
 from utils import resource_path

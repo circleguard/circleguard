@@ -1,10 +1,8 @@
 from functools import partial
 
-# pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
-# pylint: enable=no-name-in-module
 
 from settings import get_setting, set_setting
 from widgets import OptionWidget, LineEditSetting

@@ -4,9 +4,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import abc
 
-# pylint: disable=no-name-in-module
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
-# pylint: enable=no-name-in-module
 from packaging import version
 # it's tempting to use QSettings builtin ini file support instead of configparser,
 # but that doesn't let us write comments, which is rather important to explain
