@@ -597,7 +597,7 @@ class ReplayMapW(LoadableW):
         self.user_id_input = InputWidget("User id", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
 
-        super().__init__("ReplayMap", [self.map_id_input, self.user_id_input])
+        super().__init__("Replay Map", [self.map_id_input, self.user_id_input])
 
         self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
@@ -608,7 +608,7 @@ class ReplayPathW(LoadableW):
     def __init__(self):
         self.path_input = FolderChooser(".osr path", folder_mode=False, file_ending="osu! Replayfile (*.osr)")
 
-        super().__init__("ReplayPath", [self.path_input])
+        super().__init__("Replay Path", [self.path_input])
 
         self.layout.addWidget(self.path_input, 1, 0, 1, 8)
 
@@ -665,7 +665,7 @@ class MapUserW(LoadableW):
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
 
-        super().__init__("MapUser", [self.map_id_input, self.user_id_input, self.span_input])
+        super().__init__("Map User", [self.map_id_input, self.user_id_input, self.span_input])
 
         self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
@@ -682,7 +682,7 @@ class MainTab(QFrame):
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
-    LOADABLES_COMBOBOX_REGISTRY = ["ReplayMap", "ReplayPath", "Map", "User", "MapUser"]
+    LOADABLES_COMBOBOX_REGISTRY = ["Replay Map", "Replay Path", "Map", "User", "Map User"]
     CHECKS_COMBOBOX_REGISTRY = ["Steal", "Relax", "Correction"]
 
     def __init__(self):
@@ -787,15 +787,15 @@ class MainTab(QFrame):
 
     def add_loadable(self):
         button_data = self.loadables_combobox.currentData()
-        if button_data == "ReplayMap":
+        if button_data == "Replay Map":
             w = ReplayMapW()
-        if button_data == "ReplayPath":
+        if button_data == "Replay Path":
             w = ReplayPathW()
         if button_data == "Map":
             w = MapW()
         if button_data == "User":
             w = UserW()
-        if button_data == "MapUser":
+        if button_data == "Map User":
             w = MapUserW()
         self.loadables_scrollarea.widget().layout.addWidget(w)
         self.loadables.append(w) # for deleting it later
