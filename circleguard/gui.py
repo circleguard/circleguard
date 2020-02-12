@@ -681,7 +681,7 @@ class MainTab(QFrame):
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
     LOADABLES_COMBOBOX_REGISTRY = ["Replay Map", "Replay Path", "Map", "User", "Map User"]
-    CHECKS_COMBOBOX_REGISTRY = ["Steal", "Relax", "Correction"]
+    CHECKS_COMBOBOX_REGISTRY = ["Replay Stealing", "Relax", "Aim Correction"]
 
     def __init__(self):
         super().__init__()
@@ -801,11 +801,11 @@ class MainTab(QFrame):
 
     def add_check(self):
         button_data = self.checks_combobox.currentData()
-        if button_data == "Steal":
+        if button_data == "Replay Stealing":
             w = StealCheckW()
         if button_data == "Relax":
             w = RelaxCheckW()
-        if button_data == "Correction":
+        if button_data == "Aim Correction":
             w = CorrectionCheckW()
         self.checks_scrollarea.widget().layout.addWidget(w)
         self.checks.append(w)
@@ -972,6 +972,7 @@ class MainTab(QFrame):
                     self.update_run_status_signal.emit(run.run_id, "Invalid arguments")
                     self.set_progressbar_signal.emit(-1)
                     sys.exit(0)
+
             for checkW in run.checks:
                 d = None
                 check_type = None
@@ -987,7 +988,7 @@ class MainTab(QFrame):
                     max_angle = get_setting("correction_max_angle")
                     min_distance = get_setting("correction_min_distance")
                     d = CorrectionDetect(max_angle, min_distance)
-                    check_type = "Correction"
+                    check_type = "Aim Correction"
                 # retrieve loadable objects from loadableW ids
                 if isinstance(checkW, StealCheckW):
                     loadables1 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables1]
@@ -1013,7 +1014,8 @@ class MainTab(QFrame):
                     self.set_progressbar_signal.emit(1)
                 num_loaded = num_total - num_unloaded
                 message_loading_replays = get_setting("message_loading_replays").format(ts=datetime.now(),
-                                num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded)
+                                num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
+                                check_type=check_type)
                 self.write_to_terminal_signal.emit(message_loading_replays)
                 for replay in replays:
                     _check_event(event)
@@ -1025,7 +1027,8 @@ class MainTab(QFrame):
                 # the data
                 self.set_progressbar_signal.emit(0)
                 message_starting_investigation = get_setting("message_starting_investigation").format(ts=datetime.now(),
-                                check_type=check_type, num_unloaded=num_unloaded, num_total=num_total)
+                                num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
+                                check_type=check_type)
                 self.write_to_terminal_signal.emit(message_starting_investigation)
                 self.update_label_signal.emit("Investigating Replays")
                 self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
