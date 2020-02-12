@@ -35,6 +35,7 @@ COMMENTS = {
     },
     "Messages": {
         "section": "Messages written to the terminal (the text box at the bottom of the Main tab) at various times",
+        "message_loading_info": "Displayed when we load the info for replays. Occurs before loading the replays themselves",
         "message_loading_replays": "Displayed when we begin loading replays",
         "message_ratelimited": "Displayed when the api key gets ratelimited",
         "message_starting_investigation": "Displayed when we start to investigate the loaded replays",
@@ -155,6 +156,7 @@ DEFAULTS = {
         "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
     },
     "Messages": {
+        "message_loading_info":            "[{ts:%X}] Loading replay info",
         "message_loading_replays":         "[{ts:%X}] Loading {num_unloaded} of {num_total} replays ({num_previously_loaded} replays previously loaded)",
         "message_ratelimited":             "[{ts:%X}] Ratelimited, waiting for {s} seconds",
         "message_starting_investigation":  "[{ts:%X}] Running {check_type} check",

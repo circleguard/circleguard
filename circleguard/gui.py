@@ -996,6 +996,8 @@ class MainTab(QFrame):
                 else:
                     loadables = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables]
                     c = Check(loadables, detect=d)
+                message_loading_info = get_setting("message_loading_info").format(ts=datetime.now(), check_type=check_type)
+                self.write_to_terminal_signal.emit(message_loading_info)
                 cg.load_info(c)
                 replays = c.all_replays() + c.all_replays2()
                 # don't show "loading 2 replays" if they were already loaded
