@@ -241,7 +241,7 @@ class _Renderer(QFrame):
             if self.replay_amount == 2:
                 try:
                     distance = math.sqrt(((self.buffer[i-1][-1][1] - self.buffer[i][-1][1]) ** 2) + ((self.buffer[i-1][-1][2] - self.buffer[i][-1][2]) ** 2))
-                    painter.drawText(0, 45 + (15 * i), f"Cursor Distance {self.usernames[i-1]}-{self.usernames[i]}: {int(distance)}px")
+                    painter.drawText(0, 45 + (15 * i), f"Distance {self.usernames[i-1]} {self.usernames[i]}: {int(distance)}px")
                 except IndexError: # Edge case where we only have data from one cursor
                     pass
 
