@@ -225,7 +225,11 @@ class _Renderer(QFrame):
            QPainter painter: The painter.
         """
         _pen = painter.pen()
-        painter.drawText(0, 15, f"Clock: {round(self.clock.get_time())} ms")
+        # time of the last replay event in the buffer (most recent point on
+        # screen). ``self.clock.get_time`` is slow by a frame and sometimes
+        # lower than the real current time by a millisecond as well.
+        painter.drawText(0, 15, f"Clock: {self.buffer[0][-1][0]} ms")
+
         if self.replay_amount > 0:
             for i in range(self.replay_amount):
                 painter.setPen(self.CURSOR_COLORS[i])
