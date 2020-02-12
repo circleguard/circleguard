@@ -647,7 +647,7 @@ class UserW(LoadableW):
     def __init__(self):
 
         self.user_id_input = InputWidget("User id", "", "id")
-        self.span_input = InputWidget("Span", "", "id")
+        self.span_input = InputWidget("Span", "", "normal")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
 
         super().__init__("User", [self.user_id_input, self.span_input])
