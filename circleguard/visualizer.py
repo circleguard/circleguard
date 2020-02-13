@@ -62,6 +62,8 @@ class _Renderer(QWidget):
             self.has_beatmap = False
         # beatmap stuff
         if self.has_beatmap:
+            # values taken from https://github.com/ppy/osu-wiki/blob/master/meta/unused/difficulty-settings.md
+            # but it was taken from the osu! wiki since then so this might be a bit incorrect.
             if self.beatmap.approach_rate == 5:
                 self.preempt = 1200
             elif self.beatmap.approach_rate < 5:
