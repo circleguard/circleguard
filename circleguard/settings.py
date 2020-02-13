@@ -19,7 +19,7 @@ from version import __version__
 COMMENTS = {
     "file": "Please read the following before editing this file.\n"
             "We do not validate or error check these settings, so if you put an incorrect value or syntax, Circleguard may crash on start.\n"
-            "If this occurs, you can either fix the error, or if you can't find the cause, delete the file entirely.\n"
+            "If this occurs, you can either fix the error in this file, or delete this file entirely.\n"
             "This will cause a fresh config to be created when circleguard is run again.\n"
             "In places where it is easy to cause issues by editing the settings, we will warn you about it.\n"
             "Some settings use curly braces `{}`, especially the Messages, Strings, and Templates sections.\n"
