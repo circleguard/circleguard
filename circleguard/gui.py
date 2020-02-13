@@ -636,7 +636,7 @@ class MainTab(QWidget):
         except Empty:
             pass
 
-    def visualize(self, replays, beatmap_id=0):
+    def visualize(self, replays, beatmap_id=None):
         self.visualizer_window = VisualizerWindow(replays=replays, beatmap_id=beatmap_id)
         self.visualizer_window.show()
 
