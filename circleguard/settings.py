@@ -15,6 +15,7 @@ from configparser import ConfigParser
 from utils import resource_path
 from version import __version__
 
+
 COMMENTS = {
     "file": "Please read the following before editing this file.\n"
             "We do not validate or error check these settings, so if you put an incorrect value or syntax, your application will crash on start.\n"
@@ -27,13 +28,6 @@ COMMENTS = {
             "You may of course use any formatting directive in the settings (instead of the default %X) that datetime supports.\n\n"
             "After you change settings, you must press the \"sync\" button on the settings tab for them to take effect.\n\n"
             "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard.",
-    "Locations": {
-        "section": "The path to various file or directories used by the program",
-        "cache_location": "Where the cache to read and write replays to is.\n"
-                "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
-        "config_location": "Where the circelguard.cfg file (this very file) resides",
-        "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
-    },
     "Messages": {
         "section": "Messages written to the terminal (the text box at the bottom of the Main tab) at various times",
         "message_loading_info": "Displayed when we load the info for replays. Occurs before loading the replays themselves",
@@ -49,17 +43,30 @@ COMMENTS = {
         "message_correction_found_display": "Displayed when an investigation for aim correction satisfies both Thresholds/correction_max_angle_display and correction_min_distance_display",
         "message_correction_snaps": "How to represent a snap for aim correction. The result is passed to message_correction_found and message_correction_found_display as `snaps`"
     },
+    "Templates": {
+        "section": "The templates that are copied to your clipboard from the Results tab \"copy template\" button",
+        "template_steal": "Available for copying for replay stealing results",
+        "template_relax": "Available for copying for relax results",
+        "template_correction": "Available for copying for aim correction results"
+    },
     "Strings": {
         "section": "Labels seen on various widgets",
         "string_result_steal": "Displayed on the Results tab for a replay stealing result",
         "string_result_relax": "Displayed on the Results tab for a relax result",
         "string_result_correction": "Displayed on the Results tab for an aim correction result"
     },
-    "Templates": {
-        "section": "The templates that are copied to your clipboard from the Results tab \"copy template\" button",
-        "template_steal": "Available for copying for replay stealing results",
-        "template_relax": "Available for copying for relax results",
-        "template_correction": "Available for copying for aim correction results"
+    "Visualizer": {
+        "visualizer_info": "If True, info about the players is displayed on the visualizer",
+        "visualizer_black_bg": "If True, uses a pure black background for the visualizer. Otherwise uses the background of the current theme",
+        "default_speed": "The speed the visualizer defaults to when visualizing a new replay",
+        "speed_options": "The speed options available to change to in the visualizer. The value of Visualizer/default_speed must appear in this list"
+    },
+    "Locations": {
+        "section": "The path to various file or directories used by the program",
+        "cache_location": "Where the cache to read and write replays to is.\n"
+                "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
+        "config_location": "Where the circelguard.cfg file (this very file) resides",
+        "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
     },
     "Thresholds": {
         "section": "Thresholds for when to store results and when to display results for various types of cheats.\n"
@@ -77,16 +84,6 @@ COMMENTS = {
         "dark_theme": "If True, uses a dark theme for the application",
         "required_style": "The css to apply to a widget if it is required to be filled in to complete an action. This is applied if a required field in a Loadable is empty when you click run, for instance"
     },
-    "Visualizer": {
-        "visualizer_info": "If True, info about the players is displayed on the visualizer",
-        "visualizer_black_bg": "If True, uses a pure black background for the visualizer. Otherwise uses the background of the current theme",
-        "default_speed": "The speed the visualizer defaults to when visualizing a new replay",
-        "speed_options": "The speed options available to change to in the visualizer. The value of Visualizer/default_speed must appear in this list"
-    },
-    "Experimental": {
-        "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk",
-        "rainbow_accent": "Makes the accent color (defines the color of the highlight around the currently focused widget, among other things) constantly cycle through colors"
-    },
     "Logs": {
         "log_save": "Whether to save logs to a file (whose path is defined by Locations/log_dir)",
         "log_mode": "All logs with a severity level at or higher than this value will be outputted.\n"
@@ -102,6 +99,13 @@ COMMENTS = {
                 "Debug Window: 2\n"
                 "Terminal and Debug Window: 3"
     },
+    "Caching": {
+        "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
+    },
+    "Experimental": {
+        "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk",
+        "rainbow_accent": "Makes the accent color (defines the color of the highlight around the currently focused widget, among other things) constantly cycle through colors"
+    },
     "Core": {
         "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing",
         "ran": "Whether Circleguard has been run on this system before. If False when Circleguard is launched, all settings will be reset to their default and the wizard will be displayed",
@@ -110,56 +114,13 @@ COMMENTS = {
         "timestamp_format": "The format of last_update_check",
         "last_update_check": "The last time we checked for a new version. Only checks once every hour",
         "latest_version": "The latest Circleguard version available on github"
-    },
-    "Caching": {
-        "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
     }
 }
 
-class LinkableSetting():
-    """
-    XXX IMPLEMENTATION NOTE FOR SUBCLASSES:
-    all python classes must come before c classes (like QWidget) or super calls break.
-    Further reading: https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
 
-    eg, def MyClass(LinkableSetting, QFrame) NOT def MyClass(QFrame, LinkableSetting)
-    """
-    registered_classes = []
-    def __init__(self, setting):
-        self.setting = setting
-        self.registered_classes.append(self)
-        self.setting_value = get_setting(setting)
 
-    @abc.abstractmethod
-    def on_setting_changed(self, new_value):
-        """
-        Called when the internal setting this class is linked to is changed, from
-        a source other than this class. An extremely common use case - and the
-        intended one - is to change the value of a slider/label/other widget to
-        reflect the new setting value, so all settings are in sync (gui and internal).
-        """
-        pass
-
-    def filter(self, setting_changed):
-        """
-        A predicate that returns true if this class should accept signals when the given
-        setting is changed (signals in the form of a call to on_setting_changed)
-        """
-        return self.setting == setting_changed
-
-    def on_setting_changed_from_gui(self, value):
-        """
-        Called when our setting is changed from the gui,
-        and our internal settings need to be updated to reflect that.
-        """
-        set_setting(self.setting, value)
 
 DEFAULTS = {
-    "Locations": {
-        "cache_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache.db",
-        "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
-        "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
-    },
     "Messages": {
         "message_loading_info":            "[{ts:%X}] Loading replay info",
         "message_loading_replays":         "[{ts:%X}] Loading {num_unloaded} of {num_total} replays ({num_previously_loaded} replays previously loaded)",
@@ -177,13 +138,7 @@ DEFAULTS = {
         # have to use a separate message here because we can't loop in ``.format`` strings, can only loop in f strings which only work in a
         # local context and aren't usable for us. Passed as ``snaps=snaps`` in message_correction_found, once formatted. Each snap formats
         # this setting and does a ``"\n".join(snap_message)`` to create ``snaps``.
-        "message_correction_snaps":         "Time (ms): {time:.0f}\tAngle (deg): {angle:.2f}\tDistance (px): {distance:.2f}"
-
-    },
-    "Strings": {
-        "string_result_steal":       "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{replay1_mods_short_name} (set later) vs {r.earlier_replay.username} +{replay2_mods_short_name} on map {r1.map_id}",
-        "string_result_relax":       "[{ts:%x %H:%M}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "string_result_correction":  "[{ts:%x %H:%M}] {replay.username} +{mods_short_name} on map {replay.map_id}"
+        "message_correction_snaps":         "Time (ms): {time:.0f}\tAngle (°): {angle:.2f}\tDistance (px): {distance:.2f}"
     },
     "Templates": {
         "template_steal":      ("[osu!std] {r.later_replay.username} | Replay Stealing"
@@ -218,6 +173,22 @@ DEFAULTS = {
                                 "\n\n"
                                 "{snap_table}")
     },
+    "Strings": {
+        "string_result_steal":       "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{replay1_mods_short_name} (set later) vs {r.earlier_replay.username} +{replay2_mods_short_name} on map {r1.map_id}",
+        "string_result_relax":       "[{ts:%x %H:%M}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "string_result_correction":  "[{ts:%x %H:%M}] {replay.username} +{mods_short_name} on map {replay.map_id}"
+    },
+    "Visualizer": {
+        "visualizer_info": True,
+        "visualizer_black_bg": False,
+        "default_speed": float(1), # so type() returns float, since we want to allow float values, not just int
+        "speed_options": [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 5, 10]
+    },
+    "Locations": {
+        "cache_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache.db",
+        "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
+        "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
+    },
     "Thresholds": {
         "steal_max_sim": 18,
         "steal_max_sim_display": 25,
@@ -233,19 +204,16 @@ DEFAULTS = {
         "required_style": "QLineEdit { border: 1px solid red }\n"
                           "WidgetCombiner { border: 1px solid red }"
     },
-    "Visualizer": {
-        "visualizer_info": True,
-        "visualizer_black_bg": False,
-        "default_speed": float(1), # so type() returns float, since we want to allow float values, not just int
-        "speed_options": [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 5, 10]
-    },
-    "Experimental": {
-        "rainbow_accent": False
-    },
     "Logs": {
         "log_save": True,
         "log_mode": 1, # ERROR
         "log_output": 1 # TERMINAL
+    },
+    "Caching": {
+        "caching": True
+    },
+    "Experimental": {
+        "rainbow_accent": False
     },
     "Core": {
         "ran": False,
@@ -254,9 +222,6 @@ DEFAULTS = {
         "timestamp_format": "%H:%M:%S %m.%d.%Y",
         "last_update_check": "00:00:00 01.01.1970", # aka datetime.min, but formatted
         "latest_version": __version__
-    },
-    "Caching": {
-        "caching": True
     }
 }
 
@@ -300,6 +265,48 @@ CHANGED = {
         "log_dir"
     ]
 }
+
+
+
+class LinkableSetting():
+    """
+    XXX IMPLEMENTATION NOTE FOR SUBCLASSES:
+    all python classes must come before c classes (like QWidget) or super calls break.
+    Further reading: https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
+
+    eg, def MyClass(LinkableSetting, QFrame) NOT def MyClass(QFrame, LinkableSetting)
+    """
+    registered_classes = []
+    def __init__(self, setting):
+        self.setting = setting
+        self.registered_classes.append(self)
+        self.setting_value = get_setting(setting)
+
+    @abc.abstractmethod
+    def on_setting_changed(self, new_value):
+        """
+        Called when the internal setting this class is linked to is changed, from
+        a source other than this class. An extremely common use case - and the
+        intended one - is to change the value of a slider/label/other widget to
+        reflect the new setting value, so all settings are in sync (gui and internal).
+        """
+        pass
+
+    def filter(self, setting_changed):
+        """
+        A predicate that returns true if this class should accept signals when the given
+        setting is changed (signals in the form of a call to on_setting_changed)
+        """
+        return self.setting == setting_changed
+
+    def on_setting_changed_from_gui(self, value):
+        """
+        Called when our setting is changed from the gui,
+        and our internal settings need to be updated to reflect that.
+        """
+        set_setting(self.setting, value)
+
+
 
 def get_setting(name):
     type_ = TYPES[name][0]
