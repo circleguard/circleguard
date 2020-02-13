@@ -18,7 +18,7 @@ from version import __version__
 
 COMMENTS = {
     "file": "Please read the following before editing this file.\n"
-            "We do not validate or error check these settings, so if you put an incorrect value or syntax, your application will crash on start.\n"
+            "We do not validate or error check these settings, so if you put an incorrect value or syntax, Circleguard may crash on start.\n"
             "If this occurs, you can either fix the error, or if you can't find the cause, delete the file entirely.\n"
             "This will cause a fresh config to be created when circleguard is run again.\n"
             "In places where it is easy to cause issues by editing the settings, we will warn you about it.\n"
@@ -29,7 +29,7 @@ COMMENTS = {
             "After you change settings, you must press the \"sync\" button on the settings tab for them to take effect.\n\n"
             "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard.",
     "Messages": {
-        "section": "Messages written to the terminal (the text box at the bottom of the Main tab) at various times",
+        "section": "Messages written to the terminal (the text box at the bottom of the Main tab) at various times.",
         "message_loading_info": "Displayed when we load the info for replays. Occurs before loading the replays themselves",
         "message_loading_replays": "Displayed when we begin loading replays",
         "message_ratelimited": "Displayed when the api key gets ratelimited",
@@ -44,25 +44,26 @@ COMMENTS = {
         "message_correction_snaps": "How to represent a snap for aim correction. The result is passed to message_correction_found and message_correction_found_display as `snaps`"
     },
     "Templates": {
-        "section": "The templates that are copied to your clipboard from the Results tab \"copy template\" button",
+        "section": "The templates that are copied to your clipboard from the Results tab \"copy template\" button.",
         "template_steal": "Available for copying for replay stealing results",
         "template_relax": "Available for copying for relax results",
         "template_correction": "Available for copying for aim correction results"
     },
     "Strings": {
-        "section": "Labels seen on various widgets",
+        "section": "Labels seen on various widgets.",
         "string_result_steal": "Displayed on the Results tab for a replay stealing result",
         "string_result_relax": "Displayed on the Results tab for a relax result",
         "string_result_correction": "Displayed on the Results tab for an aim correction result"
     },
     "Visualizer": {
+        "section": "Settings regarding the replay visualizer.",
         "visualizer_info": "If True, info about the players is displayed on the visualizer",
         "visualizer_black_bg": "If True, uses a pure black background for the visualizer. Otherwise uses the background of the current theme",
         "default_speed": "The speed the visualizer defaults to when visualizing a new replay",
         "speed_options": "The speed options available to change to in the visualizer. The value of Visualizer/default_speed must appear in this list"
     },
     "Locations": {
-        "section": "The path to various file or directories used by the program",
+        "section": "The paths to various file or directories used by Circleguard.",
         "cache_location": "Where the cache to read and write replays to is.\n"
                 "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
         "config_location": "Where the circelguard.cfg file (this very file) resides",
@@ -70,7 +71,7 @@ COMMENTS = {
     },
     "Thresholds": {
         "section": "Thresholds for when to store results and when to display results for various types of cheats.\n"
-                "Although possible to set _display settings lower than their respective _cheat setting, it is not advised",
+                "Although possible to set _display settings lower than their respective _cheat setting, it is not advised.",
         "steal_max_sim": "The max similarity for a replay stealing comparison to be counted as cheated",
         "steal_max_sim_display": "The max similarity for a replay stealing comparison to be printed to the terminal",
         "relax_max_ur": "The max ur for a replay to be counted as cheated",
@@ -81,7 +82,8 @@ COMMENTS = {
         "correction_min_distance_display": "Unused. Aim Correction does not currently have display options"
     },
     "Appearance": {
-        "dark_theme": "If True, uses a dark theme for the application",
+        "section": "How Circleguard looks.",
+        "dark_theme": "If True, uses a dark theme for Circleguard",
         "required_style": "The css to apply to a widget if it is required to be filled in to complete an action. This is applied if a required field in a Loadable is empty when you click run, for instance"
     },
     "Logs": {
@@ -103,11 +105,11 @@ COMMENTS = {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
     },
     "Experimental": {
-        "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk",
+        "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk.",
         "rainbow_accent": "Makes the accent color (defines the color of the highlight around the currently focused widget, among other things) constantly cycle through colors"
     },
     "Core": {
-        "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing",
+        "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing.",
         "ran": "Whether Circleguard has been run on this system before. If False when Circleguard is launched, all settings will be reset to their default and the wizard will be displayed",
         "last_version": "The most recent version of Circleguard run on this system. Used to overwrite settings when they change between versions",
         "api_key": "The api key to use in circlecore",
