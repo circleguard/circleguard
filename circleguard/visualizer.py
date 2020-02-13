@@ -15,7 +15,7 @@ from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIco
 # pylint: enable=no-name-in-module
 
 import clock
-from utils import resource_path
+from utils import resource_path, Player
 from settings import get_setting
 
 import math
@@ -86,20 +86,19 @@ class _Renderer(QWidget):
         self.replay_amount = len(replays)
         self.players = []
         for replay in replays:
-            self.players.append({
-                "data": np.array(replay.as_list_with_timestamps()),
-                "replay": replay,
-                "username": replay.username,
-                "mods": replay.mods.short_name(),
-                "buffer": [],
-                "cursor_color": QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),
-                "pos": 0
-            })
-        self.playback_len = max(player["data"][-1][0] for player in self.players) if self.replay_amount > 0 else self.playback_len
+            self.players.append(
+                Player(data=np.array(replay.as_list_with_timestamps()),
+                       replay=replay,
+                       username=replay.username,
+                       mods=replay.mods.short_name(),
+                       buffer=[],
+                       cursor_color=QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),
+                       pos=0))
+        self.playback_len = max(player.data[-1][0] for player in self.players) if self.replay_amount > 0 else self.playback_len
         ## flip all replays with hr
         for player in self.players:
-            if Mod.HardRock in player["replay"].mods:
-                for d in player["data"]:
+            if Mod.HardRock in player.replay.mods:
+                for d in player.data:
                     d[2] = 384 - d[2]
 
         # clock stuff
@@ -143,9 +142,9 @@ class _Renderer(QWidget):
             self.reset(end=True if self.clock.current_speed < 0 else False)
 
         for player in self.players:
-            player["pos"] = np.searchsorted(player["data"].T[0], current_time)
-            magic = player["pos"] - FRAMES_ON_SCREEN if player["pos"] >= FRAMES_ON_SCREEN else 0
-            player["buffer"] = player["data"][magic:player["pos"]]
+            player.pos = np.searchsorted(player.data.T[0], current_time)
+            magic = player.pos - FRAMES_ON_SCREEN if player.pos >= FRAMES_ON_SCREEN else 0
+            player.buffer = player.data[magic:player.pos]
 
         if self.has_beatmap:
             self.get_hitobjects()
@@ -227,18 +226,18 @@ class _Renderer(QWidget):
             Integer index: The index of the cursor to be drawn.
         """
         alpha_step = 1 / FRAMES_ON_SCREEN
-        _pen = player["cursor_color"]
+        _pen = player.cursor_color
         _pen.setWidth(WIDTH_LINE)
         self.painter.setPen(_pen)
-        for i in range(len(player["buffer"]) - 1):
-            self.draw_line(i * alpha_step, (player["buffer"][i][1], player["buffer"][i][2]),
-                                           (player["buffer"][i + 1][1], player["buffer"][i + 1][2]))
+        for i in range(len(player.buffer) - 1):
+            self.draw_line(i * alpha_step, (player.buffer[i][1], player.buffer[i][2]),
+                                           (player.buffer[i + 1][1], player.buffer[i + 1][2]))
         _pen.setWidth(WIDTH_POINT)
         self.painter.setPen(_pen)
-        for i in range(len(player["buffer"]) - 1):
-            self.draw_point(i * alpha_step, (player["buffer"][i][1], player["buffer"][i][2]))
-            if i == len(player["buffer"]) - 2:
-                self.draw_point((i + 1) * alpha_step, (player["buffer"][i + 1][1], player["buffer"][i + 1][2]))
+        for i in range(len(player.buffer) - 1):
+            self.draw_point(i * alpha_step, (player.buffer[i][1], player.buffer[i][2]))
+            if i == len(player.buffer) - 2:
+                self.draw_point((i + 1) * alpha_step, (player.buffer[i + 1][1], player.buffer[i + 1][2]))
         # reset alpha
         self.painter.setOpacity(1)
 
@@ -261,27 +260,27 @@ class _Renderer(QWidget):
         if self.replay_amount > 0:
             for i in range(len(self.players)):
                 player = self.players[i]
-                p = player["cursor_color"]
+                p = player.cursor_color
                 self.painter.setPen(QColor(0, 0, 0, 0))
                 self.painter.setBrush(QBrush(p.color()))
-                if len(self.players[i]["buffer"]) > 0:  # skips empty buffers
-                    self.painter.setOpacity(1 if Keys.M1 in Keys(int(player["buffer"][-1][3])) else 0.3)
+                if len(player.buffer) > 0:  # skips empty buffers
+                    self.painter.setOpacity(1 if Keys.M1 in Keys(int(player.buffer[-1][3])) else 0.3)
                     self.painter.drawRect(5, 27-9 + (11 * i), 10, 10)
-                    self.painter.setOpacity(1 if Keys.M2 in Keys(int(player["buffer"][-1][3])) else 0.3)
+                    self.painter.setOpacity(1 if Keys.M2 in Keys(int(player.buffer[-1][3])) else 0.3)
                     self.painter.drawRect(18, 27-9 + (11 * i), 10, 10)
                     self.painter.setOpacity(1)
                     self.painter.setPen(p)
-                    self.painter.drawText(31, 27 + (11 * i), f"{player['username']} {player['mods']}: {int(player['buffer'][-1][1])}, {int(player['buffer'][-1][2])}")
+                    self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods}: {int(player.buffer[-1][1])}, {int(player.buffer[-1][2])}")
                 else:
-                    self.painter.drawText(35, 27 + (11 * i), f"{player['username']} {player['mods']}: Not yet loaded")
+                    self.painter.drawText(35, 27 + (11 * i), f"{player.username} {player.mods}: Not yet loaded")
             self.painter.setPen(_pen)
             if self.replay_amount == 2:
                 try:
                     player = self.players[i]
                     prev_player = self.players[i - 1]
-                    distance = math.sqrt(((prev_player["buffer"][-1][1] - player["buffer"][-1][1]) ** 2) +
-                                         ((prev_player["buffer"][-1][2] - player["buffer"][-1][2]) ** 2))
-                    self.painter.drawText(5, 39 + (12 * i), f"Distance {prev_player['username']}-{player['username']}: {int(distance)}px")
+                    distance = math.sqrt(((prev_player.buffer[-1][1] - player.buffer[-1][1]) ** 2) +
+                                         ((prev_player.buffer[-1][2] - player.buffer[-1][2]) ** 2))
+                    self.painter.drawText(5, 39 + (12 * i), f"Distance {prev_player.username}-{player.username}: {int(distance)}px")
                 except IndexError:  # Edge case where we only have data from one cursor
                     pass
 
