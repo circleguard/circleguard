@@ -36,9 +36,6 @@ SPEED_OPTIONS = [0.01, 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.
 SCREEN_WIDTH = 640+384
 SCREEN_HEIGHT = 480+96
 
-__slider_dir = TemporaryDirectory()
-SLIDER_LIBARY = Library.create_db(get_setting("cache_dir"))
-
 
 class _Renderer(QWidget):
     update_signal = pyqtSignal(int)
@@ -50,12 +47,12 @@ class _Renderer(QWidget):
 
         # beatmap init stuff
         self.hitobjs = []
-        if beatmap_path != None:
+        if beatmap_path is not None:
             self.beatmap = Beatmap.from_path(beatmap_path)
             self.has_beatmap = True
             self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000 + 3000
-        elif beatmap_id != None:
-            self.beatmap = SLIDER_LIBARY.lookup_by_id(beatmap_id, download=True, save=True)
+        elif beatmap_id is not None:
+            self.beatmap = Library(get_setting("cache_dir")).lookup_by_id(beatmap_id, download=True, save=True)
             self.has_beatmap = True
             self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000 + 3000
         else:
