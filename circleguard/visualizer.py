@@ -31,10 +31,10 @@ FRAMES_ON_SCREEN = 15  # how many frames for each replay to draw on screen at a 
 PEN_BLACK = QPen(QColor(17, 17, 17))
 PEN_WHITE = QPen(QColor(255, 255, 255))
 X_OFFSET = 64+192
-Y_OFFSET = 48+60
+Y_OFFSET = 48+48
 SPEED_OPTIONS = [0.01, 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
 SCREEN_WIDTH = 640+384
-SCREEN_HEIGHT = 480+120
+SCREEN_HEIGHT = 480+96
 
 __slider_dir = TemporaryDirectory()
 SLIDER_LIBARY = Library.create_db(get_setting("cache_dir"))
