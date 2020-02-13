@@ -242,7 +242,7 @@ class WindowWrapper(QMainWindow):
                                         mods_long_name=result.replay.mods.long_name())
             replays = [result.replay]
         elif type(result) is CorrectionResult:
-            label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, replay=result.replay,
+            label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, num_snaps=len(result.snaps), replay=result.replay,
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
             snap_table = ("| Time (ms) | Angle (°) | Distance (px) |\n"
