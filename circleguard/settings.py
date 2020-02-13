@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 import abc
+import json
 
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
 from packaging import version
@@ -74,9 +75,13 @@ COMMENTS = {
     },
     "Appearance": {
         "dark_theme": "If True, uses a dark theme for the application",
+        "required_style": "The css to apply to a widget if it is required to be filled in to complete an action. This is applied if a required field in a Loadable is empty when you click run, for instance"
+    },
+    "Visualizer": {
         "visualizer_info": "If True, info about the players is displayed on the visualizer",
         "visualizer_black_bg": "If True, uses a pure black background for the visualizer. Otherwise uses the background of the current theme",
-        "required_style": "The css to apply to a widget if it is required to be filled in to complete an action. This is applied if a required field in a Loadable is empty when you click run, for instance"
+        "default_speed": "The speed the visualizer defaults to when visualizing a new replay",
+        "speed_options": "The speed options available to change to in the visualizer. The value of Visualizer/default_speed must appear in this list"
     },
     "Experimental": {
         "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk",
@@ -225,10 +230,14 @@ DEFAULTS = {
     },
     "Appearance": {
         "dark_theme": False,
-        "visualizer_info": True,
-        "visualizer_black_bg": False,
         "required_style": "QLineEdit { border: 1px solid red }\n"
                           "WidgetCombiner { border: 1px solid red }"
+    },
+    "Visualizer": {
+        "visualizer_info": True,
+        "visualizer_black_bg": False,
+        "default_speed": float(1), # so type() returns float, since we want to allow float values, not just int
+        "speed_options": [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 5, 10]
     },
     "Experimental": {
         "rainbow_accent": False
@@ -300,6 +309,10 @@ def get_setting(name):
     # second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
     if type_ is bool:
         return False if val in ["false", "False"] else bool(val)
+    # if type_ is list:
+    #     # val is eg. "[0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]",
+    #     # convert it to a list. json module is just the most convenient way of doing so
+    #     return json.loads(val)
     v = type_(SETTINGS.value(name))
     return v
 
@@ -330,6 +343,11 @@ def overwrite_with_config_settings():
                 val = config.getboolean(section, k)
             elif type_ is int:
                 val = config.getint(section, k)
+            elif type_ is float:
+                val = config.getfloat(section, k)
+            elif type_ is list:
+                # config.getlist doesn't exist
+                val = json.loads(config.get(section, k))
             else:
                 val = config.get(section, k)
             set_setting(k, val)
