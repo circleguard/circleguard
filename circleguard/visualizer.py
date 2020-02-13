@@ -394,6 +394,7 @@ class _Renderer(QWidget):
             Hitobj hitobj: A Hitobject.
         """
         current_time = self.clock.get_time()
+        if self.get_hit_endtime(hitobj) - current_time < 0: return
         big_circle = (384 / 2)
         hitcircle_alpha = 255 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 255
         fade_out = max(0, ((current_time - self.get_hit_endtime(hitobj)) / self.hitwindow * 0.5))
