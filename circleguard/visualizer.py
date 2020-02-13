@@ -406,7 +406,7 @@ class _Renderer(QWidget):
         spinner_scale = max(1 - (self.get_hit_endtime(hitobj) - current_time) / (self.get_hit_endtime(hitobj) - self.get_hit_time(hitobj)), 0)
         c = self.painter.pen().color()
 
-        spinner_radius = self.hitcircle_radius + (big_circle * (1 - spinner_scale))
+        spinner_radius = (big_circle * (1 - spinner_scale))
         _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
         _pen.setWidth(int(WIDTH_CIRCLE_BORDER / 2))
         self.painter.setPen(_pen)
