@@ -2,8 +2,8 @@ import math
 import time
 import threading
 
-from circleguard import utils, Mod, Keys
 from tempfile import TemporaryDirectory
+from circleguard import Mod, Keys
 from slider import Beatmap, Library
 from slider.beatmap import Circle, Slider, Spinner
 from slider.curve import Bezier, MultiBezier
