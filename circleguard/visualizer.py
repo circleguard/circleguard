@@ -315,7 +315,7 @@ class _Renderer(QWidget):
             frame_path.lineTo(x_offset, max(SCREEN_HEIGHT - 100, SCREEN_HEIGHT - (time)))
         self.painter.drawPath(frame_path)
         # draw fps & ms
-        ms = sum(self.frame_times) / len(self.frame_times)
+        ms = self.frame_times[0]
         fps = 1000 / ms
         self.painter.drawText(SCREEN_WIDTH - 360 + 5, SCREEN_HEIGHT - 100 + 12, f"fps:{int(fps)}")
         self.painter.drawText(SCREEN_WIDTH - 360 + 5, SCREEN_HEIGHT - 100 + 22, "{:.2f}ms".format(ms))
