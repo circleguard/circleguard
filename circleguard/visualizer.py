@@ -50,11 +50,11 @@ class _Renderer(QWidget):
         if beatmap_path is not None:
             self.beatmap = Beatmap.from_path(beatmap_path)
             self.has_beatmap = True
-            self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000 + 3000
+            self.playback_len = self.get_hit_endtime(self.beatmap.hit_objects[-1])
         elif beatmap_id is not None:
             self.beatmap = Library(get_setting("cache_dir")).lookup_by_id(beatmap_id, download=True, save=True)
             self.has_beatmap = True
-            self.playback_len = self.beatmap.hit_objects[-1].time.total_seconds() * 1000 + 3000
+            self.playback_len = self.get_hit_endtime(self.beatmap.hit_objects[-1])
         else:
             self.playback_len = 0
             self.has_beatmap = False
