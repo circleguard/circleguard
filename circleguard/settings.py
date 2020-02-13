@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 import abc
+import json
 
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
 from packaging import version
@@ -59,6 +60,8 @@ COMMENTS = {
         "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
         "visualizer_black_bg": "If True, uses a pure black background for the visualizer. Otherwise uses the background of the current theme",
         "visualizer_frametime": "If True, displays a frametime graph at the bottom right",
+        "default_speed": "The speed the visualizer defaults to when visualizing a new replay",
+        "speed_options": "The speed options available to change to in the visualizer. The value of Visualizer/default_speed must appear in this list"
     },
     "Locations": {
         "section": "The paths to various file or directories used by Circleguard.",
@@ -183,6 +186,9 @@ DEFAULTS = {
         "visualizer_black_bg": False,
         "visualizer_frametime": False,
         "render_beatmap": True,
+        "default_speed": float(1), # so type() returns float, since we want to allow float values, not just int
+        "speed_options": [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 5, 10]
+
     },
     "Locations": {
         "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
@@ -322,6 +328,10 @@ def get_setting(name):
     # second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
     if type_ is bool:
         return False if val in ["false", "False"] else bool(val)
+    # if type_ is list:
+    #     # val is eg. "[0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]",
+    #     # convert it to a list. json module is just the most convenient way of doing so
+    #     return json.loads(val)
     v = type_(SETTINGS.value(name))
     return v
 
@@ -352,6 +362,11 @@ def overwrite_with_config_settings():
                 val = config.getboolean(section, k)
             elif type_ is int:
                 val = config.getint(section, k)
+            elif type_ is float:
+                val = config.getfloat(section, k)
+            elif type_ is list:
+                # config.getlist doesn't exist
+                val = json.loads(config.get(section, k))
             else:
                 val = config.get(section, k)
             set_setting(k, val)

@@ -27,7 +27,7 @@ PEN_BLACK = QPen(QColor(17, 17, 17))
 PEN_WHITE = QPen(QColor(255, 255, 255))
 X_OFFSET = 64+192
 Y_OFFSET = 48+48
-SPEED_OPTIONS = [0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
+SPEED_OPTIONS = get_setting("speed_options")
 SCREEN_WIDTH = 640+384
 SCREEN_HEIGHT = 480+96
 
@@ -35,7 +35,7 @@ SCREEN_HEIGHT = 480+96
 class _Renderer(QFrame):
     update_signal = pyqtSignal(int)
 
-    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None):
+    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None, speed=1):
         super(_Renderer, self).__init__(parent)
         self.setMinimumSize(SCREEN_WIDTH, SCREEN_HEIGHT)
         self.painter = QPainter()
@@ -97,12 +97,12 @@ class _Renderer(QFrame):
                     d[2] = 384 - d[2]
 
         # clock stuff
-        self.clock = clock.Timer()
+        self.clock = clock.Timer(speed)
         self.paused = False
         self.play_direction = 1
 
         # debug stuff
-        self.frame_time_clock = clock.Timer()
+        self.frame_time_clock = clock.Timer(1)
         self.last_frame = 0
         self.frame_times = []
 
@@ -580,7 +580,8 @@ class _Renderer(QFrame):
 class _Interface(QWidget):
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None):
         super(_Interface, self).__init__()
-        self.renderer = _Renderer(replays, beatmap_id, beatmap_path)
+        speed = get_setting("default_speed")
+        self.renderer = _Renderer(replays, beatmap_id, beatmap_path, speed=speed)
 
         self.layout = QGridLayout()
         self.slider = QSlider(Qt.Horizontal)
@@ -638,7 +639,7 @@ class _Interface(QWidget):
         # want to seek.
         self.slider.sliderMoved.connect(self.renderer.seek_to)
 
-        self.speed_label = QLabel("1.00")
+        self.speed_label = QLabel(str(speed) + "x")
         self.speed_label.setFixedSize(40, 20)
         self.speed_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
 
@@ -667,8 +668,8 @@ class _Interface(QWidget):
         self.renderer.play_direction = -1
         self._update_speed()
 
-    def _update_speed(self):
-        self.renderer.clock.change_speed(float(self.speed_label.text())*self.renderer.play_direction)
+    def update_speed(self, speed):
+        self.renderer.clock.change_speed(speed * self.renderer.play_direction)
 
     def previous_frame(self):
         self.renderer.pause()
@@ -679,7 +680,7 @@ class _Interface(QWidget):
         self.renderer.search_nearest_frame(reverse=False)
 
     def pause(self):
-        if(self.renderer.paused):
+        if self.renderer.paused:
             self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
             self.renderer.resume()
         else:
@@ -687,16 +688,18 @@ class _Interface(QWidget):
             self.renderer.pause()
 
     def lower_speed(self):
-        index = SPEED_OPTIONS.index(float(self.speed_label.text()))
+        index = SPEED_OPTIONS.index(self.renderer.clock.current_speed)
         if index != 0:
-            self.speed_label.setText(str(SPEED_OPTIONS[index-1]))
-            self._update_speed()
+            speed = SPEED_OPTIONS[index - 1]
+            self.speed_label.setText(str(speed) + "x")
+            self.update_speed(speed)
 
     def increase_speed(self):
-        index = SPEED_OPTIONS.index(float(self.speed_label.text()))
-        if index != len(SPEED_OPTIONS)-1:
-            self.speed_label.setText(str(SPEED_OPTIONS[index+1]))
-            self._update_speed()
+        index = SPEED_OPTIONS.index(self.renderer.clock.current_speed)
+        if index != len(SPEED_OPTIONS) - 1:
+            speed = SPEED_OPTIONS[index + 1]
+            self.speed_label.setText(str(speed) + "x")
+            self.update_speed(speed)
 
 
 class VisualizerWindow(QMainWindow):
