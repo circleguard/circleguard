@@ -565,7 +565,7 @@ class _Renderer(QWidget):
             self.next_frame()
 
     def get_hit_endtime(self, hitobj):
-        return hitobj.end_time.total_seconds() * 1000
+        return hitobj.end_time.total_seconds() * 1000 if not isinstance(hitobj, Circle) else self.get_hit_time(hitobj)
 
     def get_hit_time(self, hitobj):
         return hitobj.time.total_seconds() * 1000
