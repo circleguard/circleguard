@@ -27,7 +27,6 @@ app.setApplicationName("Circleguard")
 from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableException,
                         ReplayMap, ReplayPath, User, Map, Check, MapUser, StealDetect)
 from circleguard import __version__ as cg_version
-from visualizer import VisualizerWindow
 from utils import resource_path, run_update_check, MapRun, ScreenRun, LocalRun, VerifyRun
 from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
@@ -36,6 +35,7 @@ from widgets import (Threshold, set_event_window, InputWidget, ResetSettings, Wi
                      RunWidget)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
+from visualizer import VisualizerWindow
 import wizard
 from version import __version__
 
@@ -230,13 +230,13 @@ class WindowWrapper(QMainWindow):
                                                         r=result, r1=r1, r2=r2)
         result_widget = ComparisonResult(text, result, r1, r2)
         # set button signal connections (visualize and copy template to clipboard)
-        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, [result_widget.replay1, result_widget.replay2]))
+        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, [result_widget.replay1, result_widget.replay2], result_widget.replay1.map_id))
         result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard,
                 get_setting("template_replay_steal").format(r=result_widget.result, r1=result_widget.replay1, r2=result_widget.replay2)))
         # remove info text if shown
         if not self.main_window.results_tab.results.info_label.isHidden():
             self.main_window.results_tab.results.info_label.hide()
-        self.main_window.results_tab.results.layout.addWidget(result_widget)
+        self.main_window.results_tab.results.layout.insertWidget(0,result_widget)
 
     def copy_to_clipboard(self, text):
         self.clipboard.setText(text)
@@ -278,13 +278,6 @@ class DebugWindow(QMainWindow):
 
     def write(self, message):
         self.terminal.append(message)
-        self.scroll_to_bottom()
-
-    def scroll_to_bottom(self):
-        cursor = QTextCursor(self.terminal.document())
-        cursor.movePosition(QTextCursor.End)
-        self.terminal.setTextCursor(cursor)
-
 
 class MainWindow(QWidget):
     def __init__(self):
@@ -382,7 +375,7 @@ class MainTab(QWidget):
 
         # special case; visualize runs shouldn't get added to queue
         if run_type == "VISUALIZE":
-            self.visualize([replay.data for replay in self.visualize_tab.replays])
+            self.visualize([replay.data for replay in self.visualize_tab.replays], beatmap_id=self.visualize_tab.map_id)
             return
 
         m = self.map_tab
@@ -482,7 +475,7 @@ class MainTab(QWidget):
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
         event = run.event
         try:
-            cache_path = resource_path(get_setting("cache_location"))
+            cache_path = resource_path(get_setting("cache_dir") + "circleguard.db")
             should_cache = get_setting("caching")
             cg = Circleguard(get_setting("api_key"), cache_path, cache=should_cache, loader=TrackerLoader)
             def _ratelimited(length):
@@ -643,8 +636,8 @@ class MainTab(QWidget):
         except Empty:
             pass
 
-    def visualize(self, replays):
-        self.visualizer_window = VisualizerWindow(replays=replays)
+    def visualize(self, replays, beatmap_id=None):
+        self.visualizer_window = VisualizerWindow(replays=replays, beatmap_id=beatmap_id)
         self.visualizer_window.show()
 
 
@@ -775,9 +768,12 @@ class VisualizeTab(QWidget):
         self.map_id = None
         self.q = Queue()
         self.replays = []
-        self.cg = Circleguard(get_setting("api_key"), resource_path(get_setting("cache_location")))
+        cache_path = resource_path(get_setting("cache_dir") + "circleguard.db")
+        self.cg = Circleguard(get_setting("api_key"), cache_path)
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
+        self.label_map_id = QLabel(self)
+        self.update_map_id_label()
         self.file_chooser = FolderChooser("Add Replays", folder_mode=False, multiple_files=True,
                                             file_ending="osu! Replayfile (*osr)", display_path=False)
         self.file_chooser.path_signal.connect(self.add_files)
@@ -787,6 +783,7 @@ class VisualizeTab(QWidget):
         layout.addWidget(self.info)
         layout.addWidget(self.file_chooser)
         layout.addWidget(self.folder_chooser)
+        layout.addWidget(self.label_map_id)
         layout.addWidget(self.result_frame)
 
         self.setLayout(layout)
@@ -798,6 +795,9 @@ class VisualizeTab(QWidget):
 
     def run_timer(self):
         self.add_widget()
+
+    def update_map_id_label(self):
+        self.label_map_id.setText(f"Current beatmap_id: {self.map_id}")
 
     def add_files(self, paths):
         thread = threading.Thread(target=self._parse_replays, args=[paths])
@@ -825,6 +825,7 @@ class VisualizeTab(QWidget):
         if self.map_id == None or len(self.replays) == 0:  # store map_id if nothing stored
             log.info(f"Changing map_id from {self.map_id} to {replay.map_id}")
             self.map_id = replay.map_id
+            self.update_map_id_label()
         elif replay.map_id != self.map_id:  # ignore replay with diffrent map_ids
             log.error(f"replay {replay} doesn't match with current map_id ({replay.map_id} != {self.map_id})")
             return
@@ -841,10 +842,9 @@ class VisualizeTab(QWidget):
                 widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id}", "Delete", replay)
                 widget.pressed_signal.connect(self.remove_replay)
                 self.replays.append(widget)
-                self.result_frame.results.layout.addWidget(widget)
+                self.result_frame.results.layout.insertWidget(0,widget)
         except Empty:
             pass
-
 
     def remove_replay(self, data):
         replay_ids = [replay.data.replay_id for replay in self.replays]
@@ -896,11 +896,13 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
         self.darkmode.box.stateChanged.connect(self.reload_theme)
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
-        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply", "visualizer_bg")
+        self.visualizer_frametime = OptionWidget("Show frametime graph in visualizer", "", "visualizer_frametime")
+        self.visualizer_bg = OptionWidget("Black Visualizer bg", "", "visualizer_bg")
         self.visualizer_bg.box.stateChanged.connect(self.reload_theme)
+        self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
-        self.cache_location = FolderChooser("Cache Location", get_setting("cache_location"), folder_mode=False, file_ending="SQLite db files (*.db)")
-        self.cache_location.path_signal.connect(partial(set_setting, "cache_location"))
+        self.cache_location = FolderChooser("Cache Location", get_setting("cache_dir"), folder_mode=True)
+        self.cache_location.path_signal.connect(partial(set_setting, "cache_dir"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
         self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
@@ -929,7 +931,9 @@ class ScrollableSettingsWidget(QFrame):
         self.grid.addWidget(Separator("Appearance"))
         self.grid.addWidget(self.darkmode)
         self.grid.addWidget(self.visualizer_info)
+        self.grid.addWidget(self.visualizer_frametime)
         self.grid.addWidget(self.visualizer_bg)
+        self.grid.addWidget(self.visualizer_beatmap)
         self.grid.addWidget(Separator("Debug"))
         self.grid.addWidget(self.loglevel)
         self.grid.addWidget(ResetSettings())
@@ -989,8 +993,6 @@ class ResultsTab(QWidget):
         self.results = ResultsFrame()
         self.qscrollarea.setWidget(self.results)
         self.qscrollarea.setWidgetResizable(True)
-
-
         layout.addWidget(self.qscrollarea)
         self.setLayout(layout)
 
@@ -1002,7 +1004,7 @@ class ResultsFrame(QFrame):
         # we want widgets to fill from top down,
         # being vertically centered looks weird
         self.layout.setAlignment(Qt.AlignTop)
-        self.info_label = QLabel("After running Comparisons, this tab will fill up with results")
+        self.info_label = QLabel("All Results will appear here, with the newest one always being at the top.")
         self.layout.addWidget(self.info_label)
         self.setLayout(self.layout)
 

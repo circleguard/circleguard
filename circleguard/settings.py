@@ -31,7 +31,7 @@ COMMENTS = {
             "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard.",
     "Locations": {
         "section": "The path to various file or directories used by the program",
-        "cache_location": "Where the cache to read and write replays to is.\n"
+        "cache_dir": "Where we store caches for circlecore (replays) and slider (beatmaps).\n"
                 "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
         "config_location": "Where the circelguard.cfg file (this very file) resides.",
         "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
@@ -60,7 +60,8 @@ COMMENTS = {
     "Appearance": {
         "dark_theme": "Dark theme skins the application to be a bit easier on the eyes. The gui is developed with a dark theme in mind first, light theme second",
         "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
-        "visualizer_bg": "If True, uses a pure black background for the visualizer (emulates osu client gameplay). If False, uses the default background of the current theme (recommended)"
+        "visualizer_bg": "If True, uses a pure black background for the visualizer. If False, uses the default background of the current theme",
+        "visualizer_frametime": "If True, displays a frametime graph at the bottom right"
     },
     "Experimental": {
         "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk",
@@ -135,7 +136,7 @@ class LinkableSetting():
 
 DEFAULTS = {
     "Locations": {
-        "cache_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache.db",
+        "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
         "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
         "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
     },
@@ -171,7 +172,9 @@ DEFAULTS = {
     "Appearance": {
         "dark_theme": False,
         "visualizer_info": True,
-        "visualizer_bg": False
+        "visualizer_bg": False,
+        "visualizer_frametime": False,
+        "render_beatmap": True
     },
     "Experimental": {
         "rainbow_accent": False
@@ -204,9 +207,11 @@ CHANGED = {
         "message_loading_replays"
     ],
     "1.3.0": [
-        "cache_location",
+        "cache_dir",
         "log_dir",
-        "message_loading_replays"
+        "message_loading_replays",
+        "visualizer_frametime",
+        "render_beatmap"
     ]
 }
 
@@ -256,13 +261,13 @@ def reset_defaults():
             SETTINGS.setValue(key, value)
     SETTINGS.sync()
 
-
 def set_setting(name, value):
     for linkable_setting in LinkableSetting.registered_classes:
         if linkable_setting.filter(name):
             linkable_setting.on_setting_changed(value)
 
     SETTINGS.setValue(name, TYPES[name][0](value))
+
 
 # overwrites circleguard.cfg with our settings
 def overwrite_config():
@@ -331,6 +336,7 @@ overwrite_with_config_settings()
 # has to be called after overwrite_with_config_settings or the file will
 # overwrite our changes here since it's not synced to the file
 overwrite_outdated_settings()
+
 
 if not get_setting("ran"):
     reset_defaults()
