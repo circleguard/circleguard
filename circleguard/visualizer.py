@@ -139,7 +139,7 @@ class _Renderer(QWidget):
             self.reset(end=True if self.clock.current_speed < 0 else False)
 
         for player in self.players:
-            player.pos = np.searchsorted(player.data.T[0], current_time)
+            player.pos = np.searchsorted(player.data.T[0], current_time, "right")
             magic = player.pos - FRAMES_ON_SCREEN if player.pos >= FRAMES_ON_SCREEN else 0
             player.buffer = player.data[magic:player.pos]
 
