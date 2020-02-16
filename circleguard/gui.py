@@ -904,9 +904,10 @@ class MainTab(QFrame):
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
         event = run.event
         try:
-            cache_path = resource_path(get_setting("cache_dir") + "circleguard.db")
+            core_cache = get_setting("cache_dir") + "circleguard.db"
+            slider_cache = get_setting("cache_dir")
             should_cache = get_setting("caching")
-            cg = Circleguard(get_setting("api_key"), cache_path, cache=should_cache, loader=TrackerLoader)
+            cg = Circleguard(get_setting("api_key"), core_cache, slider_dir=slider_cache, cache=should_cache, loader=TrackerLoader)
             def _ratelimited(length):
                 message = get_setting("message_ratelimited")
                 ts = datetime.now()
