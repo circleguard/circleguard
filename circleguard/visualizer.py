@@ -529,8 +529,6 @@ class _Renderer(QFrame):
 
     def search_nearest_frame(self, reverse=False):
         """
-        Just skips 16ms, lol. If somebody can fix it, go ahead :thumbsup:
-
         Args:
             Boolean reverse: chooses the search direction
         """
@@ -540,10 +538,10 @@ class _Renderer(QFrame):
             # self.pos is a list of current indecies of the replays
             # self.data[0][self.pos[0]] is the current frame we're on
             # so seek to the next frame; self.pos[0] + 1
-            next_frame_times = [self.data[x][self.pos[x] + 1][0] for x in range(len(self.data))]
+            next_frame_times = [self.players[x].data[self.players[x].pos + 1][0] for x in range(len(self.players))]
             self.seek_to(min(next_frame_times))
         else:
-            previous_frame_times = [self.data[x][self.pos[x] - 1][0] for x in range(len(self.data))]
+            previous_frame_times = [self.players[x].data[self.players[x].pos - 1][0] for x in range(len(self.players))]
             self.seek_to(min(previous_frame_times)-1)
 
     def seek_to(self, position):
