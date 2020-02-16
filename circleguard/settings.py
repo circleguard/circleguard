@@ -57,14 +57,15 @@ COMMENTS = {
     },
     "Visualizer": {
         "section": "Settings regarding the replay visualizer.",
-        "visualizer_info": "If True, info about the players is displayed on the visualizer",
+        "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
         "visualizer_black_bg": "If True, uses a pure black background for the visualizer. Otherwise uses the background of the current theme",
+        "visualizer_frametime": "If True, displays a frametime graph at the bottom right",
         "default_speed": "The speed the visualizer defaults to when visualizing a new replay",
         "speed_options": "The speed options available to change to in the visualizer. The value of Visualizer/default_speed must appear in this list"
     },
     "Locations": {
         "section": "The paths to various file or directories used by Circleguard.",
-        "cache_location": "Where the cache to read and write replays to is.\n"
+        "cache_dir": "Where we store caches for circlecore (replays) and slider (beatmaps).\n"
                 "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
         "config_location": "Where the circelguard.cfg file (this very file) resides",
         "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
@@ -183,11 +184,13 @@ DEFAULTS = {
     "Visualizer": {
         "visualizer_info": True,
         "visualizer_black_bg": False,
+        "visualizer_frametime": False,
+        "render_beatmap": True,
         "default_speed": float(1), # so type() returns float, since we want to allow float values, not just int
         "speed_options": [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 5, 10]
     },
     "Locations": {
-        "cache_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache.db",
+        "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
         "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
         "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
     },
@@ -205,6 +208,9 @@ DEFAULTS = {
         "dark_theme": False,
         "required_style": "QLineEdit { border: 1px solid red }\n"
                           "WidgetCombiner { border: 1px solid red }"
+    },
+    "Experimental": {
+        "rainbow_accent": False
     },
     "Logs": {
         "log_save": True,
@@ -262,9 +268,12 @@ CHANGED = {
         "correction_min_distance",
         "correction_min_distance_display",
         "visualizer_black_bg",
+        "visualizer_frametime",
+        "render_beatmap",
         "required_style",
         "cache_location",
-        "log_dir"
+        "log_dir",
+        "cache_dir"
     ]
 }
 
@@ -369,13 +378,13 @@ def reset_defaults():
             SETTINGS.setValue(key, value)
     SETTINGS.sync()
 
-
 def set_setting(name, value):
     for linkable_setting in LinkableSetting.registered_classes:
         if linkable_setting.filter(name):
             linkable_setting.on_setting_changed(value)
 
     SETTINGS.setValue(name, TYPES[name][0](value))
+
 
 # overwrites circleguard.cfg with our settings
 def overwrite_config():
@@ -484,6 +493,7 @@ overwrite_with_config_settings()
 # has to be called after overwrite_with_config_settings or the file will
 # overwrite our changes here since it's not synced to the file
 overwrite_outdated_settings()
+
 
 if not get_setting("ran"):
     reset_defaults()

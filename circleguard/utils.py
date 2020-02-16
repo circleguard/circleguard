@@ -93,3 +93,13 @@ class Run():
         self.checks = checks
         self.run_id = run_id
         self.event = event
+
+class Player():
+    def __init__(self, data, replay, username, mods, buffer, cursor_color, pos):
+        self.data = data
+        self.replay = replay
+        self.username = username
+        self.mods = mods
+        self.buffer = buffer
+        self.cursor_color = cursor_color
+        self.pos = pos

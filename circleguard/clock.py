@@ -14,7 +14,7 @@ class Timer:
             current_run_time = time.time_ns()
             time_took = current_run_time-self.last_run_time
             self.time_counter += time_took/1000000*self.current_speed
-            self.last_run_time = time.time_ns()
+            self.last_run_time = current_run_time
         return self.time_counter
 
     def pause(self):

@@ -228,15 +228,31 @@ class OptionWidget(LinkableSetting, QFrame):
         self.box = QCheckBox(self)
         self.box.stateChanged.connect(self.on_setting_changed_from_gui)
         self.box.setChecked(self.setting_value)
+        item = CenteredWidget(self.box)
+        item.setFixedWidth(100)
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.box, 0, 2, 1, 3)
+        layout.addWidget(item, 0, 1, 1, 1, Qt.AlignRight)
         self.setLayout(layout)
 
     def on_setting_changed(self, new_value):
         self.box.setChecked(new_value)
+
+
+class CenteredWidget(QWidget):
+    """
+    Turns a widget with a fixed size (for example a QCheckBox) into an flexible one which can be affected by the layout.
+    """
+
+    def __init__(self, widget):
+        super().__init__()
+        layout = QGridLayout()
+        layout.setAlignment(Qt.AlignCenter)
+        layout.setContentsMargins(0,0,0,0)
+        self.setContentsMargins(0,0,0,0)
+        layout.addWidget(widget)
+        self.setLayout(layout)
 
 
 class ButtonWidget(QFrame):
@@ -318,10 +334,10 @@ class LoglevelWidget(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(level_label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.level_combobox, 0, 2, 1, 3)
+        layout.addWidget(self.level_combobox, 0, 2, 1, 3, Qt.AlignRight)
         layout.addWidget(output_label, 1, 0, 1, 1)
         layout.addItem(SPACER, 1, 1, 1, 1)
-        layout.addWidget(self.output_combobox, 1, 2, 1, 3)
+        layout.addWidget(self.output_combobox, 1, 2, 1, 3, Qt.AlignRight)
         layout.addWidget(save_option, 2, 0, 1, 5)
         layout.addWidget(self.save_folder, 3, 0, 1, 5)
 
@@ -617,7 +633,7 @@ class FolderChooser(QFrame):
 
         self.path_label = QLabel(self)
         if self.display_path:
-            self.path_label.setText(self.path)
+            self.path_label.setText(path)
         self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
         self.old_stylesheet = self.combined.styleSheet() # for mousePressedEvent / show_required
 
@@ -630,28 +646,35 @@ class FolderChooser(QFrame):
         self.switch_enabled(True)
 
     def set_dir(self):
+        parent_path_old = self.path if self.folder_mode else str(Path(self.path[0]).parent)
         if self.folder_mode:
             options = QFileDialog.Option()
             options |= QFileDialog.ShowDirsOnly
             options |= QFileDialog.HideNameFilterDetails
-            update_path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=self.path, options=options)
+            update_path = QFileDialog.getExistingDirectory(caption="Select Folder", directory=parent_path_old, options=options)
         elif self.multiple_files:
-            paths = QFileDialog.getOpenFileNames(caption="Select Files", directory=self.path, filter=self.file_ending)
+            paths = QFileDialog.getOpenFileNames(caption="Select Files", directory=parent_path_old, filter=self.file_ending)
             # qt returns a list of ([path, path, ...], filter) when we use a filter
             update_path = paths[0]
         else:
-            paths = QFileDialog.getOpenFileName(caption="Select File", directory=str(Path(self.path).parent), filter=self.file_ending)
+            paths = QFileDialog.getOpenFileName(caption="Select File", directory=parent_path_old, filter=self.file_ending)
             update_path = paths[0]
 
         # dont update path if cancel is pressed
-        if update_path != "":
+        if update_path != [] and update_path != "":
             self.update_dir(update_path)
 
     def update_dir(self, path):
         self.path = path if path != "" else self.path
         self.changed = True if self.path != self.default_path else False
         if self.display_path:
-            label = path if len(self.path) < 64 else ntpath.basename(path)
+            if self.multiple_files:
+                label = str(Path(self.path).parent)
+            elif self.folder_mode:
+                label = str(self.path)
+            else:
+                label = str(ntpath.basename(self.path))
+            label = label[:50] + '...' if len(label) > 50 else label
             self.path_label.setText(label)
         self.path_signal.emit(self.path)
 
