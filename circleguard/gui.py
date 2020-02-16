@@ -256,7 +256,7 @@ class WindowWrapper(QMainWindow):
 
         result_widget = ResultW(label_text, result, replays)
         # set button signal connections (visualize and copy template to clipboard)
-        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replays))
+        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id))
         result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard, template_text))
         # remove info text if shown
         if not self.main_window.results_tab.results.info_label.isHidden():
