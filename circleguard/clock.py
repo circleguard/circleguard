@@ -2,9 +2,9 @@ import time
 
 
 class Timer:
-    def __init__(self, speed):
+    def __init__(self):
         self.time_counter = 0
-        self.current_speed = speed
+        self.current_speed = 1
         self.paused = False
         self.paused_at_run_time = None
         self.last_run_time = time.time_ns()
