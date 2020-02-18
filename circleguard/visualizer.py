@@ -27,7 +27,6 @@ PEN_BLACK = QPen(QColor(17, 17, 17))
 PEN_WHITE = QPen(QColor(255, 255, 255))
 X_OFFSET = 64+192
 Y_OFFSET = 48+48
-SPEED_OPTIONS = get_setting("speed_options")
 SCREEN_WIDTH = 640+384
 SCREEN_HEIGHT = 480+96
 
@@ -581,6 +580,7 @@ class _Interface(QWidget):
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None):
         super(_Interface, self).__init__()
         speed = get_setting("default_speed")
+        self.speed_options = get_setting("speed_options")
         self.renderer = _Renderer(replays, beatmap_id, beatmap_path, speed=speed)
 
         self.layout = QGridLayout()
@@ -688,16 +688,16 @@ class _Interface(QWidget):
             self.renderer.pause()
 
     def lower_speed(self):
-        index = SPEED_OPTIONS.index(self.renderer.clock.current_speed)
+        index = self.speed_options.index(self.renderer.clock.current_speed)
         if index != 0:
-            speed = SPEED_OPTIONS[index - 1]
+            speed = self.speed_options[index - 1]
             self.speed_label.setText(str(speed) + "x")
             self.update_speed(speed)
 
     def increase_speed(self):
-        index = SPEED_OPTIONS.index(self.renderer.clock.current_speed)
-        if index != len(SPEED_OPTIONS) - 1:
-            speed = SPEED_OPTIONS[index + 1]
+        index = self.speed_options.index(self.renderer.clock.current_speed)
+        if index != len(self.speed_options) - 1:
+            speed = self.speed_options[index + 1]
             self.speed_label.setText(str(speed) + "x")
             self.update_speed(speed)
 
