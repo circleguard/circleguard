@@ -328,10 +328,6 @@ def get_setting(name):
     # second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
     if type_ is bool:
         return False if val in ["false", "False"] else bool(val)
-    # if type_ is list:
-    #     # val is eg. "[0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]",
-    #     # convert it to a list. json module is just the most convenient way of doing so
-    #     return json.loads(val)
     v = type_(SETTINGS.value(name))
     return v
 
