@@ -328,6 +328,17 @@ def get_setting(name):
     # see second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
     if type_ is bool:
         return False if val in ["false", "False"] else bool(val)
+    # val is eg. "['0.10', '1.00', '1.25', '1.50', '2.00']" so convert it to a list,
+    # same issue as bools with windows storing it as string
+    if type_ is list:
+        if type(val) is str:
+            # single quotes isn't valid json but it's what we get from
+            # QSettings#value on windows. Replace with nothing so json#loads
+            # interprets each value as a float instead of a string
+            return json.loads(val.replace("\'", ""))
+        # else we're on a system that preserves setting type (osx), avoid error
+        # on #replace call
+        return val
     v = type_(SETTINGS.value(name))
     return v
 
