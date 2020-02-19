@@ -324,8 +324,8 @@ def get_setting(name):
     type_ = TYPES[name][0]
     val = SETTINGS.value(name)
     # windows registry keys doesnt properly preserve types, so convert "false"
-    # keys to a true False value instead of bool("false") which would return True.
-    # second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
+    # keys to a True/False value instead of bool("false") which would return True.
+    # see second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
     if type_ is bool:
         return False if val in ["false", "False"] else bool(val)
     v = type_(SETTINGS.value(name))
