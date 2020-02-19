@@ -336,8 +336,7 @@ def get_setting(name):
             # QSettings#value on windows. Replace with nothing so json#loads
             # interprets each value as a float instead of a string
             return json.loads(val.replace("\'", ""))
-        # else we're on a system that preserves setting type (osx), avoid error
-        # on #replace call
+        # else we're on a system that preserves setting type (osx)
         return val
     v = type_(SETTINGS.value(name))
     return v
