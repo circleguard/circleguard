@@ -658,7 +658,7 @@ class _Interface(QWidget):
     def play_normal(self):
         self.renderer.resume()
         self.renderer.play_direction = 1
-        self._update_speed()
+        self.update_speed(abs(self.renderer.clock.current_speed))
 
     def update_slider(self, value):
         self.slider.setValue(value)
@@ -666,7 +666,7 @@ class _Interface(QWidget):
     def play_reverse(self):
         self.renderer.resume()
         self.renderer.play_direction = -1
-        self._update_speed()
+        self.update_speed(abs(self.renderer.clock.current_speed))
 
     def update_speed(self, speed):
         self.renderer.clock.change_speed(speed * self.renderer.play_direction)
@@ -688,14 +688,14 @@ class _Interface(QWidget):
             self.renderer.pause()
 
     def lower_speed(self):
-        index = self.speed_options.index(self.renderer.clock.current_speed)
+        index = self.speed_options.index(abs(self.renderer.clock.current_speed))
         if index != 0:
             speed = self.speed_options[index - 1]
             self.speed_label.setText(str(speed) + "x")
             self.update_speed(speed)
 
     def increase_speed(self):
-        index = self.speed_options.index(self.renderer.clock.current_speed)
+        index = self.speed_options.index(abs(self.renderer.clock.current_speed))
         if index != len(self.speed_options) - 1:
             speed = self.speed_options[index + 1]
             self.speed_label.setText(str(speed) + "x")
