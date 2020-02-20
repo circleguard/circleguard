@@ -377,7 +377,7 @@ def reset_defaults():
     SETTINGS.clear()
     for d in DEFAULTS.values():
         for key,value in d.items():
-            SETTINGS.setValue(key, value)
+            set_setting(key, value)
     SETTINGS.sync()
 
 def set_setting(name, value):
@@ -414,8 +414,8 @@ def overwrite_config():
         if section in COMMENTS and setting in COMMENTS[section]:
             comment = "# " + COMMENTS[section][setting].replace("\n", "\n# ") # comment out each newline
             config[section][comment] = None # setting a configparser key to None writes it as is, without a trailing = for the val
-
-        config[section][setting] = str(SETTINGS.value(setting))
+        
+        config[section][setting] = str(get_setting(setting))
 
     with open(CFG_PATH, "a+") as f:
         config.write(f)
@@ -475,7 +475,7 @@ SETTINGS.setFallbacksEnabled(False)
 for d in DEFAULTS.values():
     for key,value in d.items():
         if not SETTINGS.contains(key):
-            SETTINGS.setValue(key, value)
+            set_setting(key, value)
 
 # create folders if they don't exist
 initialize_dirs()
