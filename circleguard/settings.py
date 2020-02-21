@@ -186,8 +186,8 @@ DEFAULTS = {
         "visualizer_black_bg": False,
         "visualizer_frametime": False,
         "render_beatmap": True,
-        "default_speed": float(1), # so type() returns float, since we want to allow float values, not just int
-        "speed_options": [0.1, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 5, 10]
+        "default_speed": float(1),  # so type() returns float, since we want to allow float values, not just int
+        "speed_options": [0.01, 0.75, 1.0, 1.5, 10]
 
     },
     "Locations": {
