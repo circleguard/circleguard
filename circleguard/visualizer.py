@@ -713,6 +713,8 @@ class VisualizerWindow(QMainWindow):
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
         QShortcut(QKeySequence(Qt.Key_Left), self, self.interface.previous_frame)
         QShortcut(QKeySequence(Qt.Key_Right), self, self.interface.next_frame)
+        QShortcut(QKeySequence(Qt.Key_Up), self, self.interface.increase_speed)
+        QShortcut(QKeySequence(Qt.Key_Down), self, self.interface.lower_speed)
 
     def closeEvent(self, event):
         super().closeEvent(event)
