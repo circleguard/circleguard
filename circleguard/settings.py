@@ -329,9 +329,9 @@ def get_setting(name):
     if type_ is bool:
         return False if val in ["false", "False"] else bool(val)
     # val is eg. ['0.10', '1.00', '1.25', '1.50', '2.00'] so convert it to a list
-    # of ints, not strings
+    # of floats, not strings
     if type_ is list:
-        val = [int(x) for x in val]
+        val = [float(x) for x in val]
         return val
     v = type_(val)
     return v
