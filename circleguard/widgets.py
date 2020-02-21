@@ -733,7 +733,7 @@ class BeatmapTest(QFrame):
         super(BeatmapTest, self).__init__()
         self.visualizer_window = None
 
-        self.file_chooser = FolderChooser("Beatmap File", "", folder_mode=False)
+        self.file_chooser = FolderChooser("Beatmap File", folder_mode=False)
         self.label = QLabel(self)
         self.label.setText("Test Beatmap:")
 
