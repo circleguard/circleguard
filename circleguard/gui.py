@@ -11,6 +11,8 @@ import threading
 from datetime import datetime
 import math
 import time
+import json
+
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl, QMimeData, QPoint
 from PyQt5.QtWidgets import (QWidget, QFrame, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
                              QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy, QComboBox)
@@ -369,9 +371,13 @@ class DropArea(QFrame):
         event.acceptProposedAction()
 
     def dropEvent(self, event):
+        mimedata = event.mimeData()
+        # don't accept drops from anywhere else
         event.acceptProposedAction()
-        id_ = int(event.mimeData().data("circleguard/loadable_id").data().decode("utf-8"))
-        name = event.mimeData().data("circleguard/loadable_name").data().decode("utf-8")
+        # second #data necessary to convert QByteArray to python byte array
+        data = json.loads(mimedata.data("application/x-circleguard-loadable").data())
+        id_ = data[0]
+        name = data[1]
         if id_ in self.loadable_ids:
             return
         self.loadable_ids.append(id_)
@@ -560,9 +566,8 @@ class LoadableW(QFrame):
         self.drag.setHotSpot(QPoint(pixmap.width() * x_ratio, pixmap.height() * y_ratio))
         self.drag.setPixmap(pixmap)
         mime_data = QMimeData()
-
-        mime_data.setData("circleguard/loadable_id", bytes(str(self.loadable_id), "utf-8"))
-        mime_data.setData("circleguard/loadable_name", bytes(self.name, "utf-8"))
+        data = [self.loadable_id, self.name]
+        mime_data.setData("application/x-circleguard-loadable", bytes(json.dumps(data), "utf-8"))
         self.drag.setMimeData(mime_data)
         self.drag.exec() # start the drag
 
