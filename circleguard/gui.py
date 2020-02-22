@@ -373,6 +373,8 @@ class DropArea(QFrame):
     def dropEvent(self, event):
         mimedata = event.mimeData()
         # don't accept drops from anywhere else
+        if not mimedata.hasFormat("application/x-circleguard-loadable"):
+            return
         event.acceptProposedAction()
         # second #data necessary to convert QByteArray to python byte array
         data = json.loads(mimedata.data("application/x-circleguard-loadable").data())
