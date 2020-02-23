@@ -7,6 +7,7 @@ from circleguard import Mod
 from packaging import version
 import requests
 from requests import RequestException
+from PyQt5.QtWidgets import QLayout
 
 # placeholder imports to have all imports at the top of the file. Imported for
 # real farther below
@@ -82,6 +83,25 @@ def parse_mod_string(mod_string):
             raise InvalidModException(f"Invalid mod string (no matching mod found for {single_mod_string})")
         mod += matching_mods[0]
     return mod
+
+
+def delete_widget(widget):
+    if widget.layout is not None:
+        clear_layout(widget.layout)
+        widget.layout = None
+    widget.deleteLater()
+
+
+def clear_layout(layout):
+    while layout.count():
+        child = layout.takeAt(0)
+        if child.layout() is not None:
+            clear_layout(child.layout())
+        if child.widget() is not None:
+            if isinstance(child.widget().layout, QLayout):
+                clear_layout(child.widget().layout)
+            child.widget().deleteLater()
+
 
 class Run():
     """
