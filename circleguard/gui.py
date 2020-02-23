@@ -29,7 +29,7 @@ from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableExcept
                         RelaxDetect, CorrectionDetect, ReplayStealingResult, RelaxResult, CorrectionResult)
 from circleguard import __version__ as cg_version
 
-from utils import resource_path, run_update_check, Run, parse_mod_string, InvalidModException
+from utils import resource_path, run_update_check, Run, parse_mod_string, InvalidModException, delete_widget
 from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
@@ -400,10 +400,10 @@ class DropArea(QFrame):
         if not loadables:
             return
         loadable = loadables[0]
+        self.layout.removeWidget(loadable)
+        delete_widget(loadable)
         self.loadables.remove(loadable)
         self.loadable_ids.remove(loadable.loadable_id)
-        self.layout.removeWidget(loadable)
-        loadable.hide()
 
 
 class CheckW(QFrame):
@@ -753,26 +753,12 @@ class MainTab(QFrame):
         if not loadables: # sometimes an empty list, I don't know how if you need a loadable to click the delete button...
             return
         loadable = loadables[0]
-        self.loadables.remove(loadable)
         self.loadables_scrollarea.widget().layout.removeWidget(loadable)
+        delete_widget(loadable)
+        self.loadables.remove(loadable)
         # remove deleted loadables from Checks as well
         for check in self.checks:
             check.remove_loadable(loadable_id)
-
-        # TODO
-        # doing deleteLater here like we do in other places where we want to remove a
-        # widget either segfaults or throws a very scary malloc memory error.
-        #
-        # EX:
-        # Python(62285,0x10a9635c0) malloc: *** error for object 0x7fa589402890: pointer being freed was not allocated
-        # Python(62285,0x10a9635c0) malloc: *** set a breakpoint in malloc_error_break to debug
-        #
-        # I think we're still leaving a reference to it somewhere,
-        # but I don't know where - we remove it from the layout above.
-        #
-        # Hide is recommend by qt ("if necessary") https://doc.qt.io/qt-5/qlayout.html#removeWidget
-        # but I'd feel better deleting it.
-        loadable.hide()
 
     def remove_check(self, check_id):
         # see above method for comments
@@ -780,9 +766,9 @@ class MainTab(QFrame):
         if not checks:
             return
         check = checks[0]
-        self.checks.remove(check)
         self.checks_scrollarea.widget().layout.removeWidget(check)
-        check.hide()
+        delete_widget(check)
+        self.checks.remove(check)
 
     def add_loadable(self):
         button_data = self.loadables_combobox.currentData()
@@ -796,9 +782,9 @@ class MainTab(QFrame):
             w = UserW()
         if button_data == "Map User":
             w = MapUserW()
-        self.loadables_scrollarea.widget().layout.addWidget(w)
-        self.loadables.append(w) # for deleting it later
         w.remove_loadable_signal.connect(self.remove_loadable)
+        self.loadables_scrollarea.widget().layout.addWidget(w)
+        self.loadables.append(w)
 
     def add_check(self):
         button_data = self.checks_combobox.currentData()
@@ -808,9 +794,9 @@ class MainTab(QFrame):
             w = RelaxCheckW()
         if button_data == "Aim Correction":
             w = CorrectionCheckW()
+        w.remove_check_signal.connect(self.remove_check)
         self.checks_scrollarea.widget().layout.addWidget(w)
         self.checks.append(w)
-        w.remove_check_signal.connect(self.remove_check)
 
     def write(self, message):
         self.terminal.append(str(message).strip())
