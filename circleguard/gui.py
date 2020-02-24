@@ -32,9 +32,8 @@ from circleguard import __version__ as cg_version
 from utils import resource_path, run_update_check, Run, parse_mod_string, InvalidModException, delete_widget
 from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
-                     CompareTopPlays, CompareTopUsers, LoglevelWidget, SliderBoxSetting,
-                     BeatmapTest, ResultW, LineEditSetting, EntryWidget,
-                     RunWidget)
+                     LoglevelWidget, SliderBoxSetting, BeatmapTest, ResultW, LineEditSetting,
+                     EntryWidget, RunWidget)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
 from visualizer import VisualizerWindow
