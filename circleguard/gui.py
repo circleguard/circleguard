@@ -388,12 +388,12 @@ class DropArea(QFrame):
         self.loadables.append(loadable)
         loadable.remove_loadableincheck_signal.connect(self.remove_loadable)
 
-    def remove_loadable(self, loadable_id, loadableincheck=True):
+    def remove_loadable(self, loadable_id, loadable_in_check=True):
         """
-        loadableincheck will be True if loadable_id is a LoadableInCheck id,
-        otherwise if loadableincheck is False it is a Loadable id.
+        loadable_in_check will be True if loadable_id is a LoadableInCheck id,
+        otherwise if loadable_in_check is False it is a Loadable id.
         """
-        if loadableincheck:
+        if loadable_in_check:
             loadables = [l for l in self.loadables if l.loadable_in_check_id == loadable_id]
         else:
             loadables = [l for l in self.loadables if l.loadable_id == loadable_id]
@@ -450,10 +450,10 @@ class CheckW(QFrame):
 
     def remove_loadable(self, loadable_id):
         if self.double_drop_area:
-            self.drop_area1.remove_loadable(loadable_id, loadableincheck=False)
-            self.drop_area2.remove_loadable(loadable_id, loadableincheck=False)
+            self.drop_area1.remove_loadable(loadable_id, loadable_in_check=False)
+            self.drop_area2.remove_loadable(loadable_id, loadable_in_check=False)
         else:
-            self.drop_area.remove_loadable(loadable_id, loadableincheck=False)
+            self.drop_area.remove_loadable(loadable_id, loadable_in_check=False)
 
     def all_loadable_ids(self):
         if self.double_drop_area:
