@@ -135,12 +135,12 @@ class Separator(QFrame):
         label.setText(title)
         label.setAlignment(Qt.AlignCenter)
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(QHLine(), 0, 0, 1, 2)
-        layout.addWidget(label, 0, 2, 1, 1)
-        layout.addWidget(QHLine(), 0, 3, 1, 2)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(QHLine(), 0, 0, 1, 2)
+        self.layout.addWidget(label, 0, 2, 1, 1)
+        self.layout.addWidget(QHLine(), 0, 3, 1, 2)
+        self.setLayout(self.layout)
 
 
 class InputWidget(QFrame):
@@ -163,12 +163,12 @@ class InputWidget(QFrame):
         if type_ == "normal":
             self.field = LineEdit(self)
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.field, 0, 2, 1, 3)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(label, 0, 0, 1, 1)
+        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addWidget(self.field, 0, 2, 1, 3)
+        self.setLayout(self.layout)
 
     def show_required(self):
         """
@@ -196,11 +196,11 @@ class IdWidgetCombined(QFrame):
 
         self.update_user_enabled()
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.map_id, 0, 0, 1, 1)
-        layout.addWidget(self.user_id, 1, 0, 1, 1)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.map_id, 0, 0, 1, 1)
+        self.layout.addWidget(self.user_id, 1, 0, 1, 1)
+        self.setLayout(self.layout)
 
     def update_user_enabled(self):
         """
@@ -230,11 +230,11 @@ class OptionWidget(LinkableSetting, QFrame):
         self.box.setChecked(self.setting_value)
         item = CenteredWidget(self.box)
         item.setFixedWidth(100)
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addWidget(item, 0, 1, 1, 1, Qt.AlignRight)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(label, 0, 0, 1, 1)
+        self.layout.addWidget(item, 0, 1, 1, 1, Qt.AlignRight)
+        self.setLayout(self.layout)
 
     def on_setting_changed(self, new_value):
         self.box.setChecked(new_value)
@@ -242,17 +242,17 @@ class OptionWidget(LinkableSetting, QFrame):
 
 class CenteredWidget(QWidget):
     """
-    Turns a widget with a fixed size (for example a QCheckBox) into an flexible one which can be affected by the layout.
+    Turns a widget with a fixed size (for example a QCheckBox) into an flexible one which can be affected by the self.layout.
     """
 
     def __init__(self, widget):
         super().__init__()
-        layout = QGridLayout()
-        layout.setAlignment(Qt.AlignCenter)
-        layout.setContentsMargins(0,0,0,0)
+        self.layout = QGridLayout()
+        self.layout.setAlignment(Qt.AlignCenter)
+        self.layout.setContentsMargins(0,0,0,0)
         self.setContentsMargins(0,0,0,0)
-        layout.addWidget(widget)
-        self.setLayout(layout)
+        self.layout.addWidget(widget)
+        self.setLayout(self.layout)
 
 
 class ButtonWidget(QFrame):
@@ -270,12 +270,12 @@ class ButtonWidget(QFrame):
         self.button = QPushButton(button_title)
         self.button.setFixedWidth(100)
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.button, 0, 2, 1, 1)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(label, 0, 0, 1, 1)
+        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addWidget(self.button, 0, 2, 1, 1)
+        self.setLayout(self.layout)
 
 
 class LoglevelWidget(QFrame):
@@ -330,18 +330,18 @@ class LoglevelWidget(QFrame):
         self.save_folder.switch_enabled(get_setting("log_save"))
         self.save_folder.path_signal.connect(partial(set_setting, "log_dir"))
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(level_label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.level_combobox, 0, 2, 1, 3, Qt.AlignRight)
-        layout.addWidget(output_label, 1, 0, 1, 1)
-        layout.addItem(SPACER, 1, 1, 1, 1)
-        layout.addWidget(self.output_combobox, 1, 2, 1, 3, Qt.AlignRight)
-        layout.addWidget(save_option, 2, 0, 1, 5)
-        layout.addWidget(self.save_folder, 3, 0, 1, 5)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(level_label, 0, 0, 1, 1)
+        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addWidget(self.level_combobox, 0, 2, 1, 3, Qt.AlignRight)
+        self.layout.addWidget(output_label, 1, 0, 1, 1)
+        self.layout.addItem(SPACER, 1, 1, 1, 1)
+        self.layout.addWidget(self.output_combobox, 1, 2, 1, 3, Qt.AlignRight)
+        self.layout.addWidget(save_option, 2, 0, 1, 5)
+        self.layout.addWidget(self.save_folder, 3, 0, 1, 5)
 
-        self.setLayout(layout)
+        self.setLayout(self.layout)
 
 
 class CompareTopUsers(QFrame):
@@ -377,12 +377,12 @@ class CompareTopUsers(QFrame):
 
         self.combined = WidgetCombiner(slider, spinbox)
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.combined, 0, 2, 1, 3)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.label, 0, 0, 1, 1)
+        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addWidget(self.combined, 0, 2, 1, 3)
+        self.setLayout(self.layout)
 
     # keep spinbox and slider in sync
     def update_spinbox(self, value):
@@ -435,13 +435,13 @@ class CompareTopPlays(QFrame):
 
         self.combined = WidgetCombiner(slider, spinbox)
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.combined, 0, 2, 1, 3)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(label, 0, 0, 1, 1)
+        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addWidget(self.combined, 0, 2, 1, 3)
 
-        self.setLayout(layout)
+        self.setLayout(self.layout)
 
     # keep spinbox and slider in sync
     def update_spinbox(self, value):
@@ -470,14 +470,14 @@ class ResultW(QFrame):
         self.button_clipboard = QPushButton(self)
         self.button_clipboard.setText("Copy Template")
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.button, 0, 2, 1, 1)
-        layout.addWidget(self.button_clipboard, 0, 3, 1, 1)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.label, 0, 0, 1, 1)
+        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addWidget(self.button, 0, 2, 1, 1)
+        self.layout.addWidget(self.button_clipboard, 0, 3, 1, 1)
 
-        self.setLayout(layout)
+        self.setLayout(self.layout)
 
 class RunWidget(QFrame):
     """
@@ -502,16 +502,16 @@ class RunWidget(QFrame):
         self.button.setFixedWidth(50)
         self.label.setFixedHeight(self.button.size().height()*0.75)
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.label, 0, 0, 1, 1)
-        layout.addWidget(self.status_label, 0, 1, 1, 1)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.label, 0, 0, 1, 1)
+        self.layout.addWidget(self.status_label, 0, 1, 1, 1)
         # needs to be redefined because RunWidget is being called from a
         # different thread or something? get weird errors when not redefined
         SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
-        layout.addItem(SPACER, 0, 2, 1, 1)
-        layout.addWidget(self.button, 0, 3, 1, 1)
-        self.setLayout(layout)
+        self.layout.addItem(SPACER, 0, 2, 1, 1)
+        self.layout.addWidget(self.button, 0, 3, 1, 1)
+        self.setLayout(self.layout)
 
     def update_status(self, status):
         if status in ["Finished", "Invalid arguments"]:
@@ -563,13 +563,13 @@ class SliderBoxSetting(LinkableSetting, QFrame):
         self.slider.valueChanged.connect(self.on_setting_changed_from_gui)
         self.spinbox.valueChanged.connect(self.on_setting_changed_from_gui)
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.combined, 0, 2, 1, 3)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(label, 0, 0, 1, 1)
+        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addWidget(self.combined, 0, 2, 1, 3)
 
-        self.setLayout(layout)
+        self.setLayout(self.layout)
 
     def on_setting_changed(self, new_value):
         self.slider.setValue(new_value)
@@ -587,10 +587,10 @@ class LineEditSetting(LinkableSetting, QFrame):
         self.input_ = InputWidget(display, tooltip, type_=type_)
         self.input_.field.setText(self.setting_value)
         self.input_.field.textChanged.connect(self.on_setting_changed_from_gui)
-        layout = QVBoxLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.input_)
-        self.setLayout(layout)
+        self.layout = QVBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.input_)
+        self.setLayout(self.layout)
 
     def on_setting_changed(self, new_value):
         self.input_.field.setText(new_value)
@@ -598,11 +598,11 @@ class LineEditSetting(LinkableSetting, QFrame):
 class WidgetCombiner(QFrame):
     def __init__(self, widget1, widget2):
         super(WidgetCombiner, self).__init__()
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(widget1, 0, 0, 1, 1)
-        layout.addWidget(widget2, 0, 1, 1, 1)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(widget1, 0, 0, 1, 1)
+        self.layout.addWidget(widget2, 0, 1, 1, 1)
+        self.setLayout(self.layout)
 
 
 class FolderChooser(QFrame):
@@ -637,12 +637,12 @@ class FolderChooser(QFrame):
         self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
         self.old_stylesheet = self.combined.styleSheet() # for mousePressedEvent / show_required
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.combined, 0, 2, 1, 3)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.label, 0, 0, 1, 1)
+        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addWidget(self.combined, 0, 2, 1, 3)
+        self.setLayout(self.layout)
         self.switch_enabled(True)
 
     def set_dir(self):
@@ -709,12 +709,12 @@ class ResetSettings(QFrame):
         self.button.clicked.connect(self.reset_settings)
         self.button.setFixedWidth(100)
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.button, 0, 2, 1, 1)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.label, 0, 0, 1, 1)
+        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addWidget(self.button, 0, 2, 1, 1)
+        self.setLayout(self.layout)
 
     def reset_settings(self):
         prompt = QMessageBox.question(self, "Reset settings",
@@ -742,13 +742,13 @@ class BeatmapTest(QFrame):
         self.button.clicked.connect(self.visualize)
         self.button.setFixedWidth(100)
 
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.file_chooser, 0, 0, 1, 3)
-        layout.addWidget(self.label, 1, 0, 1, 1)
-        layout.addItem(SPACER, 1, 1, 1, 1)
-        layout.addWidget(self.button, 1, 2, 1, 1)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.file_chooser, 0, 0, 1, 3)
+        self.layout.addWidget(self.label, 1, 0, 1, 1)
+        self.layout.addItem(SPACER, 1, 1, 1, 1)
+        self.layout.addWidget(self.button, 1, 2, 1, 1)
+        self.setLayout(self.layout)
 
     def visualize(self):
         self.visualizer_window = VisualizerWindow(beatmap_path=self.file_chooser.path)
@@ -767,11 +767,11 @@ class EntryWidget(QFrame):
         self.button = QPushButton(action_name)
         self.button.setFixedWidth(100)
         self.button.clicked.connect(self.button_pressed)
-        layout = QGridLayout()
-        layout.addWidget(QLabel(title), 0, 0, 1, 1)
-        layout.addWidget(self.button, 0, 1, 1, 1)
-        layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(layout)
+        self.layout = QGridLayout()
+        self.layout.addWidget(QLabel(title), 0, 0, 1, 1)
+        self.layout.addWidget(self.button, 0, 1, 1, 1)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.layout)
 
     def button_pressed(self, _):
         self.pressed_signal.emit(self.data)
