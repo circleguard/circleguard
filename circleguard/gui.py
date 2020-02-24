@@ -13,10 +13,10 @@ import math
 import time
 import json
 
-from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl, QMimeData, QPoint
+from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl
 from PyQt5.QtWidgets import (QWidget, QFrame, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
                              QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy, QComboBox)
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices, QDrag, QPixmap
+from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices, QPixmap
 
 # app needs to be initialized before settings is imported so QStandardPaths resolves
 # corerctly with the applicationName
@@ -33,7 +33,9 @@ from utils import resource_path, run_update_check, Run, parse_mod_string, Invali
 from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      LoglevelWidget, SliderBoxSetting, BeatmapTest, ResultW, LineEditSetting,
-                     EntryWidget, RunWidget)
+                     EntryWidget, RunWidget, ScrollableLoadablesWidget, ScrollableChecksWidget,
+                     ReplayMapW, ReplayPathW, MapW, UserW, MapUserW, StealCheckW, RelaxCheckW,
+                     CorrectionCheckW)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
 from visualizer import VisualizerWindow

@@ -2,13 +2,17 @@ import sys
 import ntpath
 from pathlib import Path
 from functools import partial
+import json
+
 from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit, QMessageBox,
                              QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
                              QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout)
-from PyQt5.QtGui import QRegExpValidator
-from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal
+from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag
+from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint, QMimeData
+
 from settings import get_setting, reset_defaults, LinkableSetting, set_setting
 from visualizer import VisualizerWindow
+from utils import resource_path
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
