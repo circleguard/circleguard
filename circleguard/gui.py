@@ -596,7 +596,7 @@ class ReplayMapW(LoadableW):
         self.user_id_input = InputWidget("User id", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
 
-        super().__init__("User Replay on Map", [self.map_id_input, self.user_id_input])
+        super().__init__("Map Replay", [self.map_id_input, self.user_id_input])
 
         self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
@@ -664,7 +664,7 @@ class MapUserW(LoadableW):
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
 
-        super().__init__("All User Replays on Map", [self.map_id_input, self.user_id_input, self.span_input])
+        super().__init__("All Map Replays by User", [self.map_id_input, self.user_id_input, self.span_input])
 
         self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
@@ -681,6 +681,7 @@ class MainTab(QFrame):
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
+    LOADABLES_COMBOBOX_REGISTRY = ["Map Replay", "Local Replay", "Map", "User", "All Map Replays by User"]
     LOADABLES_COMBOBOX_REGISTRY = ["User Replay on Map", "Local Replay", "Map", "User", "All User Replays on Map"]
     CHECKS_COMBOBOX_REGISTRY = ["Replay Stealing", "Relax", "Aim Correction"]
 
@@ -772,7 +773,7 @@ class MainTab(QFrame):
 
     def add_loadable(self):
         button_data = self.loadables_combobox.currentData()
-        if button_data == "User Replay on Map":
+        if button_data == "Map Replay":
             w = ReplayMapW()
         if button_data == "Local Replay":
             w = ReplayPathW()
@@ -780,7 +781,7 @@ class MainTab(QFrame):
             w = MapW()
         if button_data == "User":
             w = UserW()
-        if button_data == "All User Replays on Map":
+        if button_data == "All Map Replays by User":
             w = MapUserW()
         w.remove_loadable_signal.connect(self.remove_loadable)
         self.loadables_scrollarea.widget().layout.addWidget(w)
