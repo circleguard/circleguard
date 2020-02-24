@@ -1052,7 +1052,6 @@ class MainTab(QFrame):
         try:
             while True:
                 result = self.q.get_nowait()
-                # self.visualize(result.replay1, result.replay2)]
                 ts = datetime.now() # ts = timestamp
                 message = None
                 if type(result) is ReplayStealingResult:
