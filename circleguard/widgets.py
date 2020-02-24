@@ -345,6 +345,346 @@ class LoglevelWidget(QFrame):
 
 
 
+class ScrollableLoadablesWidget(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
+
+
+class ScrollableChecksWidget(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
+
+
+class DropArea(QFrame):
+    # style largely taken from
+    # https://doc.qt.io/qt-5/qtwidgets-draganddrop-dropsite-example.html
+    # (we use a QFrame instead of a QLabel so we can have a layout and
+    # add new items to it)
+    def __init__(self):
+        super().__init__()
+
+        self.loadable_ids = [] # ids of loadables already in this drop area
+        self.loadables = [] # LoadableInChecks in this DropArea
+        self.setMinimumSize(0, 100)
+        self.setFrameStyle(QFrame.Sunken | QFrame.StyledPanel)
+        self.setAcceptDrops(True)
+
+        self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignTop)
+        self.setLayout(self.layout)
+
+    def dragEnterEvent(self, event):
+        # need to accept the event so qt gives us the DropEvent
+        # https://doc.qt.io/qt-5/qdropevent.html#details
+        event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        mimedata = event.mimeData()
+        # don't accept drops from anywhere else
+        if not mimedata.hasFormat("application/x-circleguard-loadable"):
+            return
+        event.acceptProposedAction()
+        # second #data necessary to convert QByteArray to python byte array
+        data = json.loads(mimedata.data("application/x-circleguard-loadable").data())
+        id_ = data[0]
+        name = data[1]
+        if id_ in self.loadable_ids:
+            return
+        self.loadable_ids.append(id_)
+        loadable = LoadableInCheck(name + f" (id: {id_})", id_)
+        self.layout.addWidget(loadable)
+        self.loadables.append(loadable)
+        loadable.remove_loadableincheck_signal.connect(self.remove_loadable)
+
+    def remove_loadable(self, loadable_id, loadable_in_check=True):
+        """
+        loadable_in_check will be True if loadable_id is a LoadableInCheck id,
+        otherwise if loadable_in_check is False it is a Loadable id.
+        """
+        if loadable_in_check:
+            loadables = [l for l in self.loadables if l.loadable_in_check_id == loadable_id]
+        else:
+            loadables = [l for l in self.loadables if l.loadable_id == loadable_id]
+        if not loadables:
+            return
+        loadable = loadables[0]
+        self.layout.removeWidget(loadable)
+        delete_widget(loadable)
+        self.loadables.remove(loadable)
+        self.loadable_ids.remove(loadable.loadable_id)
+
+
+class CheckW(QFrame):
+    remove_check_signal = pyqtSignal(int) # check id
+    ID = 0
+
+    def __init__(self, name, double_drop_area=False):
+        super().__init__()
+        CheckW.ID += 1
+        # so we get the DropEvent
+        # https://doc.qt.io/qt-5/qdropevent.html#details
+        self.setAcceptDrops(True)
+        self.name = name
+        self.double_drop_area = double_drop_area
+        self.check_id = CheckW.ID
+        # will have LoadableW objects added to it once this Check is
+        # run by the main tab run button, so that cg.Check objects can
+        # be easily constructed with loadables
+        if double_drop_area:
+            self.loadables1 = []
+            self.loadables2 = []
+        else:
+            self.loadables = []
+
+        self.delete_button = QPushButton(self)
+        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setMaximumWidth(30)
+        self.delete_button.clicked.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
+        title = QLabel()
+        title.setText(f"{name}")
+
+        self.layout = QGridLayout()
+        self.layout.addWidget(title, 0, 0, 1, 7)
+        self.layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        if double_drop_area:
+            self.drop_area1 = DropArea()
+            self.drop_area2 = DropArea()
+            self.layout.addWidget(self.drop_area1, 1, 0, 1, 4)
+            self.layout.addWidget(self.drop_area2, 1, 4, 1, 4)
+        else:
+            self.drop_area = DropArea()
+            self.layout.addWidget(self.drop_area, 1, 0, 1, 8)
+        self.setLayout(self.layout)
+
+    def remove_loadable(self, loadable_id):
+        if self.double_drop_area:
+            self.drop_area1.remove_loadable(loadable_id, loadable_in_check=False)
+            self.drop_area2.remove_loadable(loadable_id, loadable_in_check=False)
+        else:
+            self.drop_area.remove_loadable(loadable_id, loadable_in_check=False)
+
+    def all_loadable_ids(self):
+        if self.double_drop_area:
+            return self.drop_area1.loadable_ids + self.drop_area2.loadable_ids
+        return self.drop_area.loadable_ids
+
+    def all_loadables(self):
+        if self.double_drop_area:
+            return self.loadables1 + self.loadables2
+        return self.loadables
+
+class StealCheckW(CheckW):
+    def __init__(self):
+        super().__init__("Replay Stealing Check", double_drop_area=True)
+
+
+class RelaxCheckW(CheckW):
+    def __init__(self):
+        super().__init__("Relax Check")
+
+
+class CorrectionCheckW(CheckW):
+    def __init__(self):
+        super().__init__("Aim Correction Check")
+
+
+class DragWidget(QFrame):
+    """
+    A widget not meant to be displayed, but rendered into a pixmap with
+    #grab and stuck onto a QDrag with setPixmap to give the illusion of
+    dragging another widget.
+    """
+    def __init__(self, text):
+        super().__init__()
+        self.text = QLabel(text)
+        layout = QVBoxLayout()
+        layout.addWidget(self.text)
+        self.setLayout(layout)
+
+
+class LoadableInCheck(QFrame):
+    """
+    Represents a LoadableW inside a CheckW.
+    """
+    remove_loadableincheck_signal = pyqtSignal(int)
+    ID = 0
+    def __init__(self, text, loadable_id):
+        super().__init__()
+        LoadableInCheck.ID += 1
+        self.text = QLabel(text)
+        self.loadable_in_check_id = LoadableInCheck.ID
+        self.loadable_id = loadable_id
+
+        self.delete_button = QPushButton(self)
+        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setMaximumWidth(30)
+        self.delete_button.clicked.connect(partial(lambda id_: self.remove_loadableincheck_signal.emit(id_), self.loadable_in_check_id))
+
+        self.layout = QGridLayout()
+        self.layout.addWidget(self.text, 0, 0, 1, 7)
+        self.layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.layout)
+
+
+class LoadableW(QFrame):
+    """
+    A widget representing a circleguard.Loadable, which can be dragged onto
+    a CheckW. Keeps track of how many LoadableWs have been created
+    as a static ID attribute.
+
+    W standing for widget.
+    """
+    ID = 0
+    remove_loadable_signal = pyqtSignal(int) # id of loadable to remove
+
+    def __init__(self, name, required_input_widgets):
+        super().__init__()
+        LoadableW.ID += 1
+        self.name = name
+        self.required_input_widgets = required_input_widgets
+
+        self.layout = QGridLayout()
+        title = QLabel(self)
+        self.loadable_id = LoadableW.ID
+        t = "\t" # https://stackoverflow.com/a/44780467/12164878
+        # double tabs on short names to align with longer ones
+        title.setText(f"{name}{t+t if len(name) < 5 else t}(id: {self.loadable_id})")
+
+        self.delete_button = QPushButton(self)
+        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setMaximumWidth(30)
+        self.delete_button.clicked.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
+        self.layout.addWidget(title, 0, 0, 1, 7)
+        self.layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        self.setLayout(self.layout)
+
+    # Resources for drag and drop operations:
+    # qt tutorial           https://doc.qt.io/qt-5/qtwidgets-draganddrop-draggableicons-example.html
+    # qdrag docs            https://doc.qt.io/qt-5/qdrag.html
+    # real example code     https://lists.qt-project.org/pipermail/qt-interest-old/2011-June/034531.html
+    # bad example code      https://stackoverflow.com/q/7737913/12164878
+    def mouseMoveEvent(self, event):
+        # 1=all the way to the right/down, 0=all the way to the left/up
+        x_ratio = event.pos().x() / self.width()
+        y_ratio = event.pos().y() / self.height()
+        self.drag = QDrag(self)
+        # https://stackoverflow.com/a/53538805/12164878
+        pixmap = DragWidget(f"{self.name} (Id: {self.loadable_id})").grab()
+        # put cursor in the same relative position on the dragwidget as
+        # it clicked on the real Loadable widget.
+        self.drag.setHotSpot(QPoint(pixmap.width() * x_ratio, pixmap.height() * y_ratio))
+        self.drag.setPixmap(pixmap)
+        mime_data = QMimeData()
+        data = [self.loadable_id, self.name]
+        mime_data.setData("application/x-circleguard-loadable", bytes(json.dumps(data), "utf-8"))
+        self.drag.setMimeData(mime_data)
+        self.drag.exec() # start the drag
+
+    def check_required_fields(self):
+        """
+        Checks the required fields of this LoadableW. If any are empty, show
+        a red border around them (see InputWidget#show_required) and return
+        False. Otherwise, return True.
+        """
+        for input_widget in self.required_input_widgets:
+            all_filled = True
+            filled = input_widget.field.text() != ""
+            if not filled:
+                input_widget.show_required()
+                all_filled = False
+        return all_filled
+
+class ReplayMapW(LoadableW):
+    """
+    W standing for Widget.
+    """
+    def __init__(self):
+        self.map_id_input = InputWidget("Map id", "", "id")
+        self.user_id_input = InputWidget("User id", "", "id")
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+        super().__init__("Map Replay", [self.map_id_input, self.user_id_input])
+
+        self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+        self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
+        self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
+
+
+class ReplayPathW(LoadableW):
+    def __init__(self):
+        self.path_input = FolderChooser(".osr path", folder_mode=False, file_ending="osu! Replayfile (*.osr)")
+
+        super().__init__("Local Replay", [self.path_input])
+
+        self.layout.addWidget(self.path_input, 1, 0, 1, 8)
+
+    def check_required_fields(self):
+        for input_widget in self.required_input_widgets:
+            all_filled = True
+            filled = input_widget.changed
+            if not filled:
+                input_widget.show_required()
+                all_filled = False
+        return all_filled
+
+class MapW(LoadableW):
+    def __init__(self):
+
+        self.map_id_input = InputWidget("Map id", "", "id")
+        self.span_input = InputWidget("Span", "", "normal")
+        self.span_input.field.setPlaceholderText("1-50")
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+        super().__init__("Map", [self.map_id_input, self.span_input])
+
+        self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+        self.layout.addWidget(self.span_input, 2, 0, 1, 8)
+        self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
+
+    def check_required_fields(self):
+        for input_widget in self.required_input_widgets:
+            all_filled = True
+            # don't count span_input as empty when it has placeholder text
+            filled = input_widget.field.text() != "" or input_widget.field.placeholderText() != ""
+            if not filled:
+                input_widget.show_required()
+                all_filled = False
+        return all_filled
+
+class UserW(LoadableW):
+    def __init__(self):
+
+        self.user_id_input = InputWidget("User id", "", "id")
+        self.span_input = InputWidget("Span", "", "normal")
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+        super().__init__("User", [self.user_id_input, self.span_input])
+
+        self.layout.addWidget(self.user_id_input, 1, 0, 1, 8)
+        self.layout.addWidget(self.span_input, 2, 0, 1, 8)
+        self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
+
+
+class MapUserW(LoadableW):
+    def __init__(self):
+        self.map_id_input = InputWidget("Map id", "", "id")
+        self.user_id_input = InputWidget("User id", "", "id")
+        self.span_input = InputWidget("Span", "", "normal")
+
+        super().__init__("All Map Replays by User", [self.map_id_input, self.user_id_input, self.span_input])
+
+        self.layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+        self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
+        self.layout.addWidget(self.span_input, 3, 0, 1, 8)
+
+
 
 class ResultW(QFrame):
     """
