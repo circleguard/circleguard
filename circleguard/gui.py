@@ -682,8 +682,7 @@ class MainTab(QFrame):
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
     LOADABLES_COMBOBOX_REGISTRY = ["Map Replay", "Local Replay", "Map", "User", "All Map Replays by User"]
-    LOADABLES_COMBOBOX_REGISTRY = ["User Replay on Map", "Local Replay", "Map", "User", "All User Replays on Map"]
-    CHECKS_COMBOBOX_REGISTRY = ["Replay Stealing", "Relax", "Aim Correction"]
+    CHECKS_COMBOBOX_REGISTRY = ["Replay Stealing/Remodding", "Relax", "Aim Correction"]
 
     def __init__(self):
         super().__init__()
@@ -789,7 +788,7 @@ class MainTab(QFrame):
 
     def add_check(self):
         button_data = self.checks_combobox.currentData()
-        if button_data == "Replay Stealing":
+        if button_data == "Replay Stealing/Remodding":
             w = StealCheckW()
         if button_data == "Relax":
             w = RelaxCheckW()
