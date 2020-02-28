@@ -97,7 +97,8 @@ COMMENTS = {
                 "Nowhere: 0\n"
                 "Terminal: 1\n"
                 "Debug Window: 2\n"
-                "Terminal and Debug Window: 3"
+                "Terminal and Debug Window: 3",
+        "log_format": "What format to use for logging"
     },
     "Caching": {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
@@ -210,7 +211,8 @@ DEFAULTS = {
     "Logs": {
         "log_save": True,
         "log_mode": 1, # ERROR
-        "log_output": 1 # TERMINAL
+        "log_output": 1, # TERMINAL
+        "log_format": "[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)"
     },
     "Caching": {
         "caching": True
