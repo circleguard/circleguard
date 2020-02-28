@@ -222,13 +222,17 @@ DEFAULTS = {
         "ran": False,
         "last_version": "0.0.0", # force run update_settings if the user previously had a version without this key
         "api_key": "",
-        "timestamp_format": "%H:%M:%S %m.%d.%Y",
-        "last_update_check": "00:00:00 01.01.1970", # aka datetime.min, but formatted
+        "timestamp_format": "%Y/%m/%d %H:%M:%S",
+        "last_update_check": "1970/01/01 00:00:00", # aka datetime.min, but formatted
         "latest_version": __version__
     }
 }
 
 CHANGED = {
+    "2.0.0": [
+        "timestamp_format",
+        "last_update_check"
+    ],
     "1.1.0": [
         "message_cheater_found",
         "message_no_cheater_found",
