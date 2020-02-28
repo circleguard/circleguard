@@ -5,6 +5,7 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
+from logging.handlers import RotatingFileHandler
 import colorsys
 import traceback
 import threading
@@ -48,23 +49,11 @@ log = logging.getLogger(__name__)
 # save old excepthook
 sys._excepthook = sys.excepthook
 
-def write_log(message):
-    log_dir = resource_path(get_setting("log_dir"))
-    if not os.path.exists(log_dir): # create dir if nonexistent
-        os.makedirs(log_dir)
-    directory = os.path.join(log_dir, "circleguard.log")
-    with open(directory, 'a+') as f: # append so it creates a file if it doesn't exist
-        f.seek(0)
-        data = f.read().splitlines(True)
-    data.append(message+"\n")
-    with open(directory, 'w+') as f:
-        f.writelines(data[-1000:]) # keep file at 1000 lines
-
 # this allows us to log any and all exceptions thrown to a log file -
 # pyqt likes to eat exceptions and quit silently
 def my_excepthook(exctype, value, tb):
     # call original excepthook before ours
-    write_log("sys.excepthook error\n"
+    log.exception("sys.excepthook error\n"
               "Type: " + str(value) + "\n"
               "Value: " + str(value) + "\n"
               "Traceback: " + "".join(traceback.format_tb(tb)) + '\n')
@@ -143,7 +132,7 @@ class WindowWrapper(QMainWindow):
         logging.getLogger("circleguard").addHandler(self.handler)
         logging.getLogger("ossapi").addHandler(self.handler)
         logging.getLogger(__name__).addHandler(self.handler)
-        formatter = logging.Formatter("[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)", datefmt="%Y/%m/%d %H:%M:%S")
+        formatter = logging.Formatter(get_setting("log_format"), datefmt=get_setting("timestamp_format"))
         self.handler.setFormatter(formatter)
         self.handler.new_message.connect(self.log)
 
@@ -181,9 +170,6 @@ class WindowWrapper(QMainWindow):
         """
         Message is the string message sent to the io stream
         """
-
-        if get_setting("log_save"):
-            write_log(message)
 
         # TERMINAL / BOTH
         if get_setting("log_output") in [1, 3]:
@@ -936,6 +922,7 @@ class ScrollableSettingsWidget(QFrame):
 
         self.loglevel = LoglevelWidget("")
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
+        self.loglevel.save_option.box.clicked.connect(self.switch_handlers)
         self.set_loglevel() # set the default loglevel in cg, not just in gui
 
         self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!", "rainbow_accent")
@@ -967,6 +954,15 @@ class ScrollableSettingsWidget(QFrame):
 
         self.setLayout(self.layout)
 
+        log_dir = resource_path(get_setting("log_dir"))
+        if not os.path.exists(log_dir): # create dir if nonexistent
+            os.makedirs(log_dir)
+        log_file = os.path.join(log_dir, "circleguard.log")
+        self.file_handler = RotatingFileHandler(log_file, maxBytes=10**6, backupCount=3)
+        formatter = logging.Formatter(get_setting("log_format"), datefmt=get_setting("timestamp_format"))
+        self.file_handler.setFormatter(formatter)
+        self.switch_handlers()
+
         self.cache_location.switch_enabled(get_setting("caching"))
         # we never actually set the theme to dark anywhere
         # (even if the setting is true), it should really be
@@ -976,6 +972,15 @@ class ScrollableSettingsWidget(QFrame):
     def set_loglevel(self):
         for logger in logging.root.manager.loggerDict:
             logging.getLogger(logger).setLevel(self.loglevel.level_combobox.currentData())
+
+    def switch_handlers(self):
+        handler_added = self.file_handler in logging.getLogger("circleguard").handlers
+        if get_setting("log_save") and not handler_added:
+            for logger in logging.root.manager.loggerDict:
+                logging.getLogger(logger).addHandler(self.file_handler)
+        elif not get_setting("log_save") and handler_added:
+            for logger in logging.root.manager.loggerDict:
+                logging.getLogger(logger).removeHandler(self.file_handler)
 
     def next_color(self):
         (r, g, b) = colorsys.hsv_to_rgb(self._rainbow_counter, 1.0, 1.0)
