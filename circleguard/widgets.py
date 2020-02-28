@@ -12,7 +12,7 @@ from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint
 
 from settings import get_setting, reset_defaults, LinkableSetting, set_setting
 from visualizer import VisualizerWindow
-from utils import resource_path
+from utils import resource_path, delete_widget
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
