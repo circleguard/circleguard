@@ -318,6 +318,21 @@ class LinkableSetting():
         """
         set_setting(self.setting, value)
 
+class SettingSubscription(LinkableSetting):
+    """
+    Subscribe to one or multiple settings so that when that setting changes,
+    your on_setting_changed method is called.
+    """
+    def __init__(self, *settings):
+        self.settings = settings
+
+    def filter(self, setting_changed):
+        return setting_changed in self.settings
+
+    @abc.abstractmethod
+    def on_setting_changed(self, new_value):
+        pass
+
 
 
 def get_setting(name):
