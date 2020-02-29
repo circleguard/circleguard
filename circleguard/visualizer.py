@@ -5,11 +5,9 @@ from slider import Beatmap, Library
 from slider.beatmap import Circle, Slider, Spinner
 from slider.curve import Bezier, MultiBezier
 from slider.mod import circle_radius, od_to_ms
-# pylint: disable=no-name-in-module
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF
-from PyQt5.QtWidgets import QWidget, QMainWindow, QGridLayout, QSlider, QPushButton, QShortcut, QLabel
+from PyQt5.QtWidgets import QWidget, QFrame, QMainWindow, QGridLayout, QSlider, QPushButton, QShortcut, QLabel
 from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIcon, QPalette, QBrush
-# pylint: enable=no-name-in-module
 
 import clock
 from utils import resource_path, Player
@@ -24,17 +22,17 @@ PREVIOUS_ERRSTATE = np.seterr('raise')
 WIDTH_LINE = 1
 WIDTH_POINT = 3
 WIDTH_CIRCLE_BORDER = 8
-FRAMES_ON_SCREEN = 15  # how many frames for each replay to draw on screen at a time
+FRAMES_ON_SCREEN = 15 # how many frames for each replay to draw on screen at a time
 PEN_BLACK = QPen(QColor(17, 17, 17))
 PEN_WHITE = QPen(QColor(255, 255, 255))
 X_OFFSET = 64+192
 Y_OFFSET = 48+48
-SPEED_OPTIONS = [0.01, 0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
+SPEED_OPTIONS = [0.10, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 2.00, 5.00, 10.00]
 SCREEN_WIDTH = 640+384
 SCREEN_HEIGHT = 480+96
 
 
-class _Renderer(QWidget):
+class _Renderer(QFrame):
     update_signal = pyqtSignal(int)
 
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None):
@@ -92,7 +90,7 @@ class _Renderer(QWidget):
                        cursor_color=QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),
                        pos=0))
         self.playback_len = max(player.data[-1][0] for player in self.players) if self.replay_amount > 0 else self.playback_len
-        ## flip all replays with hr
+        # flip all replays with hr
         for player in self.players:
             if Mod.HardRock in player.replay.mods:
                 for d in player.data:
@@ -111,7 +109,7 @@ class _Renderer(QWidget):
         # render stuff
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_frame_from_timer)
-        self.timer.start(1000/60)  # 62 fps (1000ms/60frames but the result can only be a integer)
+        self.timer.start(1000/60) # 62 fps (1000ms/60frames but the result can only be a integer)
         self.next_frame()
 
     def next_frame_from_timer(self):
@@ -176,8 +174,7 @@ class _Renderer(QWidget):
         self.painter.begin(self)
         self.painter.setRenderHint(QPainter.TextAntialiasing, True)
         self.painter.setRenderHint(QPainter.Antialiasing, True)
-        self.painter.setRenderHint(QPainter.HighQualityAntialiasing, True)
-        black_bg = get_setting("visualizer_bg")
+        black_bg = get_setting("visualizer_black_bg")
         self.painter.setPen(PEN_WHITE if (get_setting("dark_theme") or black_bg) else PEN_BLACK)
         _pen = self.painter.pen()
         if black_bg:
@@ -262,9 +259,9 @@ class _Renderer(QWidget):
                 self.painter.setBrush(QBrush(p.color()))
                 if len(player.buffer) > 0:  # skips empty buffers
                     self.painter.setOpacity(1 if Keys.M1 in Keys(int(player.buffer[-1][3])) else 0.3)
-                    self.painter.drawRect(5, 27-9 + (11 * i), 10, 10)
+                    self.painter.drawRect(5, 27 - 9 + (11 * i), 10, 10)
                     self.painter.setOpacity(1 if Keys.M2 in Keys(int(player.buffer[-1][3])) else 0.3)
-                    self.painter.drawRect(18, 27-9 + (11 * i), 10, 10)
+                    self.painter.drawRect(18, 27 - 9 + (11 * i), 10, 10)
                     self.painter.setOpacity(1)
                     self.painter.setPen(p)
                     self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods}: {int(player.buffer[-1][1])}, {int(player.buffer[-1][2])}")
@@ -278,7 +275,7 @@ class _Renderer(QWidget):
                     distance = math.sqrt(((prev_player.buffer[-1][1] - player.buffer[-1][1]) ** 2) +
                                          ((prev_player.buffer[-1][2] - player.buffer[-1][2]) ** 2))
                     self.painter.drawText(5, 39 + (12 * i), f"Distance {prev_player.username}-{player.username}: {int(distance)}px")
-                except IndexError:  # Edge case where we only have data from one cursor
+                except IndexError: # Edge case where we only have data from one cursor
                     pass
 
     def paint_frametime_graph(self):
@@ -379,7 +376,7 @@ class _Renderer(QWidget):
         _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
         _pen.setWidth(WIDTH_CIRCLE_BORDER)
         self.painter.setPen(_pen)
-        self.painter.setBrush(QBrush(QColor(c.red(), c.green(), c.blue(), int(hitcircle_alpha / 4))))  # fill hitcircle
+        self.painter.setBrush(QBrush(QColor(c.red(), c.green(), c.blue(), int(hitcircle_alpha / 4)))) # fill hitcircle
         self.painter.drawEllipse(QPointF(p.x + X_OFFSET, p.y + Y_OFFSET), self.hitcircle_radius, self.hitcircle_radius)
         self.painter.setBrush(QBrush(QColor(c.red(), c.green(), c.blue(), 0)))
 
@@ -487,11 +484,11 @@ class _Renderer(QWidget):
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), 25))
         self.painter.setPen(_pen)
 
-        loading_bg.moveTo(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2)
-        loading_bg.lineTo(SCREEN_WIDTH/2 - 75 + 150, SCREEN_HEIGHT/2)
+        loading_bg.moveTo(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT / 2)
+        loading_bg.lineTo(SCREEN_WIDTH/2 - 75 + 150, SCREEN_HEIGHT / 2)
 
-        loading_bar.moveTo(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2)
-        loading_bar.lineTo(SCREEN_WIDTH/2 - 75 + percentage * 1.5, SCREEN_HEIGHT/2)
+        loading_bar.moveTo(SCREEN_WIDTH / 2 - 75, SCREEN_HEIGHT / 2)
+        loading_bar.lineTo(SCREEN_WIDTH / 2 - 75 + percentage * 1.5, SCREEN_HEIGHT / 2)
 
         self.painter.drawPath(loading_bg)
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), 255))
@@ -499,7 +496,7 @@ class _Renderer(QWidget):
         self.painter.drawPath(loading_bar)
 
     def draw_loading_screen(self):
-        self.painter.drawText(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2 - 10, f"Calculating Sliders, please wait...")
+        self.painter.drawText(SCREEN_WIDTH / 2 - 75, SCREEN_HEIGHT / 2 - 10, f"Calculating Sliders, please wait...")
         self.draw_progressbar(int((self.sliders_current / self.sliders_total) * 100))
 
     def process_sliders(self):
@@ -508,7 +505,7 @@ class _Renderer(QWidget):
             self.sliders_current = index
             current_hitobj = self.beatmap.hit_objects[index]
             if isinstance(current_hitobj, Slider):
-                steps = max(1, int((self.beatmap.hit_objects[index].end_time - self.beatmap.hit_objects[index].time).total_seconds() * 50))+1
+                steps = max(1, int((self.beatmap.hit_objects[index].end_time - self.beatmap.hit_objects[index].time).total_seconds() * 50)) + 1
                 if isinstance(current_hitobj.curve, Bezier):
                     self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.at(np.array([i / steps for i in range(steps)]))
                 elif isinstance(current_hitobj.curve, MultiBezier):
@@ -545,7 +542,7 @@ class _Renderer(QWidget):
             self.seek_to(min(next_frame_times))
         else:
             previous_frame_times = [self.players[x].data[self.players[x].pos - 1][0] for x in range(len(self.players))]
-            self.seek_to(min(previous_frame_times)-1)
+            self.seek_to(min(previous_frame_times) - 1)
 
     def seek_to(self, position):
         """
@@ -682,7 +679,7 @@ class _Interface(QWidget):
         self.renderer.search_nearest_frame(reverse=False)
 
     def pause(self):
-        if (self.renderer.paused):
+        if(self.renderer.paused):
             self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
             self.renderer.resume()
         else:
@@ -698,7 +695,7 @@ class _Interface(QWidget):
     def increase_speed(self):
         index = SPEED_OPTIONS.index(float(self.speed_label.text()))
         if index != len(SPEED_OPTIONS) - 1:
-            self.speed_label.setText(str(SPEED_OPTIONS[index + 1]))
+            self.speed_label.setText(str(SPEED_OPTIONS[index+1]))
             self._update_speed()
 
 
@@ -709,7 +706,7 @@ class VisualizerWindow(QMainWindow):
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.interface = _Interface(replays, beatmap_id, beatmap_path)
         self.setCentralWidget(self.interface)
-        self.setWindowFlag(Qt.MSWindowsFixedSizeDialogHint)  # resizing is not important rn
+        self.setWindowFlag(Qt.MSWindowsFixedSizeDialogHint) # resizing is not important rn
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
         QShortcut(QKeySequence(Qt.Key_Left), self, self.interface.previous_frame)
         QShortcut(QKeySequence(Qt.Key_Right), self, self.interface.next_frame)

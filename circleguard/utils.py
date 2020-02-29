@@ -3,12 +3,15 @@ import sys
 import os
 from datetime import datetime, timedelta
 
+from circleguard import Mod
 from packaging import version
 import requests
+from requests import RequestException
+from PyQt5.QtWidgets import QLayout
 
 # placeholder imports to have all imports at the top of the file. Imported for
 # real farther below
-#from settings import get_setting
+#from settings import get_setting, set_setting
 #from version import __version__
 
 # placed above local imports to avoid circular import errors
@@ -21,19 +24,19 @@ def resource_path(str_path):
     This location changes if the program is run from an application built with pyinstaller.
     """
 
-    if hasattr(sys, '_MEIPASS'):  # being run from a pyinstall'd app
-        return Path(sys._MEIPASS) / Path(str_path)  # pylint: disable=no-member
+    if hasattr(sys, '_MEIPASS'): # being run from a pyinstall'd app
+        return Path(sys._MEIPASS) / Path(str_path) # pylint: disable=no-member
     return ROOT_PATH / Path(str_path)
 
 
-from settings import get_setting
+from settings import get_setting, set_setting
 from version import __version__
 
 
 def run_update_check():
     last_check = datetime.strptime(get_setting("last_update_check"), get_setting("timestamp_format"))
     next_check = last_check + timedelta(hours=1)
-    if not next_check < datetime.now():
+    if next_check > datetime.now():
         return get_idle_setting_str()
     try:
         # check for new version
@@ -41,8 +44,8 @@ def run_update_check():
         git_version = version.parse(git_request["name"])
         set_setting("latest_version", git_version)
         set_setting("last_update_check", datetime.now().strftime(get_setting("timestamp_format")))
-    except:
-        # user is propably offline
+    except RequestException:
+        # user is probably offline
         pass
     return get_idle_setting_str()
 
@@ -54,50 +57,62 @@ def get_idle_setting_str():
     else:
         return "Idle"
 
+class InvalidModException(Exception):
+    """
+    We were asked to parse an invalid mod string.
+    """
+
+def parse_mod_string(mod_string):
+    """
+    Takes a string made up of two letter mod names and converts them
+    to a circlecore ModCombination.
+
+    Returns None if the string is empty (mod_string == "")
+    """
+    if mod_string == "":
+        return None
+    if len(mod_string) % 2 != 0:
+        raise InvalidModException(f"Invalid mod string {mod_string} (not of even length)")
+    # slightly hacky, using ``Mod.NM`` our "no mod present" mod
+    mod = Mod.NM
+    for i in range(2, len(mod_string) + 1, 2):
+        single_mod_string = mod_string[i - 2: i]
+        # there better only be one Mod that has an acronym matching ours, but a comp + 0 index works too
+        matching_mods = [mod for mod in Mod.ORDER if mod.short_name() == single_mod_string]
+        if not matching_mods:
+            raise InvalidModException(f"Invalid mod string (no matching mod found for {single_mod_string})")
+        mod += matching_mods[0]
+    return mod
+
+
+def delete_widget(widget):
+    if widget.layout is not None:
+        clear_layout(widget.layout)
+        widget.layout = None
+    widget.deleteLater()
+
+
+def clear_layout(layout):
+    while layout.count():
+        child = layout.takeAt(0)
+        if child.layout() is not None:
+            clear_layout(child.layout())
+        if child.widget() is not None:
+            if isinstance(child.widget().layout, QLayout):
+                clear_layout(child.widget().layout)
+            child.widget().deleteLater()
+
+
 class Run():
     """
-    Stores all the information needed to recreated or represent a run.
-    Tab-specific information is found in subclasses.
+    Represents a click of the Run button on the Main tab, which can contain
+    multiple Checks, each of which contains a set of Loadables.
     """
 
-    def __init__(self, run_id, event):
+    def __init__(self, checks, run_id, event):
+        self.checks = checks
         self.run_id = run_id
         self.event = event
-
-
-class MapRun(Run):
-
-    def __init__(self, run_id, event, map_id, user_id, num, thresh):
-        super().__init__(run_id, event)
-        self.map_id = map_id
-        self.user_id = user_id
-        self.num = num
-        self.thresh = thresh
-
-class ScreenRun(Run):
-    def __init__(self, run_id, event, user_id, num_top, num_users, thresh):
-        super().__init__(run_id, event)
-        self.user_id = user_id
-        self.num_top = num_top
-        self.num_users = num_users
-        self.thresh = thresh
-
-class LocalRun(Run):
-    def __init__(self, run_id, event, path, map_id, user_id, num, thresh):
-        super().__init__(run_id, event)
-        self.path = path
-        self.map_id = map_id
-        self.user_id = user_id
-        self.num = num
-        self.thresh = thresh
-
-class VerifyRun(Run):
-    def __init__(self, run_id, event, map_id, user_id_1, user_id_2, thresh):
-        super().__init__(run_id, event)
-        self.map_id = map_id
-        self.user_id_1 = user_id_1
-        self.user_id_2 = user_id_2
-        self.thresh = thresh
 
 class Player():
     def __init__(self, data, replay, username, mods, buffer, cursor_color, pos):

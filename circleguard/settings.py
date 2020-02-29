@@ -1,12 +1,10 @@
 import re
 import os
 from pathlib import Path
-from datetime import datetime
+from datetime import datetime, timedelta
 import abc
 
-# pylint: disable=no-name-in-module
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
-# pylint: enable=no-name-in-module
 from packaging import version
 # it's tempting to use QSettings builtin ini file support instead of configparser,
 # but that doesn't let us write comments, which is rather important to explain
@@ -16,56 +14,75 @@ from configparser import ConfigParser
 from utils import resource_path
 from version import __version__
 
+
 COMMENTS = {
     "file": "Please read the following before editing this file.\n"
-            "We do not validate or error check these settings, so if you put an incorrect value or syntax, your application will crash on start.\n"
-            "If this occurs, you can either fix the error, or if you can't find the cause, delete the file entirely.\n"
+            "We do not validate or error check these settings, so if you put an incorrect value or syntax, Circleguard may crash on start.\n"
+            "If this occurs, you can either fix the error in this file, or delete this file entirely.\n"
             "This will cause a fresh config to be created when circleguard is run again.\n"
-            "In places where it is easy to create issues by editing the settings, we will warn you about it.\n"
+            "In places where it is easy to cause issues by editing the settings, we will warn you about it.\n"
             "Some settings use curly braces `{}`, especially the Messages, Strings, and Templates sections.\n"
-            "These denote section to be filled with python's strformat. We do not currently document what options\n"
-            "are available to you for each setting, but you can move or remove these brace settings without fear or causing issues.\n"
+            "These denote settings to be filled with python's strformat. We do not currently document what variables are passed to you through strformat for each setting.\n"
             "The `ts` seen in many of the settings is a datetime.datetime object, representing the timestamp at that time.\n"
             "You may of course use any formatting directive in the settings (instead of the default %X) that datetime supports.\n\n"
             "After you change settings, you must press the \"sync\" button on the settings tab for them to take effect.\n\n"
             "This file may be edited without Circleguard being open. Any changes will take effect the next time you open Circleguard.",
-    "Locations": {
-        "section": "The path to various file or directories used by the program",
-        "cache_dir": "Where we store caches for circlecore (replays) and slider (beatmaps).\n"
-                "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
-        "config_location": "Where the circelguard.cfg file (this very file) resides.",
-        "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
-    },
     "Messages": {
-        "section": "Messages written to the terminal at various times",
-        "message_loading_replays": "Displayed just before we begin loading replays",
-        "message_ratelimited": "Displayed when the api returns a response telling us our key is ratelimited",
-        "message_starting_comparing": "Displayed just before replays are compared for replay stealing",
-        "message_finished_comparing": "Displayed when all replays have finished being compared",
-        "message_cheater_found": "Displayed when a comparison scores below the cheat threshold",
-        "message_no_cheater_found": "Displayed when a comparison scores above the cheat threshold, but below the display threshold"
-    },
-    "Strings": {
-        "section": "Labels seen on widgets",
-        "string_result_text": "Text displayed on a row on the Results tab when a result is added"
+        "section": "Messages written to the terminal (the text box at the bottom of the Main tab) at various times.",
+        "message_loading_info": "Displayed when we load the info for replays. Occurs before loading the replays themselves",
+        "message_loading_replays": "Displayed when we begin loading replays",
+        "message_ratelimited": "Displayed when the api key gets ratelimited",
+        "message_starting_investigation": "Displayed when we start to investigate the loaded replays",
+        "message_finished_investigation": "Displayed when we have finished investigating all replays",
+        "message_steal_found": "Displayed when an investigation for replay stealing has a similarity below Thresholds/steal_max_sim",
+        "message_steal_found_display": "Displayed when an investigation for replay stealing has a similarity below Thresholds/steal_max_sim_display",
+        "message_relax_found": "Displayed when an investigation for relax has a ur below Thresholds/relax_max_ur",
+        "message_relax_found_display": "Displayed when an investigation for relax has a ur below Thresholds/relax_max_ur_display",
+        "message_correction_found": "Displayed when an investigation for aim correction satisfies both Thresholds/correction_max_angle and correction_min_distance",
+        "message_correction_found_display": "Displayed when an investigation for aim correction satisfies both Thresholds/correction_max_angle_display and correction_min_distance_display",
+        "message_correction_snaps": "How to represent a snap for aim correction. The result is passed to message_correction_found and message_correction_found_display as `snaps`"
     },
     "Templates": {
-        "section": "The templates that can be copied from the Results tab for easy reddit reporting",
-        "template_replay_steal": "Template for replay stealing"
+        "section": "The templates that are copied to your clipboard from the Results tab \"copy template\" button.",
+        "template_steal": "Available for copying for replay stealing results",
+        "template_relax": "Available for copying for relax results",
+        "template_correction": "Available for copying for aim correction results"
+    },
+    "Strings": {
+        "section": "Labels seen on various widgets.",
+        "string_result_steal": "Displayed on the Results tab for a replay stealing result",
+        "string_result_relax": "Displayed on the Results tab for a relax result",
+        "string_result_correction": "Displayed on the Results tab for an aim correction result"
+    },
+    "Visualizer": {
+        "section": "Settings regarding the replay visualizer.",
+        "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
+        "visualizer_black_bg": "If True, uses a pure black background for the visualizer. Otherwise uses the background of the current theme",
+        "visualizer_frametime": "If True, displays a frametime graph at the bottom right",
+    },
+    "Locations": {
+        "section": "The paths to various file or directories used by Circleguard.",
+        "cache_dir": "Where we store caches for circlecore (replays) and slider (beatmaps).\n"
+                "If this location doesn't exist, it will be created, including any nonexistent directories in the path",
+        "config_location": "Where the circelguard.cfg file (this very file) resides",
+        "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
     },
     "Thresholds": {
         "section": "Thresholds for when to store results and when to display results for various types of cheats.\n"
-                "Although possible to set _display settings lower than their respective _cheat setting, it is not advised"
+                "Although possible to set _display settings lower than their respective _cheat setting, it is not advised.",
+        "steal_max_sim": "The max similarity for a replay stealing comparison to be counted as cheated",
+        "steal_max_sim_display": "The max similarity for a replay stealing comparison to be printed to the terminal",
+        "relax_max_ur": "The max ur for a replay to be counted as cheated",
+        "relax_max_ur_display": "The max ur for a replay to be printed to the terminal",
+        "correction_max_angle": "For any thee points in a replay, if the angle between them (in degrees) is smaller than this value, the points are counted as a Snap (indicative of aim correction). Note that the three points must also satisfy correction_min_distance",
+        "correction_max_angle_display": "Unused. Aim Correction does not currently have display options",
+        "correction_min_distance": "For any three points A B C in a replay, if the distance between AB or BC is greater than this value, the points are counted as a Snap (indicative of aim correction). Note that the three points must also satisfy correction_max_angle",
+        "correction_min_distance_display": "Unused. Aim Correction does not currently have display options"
     },
     "Appearance": {
-        "dark_theme": "Dark theme skins the application to be a bit easier on the eyes. The gui is developed with a dark theme in mind first, light theme second",
-        "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
-        "visualizer_bg": "If True, uses a pure black background for the visualizer. If False, uses the default background of the current theme",
-        "visualizer_frametime": "If True, displays a frametime graph at the bottom right"
-    },
-    "Experimental": {
-        "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk",
-        "rainbow_accent": "Makes the accent color (defines the color of the highlight around the currently focused widget, among other things) constantly cycle through colors"
+        "section": "How Circleguard looks.",
+        "dark_theme": "If True, uses a dark theme for Circleguard",
+        "required_style": "The css to apply to a widget if it is required to be filled in to complete an action. This is applied if a required field in a Loadable is empty when you click run, for instance"
     },
     "Logs": {
         "log_save": "Whether to save logs to a file (whose path is defined by Locations/log_dir)",
@@ -82,19 +99,180 @@ COMMENTS = {
                 "Debug Window: 2\n"
                 "Terminal and Debug Window: 3"
     },
+    "Caching": {
+        "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
+    },
+    "Experimental": {
+        "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk.",
+        "rainbow_accent": "Makes the accent color (defines the color of the highlight around the currently focused widget, among other things) constantly cycle through colors"
+    },
     "Core": {
-        "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing",
-        "ran": "Whether Circleguard has been run on this system before. If False, all settings will be reset to their default and the wizard will be displayed",
-        "last_version": "The most recent version of Circleguard run on this system. Used to overwrite some settings when they change between versions",
+        "section": "Internal settings. Don't modify unless you've been told to, or know exactly what you're doing.",
+        "ran": "Whether Circleguard has been run on this system before. If False when Circleguard is launched, all settings will be reset to their default and the wizard will be displayed",
+        "last_version": "The most recent version of Circleguard run on this system. Used to overwrite settings when they change between versions",
         "api_key": "The api key to use in circlecore",
         "timestamp_format": "The format of last_update_check",
         "last_update_check": "The last time we checked for a new version. Only checks once every hour",
-        "latest_version": "The latest circleguard version available on github"
-    },
-    "Caching": {
-        "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
+        "latest_version": "The latest Circleguard version available on github"
     }
 }
+
+
+
+
+DEFAULTS = {
+    "Messages": {
+        "message_loading_info":            "[{ts:%X}] Loading replay info",
+        "message_loading_replays":         "[{ts:%X}] Loading {num_unloaded} of {num_total} replays ({num_previously_loaded} replays previously loaded)",
+        "message_ratelimited":             "[{ts:%X}] Ratelimited, waiting for {s} seconds",
+        "message_starting_investigation":  "[{ts:%X}] Running {check_type} check",
+        "message_finished_investigation":  "[{ts:%X}] Done",
+        # it is possible though extremely unusual for the replays to have different map ids. This is good enough
+        # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
+        "message_steal_found":              "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later",
+        "message_steal_found_display":      "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later. Not below threshold",
+        "message_relax_found":              "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "message_relax_found_display":      "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
+        "message_correction_found":         "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
+        "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
+        # have to use a separate message here because we can't loop in ``.format`` strings, can only loop in f strings which only work in a
+        # local context and aren't usable for us. Passed as ``snaps=snaps`` in message_correction_found, once formatted. Each snap formats
+        # this setting and does a ``"\n".join(snap_message)`` to create ``snaps``.
+        "message_correction_snaps":         "Time (ms): {time:.0f}\tAngle (°): {angle:.2f}\tDistance (px): {distance:.2f}"
+    },
+    "Templates": {
+        "template_steal":      ("[osu!std] {r.later_replay.username} | Replay Stealing"
+                                "\n\n"
+                                "Profile: https://osu.ppy.sh/users/{r.later_replay.user_id}"
+                                "\n\n"
+                                "Map: https://osu.ppy.sh/b/{r.later_replay.map_id}"
+                                "\n\n"
+                                "{r.later_replay.username}'s replay (cheated): https://osu.ppy.sh/scores/osu/{r.later_replay.replay_id}/download"
+                                "\n\n"
+                                "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}/download"
+                                "\n\n"
+                                "{r.similarity:.2f} similarity according to [circleguard](https://github.com/circleguard/circleguard) (higher is less similar)"),
+        "template_relax":      ("[osu!std] {r.replay.username} | Relax"
+                                "\n\n"
+                                "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
+                                "\n\n"
+                                "Map: https://osu.ppy.sh/b/{r.replay.map_id}"
+                                "\n\n"
+                                "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
+                                "\n\n"
+                                "ur (ucv): {r.ur:.2f} according to [circleguard](https://github.com/circleguard/circleguard)"),
+        "template_correction": ("[osu!std] {r.replay.username} | Aim Correction"
+                                "\n\n"
+                                "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
+                                "\n\n"
+                                "Map: https://osu.ppy.sh/b/{r.replay.map_id}"
+                                "\n\n"
+                                "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
+                                "\n\n"
+                                "Snaps according to [circleguard](https://github.com/circleguard/circleguard):"
+                                "\n\n"
+                                "{snap_table}")
+    },
+    "Strings": {
+        "string_result_steal":       "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{replay1_mods_short_name} (set later) vs {r.earlier_replay.username} +{replay2_mods_short_name} on map {r1.map_id}",
+        "string_result_relax":       "[{ts:%x %H:%M}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "string_result_correction":  "[{ts:%x %H:%M}] {num_snaps} snaps. {replay.username} +{mods_short_name} on map {replay.map_id}"
+    },
+    "Visualizer": {
+        "visualizer_info": True,
+        "visualizer_black_bg": False,
+        "visualizer_frametime": False,
+        "render_beatmap": True,
+    },
+    "Locations": {
+        "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
+        "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
+        "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
+    },
+    "Thresholds": {
+        "steal_max_sim": 18,
+        "steal_max_sim_display": 25,
+        "relax_max_ur": 50,
+        "relax_max_ur_display": 90,
+        "correction_max_angle": 10,
+        "correction_max_angle_display": 10,
+        "correction_min_distance": 8,
+        "correction_min_distance_display": 8
+    },
+    "Appearance": {
+        "dark_theme": False,
+        "required_style": "QLineEdit { border: 1px solid red; border-radius: 4px; padding: 2px }\n"
+                          "WidgetCombiner { border: 1px solid red; border-radius: 4px; padding: 2px }"
+    },
+    "Experimental": {
+        "rainbow_accent": False
+    },
+    "Logs": {
+        "log_save": True,
+        "log_mode": 1, # ERROR
+        "log_output": 1 # TERMINAL
+    },
+    "Caching": {
+        "caching": True
+    },
+    "Experimental": {
+        "rainbow_accent": False
+    },
+    "Core": {
+        "ran": False,
+        "last_version": "0.0.0", # force run update_settings if the user previously had a version without this key
+        "api_key": "",
+        "timestamp_format": "%H:%M:%S %m.%d.%Y",
+        "last_update_check": "00:00:00 01.01.1970", # aka datetime.min, but formatted
+        "latest_version": __version__
+    }
+}
+
+CHANGED = {
+    "1.1.0": [
+        "message_cheater_found",
+        "message_no_cheater_found",
+        "string_result_text"
+    ],
+    "1.2.0": [
+        "message_loading_replays"
+    ],
+    "1.3.0": [
+        "message_loading_replays",
+        "message_starting_investigation",
+        "message_finished_investigation",
+        "message_steal_found",
+        "message_steal_found_display",
+        "message_relax_found",
+        "message_relax_found_display",
+        "message_correction_found",
+        "message_correction_found_display",
+        "message_correction_snaps",
+        "string_result_steal",
+        "string_result_relax",
+        "string_result_correction",
+        "template_steal",
+        "template_relax",
+        "template_correction",
+        "steal_max_sim",
+        "steal_max_sim_display",
+        "relax_max_ur",
+        "relax_max_ur_display",
+        "correction_max_angle",
+        "correction_max_angle_display",
+        "correction_min_distance",
+        "correction_min_distance_display",
+        "visualizer_black_bg",
+        "visualizer_frametime",
+        "render_beatmap",
+        "required_style",
+        "cache_location",
+        "log_dir",
+        "cache_dir"
+    ]
+}
+
+
 
 class LinkableSetting():
     """
@@ -134,86 +312,7 @@ class LinkableSetting():
         """
         set_setting(self.setting, value)
 
-DEFAULTS = {
-    "Locations": {
-        "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
-        "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
-        "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
-    },
-    "Messages": {
-        "message_loading_replays": "[{ts:%X}] Loading {num_replays} replays on map {map_id}",
-        "message_ratelimited": "[{ts:%X}] Ratelimited, waiting for {s} seconds",
-        "message_starting_comparing": "[{ts:%X}] Comparing Replays",
-        "message_finished_comparing": "[{ts:%X}] Done",
-        # it is possible though extremely unusual for the replays to have different map ids. This is good enough
-        "message_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}, {r.later_replay.username} set later. Extremely similar replays; look at the visualization to investigate further.",
-        "message_no_cheater_found": "[{ts:%X}] {similarity:.1f} similarity. {r1.username} vs {r2.username} on map {r1.map_id}. Replays likely not stolen."
-    },
-    "Strings": {
-        "string_result_text": "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} (set later) vs {r.earlier_replay.username} on map {r1.map_id}",
-    },
-    "Templates": {
-        "template_replay_steal": ("[osu!std] {r.later_replay.username} | Replay Stealing"
-                             "\n\n"
-                             "Profile: https://osu.ppy.sh/users/{r.later_replay.user_id}"
-                             "\n\n"
-                             "Map: https://osu.ppy.sh/b/{r.later_replay.map_id}"
-                             "\n\n"
-                             "{r.later_replay.username}'s replay (cheated): https://osu.ppy.sh/scores/osu/{r.later_replay.replay_id}/download"
-                             "\n\n"
-                             "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}/download"
-                             "\n\n"
-                             "{r.similarity:.2f} similarity according to [circleguard](https://github.com/circleguard/circleguard) (higher is less similar)")
-    },
-    "Thresholds": {
-        "threshold_cheat": 18,
-        "threshold_display": 25
-    },
-    "Appearance": {
-        "dark_theme": False,
-        "visualizer_info": True,
-        "visualizer_bg": False,
-        "visualizer_frametime": False,
-        "render_beatmap": True
-    },
-    "Experimental": {
-        "rainbow_accent": False
-    },
-    "Logs": {
-        "log_save": True,
-        "log_mode": 1, # ERROR
-        "log_output": 1 # TERMINAL
-    },
-    "Core": {
-        "ran": False,
-        "last_version": "0.0.0",  # force run update_settings if the user previously had a version without this key
-        "api_key": "",
-        "timestamp_format": "%H:%M:%S %m.%d.%Y",
-        "last_update_check": "00:00:00 01.01.1970",  # not the best code
-        "latest_version": __version__
-    },
-    "Caching": {
-        "caching": True
-    }
-}
 
-CHANGED = {
-    "1.1.0": [
-        "message_cheater_found",
-        "message_no_cheater_found",
-        "string_result_text"
-    ],
-    "1.2.0": [
-        "message_loading_replays"
-    ],
-    "1.3.0": [
-        "cache_dir",
-        "log_dir",
-        "message_loading_replays",
-        "visualizer_frametime",
-        "render_beatmap"
-    ]
-}
 
 def get_setting(name):
     type_ = TYPES[name][0]
@@ -228,10 +327,14 @@ def get_setting(name):
 
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
-    last_version = version.parse(last_version.base_version)  # remove dev stuff
+    last_version = version.parse(last_version.base_version) # remove dev stuff
     for ver, changed_arr in CHANGED.items():
         if last_version < version.parse(ver):
             for setting in changed_arr:
+                if setting not in TYPES:
+                    # happens if the key is in CHANGED but was deleted in a later version,
+                    # like message_cheater_found.
+                    continue
                 set_setting(setting, DEFAULTS[TYPES[setting][1]][setting])
     set_setting("last_version", __version__)
 
@@ -279,7 +382,12 @@ def overwrite_config():
     config.optionxform = str # preserve case in setting keys
     for section in DEFAULTS.keys():
         config[section] = {}
-    for setting in SETTINGS.allKeys():
+
+    keys = SETTINGS.allKeys()
+    # QSettings#allKeys returns a list of keys sorted alphabetically. We want
+    # to sort per section by an entry's order in the DEFAULTS dict.
+    keys = sorted(keys, key=_index_by_defaults_dict)
+    for setting in keys:
         if setting not in TYPES:
             continue
         section = TYPES[setting][1]
@@ -289,13 +397,47 @@ def overwrite_config():
             config[section][comment] = None
         if section in COMMENTS and setting in COMMENTS[section]:
             comment = "# " + COMMENTS[section][setting].replace("\n", "\n# ") # comment out each newline
-            config[section][comment] = None # slightly hacky but setting a configparser key to None writes it as is, without a trailing = for the val
+            config[section][comment] = None # setting a configparser key to None writes it as is, without a trailing = for the val
 
-        config[TYPES[setting][1]][setting] = str(SETTINGS.value(setting))
+        config[section][setting] = str(SETTINGS.value(setting))
 
     with open(CFG_PATH, "a+") as f:
         config.write(f)
 
+def _index_by_defaults_dict(key):
+    """
+    Returns the index of the key in its respective section in the DEFAULTS dict.
+    Used to sort a QSettings#allKeys call by each key's position in DEFAULTS.
+
+    Examples
+    --------
+    DEFAULTS = {
+        "category1": {
+            "item1": 0
+            "item2": 1
+        }
+    }
+
+    item1 would have an index in category1 of 0, and item2 would have an index
+    of 1, so item1 gets sorted above item2 (ie _index_bu_defaults_dict(item1))
+    returns 0 and _index_bu_defaults_dict(item2) returns 1.
+
+    Notes
+    -----
+    Index relative to keys in other sections is not defined. Neither is the
+    index if a key in the list does not appear in TYPES (ie, we don't have
+    an entry for it in DEFAULTS). This is fine for our purposes, since this is
+    only used in overwrite_config and the latter values get thrown out, and for
+    the former we segregate keys by setting so only position relative to other
+    keys in the section matters.
+    """
+    if key not in TYPES:
+        return 0
+    section = TYPES[key][1]
+    keys = DEFAULTS[section].keys()
+    # https://stackoverflow.com/a/14539017/12164878 for the list cast
+    index = list(keys).index(key)
+    return index
 
 def initialize_dirs():
     d_dirs = DEFAULTS["Locations"].keys()
@@ -304,7 +446,9 @@ def initialize_dirs():
         if not os.path.exists(parent_path):
             os.mkdir(parent_path)
 
-
+# assemble dict of {key: [type, section], ...} since we have nested dicts in DEFAULTS
+# double list comprehension feels sooo backwards to write
+# eg {"cache_location": [<class "str">, "Locations"], ...}
 TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
 SETTINGS = QSettings("Circleguard", "Circleguard")
 # see third bullet here https://doc.qt.io/qt-5/qsettings.html#platform-limitations,
@@ -320,8 +464,7 @@ for d in DEFAULTS.values():
 # create folders if they don't exist
 initialize_dirs()
 
-# assemble dict of {key: [type, section]} since we have nested dicts in DEFAULTS
-# double list comprehension feels sooo backwards to write
+
 CFG_PATH = get_setting("config_location")
 
 # create cfg file if it doesn't exist
