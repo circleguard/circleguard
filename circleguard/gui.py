@@ -135,8 +135,6 @@ class WindowWrapper(LinkableSetting, QMainWindow):
         handler.new_message.connect(self.log)
 
         log_dir = resource_path(get_setting("log_dir"))
-        if not os.path.exists(log_dir): # create dir if nonexistent
-            os.makedirs(log_dir)
         log_file = os.path.join(log_dir, "circleguard.log")
         self.file_handler = RotatingFileHandler(log_file, maxBytes=10**6, backupCount=3) # 1 mb max file size
         self.file_handler.setFormatter(formatter)

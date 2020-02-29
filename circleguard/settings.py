@@ -447,9 +447,10 @@ def _index_by_defaults_dict(key):
     return index
 
 def initialize_dirs():
-    d_dirs = DEFAULTS["Locations"].keys()
-    for d_dir in d_dirs:
-        parent_path = Path(get_setting(d_dir)).parent
+    dirs = DEFAULTS["Locations"].keys()
+    for dir_ in dirs:
+        path = Path(get_setting(dir_))
+        parent_path = path if path.is_dir else path.parent
         if not os.path.exists(parent_path):
             os.mkdir(parent_path)
 
