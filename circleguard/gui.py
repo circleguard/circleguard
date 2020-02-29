@@ -145,6 +145,7 @@ class WindowWrapper(LinkableSetting, QMainWindow):
         logging.getLogger("ossapi").addHandler(self.file_handler)
         logging.getLogger(__name__).addHandler(handler)
         logging.getLogger(__name__).addHandler(self.file_handler)
+        self.on_setting_changed(get_setting("log_save")) # manually disable logging if it wasn't checked when we started
 
         self.thread = threading.Thread(target=self._change_label_update)
         self.thread.start()
