@@ -606,14 +606,22 @@ class MainTab(QFrame):
                     if type(loadableW) is MapW:
                         # use placeholder text (1-50) if the user inputted span is empty
                         span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
+                        if span == "all":
+                            span = "1-100"
                         loadable = Map(int(loadableW.map_id_input.field.text()), span=span,
                                              mods=parse_mod_string(loadableW.mods_input.field.text()))
                     if type(loadableW) is UserW:
-                        loadable = User(int(loadableW.user_id_input.field.text()), span=loadableW.span_input.field.text(),
+                        span=loadableW.span_input.field.text()
+                        if span == "all":
+                            span = "1-100"
+                        loadable = User(int(loadableW.user_id_input.field.text()), span=span,
                                              mods=parse_mod_string(loadableW.mods_input.field.text()))
                     if type(loadableW) is MapUserW:
+                        span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
+                        if span == "all":
+                            span = "1-100"
                         loadable = MapUser(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                           span=loadableW.span_input.field.text())
+                                           span=span)
                     loadableW_id_to_loadable[loadableW.loadable_id] = loadable
                 except InvalidModException as e:
                     self.write_to_terminal_signal.emit(str(e))

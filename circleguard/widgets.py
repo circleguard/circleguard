@@ -599,7 +599,8 @@ class LoadableW(QFrame):
         """
         all_filled = True
         for input_widget in self.required_input_widgets:
-            filled = input_widget.field.text() != ""
+            # don't count inputs with defaults as empty
+            filled = input_widget.field.text() != "" or input_widget.field.placeholderText() != ""
             if not filled:
                 input_widget.show_required()
                 all_filled = False
@@ -652,16 +653,6 @@ class MapW(LoadableW):
         self.layout.addWidget(self.span_input, 2, 0, 1, 8)
         self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
 
-    def check_required_fields(self):
-        all_filled = True
-        for input_widget in self.required_input_widgets:
-            # don't count span_input as empty when it has placeholder text
-            filled = input_widget.field.text() != "" or input_widget.field.placeholderText() != ""
-            if not filled:
-                input_widget.show_required()
-                all_filled = False
-        return all_filled
-
 class UserW(LoadableW):
     def __init__(self):
 
@@ -681,6 +672,7 @@ class MapUserW(LoadableW):
         self.map_id_input = InputWidget("Map id", "", "id")
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
+        self.span_input.field.setPlaceholderText("all")
 
         super().__init__("All Map Replays by User", [self.map_id_input, self.user_id_input, self.span_input])
 
