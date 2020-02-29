@@ -325,9 +325,6 @@ class LoglevelWidget(QFrame):
         self.level_combobox.setCurrentIndex(get_setting("log_mode"))
         self.level_combobox.currentIndexChanged.connect(partial(set_setting, "log_mode"))
 
-        self.save_option.box.setChecked(get_setting("log_save"))
-        self.save_option.box.stateChanged.connect(partial(set_setting, "log_save"))
-
         self.output_combobox.setCurrentIndex(get_setting("log_output"))
         self.output_combobox.currentIndexChanged.connect(partial(set_setting, "log_output"))
 
