@@ -97,7 +97,8 @@ COMMENTS = {
                 "Nowhere: 0\n"
                 "Terminal: 1\n"
                 "Debug Window: 2\n"
-                "Terminal and Debug Window: 3"
+                "Terminal and Debug Window: 3",
+        "log_format": "What format to use for logging"
     },
     "Caching": {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
@@ -210,7 +211,8 @@ DEFAULTS = {
     "Logs": {
         "log_save": True,
         "log_mode": 1, # ERROR
-        "log_output": 1 # TERMINAL
+        "log_output": 1, # TERMINAL
+        "log_format": "[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)"
     },
     "Caching": {
         "caching": True
@@ -222,13 +224,17 @@ DEFAULTS = {
         "ran": False,
         "last_version": "0.0.0", # force run update_settings if the user previously had a version without this key
         "api_key": "",
-        "timestamp_format": "%H:%M:%S %m.%d.%Y",
-        "last_update_check": "00:00:00 01.01.1970", # aka datetime.min, but formatted
+        "timestamp_format": "%Y/%m/%d %H:%M:%S",
+        "last_update_check": "1970/01/01 00:00:00", # aka datetime.min, but formatted
         "latest_version": __version__
     }
 }
 
 CHANGED = {
+    "2.0.0": [
+        "timestamp_format",
+        "last_update_check"
+    ],
     "1.1.0": [
         "message_cheater_found",
         "message_no_cheater_found",
@@ -311,6 +317,7 @@ class LinkableSetting():
         and our internal settings need to be updated to reflect that.
         """
         set_setting(self.setting, value)
+
 
 
 
@@ -440,9 +447,10 @@ def _index_by_defaults_dict(key):
     return index
 
 def initialize_dirs():
-    d_dirs = DEFAULTS["Locations"].keys()
-    for d_dir in d_dirs:
-        parent_path = Path(get_setting(d_dir)).parent
+    dirs = DEFAULTS["Locations"].keys()
+    for dir_ in dirs:
+        path = Path(get_setting(dir_))
+        parent_path = path if path.is_dir else path.parent
         if not os.path.exists(parent_path):
             os.mkdir(parent_path)
 

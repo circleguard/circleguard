@@ -5,6 +5,7 @@ from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
+from logging.handlers import RotatingFileHandler
 import colorsys
 import traceback
 import threading
@@ -37,7 +38,7 @@ from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombine
                      ReplayMapW, ReplayPathW, MapW, UserW, MapUserW, StealCheckW, RelaxCheckW,
                      CorrectionCheckW)
 
-from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
+from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting
 from visualizer import VisualizerWindow
 import wizard
 from version import __version__
@@ -48,23 +49,11 @@ log = logging.getLogger(__name__)
 # save old excepthook
 sys._excepthook = sys.excepthook
 
-def write_log(message):
-    log_dir = resource_path(get_setting("log_dir"))
-    if not os.path.exists(log_dir): # create dir if nonexistent
-        os.makedirs(log_dir)
-    directory = os.path.join(log_dir, "circleguard.log")
-    with open(directory, 'a+') as f: # append so it creates a file if it doesn't exist
-        f.seek(0)
-        data = f.read().splitlines(True)
-    data.append(message+"\n")
-    with open(directory, 'w+') as f:
-        f.writelines(data[-1000:]) # keep file at 1000 lines
-
 # this allows us to log any and all exceptions thrown to a log file -
 # pyqt likes to eat exceptions and quit silently
 def my_excepthook(exctype, value, tb):
     # call original excepthook before ours
-    write_log("sys.excepthook error\n"
+    log.exception("sys.excepthook error\n"
               "Type: " + str(value) + "\n"
               "Value: " + str(value) + "\n"
               "Traceback: " + "".join(traceback.format_tb(tb)) + '\n')
@@ -102,9 +91,10 @@ class Handler(QObject, logging.Handler):
         self.new_message.emit(message)
 
 
-class WindowWrapper(QMainWindow):
+class WindowWrapper(LinkableSetting, QMainWindow):
     def __init__(self, clipboard):
-        super().__init__()
+        QMainWindow.__init__(self)
+        LinkableSetting.__init__(self, "log_save")
 
         self.clipboard = clipboard
         self.progressbar = QProgressBar()
@@ -139,16 +129,33 @@ class WindowWrapper(QMainWindow):
         self.start_timer()
         self.debug_window = None
 
-        self.handler = Handler()
-        logging.getLogger("circleguard").addHandler(self.handler)
-        logging.getLogger("ossapi").addHandler(self.handler)
-        logging.getLogger(__name__).addHandler(self.handler)
-        formatter = logging.Formatter("[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)", datefmt="%Y/%m/%d %H:%M:%S")
-        self.handler.setFormatter(formatter)
-        self.handler.new_message.connect(self.log)
+        formatter = logging.Formatter(get_setting("log_format"), datefmt=get_setting("timestamp_format"))
+        handler = Handler()
+        handler.setFormatter(formatter)
+        handler.new_message.connect(self.log)
+
+        log_dir = resource_path(get_setting("log_dir"))
+        log_file = os.path.join(log_dir, "circleguard.log")
+        self.file_handler = RotatingFileHandler(log_file, maxBytes=10**6, backupCount=3) # 1 mb max file size
+        self.file_handler.setFormatter(formatter)
+
+        logging.getLogger("circleguard").addHandler(handler)
+        logging.getLogger("circleguard").addHandler(self.file_handler)
+        logging.getLogger("ossapi").addHandler(handler)
+        logging.getLogger("ossapi").addHandler(self.file_handler)
+        logging.getLogger(__name__).addHandler(handler)
+        logging.getLogger(__name__).addHandler(self.file_handler)
+        self.on_setting_changed(get_setting("log_save")) # manually disable logging if it wasn't checked when we started
 
         self.thread = threading.Thread(target=self._change_label_update)
         self.thread.start()
+
+    def on_setting_changed(self, new_value):
+        log_save = new_value
+        if not log_save:
+            self.file_handler.setLevel(51) # same as disabling the handler (CRITICAL=50)
+        else:
+            self.file_handler.setLevel(logging.NOTSET) # same as default (passes all records to the attached logger)
 
     def tab_right(self):
         tabs = self.main_window.tabs
@@ -181,9 +188,6 @@ class WindowWrapper(QMainWindow):
         """
         Message is the string message sent to the io stream
         """
-
-        if get_setting("log_save"):
-            write_log(message)
 
         # TERMINAL / BOTH
         if get_setting("log_output") in [1, 3]:
