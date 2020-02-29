@@ -597,8 +597,8 @@ class LoadableW(QFrame):
         a red border around them (see InputWidget#show_required) and return
         False. Otherwise, return True.
         """
+        all_filled = True
         for input_widget in self.required_input_widgets:
-            all_filled = True
             filled = input_widget.field.text() != ""
             if not filled:
                 input_widget.show_required()
@@ -630,8 +630,8 @@ class ReplayPathW(LoadableW):
         self.layout.addWidget(self.path_input, 1, 0, 1, 8)
 
     def check_required_fields(self):
+        all_filled = True
         for input_widget in self.required_input_widgets:
-            all_filled = True
             filled = input_widget.changed
             if not filled:
                 input_widget.show_required()
@@ -653,8 +653,8 @@ class MapW(LoadableW):
         self.layout.addWidget(self.mods_input, 3, 0, 1, 8)
 
     def check_required_fields(self):
+        all_filled = True
         for input_widget in self.required_input_widgets:
-            all_filled = True
             # don't count span_input as empty when it has placeholder text
             filled = input_widget.field.text() != "" or input_widget.field.placeholderText() != ""
             if not filled:
