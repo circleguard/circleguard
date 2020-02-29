@@ -316,7 +316,7 @@ class LinkableSetting():
         Called when our setting is changed from the gui,
         and our internal settings need to be updated to reflect that.
         """
-        self.setting = value
+        set_setting(self.setting, value)
 
 
 
