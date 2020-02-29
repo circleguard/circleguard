@@ -38,7 +38,7 @@ from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombine
                      ReplayMapW, ReplayPathW, MapW, UserW, MapUserW, StealCheckW, RelaxCheckW,
                      CorrectionCheckW)
 
-from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
+from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting
 from visualizer import VisualizerWindow
 import wizard
 from version import __version__
@@ -91,9 +91,10 @@ class Handler(QObject, logging.Handler):
         self.new_message.emit(message)
 
 
-class WindowWrapper(QMainWindow):
+class WindowWrapper(LinkableSetting, QMainWindow):
     def __init__(self, clipboard):
-        super().__init__()
+        QMainWindow.__init__(self)
+        LinkableSetting.__init__(self, "log_save")
 
         self.clipboard = clipboard
         self.progressbar = QProgressBar()
@@ -128,16 +129,34 @@ class WindowWrapper(QMainWindow):
         self.start_timer()
         self.debug_window = None
 
-        self.handler = Handler()
-        logging.getLogger("circleguard").addHandler(self.handler)
-        logging.getLogger("ossapi").addHandler(self.handler)
-        logging.getLogger(__name__).addHandler(self.handler)
         formatter = logging.Formatter(get_setting("log_format"), datefmt=get_setting("timestamp_format"))
-        self.handler.setFormatter(formatter)
-        self.handler.new_message.connect(self.log)
+        handler = Handler()
+        handler.setFormatter(formatter)
+        handler.new_message.connect(self.log)
+
+        log_dir = resource_path(get_setting("log_dir"))
+        if not os.path.exists(log_dir): # create dir if nonexistent
+            os.makedirs(log_dir)
+        log_file = os.path.join(log_dir, "circleguard.log")
+        self.file_handler = RotatingFileHandler(log_file, maxBytes=10**6, backupCount=3) # 1 mb max file size
+        self.file_handler.setFormatter(formatter)
+
+        logging.getLogger("circleguard").addHandler(handler)
+        logging.getLogger("circleguard").addHandler(self.file_handler)
+        logging.getLogger("ossapi").addHandler(handler)
+        logging.getLogger("ossapi").addHandler(self.file_handler)
+        logging.getLogger(__name__).addHandler(handler)
+        logging.getLogger(__name__).addHandler(self.file_handler)
 
         self.thread = threading.Thread(target=self._change_label_update)
         self.thread.start()
+
+    def on_setting_changed(self, new_value):
+        log_save = new_value
+        if not log_save:
+            self.file_handler.setLevel(51) # same as disabling the handler (CRITICAL=50)
+        else:
+            self.file_handler.setLevel(logging.NOTSET) # same as default (passes all records to the attached logger)
 
     def tab_right(self):
         tabs = self.main_window.tabs
@@ -922,7 +941,6 @@ class ScrollableSettingsWidget(QFrame):
 
         self.loglevel = LoglevelWidget("")
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
-        self.loglevel.save_option.box.clicked.connect(self.switch_handlers)
         self.set_loglevel() # set the default loglevel in cg, not just in gui
 
         self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!", "rainbow_accent")
@@ -954,15 +972,6 @@ class ScrollableSettingsWidget(QFrame):
 
         self.setLayout(self.layout)
 
-        log_dir = resource_path(get_setting("log_dir"))
-        if not os.path.exists(log_dir): # create dir if nonexistent
-            os.makedirs(log_dir)
-        log_file = os.path.join(log_dir, "circleguard.log")
-        self.file_handler = RotatingFileHandler(log_file, maxBytes=10**6, backupCount=3)
-        formatter = logging.Formatter(get_setting("log_format"), datefmt=get_setting("timestamp_format"))
-        self.file_handler.setFormatter(formatter)
-        self.switch_handlers()
-
         self.cache_location.switch_enabled(get_setting("caching"))
         # we never actually set the theme to dark anywhere
         # (even if the setting is true), it should really be
@@ -972,15 +981,6 @@ class ScrollableSettingsWidget(QFrame):
     def set_loglevel(self):
         for logger in logging.root.manager.loggerDict:
             logging.getLogger(logger).setLevel(self.loglevel.level_combobox.currentData())
-
-    def switch_handlers(self):
-        handler_added = self.file_handler in logging.getLogger("circleguard").handlers
-        if get_setting("log_save") and not handler_added:
-            for logger in logging.root.manager.loggerDict:
-                logging.getLogger(logger).addHandler(self.file_handler)
-        elif not get_setting("log_save") and handler_added:
-            for logger in logging.root.manager.loggerDict:
-                logging.getLogger(logger).removeHandler(self.file_handler)
 
     def next_color(self):
         (r, g, b) = colorsys.hsv_to_rgb(self._rainbow_counter, 1.0, 1.0)
