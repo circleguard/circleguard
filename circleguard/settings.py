@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 from datetime import datetime, timedelta
 import abc
+import json
 
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
 from packaging import version
@@ -59,6 +60,8 @@ COMMENTS = {
         "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
         "visualizer_black_bg": "If True, uses a pure black background for the visualizer. Otherwise uses the background of the current theme",
         "visualizer_frametime": "If True, displays a frametime graph at the bottom right",
+        "default_speed": "The speed the visualizer defaults to when visualizing a new replay",
+        "speed_options": "The speed options available to change to in the visualizer. The value of Visualizer/default_speed must appear in this list"
     },
     "Locations": {
         "section": "The paths to various file or directories used by Circleguard.",
@@ -184,6 +187,9 @@ DEFAULTS = {
         "visualizer_black_bg": False,
         "visualizer_frametime": False,
         "render_beatmap": True,
+        "default_speed": float(1),  # so type() returns float, since we want to allow float values, not just int
+        "speed_options": [0.01, 0.75, 1.0, 1.5, 10]
+
     },
     "Locations": {
         "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
@@ -325,11 +331,16 @@ def get_setting(name):
     type_ = TYPES[name][0]
     val = SETTINGS.value(name)
     # windows registry keys doesnt properly preserve types, so convert "false"
-    # keys to a true False value instead of bool("false") which would return True.
-    # second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
+    # keys to a True/False value instead of bool("false") which would return True.
+    # see second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
     if type_ is bool:
         return False if val in ["false", "False"] else bool(val)
-    v = type_(SETTINGS.value(name))
+    # val is eg. ['0.10', '1.00', '1.25', '1.50', '2.00'] so convert it to a list
+    # of floats, not strings
+    if type_ is list:
+        val = [float(x) for x in val]
+        return val
+    v = type_(val)
     return v
 
 def overwrite_outdated_settings():
@@ -359,6 +370,11 @@ def overwrite_with_config_settings():
                 val = config.getboolean(section, k)
             elif type_ is int:
                 val = config.getint(section, k)
+            elif type_ is float:
+                val = config.getfloat(section, k)
+            elif type_ is list:
+                # config.getlist doesn't exist
+                val = json.loads(config.get(section, k))
             else:
                 val = config.get(section, k)
             set_setting(k, val)
@@ -368,7 +384,7 @@ def reset_defaults():
     SETTINGS.clear()
     for d in DEFAULTS.values():
         for key,value in d.items():
-            SETTINGS.setValue(key, value)
+            set_setting(key, value)
     SETTINGS.sync()
 
 def set_setting(name, value):
@@ -405,8 +421,8 @@ def overwrite_config():
         if section in COMMENTS and setting in COMMENTS[section]:
             comment = "# " + COMMENTS[section][setting].replace("\n", "\n# ") # comment out each newline
             config[section][comment] = None # setting a configparser key to None writes it as is, without a trailing = for the val
-
-        config[section][setting] = str(SETTINGS.value(setting))
+        
+        config[section][setting] = str(get_setting(setting))
 
     with open(CFG_PATH, "a+") as f:
         config.write(f)
@@ -467,7 +483,7 @@ SETTINGS.setFallbacksEnabled(False)
 for d in DEFAULTS.values():
     for key,value in d.items():
         if not SETTINGS.contains(key):
-            SETTINGS.setValue(key, value)
+            set_setting(key, value)
 
 # create folders if they don't exist
 initialize_dirs()
