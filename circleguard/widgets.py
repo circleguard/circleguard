@@ -780,11 +780,11 @@ class SliderBoxSetting(LinkableSetting, QFrame):
         self.slider = slider
 
         spinbox = SpinBox(self)
-        spinbox.setValue(self.setting_value)
-        spinbox.setAlignment(Qt.AlignCenter)
         spinbox.setRange(0, max_)
         spinbox.setSingleStep(1)
         spinbox.setFixedWidth(100)
+        spinbox.setValue(self.setting_value)
+        spinbox.setAlignment(Qt.AlignCenter)
         self.spinbox = spinbox
         self.combined = WidgetCombiner(slider, spinbox)
 
