@@ -201,8 +201,8 @@ DEFAULTS = {
     },
     "Appearance": {
         "dark_theme": False,
-        "required_style": "QLineEdit { border: 1px solid red }\n"
-                          "WidgetCombiner { border: 1px solid red }"
+        "required_style": "QLineEdit { border: 1px solid red; border-radius: 4px; padding: 2px  }\n"
+                          "WidgetCombiner { border: 1px solid red; border-radius: 4px; padding: 2px  }"
     },
     "Experimental": {
         "rainbow_accent": False
