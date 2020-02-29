@@ -258,9 +258,9 @@ class _Renderer(QFrame):
                 self.painter.setBrush(QBrush(p.color()))
                 if len(player.buffer) > 0:  # skips empty buffers
                     self.painter.setOpacity(1 if Keys.M1 in Keys(int(player.buffer[-1][3])) else 0.3)
-                    self.painter.drawRect(5, 27-9 + (11 * i), 10, 10)
+                    self.painter.drawRect(5, 27 - 9 + (11 * i), 10, 10)
                     self.painter.setOpacity(1 if Keys.M2 in Keys(int(player.buffer[-1][3])) else 0.3)
-                    self.painter.drawRect(18, 27-9 + (11 * i), 10, 10)
+                    self.painter.drawRect(18, 27 - 9 + (11 * i), 10, 10)
                     self.painter.setOpacity(1)
                     self.painter.setPen(p)
                     self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods}: {int(player.buffer[-1][1])}, {int(player.buffer[-1][2])}")
@@ -483,11 +483,11 @@ class _Renderer(QFrame):
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), 25))
         self.painter.setPen(_pen)
 
-        loading_bg.moveTo(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2)
-        loading_bg.lineTo(SCREEN_WIDTH/2 - 75 + 150, SCREEN_HEIGHT/2)
+        loading_bg.moveTo(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT / 2)
+        loading_bg.lineTo(SCREEN_WIDTH/2 - 75 + 150, SCREEN_HEIGHT / 2)
 
-        loading_bar.moveTo(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2)
-        loading_bar.lineTo(SCREEN_WIDTH/2 - 75 + percentage * 1.5, SCREEN_HEIGHT/2)
+        loading_bar.moveTo(SCREEN_WIDTH / 2 - 75, SCREEN_HEIGHT / 2)
+        loading_bar.lineTo(SCREEN_WIDTH / 2 - 75 + percentage * 1.5, SCREEN_HEIGHT / 2)
 
         self.painter.drawPath(loading_bg)
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), 255))
@@ -495,7 +495,7 @@ class _Renderer(QFrame):
         self.painter.drawPath(loading_bar)
 
     def draw_loading_screen(self):
-        self.painter.drawText(SCREEN_WIDTH/2 - 75, SCREEN_HEIGHT/2 - 10, f"Calculating Sliders, please wait...")
+        self.painter.drawText(SCREEN_WIDTH / 2 - 75, SCREEN_HEIGHT / 2 - 10, f"Calculating Sliders, please wait...")
         self.draw_progressbar(int((self.sliders_current / self.sliders_total) * 100))
 
     def process_sliders(self):
@@ -504,7 +504,7 @@ class _Renderer(QFrame):
             self.sliders_current = index
             current_hitobj = self.beatmap.hit_objects[index]
             if isinstance(current_hitobj, Slider):
-                steps = max(1, int((self.beatmap.hit_objects[index].end_time - self.beatmap.hit_objects[index].time).total_seconds() * 50))+1
+                steps = max(1, int((self.beatmap.hit_objects[index].end_time - self.beatmap.hit_objects[index].time).total_seconds() * 50)) + 1
                 if isinstance(current_hitobj.curve, Bezier):
                     self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.at(np.array([i / steps for i in range(steps)]))
                 elif isinstance(current_hitobj.curve, MultiBezier):
@@ -541,7 +541,7 @@ class _Renderer(QFrame):
             self.seek_to(min(next_frame_times))
         else:
             previous_frame_times = [self.players[x].data[self.players[x].pos - 1][0] for x in range(len(self.players))]
-            self.seek_to(min(previous_frame_times)-1)
+            self.seek_to(min(previous_frame_times) - 1)
 
     def seek_to(self, position):
         """
