@@ -19,7 +19,7 @@ class WizardPage(QWizardPage):
         self.setPixmap(QWizard.LogoPixmap, image)
 
 
-class WelcomeWindow(QWizard):
+class CircleguardWizard(QWizard):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Wizard")
