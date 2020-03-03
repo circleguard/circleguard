@@ -1,7 +1,7 @@
 from functools import partial
 
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPixmap, QIcon
+from PyQt5.QtGui import QPixmap, QIcon, QFont
 from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
 
 from settings import get_setting, set_setting
@@ -53,7 +53,7 @@ class IntroPage(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Introduction")
-        label = QLabel("<p>Circleguard is an all-in-one tool for catching cheaters. It is actively maintained at "
+        label = WizardLabel("<p>Circleguard is an all-in-one tool for catching cheaters. It is actively maintained at "
                        "<a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a>.</p>"
                        "<p>Circleguard is developed by:"
                        "<ul>"
@@ -62,11 +62,6 @@ class IntroPage(WizardPage):
                        "<li> samuelhklumpers </li>"
                        "</ul></p>"
                        "Thanks to <a href=\"https://accalixgfx.com/index.php\">Accalix</a> for creating our logo.")
-
-        label.setTextFormat(Qt.RichText)
-        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        label.setOpenExternalLinks(True)
-        label.setWordWrap(True)
 
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -77,14 +72,10 @@ class SetupPage(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Settings")
-        dark_label = QLabel("Choose the look and feel of the application")
-        dark_label.setWordWrap(True)
-
+        dark_label = WizardLabel("Choose the look and feel of the application")
         self.darkmode = OptionWidget("Dark mode", "", "dark_theme")
 
-        cache_label = QLabel("Caching reduces downloading time by storing replays when they are first downloaded")
-        cache_label.setWordWrap(True)
-
+        cache_label = WizardLabel("Caching reduces downloading time by storing replays when they are first downloaded")
         self.caching = OptionWidget("Caching", "", "caching")
 
         layout = QVBoxLayout()
@@ -99,19 +90,13 @@ class ApiKeyPage(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("API Key")
-        label = QLabel(self)
-        label.setText("<p>Circleguard needs your api key to make requests and download replays. "
+        label = WizardLabel("<p>Circleguard needs your api key to make requests and download replays. "
                       "Don't worry, this takes less than a minute to complete. </p>"
                       "<p>Go to <a href=\"https://osu.ppy.sh/p/api\">https://osu.ppy.sh/p/api</a>, enter <b>Circleguard</b> "
                       "as your application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
                       "as your application url. Paste the api key you receive into the box below.</p>"
                       "<p>Your api key will be stored locally, and is never sent anywhere but osu! servers.</p>"
                       "<p>If you skip this step, you will not be able to run any of the checks.</p>")
-
-        label.setTextFormat(Qt.RichText)
-        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        label.setOpenExternalLinks(True)
-        label.setWordWrap(True)
 
         apikey_widget = LineEditSetting("Api Key", "", "normal", "api_key")
 
@@ -125,7 +110,7 @@ class TutorialPage1(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("A Small Tutorial")
-        label = QLabel("<p>If you're an experienced reporter, you can skip this page."
+        label = WizardLabel("<p>If you're an experienced reporter, you can skip this page."
                        "<p>When using Circleguard, you will be asked to enter Beatmap Ids and User Ids. "
                        "To find a User Id, go to their profile page and copy the numbers that appear in the url. "
                        "For instance, cookiezi (<a href=\"https://osu.ppy.sh/users/124493\">https://osu.ppy.sh/users/124493</a>) "
@@ -136,11 +121,6 @@ class TutorialPage1(WizardPage):
                        "https://osu.ppy.sh/beatmapsets/39804#osu/129891</a> has a Beatmapset Id of 39804 and a Beatmap Id of "
                        "129891. Use the Beatmap Id (129891) to check this map.")
 
-        label.setTextFormat(Qt.RichText)
-        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        label.setOpenExternalLinks(True)
-        label.setWordWrap(True)
-
         layout = QVBoxLayout()
         layout.addWidget(label)
         self.setLayout(layout)
@@ -149,7 +129,7 @@ class TutorialPage2(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("A Small Tutorial (cont.)")
-        label = QLabel("<p>When you run a check on a map, user, osr files, etc. the results can "
+        label = WizardLabel("<p>When you run a check on a map, user, osr files, etc. the results can "
                        "be confusing to read at first.</p>"
                        "<p>Circleguard compares replays in sets of two at a time. The similarity "
                        "reported to you is, roughly speaking, the average pixel distance between the two cursors. "
@@ -160,11 +140,6 @@ class TutorialPage2(WizardPage):
                        "similarity under 25 by default. This is to give you suspicious replays that you may want to investiage further. "
                        "This threshold is, of course, adjustable in the settings.")
 
-        label.setTextFormat(Qt.RichText)
-        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        label.setOpenExternalLinks(True)
-        label.setWordWrap(True)
-
         layout = QVBoxLayout()
         layout.addWidget(label)
         self.setLayout(layout)
@@ -174,7 +149,7 @@ class TutorialPage3(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Configuring Settings")
-        label = QLabel("<p>Many aspects of circleguard are configurable.</p>"
+        label = WizardLabel("<p>Many aspects of circleguard are configurable.</p>"
                        "<p>Common settings can be accessed through the Settings tab. "
                        "All settings are located in a config file, including less common settings or "
                        "settings that would take too much space to display in the application. "
@@ -182,11 +157,6 @@ class TutorialPage3(WizardPage):
                        "<p>Settings contained in the config file but not in the settings tab include "
                        "the content of the messages printed to the terminal, the contents of templates, "
                        "and various file locations. More information can be found in the comments of the config file.</p>")
-
-        label.setTextFormat(Qt.RichText)
-        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        label.setOpenExternalLinks(True)
-        label.setWordWrap(True)
 
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -206,11 +176,20 @@ class ConclusionPage(WizardPage):
                        "</ul>"
                        "<p>Thanks for helping to clean up osu!</p>")
 
-        label.setTextFormat(Qt.RichText)
-        label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        label.setOpenExternalLinks(True)
-        label.setWordWrap(True)
-
         layout = QVBoxLayout()
         layout.addWidget(label)
         self.setLayout(layout)
+
+class WizardLabel(QLabel):
+    """
+    A label with larger font size for easier reading.
+    """
+    def __init__(self, text):
+        super().__init__(text)
+        self.setTextFormat(Qt.RichText)
+        self.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.setOpenExternalLinks(True)
+        self.setWordWrap(True)
+        font = QFont()
+        font.setPointSize(15)
+        self.setFont(font)
