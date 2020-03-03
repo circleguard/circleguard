@@ -41,7 +41,7 @@ from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombine
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting
 from visualizer import VisualizerWindow
-import wizard
+from wizard import CircleguardWizard
 from version import __version__
 
 
@@ -949,7 +949,7 @@ class ScrollableSettingsWidget(QFrame):
         self._rainbow_counter = 0
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_color)
-        self.welcome = wizard.WelcomeWindow()
+        self.wizard = CircleguardWizard()
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
@@ -977,8 +977,8 @@ class ScrollableSettingsWidget(QFrame):
         self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!", "rainbow_accent")
         self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
-        self.wizard = ButtonWidget("Run Wizard", "Run", "")
-        self.wizard.button.clicked.connect(self.show_wizard)
+        self.run_wizard = ButtonWidget("Run Wizard", "Run", "")
+        self.run_wizard.button.clicked.connect(self.show_wizard)
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(Separator("General"))
@@ -998,7 +998,7 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(ResetSettings())
         self.layout.addWidget(Separator("Dev"))
         self.layout.addWidget(self.rainbow)
-        self.layout.addWidget(self.wizard)
+        self.layout.addWidget(self.run_wizard)
         self.layout.addWidget(BeatmapTest())
 
         self.setLayout(self.layout)
@@ -1030,7 +1030,7 @@ class ScrollableSettingsWidget(QFrame):
             switch_theme(get_setting("dark_theme"))
 
     def show_wizard(self):
-        self.welcome.show()
+        self.wizard.show()
 
     def reload_theme(self):
         switch_theme(get_setting("dark_theme"))
@@ -1238,7 +1238,7 @@ if __name__ == "__main__":
     WINDOW.resize(900, 750)
     WINDOW.show()
     if not get_setting("ran"):
-        welcome = wizard.WelcomeWindow()
+        welcome = CircleguardWizard()
         welcome.show()
         set_setting("ran", True)
 
