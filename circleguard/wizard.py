@@ -10,8 +10,8 @@ from utils import resource_path
 
 
 class WizardPage(QWizardPage):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.setSubTitle(" ")
         banner = QPixmap(str(resource_path("resources/banner.png")))
         self.setPixmap(QWizard.BannerPixmap, banner)
@@ -21,7 +21,7 @@ class WizardPage(QWizardPage):
 
 class WelcomeWindow(QWizard):
     def __init__(self):
-        super(WelcomeWindow, self).__init__()
+        super().__init__()
         self.setWindowTitle("Wizard")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.SetupPage = SetupPage()
@@ -48,8 +48,8 @@ class WelcomeWindow(QWizard):
 
 
 class IntroPage(WizardPage):
-    def __init__(self, parent=None):
-        super(IntroPage, self).__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.setTitle("Introduction")
         label = QLabel("<p>Circleguard is an all-in-one tool for catching cheaters. It is actively maintained at "
                        "<a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a>.</p>"
@@ -72,8 +72,8 @@ class IntroPage(WizardPage):
 
 
 class SetupPage(WizardPage):
-    def __init__(self, parent=None):
-        super(SetupPage, self).__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.setTitle("Settings")
         dark_label = QLabel("Choose the look and feel of the application")
         dark_label.setWordWrap(True)
@@ -94,8 +94,8 @@ class SetupPage(WizardPage):
 
 
 class ApiKeyPage(WizardPage):
-    def __init__(self, parent=None):
-        super(ApiKeyPage, self).__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.setTitle("API Key")
         label = QLabel(self)
         label.setText("<p>Circleguard needs your api key to make requests and download replays. "
@@ -120,8 +120,8 @@ class ApiKeyPage(WizardPage):
 
 
 class TutorialPage1(WizardPage):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.setTitle("A Small Tutorial")
         label = QLabel("<p>If you're an experienced reporter, you can skip this page."
                        "<p>When using Circleguard, you will be asked to enter Beatmap Ids and User Ids. "
@@ -144,8 +144,8 @@ class TutorialPage1(WizardPage):
         self.setLayout(layout)
 
 class TutorialPage2(WizardPage):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.setTitle("A Small Tutorial (cont.)")
         label = QLabel("<p>When you run a check on a map, user, osr files, etc. the results can "
                        "be confusing to read at first.</p>"
@@ -169,8 +169,8 @@ class TutorialPage2(WizardPage):
 
 
 class TutorialPage3(WizardPage):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.setTitle("Configuring Settings")
         label = QLabel("<p>Many aspects of circleguard are configurable.</p>"
                        "<p>Common settings can be accessed through the Settings tab. "
@@ -192,8 +192,8 @@ class TutorialPage3(WizardPage):
 
 
 class ConclusionPage(WizardPage):
-    def __init__(self, parent=None):
-        super(ConclusionPage, self).__init__(parent)
+    def __init__(self):
+        super().__init__()
         self.setTitle("<3")
         label = QLabel("<p>If you run into any problems with the gui, have suggestions, or want to contribute, join "
                        " our discord or file an issue on the GitHub! We don't bite, we promise :)</p>"
