@@ -12,6 +12,8 @@ from utils import resource_path
 class WizardPage(QWizardPage):
     def __init__(self):
         super().__init__()
+        # "In ClassicStyle and ModernStyle, using subtitles is necessary to make the header appear"
+        # https://doc.qt.io/qt-5/qwizardpage.html#subTitle-prop
         self.setSubTitle(" ")
         banner = QPixmap(str(resource_path("resources/banner.png")))
         self.setPixmap(QWizard.BannerPixmap, banner)
