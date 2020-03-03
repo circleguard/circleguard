@@ -39,7 +39,7 @@ class CircleguardWizard(QWizard):
         self.setButtonText(QWizard.CancelButton, "Skip")
         self.setWizardStyle(QWizard.ModernStyle)
 
-        self.setFixedSize(525, 400)
+        self.setFixedSize(750, 625) # 1.2 aspect ratio, same as gui
 
     def mousePressEvent(self, event):
         focused = self.focusWidget()
