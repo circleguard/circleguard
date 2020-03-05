@@ -16,7 +16,7 @@ Circleguard is developed and maintained by:
 
 * [tybug](https://github.com/tybug)
 * [samuelhklumpers](https://github.com/samuelhklumpers)
-* [Invisible_Symbol](https://github.com/InvisibleSymbol)
+* [InvisibleSymbol](https://github.com/InvisibleSymbol)
 
 With contributions from:
 
