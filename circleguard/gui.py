@@ -660,7 +660,7 @@ class MainTab(QFrame):
                     d = CorrectionDetect(max_angle, min_distance)
                     check_type = "Aim Correction"
                 if type(checkW) is VisualizerW:
-                    d = Detect(256)  # invalid value so it doesn't try to run any detection
+                    d = Detect(0)  # don't run any detection
                     check_type = "Visualization"
                 # retrieve loadable objects from loadableW ids
                 if isinstance(checkW, StealCheckW):
