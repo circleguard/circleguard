@@ -496,7 +496,7 @@ class CorrectionCheckW(CheckW):
 
 class VisualizerW(CheckW):
     def __init__(self):
-        super().__init__("Visualizer")
+        super().__init__("Visualize")
 
 
 class DragWidget(QFrame):
