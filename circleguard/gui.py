@@ -27,8 +27,9 @@ app.setApplicationName("Circleguard")
 
 from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableException,
                         ReplayMap, ReplayPath, User, Map, Check, MapUser, StealDetect,
-                        RelaxDetect, CorrectionDetect, ReplayStealingResult, RelaxResult, CorrectionResult)
+                        RelaxDetect, CorrectionDetect, ReplayStealingResult, RelaxResult, CorrectionResult, Detect)
 from circleguard import __version__ as cg_version
+from circleguard.loadable import Loadable
 
 from utils import resource_path, run_update_check, Run, parse_mod_string, InvalidModException, delete_widget
 from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombiner,
@@ -36,7 +37,7 @@ from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombine
                      LoglevelWidget, SliderBoxSetting, BeatmapTest, ResultW, LineEditSetting,
                      EntryWidget, RunWidget, ScrollableLoadablesWidget, ScrollableChecksWidget,
                      ReplayMapW, ReplayPathW, MapW, UserW, MapUserW, StealCheckW, RelaxCheckW,
-                     CorrectionCheckW)
+                     CorrectionCheckW, VisualizerW)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting
 from visualizer import VisualizerWindow
@@ -260,11 +261,17 @@ class WindowWrapper(LinkableSetting, QMainWindow):
             template_text = get_setting("template_correction").format(ts=timestamp, r=result, replay=result.replay, snap_table=snap_table,
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
             replays = [result.replay]
+        elif isinstance(result, list) and isinstance(result[0], Loadable):  # a list of loadables
+            label_text = get_setting("string_result_visualization").format(ts=timestamp, replay_amount=len(result), map_id=result[0].map_id)
+            replays = result
 
         result_widget = ResultW(label_text, result, replays)
         # set button signal connections (visualize and copy template to clipboard)
         result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id))
-        result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard, template_text))
+        if template_text:
+            result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard, template_text))
+        else: # hide template button if there is no template
+            result_widget.button_clipboard.hide()
         # remove info text if shown
         if not self.main_window.results_tab.results.info_label.isHidden():
             self.main_window.results_tab.results.info_label.hide()
@@ -347,7 +354,7 @@ class MainTab(QFrame):
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
     LOADABLES_COMBOBOX_REGISTRY = ["Map Replay", "Local Replay", "Map", "User", "All Map Replays by User"]
-    CHECKS_COMBOBOX_REGISTRY = ["Replay Stealing/Remodding", "Relax", "Aim Correction"]
+    CHECKS_COMBOBOX_REGISTRY = ["Replay Stealing/Remodding", "Relax", "Aim Correction", "Visualize"]
 
     def __init__(self):
         super().__init__()
@@ -459,6 +466,8 @@ class MainTab(QFrame):
             w = RelaxCheckW()
         if button_data == "Aim Correction":
             w = CorrectionCheckW()
+        if button_data == "Visualize":
+            w = VisualizerW()
         w.remove_check_signal.connect(self.remove_check)
         self.checks_scrollarea.widget().layout.addWidget(w)
         self.checks.append(w)
@@ -650,6 +659,9 @@ class MainTab(QFrame):
                     min_distance = get_setting("correction_min_distance")
                     d = CorrectionDetect(max_angle, min_distance)
                     check_type = "Aim Correction"
+                if type(checkW) is VisualizerW:
+                    d = Detect(0)  # don't run any detection
+                    check_type = "Visualization"
                 # retrieve loadable objects from loadableW ids
                 if isinstance(checkW, StealCheckW):
                     loadables1 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables1]
@@ -687,15 +699,26 @@ class MainTab(QFrame):
                 # stripes sliding horizontally) to indicate we're processing
                 # the data
                 self.set_progressbar_signal.emit(0)
-                message_starting_investigation = get_setting("message_starting_investigation").format(ts=datetime.now(),
+                setting = "message_starting_investigation_visualization" if type(checkW) is VisualizerW else "message_starting_investigation"
+                message_starting_investigation = get_setting(setting).format(ts=datetime.now(),
                                 num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
                                 check_type=check_type)
                 self.write_to_terminal_signal.emit(message_starting_investigation)
-                self.update_label_signal.emit("Investigating Replays")
-                self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
-                for result in cg.run(c):
-                    _check_event(event)
-                    self.q.put(result)
+                if type(checkW) is VisualizerW:
+                    map_ids = [r.map_id for r in replays]
+                    if len(set(map_ids)) != 1:
+                        self.write_to_terminal_signal.emit(f"Visualizer expected replays from a single map, but got multiple {set(map_ids)}. Please use a different Visualizer Object for each map")
+                        self.update_label_signal.emit("Visualizer Error (Multiple maps)")
+                        self.update_run_status_signal.emit(run.run_id, "Visualizer Error (Multiple maps)")
+                        self.set_progressbar_signal.emit(-1)
+                        sys.exit(0)
+                    self.q.put(replays)
+                else:
+                    self.update_label_signal.emit("Investigating Replays")
+                    self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
+                    for result in cg.run(c):
+                        _check_event(event)
+                        self.q.put(result)
                 self.print_results_signal.emit() # flush self.q
 
             self.set_progressbar_signal.emit(-1) # empty progressbar
@@ -755,11 +778,12 @@ class MainTab(QFrame):
                 # satisfy its display threshold
                 if message:
                     self.write(message)
-                if result.ischeat:
-                    QApplication.beep()
-                    QApplication.alert(self)
-                    # add to Results Tab so it can be played back on demand
-                    self.add_result_signal.emit(result)
+                if not isinstance(result, list): # not a list of loadables
+                    if result.ischeat:
+                        QApplication.beep()
+                        QApplication.alert(self)
+                # add to Results Tab so it can be played back on demand
+                self.add_result_signal.emit(result)
 
         except Empty:
             pass
