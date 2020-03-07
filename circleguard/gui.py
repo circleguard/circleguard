@@ -699,7 +699,8 @@ class MainTab(QFrame):
                 # stripes sliding horizontally) to indicate we're processing
                 # the data
                 self.set_progressbar_signal.emit(0)
-                message_starting_investigation = get_setting("message_starting_investigation").format(ts=datetime.now(),
+                setting = "message_starting_investigation_visualization" if type(checkW) is VisualizerW else "message_starting_investigation"
+                message_starting_investigation = get_setting(setting).format(ts=datetime.now(),
                                 num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
                                 check_type=check_type)
                 self.write_to_terminal_signal.emit(message_starting_investigation)

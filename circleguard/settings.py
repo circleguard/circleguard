@@ -130,6 +130,7 @@ DEFAULTS = {
         "message_loading_replays":         "[{ts:%X}] Loading {num_unloaded} of {num_total} replays ({num_previously_loaded} replays previously loaded)",
         "message_ratelimited":             "[{ts:%X}] Ratelimited, waiting for {s} seconds",
         "message_starting_investigation":  "[{ts:%X}] Running {check_type} check",
+        "message_starting_investigation_visualization":  "[{ts:%X}] Running visualization check, you can visualize from the Results tab when finished",
         "message_finished_investigation":  "[{ts:%X}] Done",
         # it is possible though extremely unusual for the replays to have different map ids. This is good enough
         # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
@@ -422,7 +423,7 @@ def overwrite_config():
         if section in COMMENTS and setting in COMMENTS[section]:
             comment = "# " + COMMENTS[section][setting].replace("\n", "\n# ") # comment out each newline
             config[section][comment] = None # setting a configparser key to None writes it as is, without a trailing = for the val
-        
+
         config[section][setting] = str(get_setting(setting))
 
     with open(CFG_PATH, "a+") as f:
