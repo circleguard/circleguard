@@ -167,7 +167,7 @@ class ConclusionPage(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("<3")
-        label = QLabel("<p>If you run into any problems with the gui, have suggestions, or want to contribute, join "
+        label = WizardLabel("<p>If you run into any problems with the gui, have suggestions, or want to contribute, join "
                        " our discord or file an issue on the GitHub! We don't bite, we promise :)</p>"
                        "<ul>"
                        "<li><a href=\"https://discord.gg/e84qxkQ\">Discord</a></li>"
@@ -190,6 +190,3 @@ class WizardLabel(QLabel):
         self.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.setOpenExternalLinks(True)
         self.setWordWrap(True)
-        font = QFont()
-        font.setPointSize(15)
-        self.setFont(font)
