@@ -66,7 +66,9 @@ class IntroPage(WizardPage):
                 "<li>InvisibleSymbol </li>"
                 "<li>samuelhklumpers </li>"
                 "</ul></p>"
-                "<p>Thanks to <a href=\"https://accalixgfx.com/index.php\">Accalix</a> for creating our logo.<p>")
+                "<p>Thanks to <a href=\"https://accalixgfx.com/index.php\">Accalix</a> for creating our logo.<p>"
+                "<p>If at any point you want to replay this wizard, go to the settings tab and click \"Run Wizard\" "
+                "under the Dev section.")
         layout = QVBoxLayout()
         layout.addWidget(label)
         self.setLayout(layout)
@@ -104,7 +106,7 @@ class ApiKeyPage(WizardPage):
                 "as your application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
                 "as your application url. Paste the api key you receive into the box below.</p>"
                 "<p>Your api key will be stored locally, and is never sent anywhere but osu! servers.</p>"
-                "<p>If you skip this step, you will not be able to use circleguard.</p>")
+                "<p>If you skip this step, you will not be able to use Circleguard.</p>")
 
         apikey_widget = LineEditSetting("Api Key", "", "normal", "api_key")
 
@@ -231,7 +233,7 @@ class TutorialPage6(WizardPage):
                 "and is equivalent to a span of 1-100 in both of those Loadables.</p>"
                 "<p>What is this Loadable good for? Mostly remodding checks. If you want to check if someone's remodding their replays, "
                 "you can create this Loadable, add their User id and the Map id you suspect them of remodding on, and check it for Replay Stealing. "
-                "You might also want to check multiple of a User's replays, not just his top one, on a map for Relax or Aim Correction.</p>")
+                "You might also want to check multiple of a User's replays, not just his top one, on a Map for Relax or Aim Correction.</p>")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
