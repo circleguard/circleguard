@@ -209,7 +209,7 @@ DEFAULTS = {
         "correction_min_distance_display": 8
     },
     "Appearance": {
-        "dark_theme": False,
+        "dark_theme": True,
         "required_style": "QLineEdit { border: 1px solid red; border-radius: 4px; padding: 2px }\n"
                           "WidgetCombiner { border: 1px solid red; border-radius: 4px; padding: 2px }"
     },
