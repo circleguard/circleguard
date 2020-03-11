@@ -37,6 +37,7 @@ class CircleguardWizard(QWizard):
         self.addPage(TutorialPage5())
         self.addPage(TutorialPage6())
         self.addPage(TutorialPage7())
+        self.addPage(TutorialPage8())
         self.addPage(ConclusionPage())
 
         # disable help button
@@ -120,7 +121,8 @@ class TutorialPage1(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Tutorial (ids)")
-        label = WizardLabel("<p>What follows is a short tutorial in using Circleguard. Skip at your own risk!</p>"
+        label = WizardLabel("<p>What follows is a short tutorial in using Circleguard. Feel free to try out the examples "
+                "yourself in the gui as you work your way through the tutorial. Skip at your own risk!</p>"
                 "<p>When using Circleguard, you will be asked to enter Beatmap ids and User ids. "
                 "To find a User id, go to their profile page and copy the numbers that appear in the url. "
                 "For instance, cookiezi (<a href=\"https://osu.ppy.sh/users/124493\">https://osu.ppy.sh/users/124493</a>) "
@@ -241,19 +243,42 @@ class TutorialPage6(WizardPage):
         layout.addWidget(label2)
         self.setLayout(layout)
 
-
 class TutorialPage7(WizardPage):
     def __init__(self):
         super().__init__()
+        self.setTitle("Tutorial (Checks)")
+        label = WizardLabel("<p>Now that you can represent Replays with Loadables, you can start investigating them for cheats. Circleguard "
+                            "supports four different kinds of Checks.</p>")
+        image = QLabel()
+        image.setPixmap(QPixmap(str(resource_path("resources/tutorial/checks_dropdown.png"))).scaledToWidth(500, Qt.SmoothTransformation))
+        label2 = WizardLabel("<p>Each of these should be self explanatory. If you want to check a Loadable for a certain cheat, just drag and "
+                "drop it onto the appropriate Check, then hit run.</p>"
+                "<p>Replay Stealing and Visualize are both different from the others. Replay Stealing has two areas for you to drag Loadables "
+                "onto - if only one of them has any Loadables, each replay will be compared against each other replay. eg, if you "
+                "give a Map with span=\"1-50\" to one area of a Replay Stealing Check, and nothing to the other area, it will compare "
+                "each replay in the top 50 of that map against each other replay in the top 50. However, if you drag a Map Replay to "
+                "the other area of the Check, it will compare just the Replay Map against each of the replays in the top 50. This "
+                "can be useful if you want to check if a specific user stole from a map, without comparing replays that don't involve "
+                "the player you suspect.</p>"
+                "<p>A Visualize Check doesn't perform any sort of analysis on the replays, but instead plays back the replays in a new window, "
+                "simulating osu! gameplay, including the beatmap. This is useful for manual inspection and frame-by-frame visualization.<p>")
+
+        layout = QVBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(image)
+        layout.addWidget(label2)
+        self.setLayout(layout)
+
+
+class TutorialPage8(WizardPage):
+    def __init__(self):
+        super().__init__()
         self.setTitle("Configuring Settings")
-        label = WizardLabel("<p>Many aspects of circleguard are configurable.</p>"
-                "<p>Common settings can be accessed through the Settings tab. "
-                "All settings are located in a config file, including less common settings or "
-                "settings that would take too much space to display in the application. "
-                "You can edit these settings by pressing \"Open\" under \"Edit Settings File\". </p>"
-                "<p>Settings contained in the config file but not in the settings tab include "
-                "the content of the messages printed to the terminal, the contents of templates, "
-                "and various file locations. More information can be found in the comments of the config file.</p>")
+        label = WizardLabel("<p>Thresholds for the different Checks can be changed in the Thresholds tab, and other common settings in "
+                "the Settings tab.</p>"
+                "<p>The full range of settings (of which there are quite a few — you can customize Circleguard heavily!) "
+                "can be accessed by pressing \"Open Settings\" at the top of the Settings tab. Be sure to read the comments in that file "
+                "for instructions on editing the settings!</p>")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -279,7 +304,8 @@ class ConclusionPage(WizardPage):
 
 class WizardLabel(QLabel):
     """
-    A label with larger font size for easier reading.
+    A labvel which enables all the clicky links and html goodness we want.
+    And word wrap.
     """
     def __init__(self, text):
         super().__init__(text)
