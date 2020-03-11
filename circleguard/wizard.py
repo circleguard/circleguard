@@ -304,7 +304,7 @@ class ConclusionPage(WizardPage):
 
 class WizardLabel(QLabel):
     """
-    A labvel which enables all the clicky links and html goodness we want.
+    A label which enables all the clicky links and html goodness we want.
     And word wrap.
     """
     def __init__(self, text):
