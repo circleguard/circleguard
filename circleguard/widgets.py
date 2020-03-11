@@ -305,6 +305,10 @@ class LoglevelWidget(QFrame):
         level_combobox.setInsertPolicy(QComboBox.NoInsert)
         self.level_combobox = level_combobox
 
+        save_option = OptionWidget("Save logs?", "", "log_save", end="")
+        save_option.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
+        self.save_option = save_option
+
         output_combobox = QComboBox(self)
         output_combobox.setFixedWidth(100)
         output_combobox.addItem("NONE")
@@ -314,12 +318,18 @@ class LoglevelWidget(QFrame):
         output_combobox.setInsertPolicy(QComboBox.NoInsert)
         output_combobox.setCurrentIndex(0) # NONE by default
         self.output_combobox = output_combobox
+        self.save_folder = FolderChooser("Log Folder", get_setting("log_dir"))
+        save_option.box.stateChanged.connect(self.save_folder.switch_enabled)
+        self.save_folder.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Fixed)
 
         self.level_combobox.setCurrentIndex(get_setting("log_mode"))
         self.level_combobox.currentIndexChanged.connect(partial(set_setting, "log_mode"))
 
         self.output_combobox.setCurrentIndex(get_setting("log_output"))
         self.output_combobox.currentIndexChanged.connect(partial(set_setting, "log_output"))
+
+        self.save_folder.switch_enabled(get_setting("log_save"))
+        self.save_folder.path_signal.connect(partial(set_setting, "log_dir"))
 
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -329,6 +339,8 @@ class LoglevelWidget(QFrame):
         self.layout.addWidget(output_label, 1, 0, 1, 1)
         self.layout.addItem(SPACER, 1, 1, 1, 1)
         self.layout.addWidget(self.output_combobox, 1, 2, 1, 3, Qt.AlignRight)
+        self.layout.addWidget(save_option, 2, 0, 1, 5)
+        self.layout.addWidget(self.save_folder, 3, 0, 1, 5)
 
         self.setLayout(self.layout)
 
