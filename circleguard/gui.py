@@ -951,6 +951,11 @@ class ScrollableSettingsWidget(QFrame):
         self.timer.timeout.connect(self.next_color)
         self.wizard = CircleguardWizard()
 
+        self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
+        self.open_settings.button.clicked.connect(self._open_settings)
+        self.sync_settings = ButtonWidget("Sync Settings", "Sync", "")
+        self.sync_settings.button.clicked.connect(self._sync_settings)
+
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
         self.darkmode.box.stateChanged.connect(self.reload_theme)
@@ -964,12 +969,6 @@ class ScrollableSettingsWidget(QFrame):
         self.cache_location.path_signal.connect(partial(set_setting, "cache_dir"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
-        self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
-        self.open_settings.button.clicked.connect(self._open_settings)
-
-        self.sync_settings = ButtonWidget("Sync Settings", "Sync", "")
-        self.sync_settings.button.clicked.connect(self._sync_settings)
-
         self.loglevel = LoglevelWidget("")
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
         self.set_loglevel() # set the default loglevel in cg, not just in gui
@@ -981,16 +980,14 @@ class ScrollableSettingsWidget(QFrame):
         self.run_wizard.button.clicked.connect(self.show_wizard)
 
         self.layout = QVBoxLayout()
+        self.layout.addWidget(self.open_settings)
+        self.layout.addWidget(self.sync_settings)
         self.layout.addWidget(Separator("General"))
         self.layout.addWidget(self.apikey_widget)
         self.layout.addWidget(self.cache)
-        self.layout.addWidget(self.cache_location)
-        self.layout.addWidget(self.open_settings)
-        self.layout.addWidget(self.sync_settings)
         self.layout.addWidget(Separator("Appearance"))
         self.layout.addWidget(self.darkmode)
         self.layout.addWidget(self.visualizer_info)
-        self.layout.addWidget(self.visualizer_frametime)
         self.layout.addWidget(self.visualizer_bg)
         self.layout.addWidget(self.visualizer_beatmap)
         self.layout.addWidget(Separator("Debug"))
@@ -1003,7 +1000,6 @@ class ScrollableSettingsWidget(QFrame):
 
         self.setLayout(self.layout)
 
-        self.cache_location.switch_enabled(get_setting("caching"))
         # we never actually set the theme to dark anywhere
         # (even if the setting is true), it should really be
         # in the main application but uh this works too
