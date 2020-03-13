@@ -16,7 +16,7 @@ import json
 
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl
 from PyQt5.QtWidgets import (QWidget, QFrame, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
-                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy, QComboBox)
+                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy, QComboBox, QSpacerItem)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices, QPixmap
 
 # app needs to be initialized before settings is imported so QStandardPaths resolves
@@ -979,20 +979,26 @@ class ScrollableSettingsWidget(QFrame):
         self.wizard = ButtonWidget("Run Wizard", "Run", "")
         self.wizard.button.clicked.connect(self.show_wizard)
 
+        vert_spacer = QSpacerItem(0, 10, QSizePolicy.Maximum, QSizePolicy.Minimum)
         self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignTop)
         self.layout.addWidget(self.open_settings)
         self.layout.addWidget(self.sync_settings)
+        self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("General"))
         self.layout.addWidget(self.apikey_widget)
         self.layout.addWidget(self.cache)
+        self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Appearance"))
         self.layout.addWidget(self.darkmode)
         self.layout.addWidget(self.visualizer_info)
         self.layout.addWidget(self.visualizer_bg)
         self.layout.addWidget(self.visualizer_beatmap)
+        self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Debug"))
         self.layout.addWidget(self.loglevel)
         self.layout.addWidget(ResetSettings())
+        self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Dev"))
         self.layout.addWidget(self.rainbow)
         self.layout.addWidget(self.wizard)
