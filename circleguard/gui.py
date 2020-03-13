@@ -16,7 +16,7 @@ import json
 
 from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl
 from PyQt5.QtWidgets import (QWidget, QFrame, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
-                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy, QComboBox)
+                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy, QComboBox, QSpacerItem)
 from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices, QPixmap
 
 # app needs to be initialized before settings is imported so QStandardPaths resolves
@@ -922,20 +922,37 @@ class SettingsTab(QFrame):
         self.qscrollarea.setAlignment(Qt.AlignCenter)
         self.qscrollarea.setWidgetResizable(True)
 
+        self.open_settings = QPushButton("Open Advanced Settings")
+        self.open_settings.clicked.connect(self._open_settings)
+        self.sync_settings = QPushButton("Sync Settings")
+        self.sync_settings.clicked.connect(self._sync_settings)
+
+
         self.info = QLabel(self)
-        self.info.setText(f"Frontend v{__version__}<br/>"
-                          f"Backend v{cg_version}<br/>"
-                          f"Found a bug or want to request a feature? "
-                          f"Open an issue <a href=\"https://github.com/circleguard/circleguard/issues\">here</a>!")
+        # multiple spaces get shrinked to one space in rich text mode
+        # https://groups.google.com/forum/#!topic/qtcontribs/VDOQFUj-eIA
+        self.info.setText(f"circleguard v{__version__}&nbsp;&nbsp;|&nbsp;&nbsp;"
+                          f"circlecore v{cg_version}&nbsp;&nbsp;|&nbsp;&nbsp;"
+                          f"<a href=\"https://github.com/circleguard/circleguard/issues\">Bug Report</a>")
         self.info.setTextFormat(Qt.RichText)
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
+        self.setting_buttons = WidgetCombiner(self.open_settings, self.sync_settings)
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.info)
-        layout.addWidget(self.qscrollarea)
+        layout = QGridLayout()
+        layout.addWidget(self.info, 0,0,1,1, alignment=Qt.AlignLeft)
+        layout.addWidget(self.setting_buttons, 0,1,1,1, alignment=Qt.AlignRight)
+        layout.addWidget(self.qscrollarea, 1,0,1,2)
+
         self.setLayout(layout)
+
+    def _open_settings(self):
+        overwrite_config() # generate file with latest changes
+        QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location")))
+
+    def _sync_settings(self):
+        overwrite_with_config_settings()
 
 
 class ScrollableSettingsWidget(QFrame):
@@ -950,7 +967,6 @@ class ScrollableSettingsWidget(QFrame):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_color)
         self.welcome = wizard.WelcomeWindow()
-
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
         self.darkmode.box.stateChanged.connect(self.reload_theme)
@@ -964,12 +980,6 @@ class ScrollableSettingsWidget(QFrame):
         self.cache_location.path_signal.connect(partial(set_setting, "cache_dir"))
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
-        self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
-        self.open_settings.button.clicked.connect(self._open_settings)
-
-        self.sync_settings = ButtonWidget("Sync Settings", "Sync", "")
-        self.sync_settings.button.clicked.connect(self._sync_settings)
-
         self.loglevel = LoglevelWidget("")
         self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
         self.set_loglevel() # set the default loglevel in cg, not just in gui
@@ -980,30 +990,30 @@ class ScrollableSettingsWidget(QFrame):
         self.wizard = ButtonWidget("Run Wizard", "Run", "")
         self.wizard.button.clicked.connect(self.show_wizard)
 
+        vert_spacer = QSpacerItem(0, 10, QSizePolicy.Maximum, QSizePolicy.Minimum)
         self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignTop)
+        self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("General"))
         self.layout.addWidget(self.apikey_widget)
         self.layout.addWidget(self.cache)
-        self.layout.addWidget(self.cache_location)
-        self.layout.addWidget(self.open_settings)
-        self.layout.addWidget(self.sync_settings)
+        self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Appearance"))
         self.layout.addWidget(self.darkmode)
         self.layout.addWidget(self.visualizer_info)
-        self.layout.addWidget(self.visualizer_frametime)
         self.layout.addWidget(self.visualizer_bg)
         self.layout.addWidget(self.visualizer_beatmap)
+        self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Debug"))
         self.layout.addWidget(self.loglevel)
         self.layout.addWidget(ResetSettings())
+        self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Dev"))
         self.layout.addWidget(self.rainbow)
         self.layout.addWidget(self.wizard)
         self.layout.addWidget(BeatmapTest())
-
         self.setLayout(self.layout)
 
-        self.cache_location.switch_enabled(get_setting("caching"))
         # we never actually set the theme to dark anywhere
         # (even if the setting is true), it should really be
         # in the main application but uh this works too
@@ -1034,13 +1044,6 @@ class ScrollableSettingsWidget(QFrame):
 
     def reload_theme(self):
         switch_theme(get_setting("dark_theme"))
-
-    def _open_settings(self):
-        overwrite_config() # generate file with latest changes
-        QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location")))
-
-    def _sync_settings(self):
-        overwrite_with_config_settings()
 
 
 class ResultsTab(QFrame):
