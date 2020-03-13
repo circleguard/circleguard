@@ -929,8 +929,10 @@ class SettingsTab(QFrame):
 
 
         self.info = QLabel(self)
-        self.info.setText(f"circleguard v{__version__} | "
-                          f"circlecore v{cg_version} | "
+        # multiple spaces get shrinked to one space in rich text mode
+        # https://groups.google.com/forum/#!topic/qtcontribs/VDOQFUj-eIA
+        self.info.setText(f"circleguard v{__version__}&nbsp;&nbsp;|&nbsp;&nbsp;"
+                          f"circlecore v{cg_version}&nbsp;&nbsp;|&nbsp;&nbsp;"
                           f"<a href=\"https://github.com/circleguard/circleguard/issues\">Bug Report</a>")
         self.info.setTextFormat(Qt.RichText)
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
