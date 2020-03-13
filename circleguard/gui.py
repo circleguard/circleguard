@@ -922,6 +922,8 @@ class SettingsTab(QFrame):
         self.qscrollarea.setAlignment(Qt.AlignCenter)
         self.qscrollarea.setWidgetResizable(True)
 
+        self.open_settings = QPushButton("Open Advanced Settings")
+        self.open_settings.clicked.connect(self._open_settings)
         self.sync_settings = QPushButton("Sync Settings")
         self.sync_settings.clicked.connect(self._sync_settings)
 
