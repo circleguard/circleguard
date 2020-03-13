@@ -922,6 +922,8 @@ class SettingsTab(QFrame):
         self.qscrollarea.setAlignment(Qt.AlignCenter)
         self.qscrollarea.setWidgetResizable(True)
 
+        self.sync_settings = QPushButton("Sync Settings")
+        self.sync_settings.clicked.connect(self._sync_settings)
 
 
         self.info = QLabel(self)
@@ -940,6 +942,13 @@ class SettingsTab(QFrame):
         layout.addWidget(self.qscrollarea, 1,0,1,2)
 
         self.setLayout(layout)
+
+    def _open_settings(self):
+        overwrite_config() # generate file with latest changes
+        QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location")))
+
+    def _sync_settings(self):
+        overwrite_with_config_settings()
 
 
 class ScrollableSettingsWidget(QFrame):
@@ -1025,13 +1034,6 @@ class ScrollableSettingsWidget(QFrame):
 
     def reload_theme(self):
         switch_theme(get_setting("dark_theme"))
-
-    def _open_settings(self):
-        overwrite_config() # generate file with latest changes
-        QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location")))
-
-    def _sync_settings(self):
-        overwrite_with_config_settings()
 
 
 class ResultsTab(QFrame):
