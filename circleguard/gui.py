@@ -922,19 +922,23 @@ class SettingsTab(QFrame):
         self.qscrollarea.setAlignment(Qt.AlignCenter)
         self.qscrollarea.setWidgetResizable(True)
 
+
+
         self.info = QLabel(self)
-        self.info.setText(f"Frontend v{__version__}<br/>"
-                          f"Backend v{cg_version}<br/>"
-                          f"Found a bug or want to request a feature? "
-                          f"Open an issue <a href=\"https://github.com/circleguard/circleguard/issues\">here</a>!")
+        self.info.setText(f"circleguard v{__version__} | "
+                          f"circlecore v{cg_version} | "
+                          f"<a href=\"https://github.com/circleguard/circleguard/issues\">Bug Report</a>")
         self.info.setTextFormat(Qt.RichText)
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
+        self.setting_buttons = WidgetCombiner(self.open_settings, self.sync_settings)
 
-        layout = QVBoxLayout()
-        layout.addWidget(self.info)
-        layout.addWidget(self.qscrollarea)
+        layout = QGridLayout()
+        layout.addWidget(self.info, 0,0,1,1, alignment=Qt.AlignLeft)
+        layout.addWidget(self.setting_buttons, 0,1,1,1, alignment=Qt.AlignRight)
+        layout.addWidget(self.qscrollarea, 1,0,1,2)
+
         self.setLayout(layout)
 
 
@@ -950,12 +954,6 @@ class ScrollableSettingsWidget(QFrame):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_color)
         self.welcome = wizard.WelcomeWindow()
-
-        self.open_settings = ButtonWidget("Edit Settings File", "Open", "")
-        self.open_settings.button.clicked.connect(self._open_settings)
-        self.sync_settings = ButtonWidget("Sync Settings", "Sync", "")
-        self.sync_settings.button.clicked.connect(self._sync_settings)
-
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
         self.darkmode.box.stateChanged.connect(self.reload_theme)
@@ -980,8 +978,6 @@ class ScrollableSettingsWidget(QFrame):
         self.wizard.button.clicked.connect(self.show_wizard)
 
         self.layout = QVBoxLayout()
-        self.layout.addWidget(self.open_settings)
-        self.layout.addWidget(self.sync_settings)
         self.layout.addWidget(Separator("General"))
         self.layout.addWidget(self.apikey_widget)
         self.layout.addWidget(self.cache)
@@ -997,7 +993,6 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(self.rainbow)
         self.layout.addWidget(self.wizard)
         self.layout.addWidget(BeatmapTest())
-
         self.setLayout(self.layout)
 
         # we never actually set the theme to dark anywhere
