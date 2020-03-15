@@ -463,9 +463,8 @@ def initialize_dirs():
     dirs = DEFAULTS["Locations"].keys()
     for dir_ in dirs:
         path = Path(get_setting(dir_))
-        parent_path = path if path.is_dir else path.parent
-        if not os.path.exists(parent_path):
-            os.mkdir(parent_path)
+        if not path.exists():
+            path.mkdir(parents=True)
 
 # assemble dict of {key: [type, section], ...} since we have nested dicts in DEFAULTS
 # double list comprehension feels sooo backwards to write
