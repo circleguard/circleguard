@@ -782,8 +782,8 @@ class MainTab(QFrame):
                     if result.ischeat:
                         QApplication.beep()
                         QApplication.alert(self)
-                # add to Results Tab so it can be played back on demand
-                self.add_result_signal.emit(result)
+                        # add to Results Tab so it can be played back on demand
+                        self.add_result_signal.emit(result)
 
         except Empty:
             pass
