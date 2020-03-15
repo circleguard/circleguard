@@ -538,7 +538,7 @@ class _Renderer(QFrame):
             # self.data[0][self.pos[0]] is the current frame we're on
             # so seek to the next frame; self.pos[0] + 1
             next_frame_times = [self.players[x].data[self.players[x].pos + 1][0] for x in range(len(self.players))]
-            self.seek_to(min(next_frame_times))
+            self.seek_to(min(next_frame_times) - 1)
         else:
             previous_frame_times = [self.players[x].data[self.players[x].pos - 1][0] for x in range(len(self.players))]
             self.seek_to(min(previous_frame_times) - 1)
@@ -602,13 +602,13 @@ class _Interface(QWidget):
         self.next_frame_button.setIcon(QIcon(str(resource_path("./resources/frame_next.png"))))
         self.next_frame_button.setFixedSize(20, 20)
         self.next_frame_button.setToolTip("Displays next frame")
-        self.next_frame_button.clicked.connect(self.next_frame)
+        self.next_frame_button.clicked.connect(lambda: self.change_frame(reverse=False))
 
         self.previous_frame_button = QPushButton()
         self.previous_frame_button.setIcon(QIcon(str(resource_path("./resources/frame_back.png"))))
         self.previous_frame_button.setFixedSize(20, 20)
         self.previous_frame_button.setToolTip("Displays previous frame")
-        self.previous_frame_button.clicked.connect(self.previous_frame)
+        self.previous_frame_button.clicked.connect(lambda: self.change_frame(reverse=True))
 
         self.pause_button = QPushButton()
         self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
@@ -671,13 +671,12 @@ class _Interface(QWidget):
     def update_speed(self, speed):
         self.renderer.clock.change_speed(speed * self.renderer.play_direction)
 
-    def previous_frame(self):
-        self.pause()
-        self.renderer.search_nearest_frame(reverse=True)
-
-    def next_frame(self):
-        self.pause()
-        self.renderer.search_nearest_frame(reverse=False)
+    def change_frame(self, reverse):
+        # only change pause state if we're not paused, this way we don't unpause
+        # when changing frames
+        if not self.renderer.paused:
+            self.pause()
+        self.renderer.search_nearest_frame(reverse=reverse)
 
     def pause(self):
         if self.renderer.paused:
@@ -711,8 +710,8 @@ class VisualizerWindow(QMainWindow):
         self.setCentralWidget(self.interface)
         self.setWindowFlag(Qt.MSWindowsFixedSizeDialogHint) # resizing is not important rn
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
-        QShortcut(QKeySequence(Qt.Key_Left), self, self.interface.previous_frame)
-        QShortcut(QKeySequence(Qt.Key_Right), self, self.interface.next_frame)
+        QShortcut(QKeySequence(Qt.Key_Right), self, lambda: self.interface.change_frame(reverse=False))
+        QShortcut(QKeySequence(Qt.Key_Left), self, lambda: self.interface.change_frame(reverse=True))
         QShortcut(QKeySequence(Qt.Key_Up), self, self.interface.increase_speed)
         QShortcut(QKeySequence(Qt.Key_Down), self, self.interface.lower_speed)
 
