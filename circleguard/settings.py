@@ -156,7 +156,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}/download"
                                 "\n\n"
-                                "{r.similarity:.2f} similarity according to [circleguard](https://github.com/circleguard/circleguard) (higher is less similar)"),
+                                "{r.similarity:.2f} similarity according to https://circleguard.dev/ (higher is less similar)"),
         "template_relax":      ("[osu!std] {r.replay.username} | Relax"
                                 "\n\n"
                                 "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
@@ -165,7 +165,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
                                 "\n\n"
-                                "ur (ucv): {r.ur:.2f} according to [circleguard](https://github.com/circleguard/circleguard)"),
+                                "ur (ucv): {r.ur:.2f} according to https://circleguard.dev/"),
         "template_correction": ("[osu!std] {r.replay.username} | Aim Correction"
                                 "\n\n"
                                 "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
@@ -174,7 +174,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
                                 "\n\n"
-                                "Snaps according to [circleguard](https://github.com/circleguard/circleguard):"
+                                "Snaps according to https://circleguard.dev/:"
                                 "\n\n"
                                 "{snap_table}")
     },
