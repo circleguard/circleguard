@@ -51,8 +51,8 @@ coll = COLLECT(
 
 # post-build script
 shell = win32com.client.Dispatch("WScript.Shell")
-shortcut = shell.CreateShortCut("./dist/Circleguard_win_x64/Circleguard.lnk")
-shortcut.Targetpath = abspath(abspath(".\dist\Circleguard_win_x64\Circleguard\Circleguard.exe"))
+shortcut = shell.CreateShortCut("./dist/Circleguard_win_x86/Circleguard.lnk")
+shortcut.Targetpath = abspath(abspath(".\dist\Circleguard_win_x86\Circleguard\Circleguard.exe"))
 shortcut.save()
 
 print("Creating zip")
