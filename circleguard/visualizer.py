@@ -672,11 +672,11 @@ class _Interface(QWidget):
         self.renderer.clock.change_speed(speed * self.renderer.play_direction)
 
     def previous_frame(self):
-        self.renderer.pause()
+        self.pause()
         self.renderer.search_nearest_frame(reverse=True)
 
     def next_frame(self):
-        self.renderer.pause()
+        self.pause()
         self.renderer.search_nearest_frame(reverse=False)
 
     def pause(self):
