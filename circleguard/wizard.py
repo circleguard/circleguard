@@ -142,6 +142,7 @@ class TutorialPageLoadables(WizardPage):
         super().__init__()
         self.setTitle("Tutorial (Loadables)")
         label = WizardLabel("<p>Circleguard uses five different objects (called Loadables) to represent replays. "
+                "They can be created on the left half of the Main tab. "
                 "They are Map Replay, Local Replay, Map, User, and All Map Replays by User.</p>"
                 "<p>A Map Replay represents a replay by a single User on a Map.</p>")
         image = QLabel()
@@ -278,7 +279,7 @@ class SettingsPage(WizardPage):
                 "the Settings tab.</p>"
                 "<p>The full range of settings (of which there are quite a few — you can customize Circleguard heavily!) "
                 "can be accessed by pressing \"Open Settings\" at the top of the Settings tab. Be sure to read the comments in that file "
-                "for instructions on editing the settings!</p>")
+                "for instructions on editing the settings.</p>")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
