@@ -11,7 +11,7 @@ from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIco
 
 import clock
 from utils import resource_path, Player
-from settings import get_setting
+from settings import get_setting, set_setting
 
 import math
 
@@ -714,8 +714,12 @@ class VisualizerWindow(QMainWindow):
         QShortcut(QKeySequence(Qt.Key_Left), self, lambda: self.interface.change_frame(reverse=True))
         QShortcut(QKeySequence(Qt.Key_Up), self, self.interface.increase_speed)
         QShortcut(QKeySequence(Qt.Key_Down), self, self.interface.lower_speed)
+        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F11), self, self.toggle_frametime)
 
     def closeEvent(self, event):
         super().closeEvent(event)
         self.interface.renderer.timer.stop()
         np.seterr(**PREVIOUS_ERRSTATE)
+
+    def toggle_frametime(self):
+        set_setting("visualizer_frametime", not get_setting("visualizer_frametime"))
