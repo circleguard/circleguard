@@ -236,10 +236,6 @@ DEFAULTS = {
 }
 
 CHANGED = {
-    "2.0.0": [
-        "timestamp_format",
-        "last_update_check"
-    ],
     "1.1.0": [
         "message_cheater_found",
         "message_no_cheater_found",
@@ -279,7 +275,9 @@ CHANGED = {
         "required_style",
         "cache_location",
         "log_dir",
-        "cache_dir"
+        "cache_dir",
+        "timestamp_format",
+        "last_update_check"
     ]
 }
 
