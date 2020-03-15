@@ -538,7 +538,7 @@ class _Renderer(QFrame):
             # self.data[0][self.pos[0]] is the current frame we're on
             # so seek to the next frame; self.pos[0] + 1
             next_frame_times = [self.players[x].data[self.players[x].pos + 1][0] for x in range(len(self.players))]
-            self.seek_to(min(next_frame_times))
+            self.seek_to(min(next_frame_times) - 1)
         else:
             previous_frame_times = [self.players[x].data[self.players[x].pos - 1][0] for x in range(len(self.players))]
             self.seek_to(min(previous_frame_times) - 1)
