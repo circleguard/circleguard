@@ -1,0 +1,4 @@
+[MASTER]
+# https://stackoverflow.com/a/56728368/12164878
+# pylint doesn't load c extensions by default for security reasons
+extension-pkg-whitelist=PyQt5

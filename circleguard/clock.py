@@ -2,9 +2,9 @@ import time
 
 
 class Timer:
-    def __init__(self):
+    def __init__(self, speed):
         self.time_counter = 0
-        self.current_speed = 1
+        self.current_speed = speed
         self.paused = False
         self.paused_at_run_time = None
         self.last_run_time = time.time_ns()
@@ -14,7 +14,7 @@ class Timer:
             current_run_time = time.time_ns()
             time_took = current_run_time-self.last_run_time
             self.time_counter += time_took/1000000*self.current_speed
-            self.last_run_time = time.time_ns()
+            self.last_run_time = current_run_time
         return self.time_counter
 
     def pause(self):

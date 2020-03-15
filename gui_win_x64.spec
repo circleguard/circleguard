@@ -3,7 +3,7 @@
 block_cipher = None
 from os.path import *
 import sys
-import winshell
+import win32com.client
 import zipfile
 import PyInstaller.config
 os.path.expanduser
@@ -22,7 +22,7 @@ def zipdir(path, ziph):
 PyInstaller.config.CONF['distpath'] = "./dist/Circleguard_win_x64"
 a = Analysis(['circleguard/gui.py'],
              pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x64', expanduser('~/AppData/Local/Programs/Python/Python37/')],
-             datas=[('circleguard/resources/','resources/'), ('circleguard/db/','db/'), ('circleguard/examples', 'examples/'), ('circleguard/logs', 'logs/')],
+             datas=[('circleguard/resources/','resources/'), ('circleguard/examples', 'examples/')],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher,
@@ -50,8 +50,10 @@ coll = COLLECT(
 )
 
 # post-build script
-shortcut = winshell.shortcut(abspath(".\dist\Circleguard_win_x64\Circleguard\Circleguard.exe"))
-shortcut.write(abspath("./dist/Circleguard_win_x64/Circleguard.lnk"))
+shell = win32com.client.Dispatch("WScript.Shell")
+shortcut = shell.CreateShortCut("./dist/Circleguard_win_x64/Circleguard.lnk")
+shortcut.Targetpath = abspath(abspath(".\dist\Circleguard_win_x64\Circleguard\Circleguard.exe"))
+shortcut.save()
 
 print("Creating zip")
 os. chdir("./dist/")

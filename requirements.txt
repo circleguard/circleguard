@@ -1,3 +1,4 @@
 PyQt5<=5.12.2
-circleguard==2.3.1
+circleguard==3.2.1
 packaging>=17.0
+slider>=0.2
