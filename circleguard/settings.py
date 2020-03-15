@@ -248,7 +248,7 @@ CHANGED = {
     "1.2.0": [
         "message_loading_replays"
     ],
-    "1.3.0": [
+    "2.0.0": [
         "message_loading_replays",
         "message_starting_investigation",
         "message_finished_investigation",
