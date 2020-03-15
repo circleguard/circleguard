@@ -484,9 +484,6 @@ for d in DEFAULTS.values():
 
 CFG_PATH = get_setting("config_location") + "/circleguard.cfg"
 
-# create cfg file if it doesn't exist
-if not os.path.exists(CFG_PATH):
-    overwrite_config()
 
 # overwrite our settings with the config settings (if the user changed them while
 # the application was closed)
