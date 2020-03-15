@@ -37,7 +37,7 @@ class CircleguardWizard(QWizard):
         self.addPage(TutorialPage5())
         self.addPage(TutorialPage6())
         self.addPage(TutorialPage7())
-        self.addPage(TutorialPage8())
+        self.addPage(SettingsPage())
         self.addPage(ConclusionPage())
 
         # disable help button
@@ -270,7 +270,7 @@ class TutorialPage7(WizardPage):
         self.setLayout(layout)
 
 
-class TutorialPage8(WizardPage):
+class SettingsPage(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Configuring Settings")
