@@ -784,6 +784,8 @@ class MainTab(QFrame):
                         QApplication.alert(self)
                         # add to Results Tab so it can be played back on demand
                         self.add_result_signal.emit(result)
+                else:
+                    self.add_result_signal.emit(result)
 
         except Empty:
             pass
