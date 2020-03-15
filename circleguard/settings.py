@@ -196,7 +196,7 @@ DEFAULTS = {
     "Locations": {
         "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
         "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
-        "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/circleguard.cfg"
+        "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
     },
     "Thresholds": {
         "steal_max_sim": 18,
@@ -483,7 +483,7 @@ for d in DEFAULTS.values():
             set_setting(key, value)
 
 
-CFG_PATH = get_setting("config_location")
+CFG_PATH = get_setting("config_location") + "/circleguard.cfg"
 
 # create cfg file if it doesn't exist
 if not os.path.exists(CFG_PATH):

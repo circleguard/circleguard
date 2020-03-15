@@ -949,7 +949,7 @@ class SettingsTab(QFrame):
 
     def _open_settings(self):
         overwrite_config() # generate file with latest changes
-        QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location")))
+        QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location") + "/circleguard.cfg"))
 
     def _sync_settings(self):
         overwrite_with_config_settings()
