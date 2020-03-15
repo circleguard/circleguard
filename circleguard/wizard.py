@@ -30,13 +30,13 @@ class CircleguardWizard(QWizard):
         self.addPage(IntroPage())
         self.addPage(self.SetupPage)
         self.addPage(ApiKeyPage())
-        self.addPage(TutorialPage1())
-        self.addPage(TutorialPage2())
-        self.addPage(TutorialPage3())
-        self.addPage(TutorialPage4())
-        self.addPage(TutorialPage5())
-        self.addPage(TutorialPage6())
-        self.addPage(TutorialPage7())
+        self.addPage(TutorialPageId())
+        self.addPage(TutorialPageLoadables())
+        self.addPage(TutorialPageLoadableLocal())
+        self.addPage(TutorialPageLoadableMap())
+        self.addPage(TutorialPageLoadableUser())
+        self.addPage(TutorialPageLoadableUsersAll())
+        self.addPage(TutorialPageChecks())
         self.addPage(SettingsPage())
         self.addPage(ConclusionPage())
 
@@ -117,7 +117,7 @@ class ApiKeyPage(WizardPage):
         self.setLayout(layout)
 
 
-class TutorialPage1(WizardPage):
+class TutorialPageId(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Tutorial (ids)")
@@ -137,7 +137,7 @@ class TutorialPage1(WizardPage):
         layout.addWidget(label)
         self.setLayout(layout)
 
-class TutorialPage2(WizardPage):
+class TutorialPageLoadables(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Tutorial (Loadables)")
@@ -160,7 +160,7 @@ class TutorialPage2(WizardPage):
         layout.addWidget(label2)
         self.setLayout(layout)
 
-class TutorialPage3(WizardPage):
+class TutorialPageLoadableLocal(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Tutorial (Loadables - Local Replay)")
@@ -175,7 +175,7 @@ class TutorialPage3(WizardPage):
         layout.addWidget(label2)
         self.setLayout(layout)
 
-class TutorialPage4(WizardPage):
+class TutorialPageLoadableMap(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Tutorial (Loadables - Map)")
@@ -203,7 +203,7 @@ class TutorialPage4(WizardPage):
         self.setLayout(layout)
 
 
-class TutorialPage5(WizardPage):
+class TutorialPageLoadableUser(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Tutorial (Loadables - User)")
@@ -223,7 +223,7 @@ class TutorialPage5(WizardPage):
         layout.addWidget(label2)
         self.setLayout(layout)
 
-class TutorialPage6(WizardPage):
+class TutorialPageLoadableUsersAll(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Tutorial (Loadables - All Map Replays by User)")
@@ -243,7 +243,7 @@ class TutorialPage6(WizardPage):
         layout.addWidget(label2)
         self.setLayout(layout)
 
-class TutorialPage7(WizardPage):
+class TutorialPageChecks(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Tutorial (Checks)")
