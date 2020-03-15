@@ -500,6 +500,9 @@ overwrite_outdated_settings()
 # create folders if they don't exist
 initialize_dirs()
 
+# create cfg file if it doesn't exist
+if not os.path.exists(CFG_PATH):
+    overwrite_config()
 
 if not get_setting("ran"):
     reset_defaults()
