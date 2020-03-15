@@ -482,9 +482,6 @@ for d in DEFAULTS.values():
         if not SETTINGS.contains(key):
             set_setting(key, value)
 
-# create folders if they don't exist
-initialize_dirs()
-
 
 CFG_PATH = get_setting("config_location")
 
@@ -500,6 +497,9 @@ overwrite_with_config_settings()
 # has to be called after overwrite_with_config_settings or the file will
 # overwrite our changes here since it's not synced to the file
 overwrite_outdated_settings()
+
+# create folders if they don't exist
+initialize_dirs()
 
 
 if not get_setting("ran"):
