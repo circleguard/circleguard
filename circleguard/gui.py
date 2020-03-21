@@ -233,7 +233,7 @@ class WindowWrapper(LinkableSetting, QMainWindow):
         label_text = None
         template_text = None
 
-        if type(result) is ReplayStealingResult:
+        if isinstance(result, ReplayStealingResult):
             label_text = get_setting("string_result_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
                                         replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
                                         replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
@@ -242,7 +242,7 @@ class WindowWrapper(LinkableSetting, QMainWindow):
                                         replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
             replays = [result.replay1, result.replay2]
 
-        elif type(result) is RelaxResult:
+        elif isinstance(result, RelaxResult):
             label_text = get_setting("string_result_relax").format(ts=timestamp, ur=result.ur, r=result,
                                         replay=result.replay, mods_short_name=result.replay.mods.short_name(),
                                         mods_long_name=result.replay.mods.long_name())
@@ -250,7 +250,7 @@ class WindowWrapper(LinkableSetting, QMainWindow):
                                         replay=result.replay, mods_short_name=result.replay.mods.short_name(),
                                         mods_long_name=result.replay.mods.long_name())
             replays = [result.replay]
-        elif type(result) is CorrectionResult:
+        elif isinstance(result, CorrectionResult):
             label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, num_snaps=len(result.snaps), replay=result.replay,
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
@@ -611,25 +611,25 @@ class MainTab(QFrame):
             for loadableW in loadableWs:
                 loadable = None
                 try:
-                    if type(loadableW) is ReplayPathW:
+                    if isinstance(loadableW, ReplayPathW):
                         loadable = ReplayPath(loadableW.path_input.path)
-                    if type(loadableW) is ReplayMapW:
+                    if isinstance(loadableW, ReplayMapW):
                         loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
                                              mods=parse_mod_string(loadableW.mods_input.field.text()))
-                    if type(loadableW) is MapW:
+                    if isinstance(loadableW, MapW):
                         # use placeholder text (1-50) if the user inputted span is empty
                         span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = "1-100"
                         loadable = Map(int(loadableW.map_id_input.field.text()), span=span,
                                              mods=parse_mod_string(loadableW.mods_input.field.text()))
-                    if type(loadableW) is UserW:
+                    if isinstance(loadableW, UserW):
                         span=loadableW.span_input.field.text()
                         if span == "all":
                             span = "1-100"
                         loadable = User(int(loadableW.user_id_input.field.text()), span=span,
                                              mods=parse_mod_string(loadableW.mods_input.field.text()))
-                    if type(loadableW) is MapUserW:
+                    if isinstance(loadableW, MapUserW):
                         span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = "1-100"
@@ -646,20 +646,20 @@ class MainTab(QFrame):
             for checkW in run.checks:
                 d = None
                 check_type = None
-                if type(checkW) is StealCheckW:
+                if isinstance(checkW, StealCheckW):
                     steal_thresh = get_setting("steal_max_sim")
                     d = StealDetect(steal_thresh)
                     check_type = "Steal"
-                if type(checkW) is RelaxCheckW:
+                if isinstance(checkW, RelaxCheckW):
                     relax_thresh = get_setting("relax_max_ur")
                     check_type = "Relax"
                     d = RelaxDetect(relax_thresh)
-                if type(checkW) is CorrectionCheckW:
+                if isinstance(checkW, CorrectionCheckW):
                     max_angle = get_setting("correction_max_angle")
                     min_distance = get_setting("correction_min_distance")
                     d = CorrectionDetect(max_angle, min_distance)
                     check_type = "Aim Correction"
-                if type(checkW) is VisualizerW:
+                if isinstance(checkW, VisualizerW):
                     d = Detect(0)  # don't run any detection
                     check_type = "Visualization"
                 # retrieve loadable objects from loadableW ids
@@ -699,12 +699,12 @@ class MainTab(QFrame):
                 # stripes sliding horizontally) to indicate we're processing
                 # the data
                 self.set_progressbar_signal.emit(0)
-                setting = "message_starting_investigation_visualization" if type(checkW) is VisualizerW else "message_starting_investigation"
+                setting = "message_starting_investigation_visualization" if isinstance(checkW, VisualizerW) else "message_starting_investigation"
                 message_starting_investigation = get_setting(setting).format(ts=datetime.now(),
                                 num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
                                 check_type=check_type)
                 self.write_to_terminal_signal.emit(message_starting_investigation)
-                if type(checkW) is VisualizerW:
+                if isinstance(checkW, VisualizerW):
                     map_ids = [r.map_id for r in replays]
                     if len(set(map_ids)) != 1:
                         self.write_to_terminal_signal.emit(f"Visualizer expected replays from a single map, but got multiple {set(map_ids)}. Please use a different Visualizer Object for each map")
@@ -750,7 +750,7 @@ class MainTab(QFrame):
                 result = self.q.get_nowait()
                 ts = datetime.now() # ts = timestamp
                 message = None
-                if type(result) is ReplayStealingResult:
+                if isinstance(result, ReplayStealingResult):
                     if result.ischeat:
                         message = get_setting("message_steal_found").format(ts=ts, sim=result.similarity, r=result, replay1=result.replay1, replay2=result.replay2,
                                                 replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
@@ -760,7 +760,7 @@ class MainTab(QFrame):
                                                 replay2=result.replay2, replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
                                                 replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
 
-                if type(result) is RelaxResult:
+                if isinstance(result, RelaxResult):
                     if result.ischeat:
                         message = get_setting("message_relax_found").format(ts=ts, r=result, replay=result.replay, ur=result.ur,
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
@@ -768,7 +768,7 @@ class MainTab(QFrame):
                         message = get_setting("message_relax_found_display").format(ts=ts, r=result, replay=result.replay, ur=result.ur,
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
-                if type(result) is CorrectionResult:
+                if isinstance(result, CorrectionResult):
                     if result.ischeat:
                         snap_message = get_setting("message_correction_snaps")
                         snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
