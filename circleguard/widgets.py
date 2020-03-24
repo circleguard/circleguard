@@ -839,7 +839,7 @@ class FolderChooser(QFrame):
         self.multiple_files = multiple_files
         self.file_ending = file_ending
         self.label = QLabel(self)
-        self.label.setText(title+":")
+        self.label.setText(title + ":")
 
         self.file_chooser_button = QPushButton(self)
         type_ = "Folder" if self.folder_mode else "Files" if self.multiple_files else "File"
