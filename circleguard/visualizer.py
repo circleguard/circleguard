@@ -21,7 +21,7 @@ PREVIOUS_ERRSTATE = np.seterr('raise')
 
 WIDTH_LINE = 1
 WIDTH_POINT = 3
-WIDTH_CIRCLE_BORDER = 5
+WIDTH_CIRCLE_BORDER = 8
 FRAMES_ON_SCREEN = 15 # how many frames for each replay to draw on screen at a time
 PEN_BLACK = QPen(QColor(17, 17, 17))
 PEN_WHITE = QPen(QColor(255, 255, 255))
@@ -29,7 +29,6 @@ X_OFFSET = 64 + 192
 Y_OFFSET = 48 + 48
 SCREEN_WIDTH = 640 + 384
 SCREEN_HEIGHT = 480 + 96
-MAX_HITOBJECT_ALPHA = 200
 
 
 class _Renderer(QFrame):
@@ -366,9 +365,9 @@ class _Renderer(QFrame):
         """
         current_time = self.clock.get_time()
         fade_out_scale = max(0, ((current_time - self.get_hit_time(hitobj)) / self.hitwindow * 0.75))
-        hitcircle_alpha = MAX_HITOBJECT_ALPHA - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * MAX_HITOBJECT_ALPHA
-        magic = (MAX_HITOBJECT_ALPHA * (fade_out_scale))
-        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 200 else 200
+        hitcircle_alpha = 255 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 255
+        magic = (255 * (fade_out_scale))
+        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
         hitcircle_alpha = hitcircle_alpha - (magic if magic > 0 else 0)
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha > 0 else 0
         c = self.painter.pen().color()
@@ -391,10 +390,10 @@ class _Renderer(QFrame):
         current_time = self.clock.get_time()
         if self.get_hit_endtime(hitobj) - current_time < 0: return
         big_circle = (384 / 2)
-        hitcircle_alpha = MAX_HITOBJECT_ALPHA - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * MAX_HITOBJECT_ALPHA
+        hitcircle_alpha = 255 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 255
         fade_out = max(0, ((current_time - self.get_hit_endtime(hitobj)) / self.hitwindow * 0.5))
         magic = (75 * ((fade_out) * 2))
-        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < MAX_HITOBJECT_ALPHA else MAX_HITOBJECT_ALPHA
+        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
         hitcircle_alpha = hitcircle_alpha - (magic if magic > 0 else 0)
         hitcircle_alpha = hitcircle_alpha if hitcircle_alpha > 0 else 0
 
@@ -417,8 +416,8 @@ class _Renderer(QFrame):
         """
         current_time = self.clock.get_time()
         if self.get_hit_time(hitobj) - current_time < 0: return
-        hitcircle_alpha = MAX_HITOBJECT_ALPHA - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * MAX_HITOBJECT_ALPHA
-        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < MAX_HITOBJECT_ALPHA else MAX_HITOBJECT_ALPHA
+        hitcircle_alpha = 255 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 255
+        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
         approachcircle_scale = max(((self.get_hit_time(hitobj) - current_time) / self.preempt) * 3 + 1, 1)
         c = self.painter.pen().color()
         p = hitobj.position
@@ -709,7 +708,7 @@ class VisualizerWindow(QMainWindow):
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
         self.interface = _Interface(replays, beatmap_id, beatmap_path)
         self.setCentralWidget(self.interface)
-        # self.setWindowFlag(Qt.MSWindowsFixedSizeDialogHint) # resizing is not important rn
+        self.setWindowFlag(Qt.MSWindowsFixedSizeDialogHint) # resizing is not important rn
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
         QShortcut(QKeySequence(Qt.Key_Right), self, lambda: self.interface.change_frame(reverse=False))
         QShortcut(QKeySequence(Qt.Key_Left), self, lambda: self.interface.change_frame(reverse=True))
