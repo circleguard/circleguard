@@ -20,7 +20,7 @@ import numpy as np
 PREVIOUS_ERRSTATE = np.seterr('raise')
 
 WIDTH_LINE = 1
-WIDTH_POINT = 3
+WIDTH_CROSS = 6
 WIDTH_CIRCLE_BORDER = 8
 FRAMES_ON_SCREEN = 15 # how many frames for each replay to draw on screen at a time
 PEN_BLACK = QPen(QColor(17, 17, 17))
@@ -225,12 +225,12 @@ class _Renderer(QFrame):
         for i in range(len(player.buffer) - 1):
             self.draw_line(i * alpha_step, (player.buffer[i][1], player.buffer[i][2]),
                                            (player.buffer[i + 1][1], player.buffer[i + 1][2]))
-        _pen.setWidth(WIDTH_POINT)
+        _pen.setWidth(2)
         self.painter.setPen(_pen)
         for i in range(len(player.buffer) - 1):
-            self.draw_point(i * alpha_step, (player.buffer[i][1], player.buffer[i][2]))
+            self.draw_cross(i * alpha_step, (player.buffer[i][1], player.buffer[i][2]))
             if i == len(player.buffer) - 2:
-                self.draw_point((i + 1) * alpha_step, (player.buffer[i + 1][1], player.buffer[i + 1][2]))
+                self.draw_cross((i + 1) * alpha_step, (player.buffer[i + 1][1], player.buffer[i + 1][2]))
         # reset alpha
         self.painter.setOpacity(1)
 
@@ -326,7 +326,7 @@ class _Renderer(QFrame):
         self.painter.setOpacity(alpha)
         self.painter.drawLine(start[0] + X_OFFSET, start[1] + Y_OFFSET, end[0] + X_OFFSET, end[1] + Y_OFFSET)
 
-    def draw_point(self, alpha, point):
+    def draw_cross(self, alpha, point):
         """
         Draws a line using the given painter, pen, and alpha level from Point start to Point end.
 
@@ -335,9 +335,12 @@ class _Renderer(QFrame):
            Integer alpha: The alpha level from 0.0-1.0 to set the line to.
            List point: The X&Y position of the point.
         """
-
+        half_width = WIDTH_CROSS/2
         self.painter.setOpacity(alpha)
-        self.painter.drawPoint(point[0] + X_OFFSET, point[1] + Y_OFFSET)
+        self.painter.drawLine(point[0] + X_OFFSET + half_width, point[1] + Y_OFFSET + half_width,
+                              point[0] + X_OFFSET - half_width, point[1] + Y_OFFSET - half_width)
+        self.painter.drawLine(point[0] + X_OFFSET - half_width, point[1] + Y_OFFSET + half_width,
+                              point[0] + X_OFFSET + half_width, point[1] + Y_OFFSET - half_width)
 
     def draw_hitobject(self, hitobj):
         """
