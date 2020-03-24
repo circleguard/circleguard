@@ -25,10 +25,10 @@ WIDTH_CIRCLE_BORDER = 8
 FRAMES_ON_SCREEN = 15 # how many frames for each replay to draw on screen at a time
 PEN_BLACK = QPen(QColor(17, 17, 17))
 PEN_WHITE = QPen(QColor(255, 255, 255))
-X_OFFSET = 64+192
-Y_OFFSET = 48+48
-SCREEN_WIDTH = 640+384
-SCREEN_HEIGHT = 480+96
+X_OFFSET = 64 + 192
+Y_OFFSET = 48 + 48
+SCREEN_WIDTH = 640 + 384
+SCREEN_HEIGHT = 480 + 96
 
 
 class _Renderer(QFrame):
