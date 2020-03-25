@@ -22,9 +22,13 @@ PREVIOUS_ERRSTATE = np.seterr('raise')
 WIDTH_LINE = 1
 WIDTH_CROSS = 6
 WIDTH_CIRCLE_BORDER = 8
-FRAMES_ON_SCREEN = 15 # how many frames for each replay to draw on screen at a time
-PEN_BLACK = QPen(QColor(17, 17, 17))
-PEN_WHITE = QPen(QColor(255, 255, 255))
+FRAMES_ON_SCREEN = 15  # how many frames for each replay to draw on screen at a time
+PEN_WHITE = QPen(QColor(200, 200, 200))
+PEN_GRAY = QPen(QColor(75, 75, 75))
+PEN_BLANK = QPen(QColor(0, 0, 0, 0))
+BRUSH_GRAY = QBrush(QColor(100, 100, 100))
+BRUSH_DARKGRAY = QBrush(QColor(10, 10, 10))
+BRUSH_BLANK = QBrush(QColor(0, 0, 0, 0))
 X_OFFSET = 64 + 192
 Y_OFFSET = 48 + 48
 SCREEN_WIDTH = 640 + 384
@@ -111,6 +115,12 @@ class _Renderer(QFrame):
         self.timer.start(1000/60) # 62 fps (1000ms/60frames but the result can only be a integer)
         self.next_frame()
 
+        # black background
+        pal = QPalette()
+        pal.setColor(QPalette.Background, Qt.black)
+        self.setAutoFillBackground(True)
+        self.setPalette(pal)
+
     def next_frame_from_timer(self):
         """
         Has the same effect as next_frame except if paused, where it returns. This is to allow
@@ -173,14 +183,8 @@ class _Renderer(QFrame):
         self.painter.begin(self)
         self.painter.setRenderHint(QPainter.TextAntialiasing, True)
         self.painter.setRenderHint(QPainter.Antialiasing, True)
-        black_bg = get_setting("visualizer_black_bg")
-        self.painter.setPen(PEN_WHITE if (get_setting("dark_theme") or black_bg) else PEN_BLACK)
+        self.painter.setPen(PEN_WHITE)
         _pen = self.painter.pen()
-        if black_bg:
-            pal = QPalette()
-            pal.setColor(QPalette.Background, Qt.black)
-            self.setAutoFillBackground(True)
-            self.setPalette(pal)
         # loading screen
         if self.is_loading:
             if self.thread.is_alive():
@@ -245,7 +249,8 @@ class _Renderer(QFrame):
         Args:
            QPainter painter: The painter.
         """
-        _pen = self.painter.pen()
+        PEN_WHITE.setWidth(1)
+        self.painter.setPen(PEN_WHITE)
         self.painter.setOpacity(0.25)
         self.painter.drawRect(X_OFFSET, Y_OFFSET, 512, 384)
         self.painter.setOpacity(1)
@@ -254,9 +259,9 @@ class _Renderer(QFrame):
             for i in range(len(self.players)):
                 player = self.players[i]
                 p = player.cursor_color
-                self.painter.setPen(QColor(0, 0, 0, 0))
+                self.painter.setPen(PEN_BLANK)
                 self.painter.setBrush(QBrush(p.color()))
-                if len(player.buffer) > 0:  # skips empty buffers
+                if len(player.buffer) > 0: # skips empty buffers
                     self.painter.setOpacity(1 if Keys.M1 in Keys(int(player.buffer[-1][3])) else 0.3)
                     self.painter.drawRect(5, 27 - 9 + (11 * i), 10, 10)
                     self.painter.setOpacity(1 if Keys.M2 in Keys(int(player.buffer[-1][3])) else 0.3)
@@ -265,29 +270,29 @@ class _Renderer(QFrame):
                     self.painter.setPen(p)
                     self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods}: {int(player.buffer[-1][1])}, {int(player.buffer[-1][2])}")
                 else:
+                    self.painter.setPen(p)
                     self.painter.drawText(35, 27 + (11 * i), f"{player.username} {player.mods}: Not yet loaded")
-            self.painter.setPen(_pen)
+            self.painter.setPen(PEN_WHITE)
             if self.replay_amount == 2:
                 try:
-                    player = self.players[i]
-                    prev_player = self.players[i - 1]
+                    player = self.players[1]
+                    prev_player = self.players[0]
                     distance = math.sqrt(((prev_player.buffer[-1][1] - player.buffer[-1][1]) ** 2) +
                                          ((prev_player.buffer[-1][2] - player.buffer[-1][2]) ** 2))
-                    self.painter.drawText(5, 39 + (12 * i), f"Distance {prev_player.username}-{player.username}: {int(distance)}px")
+                    self.painter.drawText(5, 39 + (12 * 1), f"Distance {prev_player.username}-{player.username}: {int(distance)}px")
                 except IndexError: # Edge case where we only have data from one cursor
                     pass
 
     def paint_frametime_graph(self):
-        _pen = self.painter.pen()
         x_offset = SCREEN_WIDTH
-        c = _pen.color()
-        self.painter.setBrush(QColor(255 - c.red(), 255 - c.green(), 255 - c.blue(), 180))
+        self.painter.setBrush(BRUSH_DARKGRAY)
+        self.painter.setOpacity(0.75)
         self.painter.drawRect(SCREEN_WIDTH - 360, SCREEN_HEIGHT - 100, 360, 100)
-        self.painter.setBrush(QColor(255 - c.red(), 255 - c.green(), 255 - c.blue(), 0))
+        self.painter.setBrush(BRUSH_BLANK)
         # line routine, draws 60/30/15 fps lines
-        c = _pen.color()
-        _pen.setColor(QColor(c.red(), c.green(), c.blue(), c.alpha() / 2))
-        self.painter.setPen(_pen)
+        PEN_GRAY.setWidth(1)
+        self.painter.setPen(PEN_GRAY)
+        self.painter.setOpacity(1)
         ref_path = QPainterPath()
         ref_path.moveTo(SCREEN_WIDTH - 360, SCREEN_HEIGHT - 17)
         ref_path.lineTo(SCREEN_WIDTH,  SCREEN_HEIGHT - 17)
@@ -297,13 +302,13 @@ class _Renderer(QFrame):
         ref_path.lineTo(SCREEN_WIDTH, SCREEN_HEIGHT - 67)
         self.painter.drawPath(ref_path)
         # draw frame time graph
-        _pen.setColor(QColor(c.red(), c.green(), c.blue(), c.alpha()))
-        self.painter.setPen(_pen)
+        PEN_WHITE.setWidth(1)
+        self.painter.setPen(PEN_WHITE)
         frame_path = QPainterPath()
         frame_path.moveTo(x_offset, max(SCREEN_HEIGHT - 100, SCREEN_HEIGHT - (self.frame_times[0])))
         for time in self.frame_times:
             x_offset -= 3
-            frame_path.lineTo(x_offset, max(SCREEN_HEIGHT - 100, SCREEN_HEIGHT - (time)))
+            frame_path.lineTo(x_offset, max(SCREEN_HEIGHT - 100, SCREEN_HEIGHT - time))
         self.painter.drawPath(frame_path)
         # draw fps & ms
         ms = self.frame_times[0]
@@ -328,12 +333,12 @@ class _Renderer(QFrame):
 
     def draw_cross(self, alpha, point):
         """
-        Draws a line using the given painter, pen, and alpha level from Point start to Point end.
+        Draws a cross.
 
         Args:
            QPainter painter: The painter.
-           Integer alpha: The alpha level from 0.0-1.0 to set the line to.
-           List point: The X&Y position of the point.
+           Integer alpha: The alpha level from 0.0-1.0 to set the cross to.
+           List point: The X&Y position of the cross.
         """
         half_width = WIDTH_CROSS/2
         self.painter.setOpacity(alpha)
@@ -367,20 +372,17 @@ class _Renderer(QFrame):
             Hitobj hitobj: A Hitobject.
         """
         current_time = self.clock.get_time()
-        fade_out_scale = max(0, ((current_time - self.get_hit_time(hitobj)) / self.hitwindow * 0.75))
-        hitcircle_alpha = 255 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 255
-        magic = (255 * (fade_out_scale))
-        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
-        hitcircle_alpha = hitcircle_alpha - (magic if magic > 0 else 0)
-        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha > 0 else 0
-        c = self.painter.pen().color()
+        fade_out = max(0, ((current_time - self.get_hit_time(hitobj)) / self.hitwindow))
+        opacity = min(1, ((current_time - (self.get_hit_time(hitobj) - self.preempt)) / self.fade_in))
+        opacity = max(0, min(1, opacity-fade_out))
         p = hitobj.position
-        _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
-        _pen.setWidth(WIDTH_CIRCLE_BORDER)
-        self.painter.setPen(_pen)
-        self.painter.setBrush(QBrush(QColor(c.red(), c.green(), c.blue(), int(hitcircle_alpha / 4)))) # fill hitcircle
+
+        PEN_WHITE.setWidth(WIDTH_CIRCLE_BORDER)
+        self.painter.setOpacity(opacity)
+        self.painter.setPen(PEN_WHITE)
+        self.painter.setBrush(BRUSH_GRAY)
         self.painter.drawEllipse(QPointF(p.x + X_OFFSET, p.y + Y_OFFSET), self.hitcircle_radius, self.hitcircle_radius)
-        self.painter.setBrush(QBrush(QColor(c.red(), c.green(), c.blue(), 0)))
+        self.painter.setBrush(BRUSH_BLANK)
 
     def draw_spinner(self, hitobj):
         """
@@ -391,23 +393,19 @@ class _Renderer(QFrame):
             Hitobj hitobj: A Hitobject.
         """
         current_time = self.clock.get_time()
-        if self.get_hit_endtime(hitobj) - current_time < 0: return
-        big_circle = (384 / 2)
-        hitcircle_alpha = 255 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 255
-        fade_out = max(0, ((current_time - self.get_hit_endtime(hitobj)) / self.hitwindow * 0.5))
-        magic = (75 * ((fade_out) * 2))
-        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
-        hitcircle_alpha = hitcircle_alpha - (magic if magic > 0 else 0)
-        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha > 0 else 0
+        if self.get_hit_endtime(hitobj) - current_time < 0:
+            return
+        radius = (384 / 2)
+        fade_out = max(0, ((current_time - self.get_hit_endtime(hitobj)) / self.hitwindow))
+        opacity = min(1, ((current_time - (self.get_hit_time(hitobj) - self.preempt)) / self.fade_in))
+        opacity = max(0, min(1, opacity-fade_out))
+        scale = min(1, (self.get_hit_endtime(hitobj) - current_time) / (self.get_hit_endtime(hitobj) - self.get_hit_time(hitobj)))
+        radius = radius * scale
 
-        spinner_scale = max(1 - (self.get_hit_endtime(hitobj) - current_time) / (self.get_hit_endtime(hitobj) - self.get_hit_time(hitobj)), 0)
-        c = self.painter.pen().color()
-
-        spinner_radius = (big_circle * (1 - spinner_scale))
-        _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
-        _pen.setWidth(int(WIDTH_CIRCLE_BORDER / 2))
-        self.painter.setPen(_pen)
-        self.painter.drawEllipse(QPointF(512 / 2 + X_OFFSET, 384 / 2 + Y_OFFSET), spinner_radius, spinner_radius)
+        PEN_WHITE.setWidth(int(WIDTH_CIRCLE_BORDER / 2))
+        self.painter.setPen(PEN_WHITE)
+        self.painter.setOpacity(opacity)
+        self.painter.drawEllipse(QPointF(512 / 2 + X_OFFSET, 384 / 2 + Y_OFFSET), radius, radius)
 
     def draw_approachcircle(self, hitobj):
         """
@@ -418,17 +416,18 @@ class _Renderer(QFrame):
             Hitobj hitobj: A Hitobject.
         """
         current_time = self.clock.get_time()
-        if self.get_hit_time(hitobj) - current_time < 0: return
-        hitcircle_alpha = 255 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 255
-        hitcircle_alpha = hitcircle_alpha if hitcircle_alpha < 255 else 255
-        approachcircle_scale = max(((self.get_hit_time(hitobj) - current_time) / self.preempt) * 3 + 1, 1)
-        c = self.painter.pen().color()
+        if self.get_hit_time(hitobj) - current_time < 0:
+            return
+        opacity = min(1, ((current_time - (self.get_hit_time(hitobj) - self.preempt)) / self.fade_in))
+        opacity = max(0, min(1, opacity))
+        scale = max(1, ((self.get_hit_time(hitobj) - current_time) / self.preempt) * 3 + 1)
         p = hitobj.position
-        approachcircle_radius = self.hitcircle_radius * approachcircle_scale
-        _pen = QPen(QColor(c.red(), c.green(), c.blue(), hitcircle_alpha))
-        _pen.setWidth(int(WIDTH_CIRCLE_BORDER / 2))
-        self.painter.setPen(_pen)
-        self.painter.drawEllipse(QPointF(p.x + X_OFFSET, p.y + Y_OFFSET), approachcircle_radius, approachcircle_radius)
+        radius = self.hitcircle_radius * scale
+
+        PEN_WHITE.setWidth(int(WIDTH_CIRCLE_BORDER / 2))
+        self.painter.setPen(PEN_WHITE)
+        self.painter.setOpacity(opacity)
+        self.painter.drawEllipse(QPointF(p.x + X_OFFSET, p.y + Y_OFFSET), radius, radius)
 
     def draw_slider(self, hitobj):
         """
@@ -452,26 +451,20 @@ class _Renderer(QFrame):
         """
         sliderbody = QPainterPath()
         current_time = self.clock.get_time()
-        sliderbody_alpha = 75 - ((self.get_hit_time(hitobj) - current_time - (self.preempt - self.fade_in)) / self.fade_in) * 75
-        fade_out = max(0, ((current_time - self.get_hit_endtime(hitobj)) / self.hitwindow * 0.5))
-        magic = (75 * ((fade_out) * 2))
-        sliderbody_alpha = sliderbody_alpha if sliderbody_alpha < 75 else 75
-        sliderbody_alpha = sliderbody_alpha - (magic if magic > 0 else 0)
-        sliderbody_alpha = sliderbody_alpha if sliderbody_alpha > 0 else 0
-        c = self.painter.pen().color()
-
-        _pen = self.painter.pen()
-        _pen.setWidth(self.hitcircle_radius * 2 + WIDTH_CIRCLE_BORDER)
-        _pen.setCapStyle(Qt.RoundCap)
-        _pen.setJoinStyle(Qt.RoundJoin)
-        _pen.setColor(QColor(c.red(), c.green(), c.blue(), sliderbody_alpha))
-
+        fade_out = max(0, ((current_time - self.get_hit_endtime(hitobj)) / self.hitwindow))
+        opacity = min(1, ((current_time - (self.get_hit_time(hitobj) - self.preempt)) / self.fade_in))
+        opacity = max(0, min(1, opacity-fade_out)) * 0.75
         p = hitobj.position
+
+        PEN_GRAY.setWidth(self.hitcircle_radius * 2 + WIDTH_CIRCLE_BORDER)
+        PEN_GRAY.setCapStyle(Qt.RoundCap)
+        PEN_GRAY.setJoinStyle(Qt.RoundJoin)
+        self.painter.setPen(PEN_GRAY)
+        self.painter.setOpacity(opacity)
+
         sliderbody.moveTo(p.x + X_OFFSET, p.y + Y_OFFSET)
         for i in hitobj.slider_body:
             sliderbody.lineTo(i.x + X_OFFSET, i.y + Y_OFFSET)
-
-        self.painter.setPen(_pen)
         self.painter.drawPath(sliderbody)
 
     def draw_progressbar(self, percentage):
