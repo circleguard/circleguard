@@ -231,10 +231,8 @@ class _Renderer(QFrame):
                                            (player.buffer[i + 1][1], player.buffer[i + 1][2]))
         _pen.setWidth(2)
         self.painter.setPen(_pen)
-        for i in range(len(player.buffer) - 1):
+        for i in range(len(player.buffer)):
             self.draw_cross(i * alpha_step, (player.buffer[i][1], player.buffer[i][2]))
-            if i == len(player.buffer) - 2:
-                self.draw_cross((i + 1) * alpha_step, (player.buffer[i + 1][1], player.buffer[i + 1][2]))
         # reset alpha
         self.painter.setOpacity(1)
 
