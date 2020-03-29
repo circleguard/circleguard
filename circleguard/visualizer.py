@@ -12,6 +12,7 @@ from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIco
 import clock
 from utils import resource_path, Player
 from settings import get_setting, set_setting
+from runtime_tracker import RunTimeAnalyser
 
 import math
 
@@ -33,6 +34,7 @@ SCREEN_HEIGHT = 480+96
 
 class _Renderer(QFrame):
     update_signal = pyqtSignal(int)
+    analyzer = RunTimeAnalyser()
 
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None, speed=1):
         super(_Renderer, self).__init__(parent)
@@ -100,11 +102,6 @@ class _Renderer(QFrame):
         self.paused = False
         self.play_direction = 1
 
-        # debug stuff
-        self.frame_time_clock = clock.Timer(1)
-        self.last_frame = 0
-        self.frame_times = []
-
         # render stuff
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_frame_from_timer)
@@ -145,6 +142,7 @@ class _Renderer(QFrame):
         self.update_signal.emit(current_time)
         self.update()
 
+    @analyzer.track
     def get_hitobjects(self):
         # get current hitobjects
         current_time = self.clock.get_time()
@@ -192,10 +190,6 @@ class _Renderer(QFrame):
                 self.clock.reset()
                 self.painter.end()
                 return
-        # debug stuff
-        self.frame_times.insert(0, self.frame_time_clock.get_time() - self.last_frame)
-        self.frame_times = self.frame_times[:120]
-        self.last_frame = self.frame_time_clock.get_time()
         # beatmap
         if self.has_beatmap:
             self.paint_beatmap()
@@ -206,10 +200,14 @@ class _Renderer(QFrame):
         self.painter.setPen(_pen)
         if get_setting("visualizer_info"):
             self.paint_info()
-        if get_setting("visualizer_frametime"):
+        show_frametime = get_setting("visualizer_frametime")
+        if show_frametime:
+            self.analyzer.new_frame()
             self.paint_frametime_graph()
+        self.analyzer.toggle(show_frametime)
         self.painter.end()
 
+    @analyzer.track
     def paint_cursor(self, player):
         """
         Draws a cursor.
@@ -238,6 +236,7 @@ class _Renderer(QFrame):
         for hitobj in self.hitobjs[::-1]:
             self.draw_hitobject(hitobj)
 
+    @analyzer.track
     def paint_info(self):
         """
         Draws various Information.
@@ -300,16 +299,22 @@ class _Renderer(QFrame):
         _pen.setColor(QColor(c.red(), c.green(), c.blue(), c.alpha()))
         self.painter.setPen(_pen)
         frame_path = QPainterPath()
-        frame_path.moveTo(x_offset, max(SCREEN_HEIGHT - 100, SCREEN_HEIGHT - (self.frame_times[0])))
-        for time in self.frame_times:
+        frames = self.analyzer.get_frames()
+        frame_path.moveTo(x_offset, max(SCREEN_HEIGHT - 100, SCREEN_HEIGHT - (frames[0]["total"])))
+        for frame in frames:
             x_offset -= 3
-            frame_path.lineTo(x_offset, max(SCREEN_HEIGHT - 100, SCREEN_HEIGHT - (time)))
+            frame_path.lineTo(x_offset, max(SCREEN_HEIGHT - 100, SCREEN_HEIGHT - (frame["total"])))
         self.painter.drawPath(frame_path)
         # draw fps & ms
-        ms = self.frame_times[0]
+        objects = frames[0]
+        ms = frames[0]["total"]
         fps = 1000 / ms
         self.painter.drawText(SCREEN_WIDTH - 360 + 5, SCREEN_HEIGHT - 100 + 12, f"fps:{int(fps)}")
         self.painter.drawText(SCREEN_WIDTH - 360 + 5, SCREEN_HEIGHT - 100 + 22, "{:.2f}ms".format(ms))
+
+        for i in range(len(objects)):
+            current_key = list(objects.keys())[i]
+            self.painter.drawText(SCREEN_WIDTH - 160, SCREEN_HEIGHT - 100 - 6-10*i, "{}: {:.2f}ms".format(current_key, objects[current_key]))
 
     def draw_line(self, alpha, start, end):
         """
@@ -355,6 +360,7 @@ class _Renderer(QFrame):
         if isinstance(hitobj, Spinner):
             self.draw_spinner(hitobj)
 
+    @analyzer.track
     def draw_hitcircle(self, hitobj):
         """
         Draws Hitcircle.
@@ -379,6 +385,7 @@ class _Renderer(QFrame):
         self.painter.drawEllipse(QPointF(p.x + X_OFFSET, p.y + Y_OFFSET), self.hitcircle_radius, self.hitcircle_radius)
         self.painter.setBrush(QBrush(QColor(c.red(), c.green(), c.blue(), 0)))
 
+    @analyzer.track
     def draw_spinner(self, hitobj):
         """
         Draws Spinner.
@@ -406,6 +413,7 @@ class _Renderer(QFrame):
         self.painter.setPen(_pen)
         self.painter.drawEllipse(QPointF(512 / 2 + X_OFFSET, 384 / 2 + Y_OFFSET), spinner_radius, spinner_radius)
 
+    @analyzer.track
     def draw_approachcircle(self, hitobj):
         """
         Draws Approachcircle.
@@ -427,6 +435,7 @@ class _Renderer(QFrame):
         self.painter.setPen(_pen)
         self.painter.drawEllipse(QPointF(p.x + X_OFFSET, p.y + Y_OFFSET), approachcircle_radius, approachcircle_radius)
 
+    @analyzer.track
     def draw_slider(self, hitobj):
         """
         Draws sliderbody and hitcircle & approachcircle if needed
