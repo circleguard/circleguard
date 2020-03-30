@@ -791,6 +791,9 @@ class MainTab(QFrame):
             pass
 
     def visualize(self, replays, beatmap_id=None):
+        # only run one instance at a time
+        if self.visualizer_window is not None:
+            self.visualizer_window.close()
         self.visualizer_window = VisualizerWindow(replays=replays, beatmap_id=beatmap_id)
         self.visualizer_window.show()
 
@@ -966,6 +969,7 @@ class ScrollableSettingsWidget(QFrame):
         super().__init__()
         self._rainbow_speed = 0.005
         self._rainbow_counter = 0
+        self.visualizer_window = None
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.next_color)
         self.wizard = CircleguardWizard()
@@ -974,9 +978,6 @@ class ScrollableSettingsWidget(QFrame):
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
         self.darkmode.box.stateChanged.connect(self.reload_theme)
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
-        self.visualizer_bg = OptionWidget("Black Visualizer bg", "Reopen Visualizer for it to apply", "visualizer_black_bg")
-        self.visualizer_frametime = OptionWidget("Show frametime graph in visualizer", "", "visualizer_frametime")
-        self.visualizer_bg.box.stateChanged.connect(self.reload_theme)
         self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
         self.cache_location = FolderChooser("Cache Location", get_setting("cache_dir"), folder_mode=True)
@@ -1004,7 +1005,6 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(Separator("Appearance"))
         self.layout.addWidget(self.darkmode)
         self.layout.addWidget(self.visualizer_info)
-        self.layout.addWidget(self.visualizer_bg)
         self.layout.addWidget(self.visualizer_beatmap)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Debug"))
@@ -1014,7 +1014,9 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(Separator("Dev"))
         self.layout.addWidget(self.rainbow)
         self.layout.addWidget(self.run_wizard)
-        self.layout.addWidget(BeatmapTest())
+        self.beatmaptest = BeatmapTest()
+        self.beatmaptest.button.clicked.connect(self.visualize)
+        self.layout.addWidget(self.beatmaptest)
         self.setLayout(self.layout)
 
         # we never actually set the theme to dark anywhere
@@ -1047,6 +1049,12 @@ class ScrollableSettingsWidget(QFrame):
 
     def reload_theme(self):
         switch_theme(get_setting("dark_theme"))
+
+    def visualize(self):
+        if self.visualizer_window is not None:
+            self.visualizer_window.close()
+        self.visualizer_window = VisualizerWindow(beatmap_path=self.beatmaptest.file_chooser.path)
+        self.visualizer_window.show()
 
 
 class ResultsTab(QFrame):

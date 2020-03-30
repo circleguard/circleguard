@@ -6,12 +6,13 @@ from slider.beatmap import Circle, Slider, Spinner
 from slider.curve import Bezier, MultiBezier
 from slider.mod import circle_radius, od_to_ms
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF
-from PyQt5.QtWidgets import QWidget, QFrame, QMainWindow, QGridLayout, QSlider, QPushButton, QShortcut, QLabel
+from PyQt5.QtWidgets import QWidget, QFrame, QMainWindow, QVBoxLayout, QShortcut
 from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIcon, QPalette, QBrush
 
 import clock
 from utils import resource_path, Player
 from settings import get_setting, set_setting
+from widgets import VisualizerControls
 
 import math
 
@@ -575,78 +576,24 @@ class _Interface(QWidget):
         super(_Interface, self).__init__()
         speed = get_setting("default_speed")
         self.speed_options = get_setting("speed_options")
+        self.layout = QVBoxLayout()
+
         self.renderer = _Renderer(replays, beatmap_id, beatmap_path, speed=speed)
-
-        self.layout = QGridLayout()
-        self.slider = QSlider(Qt.Horizontal)
-
-        self.play_reverse_button = QPushButton()
-        self.play_reverse_button.setIcon(QIcon(str(resource_path("./resources/play_reverse.png"))))
-        self.play_reverse_button.setFixedSize(20, 20)
-        self.play_reverse_button.setToolTip("Plays visualization in reverse")
-        self.play_reverse_button.clicked.connect(self.play_reverse)
-
-        self.play_normal_button = QPushButton()
-        self.play_normal_button.setIcon(QIcon(str(resource_path("./resources/play_normal.png"))))
-        self.play_normal_button.setFixedSize(20, 20)
-        self.play_normal_button.setToolTip("Plays visualization in normally")
-        self.play_normal_button.clicked.connect(self.play_normal)
-
-        self.next_frame_button = QPushButton()
-        self.next_frame_button.setIcon(QIcon(str(resource_path("./resources/frame_next.png"))))
-        self.next_frame_button.setFixedSize(20, 20)
-        self.next_frame_button.setToolTip("Displays next frame")
-        self.next_frame_button.clicked.connect(lambda: self.change_frame(reverse=False))
-
-        self.previous_frame_button = QPushButton()
-        self.previous_frame_button.setIcon(QIcon(str(resource_path("./resources/frame_back.png"))))
-        self.previous_frame_button.setFixedSize(20, 20)
-        self.previous_frame_button.setToolTip("Displays previous frame")
-        self.previous_frame_button.clicked.connect(lambda: self.change_frame(reverse=True))
-
-        self.pause_button = QPushButton()
-        self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
-        self.pause_button.setFixedSize(20, 20)
-        self.pause_button.setToolTip("Pause visualization")
-        self.pause_button.clicked.connect(self.pause)
-
-        self.speed_up_button = QPushButton()
-        self.speed_up_button.setIcon(QIcon(str(resource_path("./resources/speed_up.png"))))
-        self.speed_up_button.setFixedSize(20, 20)
-        self.speed_up_button.setToolTip("Speed up")
-        self.speed_up_button.clicked.connect(self.increase_speed)
-
-        self.speed_down_button = QPushButton()
-        self.speed_down_button.setIcon(QIcon(str(resource_path("./resources/speed_down.png"))))
-        self.speed_down_button.setFixedSize(20, 20)
-        self.speed_down_button.setToolTip("Speed down")
-        self.speed_down_button.clicked.connect(self.lower_speed)
-
-        self.slider.setRange(0, self.renderer.playback_len)
-        self.slider.setValue(0)
-        self.slider.setFixedHeight(20)
-        self.slider.setStyleSheet("outline: none;")
         self.renderer.update_signal.connect(self.update_slider)
-        # don't want to use valueChanged because we change the value
-        # programatically and valueChanged would cause a feedback loop.
-        # sliderMoved only activates on true user action, when we actually
-        # want to seek.
-        self.slider.sliderMoved.connect(self.renderer.seek_to)
 
-        self.speed_label = QLabel(str(speed) + "x")
-        self.speed_label.setFixedSize(40, 20)
-        self.speed_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
+        self.controls = VisualizerControls(speed)
+        self.controls.play_reverse_button.clicked.connect(self.play_reverse)
+        self.controls.play_normal_button.clicked.connect(self.play_normal)
+        self.controls.next_frame_button.clicked.connect(lambda: self.change_frame(reverse=False))
+        self.controls.previous_frame_button.clicked.connect(lambda: self.change_frame(reverse=True))
+        self.controls.speed_up_button.clicked.connect(self.increase_speed)
+        self.controls.speed_down_button.clicked.connect(self.lower_speed)
+        self.controls.slider.sliderMoved.connect(self.renderer.seek_to)
+        self.controls.slider.setRange(0, self.renderer.playback_len)
 
-        self.layout.addWidget(self.renderer, 0, 0, 16, 17)
-        self.layout.addWidget(self.play_reverse_button, 17, 0, 1, 1)
-        self.layout.addWidget(self.previous_frame_button, 17, 1, 1, 1)
-        self.layout.addWidget(self.pause_button, 17, 2, 1, 1)
-        self.layout.addWidget(self.next_frame_button, 17, 3, 1, 1)
-        self.layout.addWidget(self.play_normal_button, 17, 4, 1, 1)
-        self.layout.addWidget(self.slider, 17, 5, 1, 9)
-        self.layout.addWidget(self.speed_label, 17, 14, 1, 1)
-        self.layout.addWidget(self.speed_down_button, 17, 15, 1, 1)
-        self.layout.addWidget(self.speed_up_button, 17, 16, 1, 1)
+        self.layout.addWidget(self.renderer)
+        self.layout.addWidget(self.controls)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.setLayout(self.layout)
 
     def play_normal(self):
@@ -655,7 +602,7 @@ class _Interface(QWidget):
         self.update_speed(abs(self.renderer.clock.current_speed))
 
     def update_slider(self, value):
-        self.slider.setValue(value)
+        self.controls.slider.setValue(value)
 
     def play_reverse(self):
         self.renderer.resume()
@@ -674,24 +621,24 @@ class _Interface(QWidget):
 
     def pause(self):
         if self.renderer.paused:
-            self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
+            self.controls.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
             self.renderer.resume()
         else:
-            self.pause_button.setIcon(QIcon(str(resource_path("./resources/play.png"))))
+            self.controls.pause_button.setIcon(QIcon(str(resource_path("./resources/play.png"))))
             self.renderer.pause()
 
     def lower_speed(self):
         index = self.speed_options.index(abs(self.renderer.clock.current_speed))
         if index != 0:
             speed = self.speed_options[index - 1]
-            self.speed_label.setText(str(speed) + "x")
+            self.controls.speed_label.setText(str(speed) + "x")
             self.update_speed(speed)
 
     def increase_speed(self):
         index = self.speed_options.index(abs(self.renderer.clock.current_speed))
         if index != len(self.speed_options) - 1:
             speed = self.speed_options[index + 1]
-            self.speed_label.setText(str(speed) + "x")
+            self.controls.speed_label.setText(str(speed) + "x")
             self.update_speed(speed)
 
 
