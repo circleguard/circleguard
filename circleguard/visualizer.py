@@ -81,7 +81,7 @@ class _Renderer(QFrame):
             self.hitcircle_radius = circle_radius(self.beatmap.circle_size) - WIDTH_CIRCLE_BORDER / 2
             ## loading stuff
             self.is_loading = True
-            self.sliders_total = len(self.beatmap.hit_objects) - 1
+            self.sliders_total = len(self.beatmap.hit_objects)
             self.sliders_current = 0
             self.thread = threading.Thread(target=self.process_sliders)
             self.thread.start()
