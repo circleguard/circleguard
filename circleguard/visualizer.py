@@ -35,11 +35,13 @@ GAMEPLAY_PADDING_WIDTH = 64 + 192
 GAMEPLAY_PADDING_HEIGHT = 48 + 48
 GAMEPLAY_WIDTH = 512
 GAMEPLAY_HEIGHT = 384
+FRAMETIME_STEPS = 3
+FRAMETIME_FRAMES = 120
 
 
 class _Renderer(QFrame):
     update_signal = pyqtSignal(int)
-    analyzer = RunTimeAnalyser()
+    analyzer = RunTimeAnalyser(frame_buffer=FRAMETIME_FRAMES)
 
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None, speed=1):
         super(_Renderer, self).__init__(parent)
@@ -317,7 +319,7 @@ class _Renderer(QFrame):
         x_offset = self.width()
         height = self.height()
         width = self.width()
-        length = 360
+        length = FRAMETIME_FRAMES * FRAMETIME_STEPS
         self.painter.setBrush(BRUSH_DARKGRAY)
         self.painter.setOpacity(0.75)
         self.painter.drawRect(width - length, height - 100, 360, 100)
@@ -327,11 +329,11 @@ class _Renderer(QFrame):
         self.painter.setPen(PEN_GRAY)
         self.painter.setOpacity(1)
         ref_path = QPainterPath()
-        ref_path.moveTo(width - 360, height - 17)
+        ref_path.moveTo(width - length, height - 17)
         ref_path.lineTo(width,  height - 17)
-        ref_path.moveTo(width - 360, height - 33)
+        ref_path.moveTo(width - length, height - 33)
         ref_path.lineTo(width, height - 33)
-        ref_path.moveTo(width - 360, height - 67)
+        ref_path.moveTo(width - length, height - 67)
         ref_path.lineTo(width, height - 67)
         self.painter.drawPath(ref_path)
         # draw frame time graph
@@ -341,7 +343,7 @@ class _Renderer(QFrame):
         frames = self.analyzer.get_frames()
         frame_path.moveTo(x_offset, max(height - 100, height - frames[0]["total"]))
         for frame in frames:
-            x_offset -= 3
+            x_offset -= FRAMETIME_STEPS
             frame_path.lineTo(x_offset, max(height - 100, height - frame["total"]))
         self.painter.drawPath(frame_path)
         # draw fps & ms
