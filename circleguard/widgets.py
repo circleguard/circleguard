@@ -1050,3 +1050,4 @@ class VisualizerControls(QFrame):
         self.layout.addWidget(self.speed_up_button, 16, 16, 1, 1)
         self.layout.setContentsMargins(5, 0, 5, 5)
         self.setLayout(self.layout)
+        self.setFixedHeight(25)
