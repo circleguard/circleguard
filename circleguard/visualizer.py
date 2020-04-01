@@ -697,9 +697,9 @@ class VisualizerWindow(QMainWindow):
         QShortcut(QKeySequence(Qt.Key_Up), self, self.interface.increase_speed)
         QShortcut(QKeySequence(Qt.Key_Down), self, self.interface.lower_speed)
         QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F11), self, self.toggle_frametime)
-        QShortcut(QKeySequence.FullScreen, self, self.go_fullscreen)
-        QShortcut(QKeySequence(Qt.Key_F), self, self.go_fullscreen)
-        QShortcut(QKeySequence(Qt.ALT + Qt.Key_Return), self, self.go_fullscreen)
+        QShortcut(QKeySequence.FullScreen, self, self.toggle_fullscreen)
+        QShortcut(QKeySequence(Qt.Key_F), self, self.toggle_fullscreen)
+        QShortcut(QKeySequence(Qt.ALT + Qt.Key_Return), self, self.toggle_fullscreen)
         QShortcut(QKeySequence('Escape'), self, self.exit_fullscreen)
 
     def closeEvent(self, event):
@@ -707,7 +707,7 @@ class VisualizerWindow(QMainWindow):
         self.interface.renderer.timer.stop()
         np.seterr(**PREVIOUS_ERRSTATE)
 
-    def go_fullscreen(self):
+    def toggle_fullscreen(self):
         if self.windowState() == Qt.WindowFullScreen:
             self.exit_fullscreen()
             return
