@@ -132,7 +132,6 @@ class _Renderer(QFrame):
             self.scale = x_scale
             self.y_offset = (self.size().height() - height * x_scale) / 2
             self.x_offset = 0
-            print(self.y_offset)
         else:
             self.scale = y_scale
             self.y_offset = 0
