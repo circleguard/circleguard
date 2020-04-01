@@ -124,24 +124,24 @@ class _Renderer(QFrame):
         self.setPalette(pal)
 
     def resizeEvent(self, event):
-        width = (GAMEPLAY_WIDTH + GAMEPLAY_PADDING_WIDTH * 2)
-        height = (GAMEPLAY_HEIGHT + GAMEPLAY_PADDING_HEIGHT * 2)
-        y_scale = event.size().height() / height
-        x_scale = event.size().width() / width
-        if width * y_scale > event.size().width():
+        width = event.size().width() - GAMEPLAY_PADDING_WIDTH * 2
+        height = event.size().height() - GAMEPLAY_PADDING_HEIGHT * 2
+        y_scale = height / GAMEPLAY_HEIGHT
+        x_scale = width / GAMEPLAY_WIDTH
+        if GAMEPLAY_WIDTH * y_scale > width:
             self.scale = x_scale
-            self.y_offset = (self.size().height() - height * x_scale) / 2
+            self.y_offset = (height - GAMEPLAY_HEIGHT * x_scale) / 2
             self.x_offset = 0
         else:
             self.scale = y_scale
             self.y_offset = 0
-            self.x_offset = (self.size().width() - width * y_scale) / 2
+            self.x_offset = (width - GAMEPLAY_WIDTH * y_scale) / 2
 
     def _x(self, position):
-        return self.x_offset + self.scaled_number(GAMEPLAY_PADDING_WIDTH + position)
+        return self.x_offset + GAMEPLAY_PADDING_WIDTH + self.scaled_number(position)
 
     def _y(self, position):
-        return self.y_offset + self.scaled_number(GAMEPLAY_PADDING_HEIGHT + position)
+        return self.y_offset + GAMEPLAY_PADDING_HEIGHT + self.scaled_number(position)
 
     def scaled_point(self, x, y):
         return QPointF(self._x(x), self._y(y))
