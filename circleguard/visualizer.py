@@ -3,7 +3,6 @@ import threading
 from circleguard import Mod, Keys
 from slider import Beatmap, Library
 from slider.beatmap import Circle, Slider, Spinner
-from slider.curve import Bezier, MultiBezier
 from slider.mod import circle_radius, od_to_ms
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF, QRectF
 from PyQt5.QtWidgets import QWidget, QFrame, QMainWindow, QVBoxLayout, QShortcut
@@ -37,6 +36,7 @@ GAMEPLAY_WIDTH = 512
 GAMEPLAY_HEIGHT = 384
 FRAMETIME_STEPS = 3
 FRAMETIME_FRAMES = 120
+SLIDER_TICKRATE = 50
 
 
 class _Renderer(QFrame):
@@ -541,13 +541,8 @@ class _Renderer(QFrame):
             self.sliders_current = index
             current_hitobj = self.beatmap.hit_objects[index]
             if isinstance(current_hitobj, Slider):
-                steps = max(1, int((self.beatmap.hit_objects[index].end_time - self.beatmap.hit_objects[index].time).total_seconds() * 50)) + 1
-                if isinstance(current_hitobj.curve, Bezier):
-                    self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.at(np.array([i / steps for i in range(steps)]))
-                elif isinstance(current_hitobj.curve, MultiBezier):
-                    self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve(i / steps) for i in range(steps)]
-                else:
-                    self.beatmap.hit_objects[index].slider_body = current_hitobj.curve.points
+                steps = max(2, int((self.get_hit_endtime(current_hitobj) - self.get_hit_time(current_hitobj))/SLIDER_TICKRATE))
+                self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve(i / steps) for i in range(steps + 1)]
 
     def reset(self, end=False):
         """
