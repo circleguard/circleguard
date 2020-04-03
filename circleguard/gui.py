@@ -673,11 +673,11 @@ class MainTab(QFrame):
                 message_loading_info = get_setting("message_loading_info").format(ts=datetime.now(), check_type=check_type)
                 self.write_to_terminal_signal.emit(message_loading_info)
                 cg.load_info(c)
-                replays = c.all_replays() + c.all_replays2()
+                replays = c.all_replays()
                 # don't show "loading 2 replays" if they were already loaded
                 # by a previous check, would be misleading
                 num_unloaded = 0
-                num_total = c.num_replays()
+                num_total = len(c.all_replays())
                 for r in replays:
                     if not r.loaded:
                         num_unloaded += 1
