@@ -190,7 +190,7 @@ DEFAULTS = {
         "visualizer_frametime": False,
         "render_beatmap": True,
         "default_speed": float(1),  # so type() returns float, since we want to allow float values, not just int
-        "speed_options": [0.1, 0.75, 1.0, 1.5, 10]
+        "speed_options": [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 3.0, 5.0, 10.0]
 
     },
     "Locations": {
@@ -278,6 +278,9 @@ CHANGED = {
         "cache_dir",
         "timestamp_format",
         "last_update_check"
+    ],
+    "2.1.1": [
+        "speed_options"
     ]
 }
 
