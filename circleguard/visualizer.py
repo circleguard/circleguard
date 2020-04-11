@@ -620,6 +620,7 @@ class _Interface(QWidget):
         self.renderer.update_signal.connect(self.update_slider)
 
         self.controls = VisualizerControls(speed)
+        self.controls.pause_button.clicked.connect(self.pause)
         self.controls.play_reverse_button.clicked.connect(self.play_reverse)
         self.controls.play_normal_button.clicked.connect(self.play_normal)
         self.controls.next_frame_button.clicked.connect(lambda: self.change_frame(reverse=False))
