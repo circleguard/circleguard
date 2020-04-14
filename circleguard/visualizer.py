@@ -103,7 +103,7 @@ class _Renderer(QFrame):
         self.playback_len = max(max(player.t) for player in self.players) if self.replay_amount > 0 else self.playback_len
         # flip all replays with hr
         for player in self.players:
-            if Mod.HardRock in player.replay.mods:
+            if Mod.HardRock in player.mods:
                 for d in player.xy:
                     d[1] = 384 - d[1]
 
@@ -297,7 +297,7 @@ class _Renderer(QFrame):
                 self.painter.drawRect(18, 27 - 9 + (11 * i), 10, 10)
                 self.painter.setOpacity(1)
                 self.painter.setPen(p)
-                self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods}: {int(player.xy[player.end_pos][0])}, {int(player.xy[player.end_pos][1])} (t:{int(player.t[player.end_pos])})")
+                self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods.short_name()}: {int(player.xy[player.end_pos][0])}, {int(player.xy[player.end_pos][1])} (t:{int(player.t[player.end_pos])})")
             self.painter.setPen(PEN_WHITE)
             if self.replay_amount == 2:
                 try:

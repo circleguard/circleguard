@@ -117,7 +117,6 @@ class Run():
 
 class Player:
     def __init__(self, replay, cursor_color):
-        self.replay = replay
         self.cursor_color = cursor_color
         self.username = replay.username
         self.t = replay.t
@@ -125,4 +124,4 @@ class Player:
         self.k = replay.k
         self.end_pos = 0
         self.start_pos = 0
-        self.mods = replay.mods.short_name()
+        self.mods = replay.mods
