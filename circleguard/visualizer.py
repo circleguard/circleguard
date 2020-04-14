@@ -686,6 +686,8 @@ class VisualizerWindow(QMainWindow):
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
         QShortcut(QKeySequence(Qt.Key_Right), self, lambda: self.interface.change_frame(reverse=False))
         QShortcut(QKeySequence(Qt.Key_Left), self, lambda: self.interface.change_frame(reverse=True))
+        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Right), self, lambda: self.interface.play_normal())
+        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Left), self, lambda: self.interface.play_reverse())
         QShortcut(QKeySequence(Qt.Key_Up), self, self.interface.increase_speed)
         QShortcut(QKeySequence(Qt.Key_Down), self, self.interface.lower_speed)
         QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F11), self, self.toggle_frametime)
