@@ -54,7 +54,10 @@ class _Renderer(QFrame):
 
         # beatmap init stuff
         self.hitobjs = []
-        if beatmap_path is not None:
+
+        if not get_setting("render_beatmap"):
+            self.has_beatmap = False
+        elif beatmap_path is not None:
             self.beatmap = Beatmap.from_path(beatmap_path)
             self.has_beatmap = True
             self.playback_len = self.get_hit_endtime(self.beatmap.hit_objects[-1])
