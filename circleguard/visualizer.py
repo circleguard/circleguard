@@ -54,7 +54,10 @@ class _Renderer(QFrame):
 
         # beatmap init stuff
         self.hitobjs = []
-        if beatmap_path is not None:
+
+        if not get_setting("render_beatmap"):
+            self.has_beatmap = False
+        elif beatmap_path is not None:
             self.beatmap = Beatmap.from_path(beatmap_path)
             self.has_beatmap = True
             self.playback_len = self.get_hit_endtime(self.beatmap.hit_objects[-1])
@@ -95,19 +98,14 @@ class _Renderer(QFrame):
         self.players = []
         for replay in replays:
             self.players.append(
-                Player(data=np.array(replay.as_list_with_timestamps()),
-                       replay=replay,
-                       username=replay.username,
-                       mods=replay.mods.short_name(),
-                       buffer=[],
-                       cursor_color=QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),
-                       pos=0))
-        self.playback_len = max(player.data[-1][0] for player in self.players) if self.replay_amount > 0 else self.playback_len
+                Player(replay=replay,
+                       cursor_color=QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),))
+        self.playback_len = max(max(player.t) for player in self.players) if self.replay_amount > 0 else self.playback_len
         # flip all replays with hr
         for player in self.players:
-            if Mod.HardRock in player.replay.mods:
-                for d in player.data:
-                    d[2] = 384 - d[2]
+            if Mod.HardRock in player.mods:
+                for d in player.xy:
+                    d[1] = 384 - d[1]
 
         # clock stuff
         self.clock = clock.Timer(speed)
@@ -177,9 +175,8 @@ class _Renderer(QFrame):
             self.reset(end=True if self.clock.current_speed < 0 else False)
 
         for player in self.players:
-            player.pos = np.searchsorted(player.data.T[0], current_time, "right")
-            magic = player.pos - FRAMES_ON_SCREEN if player.pos >= FRAMES_ON_SCREEN else 0
-            player.buffer = player.data[magic:player.pos]
+            player.end_pos = np.searchsorted(player.t, current_time, "right") - 1
+            player.start_pos = player.end_pos - FRAMES_ON_SCREEN if player.end_pos >= FRAMES_ON_SCREEN else 0
 
         if self.has_beatmap:
             self.get_hitobjects()
@@ -258,13 +255,13 @@ class _Renderer(QFrame):
         _pen = player.cursor_color
         _pen.setWidth(self.scaled_number(WIDTH_LINE))
         self.painter.setPen(_pen)
-        for i in range(len(player.buffer) - 1):
-            self.draw_line(i * alpha_step, (player.buffer[i][1], player.buffer[i][2]),
-                                           (player.buffer[i + 1][1], player.buffer[i + 1][2]))
+        for i in range(player.start_pos, player.end_pos):
+            self.draw_line((i-player.start_pos) * alpha_step, (player.xy[i][0], player.xy[i][1]),
+                           (player.xy[i + 1][0], player.xy[i + 1][1]))
         _pen.setWidth(self.scaled_number(2))
         self.painter.setPen(_pen)
-        for i in range(len(player.buffer)):
-            self.draw_cross(i * alpha_step, (player.buffer[i][1], player.buffer[i][2]))
+        for i in range(player.start_pos, player.end_pos+1):
+            self.draw_cross((i-player.start_pos) * alpha_step, (player.xy[i][0], player.xy[i][1]))
         # reset alpha
         self.painter.setOpacity(1)
 
@@ -294,24 +291,20 @@ class _Renderer(QFrame):
                 p = player.cursor_color
                 self.painter.setPen(PEN_BLANK)
                 self.painter.setBrush(QBrush(p.color()))
-                if len(player.buffer) > 0: # skips empty buffers
-                    self.painter.setOpacity(1 if Keys.M1 in Keys(int(player.buffer[-1][3])) else 0.3)
-                    self.painter.drawRect(5, 27 - 9 + (11 * i), 10, 10)
-                    self.painter.setOpacity(1 if Keys.M2 in Keys(int(player.buffer[-1][3])) else 0.3)
-                    self.painter.drawRect(18, 27 - 9 + (11 * i), 10, 10)
-                    self.painter.setOpacity(1)
-                    self.painter.setPen(p)
-                    self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods}: {int(player.buffer[-1][1])}, {int(player.buffer[-1][2])}")
-                else:
-                    self.painter.setPen(p)
-                    self.painter.drawText(35, 27 + (11 * i), f"{player.username} {player.mods}: Not yet loaded")
+                self.painter.setOpacity(1 if Keys.M1 in Keys(int(player.k[player.end_pos])) else 0.3)
+                self.painter.drawRect(5, 27 - 9 + (11 * i), 10, 10)
+                self.painter.setOpacity(1 if Keys.M2 in Keys(int(player.k[player.end_pos])) else 0.3)
+                self.painter.drawRect(18, 27 - 9 + (11 * i), 10, 10)
+                self.painter.setOpacity(1)
+                self.painter.setPen(p)
+                self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods.short_name()}: {int(player.xy[player.end_pos][0])}, {int(player.xy[player.end_pos][1])}")
             self.painter.setPen(PEN_WHITE)
             if self.replay_amount == 2:
                 try:
                     player = self.players[1]
                     prev_player = self.players[0]
-                    distance = math.sqrt(((prev_player.buffer[-1][1] - player.buffer[-1][1]) ** 2) +
-                                         ((prev_player.buffer[-1][2] - player.buffer[-1][2]) ** 2))
+                    distance = math.sqrt(((prev_player.xy[prev_player.end_pos][0] - player.xy[player.end_pos][0]) ** 2) +
+                                         ((prev_player.xy[prev_player.end_pos][1] - player.xy[player.end_pos][1]) ** 2))
                     self.painter.drawText(5, 39 + (12 * 1), f"Distance {prev_player.username}-{player.username}: {int(distance)}px")
                 except IndexError: # Edge case where we only have data from one cursor
                     pass
@@ -570,11 +563,11 @@ class _Renderer(QFrame):
             # self.pos is a list of current indecies of the replays
             # self.data[0][self.pos[0]] is the current frame we're on
             # so seek to the next frame; self.pos[0] + 1
-            next_frame_times = [self.players[x].data[self.players[x].pos + 1][0] for x in range(len(self.players))]
-            self.seek_to(min(next_frame_times) - 1)
+            next_frame_times = [self.players[x].t[self.players[x].end_pos + 1] for x in range(len(self.players))]
+            self.seek_to(min(next_frame_times))
         else:
-            previous_frame_times = [self.players[x].data[self.players[x].pos - 1][0] for x in range(len(self.players))]
-            self.seek_to(min(previous_frame_times) - 1)
+            previous_frame_times = [self.players[x].t[self.players[x].end_pos - 1] for x in range(len(self.players))]
+            self.seek_to(max(previous_frame_times))
 
     def seek_to(self, position):
         """

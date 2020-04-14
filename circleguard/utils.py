@@ -114,12 +114,14 @@ class Run():
         self.run_id = run_id
         self.event = event
 
-class Player():
-    def __init__(self, data, replay, username, mods, buffer, cursor_color, pos):
-        self.data = data
-        self.replay = replay
-        self.username = username
-        self.mods = mods
-        self.buffer = buffer
+
+class Player:
+    def __init__(self, replay, cursor_color):
         self.cursor_color = cursor_color
-        self.pos = pos
+        self.username = replay.username
+        self.t = replay.t
+        self.xy = replay.xy
+        self.k = replay.k
+        self.end_pos = 0
+        self.start_pos = 0
+        self.mods = replay.mods
