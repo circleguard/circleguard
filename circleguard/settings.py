@@ -397,10 +397,6 @@ def set_setting(name, value):
 
 # overwrites circleguard.cfg with our settings
 def overwrite_config():
-    # add file comments at top of file
-    with open(CFG_PATH, "w+") as f:
-        f.write("### " + COMMENTS["file"].replace("\n", "\n### ") + "\n\n")
-
     config = ConfigParser(allow_no_value=True, interpolation=None)
     config.optionxform = str # preserve case in setting keys
     for section in DEFAULTS.keys():
@@ -424,8 +420,11 @@ def overwrite_config():
 
         config[section][setting] = str(get_setting(setting))
 
-    with open(CFG_PATH, "a+") as f:
+    with open(CFG_PATH, "w+") as f:
+        # add file comments at top of file
+        f.write("### " + COMMENTS["file"].replace("\n", "\n### ") + "\n\n")
         config.write(f)
+
 
 def _index_by_defaults_dict(key):
     """
