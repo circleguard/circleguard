@@ -17,7 +17,6 @@ from widgets import VisualizerControls
 from runtime_tracker import RunTimeAnalyser
 
 
-
 PREVIOUS_ERRSTATE = np.seterr('raise')
 
 WIDTH_LINE = 1
