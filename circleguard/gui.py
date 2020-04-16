@@ -93,11 +93,11 @@ class Handler(QObject, logging.Handler):
 
 
 class WindowWrapper(LinkableSetting, QMainWindow):
-    def __init__(self, clipboard):
+    def __init__(self):
         QMainWindow.__init__(self)
         LinkableSetting.__init__(self, "log_save")
 
-        self.clipboard = clipboard
+        self.clipboard = QApplication.clipboard()
         self.progressbar = QProgressBar()
         self.progressbar.setFixedWidth(250)
         self.current_state_label = QLabel("Idle")
@@ -1247,7 +1247,7 @@ def switch_theme(dark, accent=QColor(71, 174, 247)):
 
 if __name__ == "__main__":
     # app is initialized at the top of the file
-    WINDOW = WindowWrapper(app.clipboard())
+    WINDOW = WindowWrapper()
     set_event_window(WINDOW)
     WINDOW.resize(900, 750)
     WINDOW.show()
