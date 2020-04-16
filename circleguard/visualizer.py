@@ -1,5 +1,7 @@
 import threading
+import math
 
+import numpy as np
 from circleguard import Mod, Keys
 from slider import Beatmap, Library
 from slider.beatmap import Circle, Slider, Spinner
@@ -14,9 +16,7 @@ from settings import get_setting, set_setting
 from widgets import VisualizerControls
 from runtime_tracker import RunTimeAnalyser
 
-import math
 
-import numpy as np
 
 PREVIOUS_ERRSTATE = np.seterr('raise')
 
