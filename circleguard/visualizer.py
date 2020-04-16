@@ -5,7 +5,7 @@ from slider import Beatmap, Library
 from slider.beatmap import Circle, Slider, Spinner
 from slider.mod import circle_radius, od_to_ms
 from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF, QRectF
-from PyQt5.QtWidgets import QWidget, QFrame, QMainWindow, QVBoxLayout, QShortcut
+from PyQt5.QtWidgets import QWidget, QFrame, QMainWindow, QVBoxLayout, QShortcut, QApplication
 from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIcon, QPalette, QBrush
 
 import clock
@@ -695,6 +695,7 @@ class VisualizerWindow(QMainWindow):
         QShortcut(QKeySequence(Qt.Key_F), self, self.toggle_fullscreen)
         QShortcut(QKeySequence(Qt.ALT + Qt.Key_Return), self, self.toggle_fullscreen)
         QShortcut(QKeySequence('Escape'), self, self.exit_fullscreen)
+        QShortcut(QKeySequence.Paste, self, self.seek_to_paste_contents)
 
     def closeEvent(self, event):
         super().closeEvent(event)
@@ -713,3 +714,15 @@ class VisualizerWindow(QMainWindow):
 
     def toggle_frametime(self):
         set_setting("visualizer_frametime", not get_setting("visualizer_frametime"))
+
+    def seek_to_paste_contents(self):
+        clipboard = QApplication.clipboard()
+        time = clipboard.text()
+        try:
+            # need float to convert x.0 values, then int to make it an int after
+            # (seek_to needs a ms value as an int)
+            time = int(float(time))
+        except ValueError:
+            # invalid time, don't seek
+            return
+        self.interface.renderer.seek_to(time)
