@@ -3,7 +3,6 @@ import sys
 import os
 from datetime import datetime, timedelta
 
-import numpy as np
 from circleguard import Mod
 from packaging import version
 import requests
@@ -124,7 +123,7 @@ class Player:
         # copy so we don't flip the actual replay's xy coordinates when we
         # account for hr (not doing this causes replays to be flipped on odd
         # runs of the visualizer and correct on even runs of the visualizer)
-        self.xy = np.copy(replay.xy)
+        self.xy = replay.xy.copy()
         self.k = replay.k
         self.end_pos = 0
         self.start_pos = 0
