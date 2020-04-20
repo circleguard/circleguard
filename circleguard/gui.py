@@ -123,7 +123,7 @@ class WindowWrapper(LinkableSetting, QMainWindow):
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
-        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, partial(self.cancel_all_runs, self))
+        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, app.quit)
 
         self.setWindowTitle(f"Circleguard v{__version__}")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
@@ -1256,6 +1256,6 @@ if __name__ == "__main__":
         welcome.show()
         set_setting("ran", True)
 
-    app.lastWindowClosed.connect(WINDOW.cancel_all_runs)
+    app.aboutToQuit.connect(WINDOW.cancel_all_runs)
     app.aboutToQuit.connect(WINDOW.on_application_quit)
     app.exec_()
