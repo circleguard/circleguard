@@ -116,8 +116,8 @@ class Run():
 
 
 class Player:
-    def __init__(self, replay, cursor_color):
-        self.cursor_color = cursor_color
+    def __init__(self, replay, pen):
+        self.pen = pen
         self.username = replay.username
         self.t = replay.t
         # copy so we don't flip the actual replay's xy coordinates when we

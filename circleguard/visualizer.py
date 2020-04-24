@@ -99,7 +99,7 @@ class _Renderer(QFrame):
         for replay in replays:
             self.players.append(
                 Player(replay=replay,
-                       cursor_color=QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),))
+                       pen=QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),))
         self.playback_len = max(max(player.t) for player in self.players) if self.replay_amount > 0 else self.playback_len
         # flip all replays with hr
         for player in self.players:
@@ -248,11 +248,10 @@ class _Renderer(QFrame):
         Draws a cursor.
 
         Arguments:
-            QPainter painter: The painter.
-            Integer index: The index of the cursor to be drawn.
+            Player player: The index of the cursor to be drawn.
         """
         alpha_step = 1 / FRAMES_ON_SCREEN
-        _pen = player.cursor_color
+        _pen = player.pen
         _pen.setWidth(self.scaled_number(WIDTH_LINE))
         self.painter.setPen(_pen)
         for i in range(player.start_pos, player.end_pos):
@@ -288,15 +287,15 @@ class _Renderer(QFrame):
         if self.replay_amount > 0:
             for i in range(len(self.players)):
                 player = self.players[i]
-                p = player.cursor_color
+                pen = player.pen
                 self.painter.setPen(PEN_BLANK)
-                self.painter.setBrush(QBrush(p.color()))
+                self.painter.setBrush(QBrush(pen.color()))
                 self.painter.setOpacity(1 if Keys.M1 in Keys(int(player.k[player.end_pos])) else 0.3)
                 self.painter.drawRect(5, 27 - 9 + (11 * i), 10, 10)
                 self.painter.setOpacity(1 if Keys.M2 in Keys(int(player.k[player.end_pos])) else 0.3)
                 self.painter.drawRect(18, 27 - 9 + (11 * i), 10, 10)
                 self.painter.setOpacity(1)
-                self.painter.setPen(p)
+                self.painter.setPen(pen)
                 self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods.short_name()}: {int(player.xy[player.end_pos][0])}, {int(player.xy[player.end_pos][1])}")
             self.painter.setPen(PEN_WHITE)
             if self.replay_amount == 2:
