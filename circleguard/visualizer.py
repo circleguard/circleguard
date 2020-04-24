@@ -369,7 +369,6 @@ class _Renderer(QFrame):
         Draws a cross.
 
         Args:
-           QPainter painter: The painter.
            Float alpha: The alpha level from 0.0-1.0 to set the cross to.
            List point: The X&Y position of the cross.
         """
