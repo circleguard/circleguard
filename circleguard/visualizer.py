@@ -352,11 +352,10 @@ class _Renderer(QFrame):
 
     def draw_line(self, alpha, start, end):
         """
-        Draws a line using the given painter, pen, and alpha level from Point start to Point end.
+        Draws a line at the given alpha level from the start point to the end point.
 
         Arguments:
-            QPainter painter: The painter.
-            Integer alpha: The alpha level from 0.0-1.0 to set the line to.
+            Float alpha: The alpha level from 0.0-1.0 to set the line to.
                            https://doc.qt.io/qt-5/qcolor.html#alpha-blended-drawing
             List start: The X&Y position of the start of the line.
             List end: The X&Y position of the end of the line.
@@ -371,7 +370,7 @@ class _Renderer(QFrame):
 
         Args:
            QPainter painter: The painter.
-           Integer alpha: The alpha level from 0.0-1.0 to set the cross to.
+           Float alpha: The alpha level from 0.0-1.0 to set the cross to.
            List point: The X&Y position of the cross.
         """
         half_width = WIDTH_CROSS/2
