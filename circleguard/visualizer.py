@@ -263,8 +263,14 @@ class _Renderer(QFrame):
         alpha_step = 1 / FRAMES_ON_SCREEN
         pen = player.pen
         pen.setWidth(self.scaled_number(WIDTH_LINE))
+        PEN_HIGHLIGHT.setWidth(self.scaled_number(WIDTH_LINE))
         self.painter.setPen(pen)
         for i in range(player.start_pos, player.end_pos):
+            highlight = any((player.t[i + 1] in self.events, player.t[i] in self.events))
+            if highlight:
+                self.painter.setPen(PEN_HIGHLIGHT)
+            else:
+                self.painter.setPen(pen)
             self.draw_line((i-player.start_pos) * alpha_step, (player.xy[i][0], player.xy[i][1]),
                            (player.xy[i + 1][0], player.xy[i + 1][1]))
         pen.setWidth(self.scaled_number(WIDTH_CROSS))
