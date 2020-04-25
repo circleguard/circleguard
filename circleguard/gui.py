@@ -267,7 +267,7 @@ class WindowWrapper(LinkableSetting, QMainWindow):
 
         result_widget = ResultW(label_text, result, replays)
         # set button signal connections (visualize and copy template to clipboard)
-        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id))
+        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id, result_widget.result))
         if template_text:
             result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard, template_text))
         else: # hide template button if there is no template
@@ -790,11 +790,14 @@ class MainTab(QFrame):
         except Empty:
             pass
 
-    def visualize(self, replays, beatmap_id=None):
+    def visualize(self, replays, beatmap_id, result):
         # only run one instance at a time
         if self.visualizer_window is not None:
             self.visualizer_window.close()
-        self.visualizer_window = VisualizerWindow(replays=replays, beatmap_id=beatmap_id)
+        snaps = []
+        if isinstance(result, CorrectionResult):
+            snaps = [snap.time for snap in result.snaps]
+        self.visualizer_window = VisualizerWindow(replays=replays, beatmap_id=beatmap_id, events=snaps)
         self.visualizer_window.show()
 
 
