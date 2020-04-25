@@ -28,7 +28,7 @@ FRAMES_ON_SCREEN = 15  # how many frames for each replay to draw on screen at a 
 PEN_WHITE = QPen(QColor(200, 200, 200))
 PEN_GRAY = QPen(QColor(75, 75, 75))
 PEN_GREY_INACTIVE = QPen(QColor(133, 125, 125))
-PEN_HIGHLIGHT = QPen(QColor(230, 215, 115))
+PEN_HIGHLIGHT = QPen(QColor(230, 212, 92))
 PEN_BLANK = QPen(QColor(0, 0, 0, 0))
 
 BRUSH_WHITE = QBrush(QColor(200, 200, 200))
