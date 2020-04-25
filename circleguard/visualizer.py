@@ -269,7 +269,7 @@ class _Renderer(QFrame):
             alpha = (i - player.start_pos) * alpha_step
             xy = player.xy[i]
             k = player.k[i]
-            self.draw_cross(alpha, xy, grey_out = not bool(k), pen=pen)
+            self.draw_cross(alpha, xy, grey_out = not bool(k))
         # reset alpha
         self.painter.setOpacity(1)
 
@@ -372,7 +372,7 @@ class _Renderer(QFrame):
         self.painter.setOpacity(alpha)
         self.painter.drawLine(self.scaled_point(start[0], start[1]), self.scaled_point(end[0], end[1]))
 
-    def draw_cross(self, alpha, point, grey_out, pen):
+    def draw_cross(self, alpha, point, grey_out):
         """
         Draws a cross.
 
@@ -380,8 +380,8 @@ class _Renderer(QFrame):
            Float alpha: The alpha level from 0.0-1.0 to set the cross to.
            List point: The X&Y position of the cross.
            Boolean grey_out: Whether to grey out the cross or not.
-            QPen pen: the pen to revert back to after drawing caps.
         """
+        prev_pen = self.painter.pen()
         if grey_out:
             PEN_GREY_INACTIVE.setWidth(self.scaled_number(WIDTH_CROSS))
             self.painter.setPen(PEN_GREY_INACTIVE)
@@ -395,7 +395,8 @@ class _Renderer(QFrame):
 
         self.draw_line(alpha, [x1, y1], [x2, y2])
         self.draw_line(alpha, [x2, y1], [x1, y2])
-        self.painter.setPen(pen)
+        if grey_out:
+            self.painter.setPen(prev_pen)
 
 
     def draw_hitobject(self, hitobj):
