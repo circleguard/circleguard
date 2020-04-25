@@ -381,8 +381,9 @@ class _Renderer(QFrame):
            List point: The X&Y position of the cross.
            Boolean grey_out: Whether to grey out the cross or not.
         """
-        prev_pen = self.painter.pen()
+        prev_pen = None
         if grey_out:
+            prev_pen = self.painter.pen()
             PEN_GREY_INACTIVE.setWidth(self.scaled_number(WIDTH_CROSS))
             self.painter.setPen(PEN_GREY_INACTIVE)
         half_width = LENGTH_CROSS/2
