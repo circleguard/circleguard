@@ -20,20 +20,26 @@ from runtime_tracker import RunTimeAnalyser
 PREVIOUS_ERRSTATE = np.seterr('raise')
 
 WIDTH_LINE = 1
-WIDTH_CROSS = 6
+WIDTH_CROSS = 2
 WIDTH_CIRCLE_BORDER = 8
+LENGTH_CROSS = 6
 FRAMES_ON_SCREEN = 15  # how many frames for each replay to draw on screen at a time
+
 PEN_WHITE = QPen(QColor(200, 200, 200))
 PEN_GRAY = QPen(QColor(75, 75, 75))
+PEN_GREY_INACTIVE = QPen(QColor(133, 125, 125))
 PEN_BLANK = QPen(QColor(0, 0, 0, 0))
+
 BRUSH_WHITE = QBrush(QColor(200, 200, 200))
 BRUSH_GRAY = QBrush(QColor(100, 100, 100))
 BRUSH_DARKGRAY = QBrush(QColor(10, 10, 10))
 BRUSH_BLANK = QBrush(QColor(0, 0, 0, 0))
+
 GAMEPLAY_PADDING_WIDTH = 64 + 192
 GAMEPLAY_PADDING_HEIGHT = 48 + 48
 GAMEPLAY_WIDTH = 512
 GAMEPLAY_HEIGHT = 384
+
 FRAMETIME_STEPS = 3
 FRAMETIME_FRAMES = 120
 SLIDER_TICKRATE = 50
@@ -98,7 +104,7 @@ class _Renderer(QFrame):
         for replay in replays:
             self.players.append(
                 Player(replay=replay,
-                       cursor_color=QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),))
+                       pen=QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),))
         self.playback_len = max(max(player.t) for player in self.players) if self.replay_amount > 0 else self.playback_len
         # flip all replays with hr
         for player in self.players:
@@ -247,20 +253,22 @@ class _Renderer(QFrame):
         Draws a cursor.
 
         Arguments:
-            QPainter painter: The painter.
-            Integer index: The index of the cursor to be drawn.
+            Player player: player to draw the cursor of.
         """
         alpha_step = 1 / FRAMES_ON_SCREEN
-        _pen = player.cursor_color
-        _pen.setWidth(self.scaled_number(WIDTH_LINE))
-        self.painter.setPen(_pen)
+        pen = player.pen
+        pen.setWidth(self.scaled_number(WIDTH_LINE))
+        self.painter.setPen(pen)
         for i in range(player.start_pos, player.end_pos):
             self.draw_line((i-player.start_pos) * alpha_step, (player.xy[i][0], player.xy[i][1]),
                            (player.xy[i + 1][0], player.xy[i + 1][1]))
-        _pen.setWidth(self.scaled_number(2))
-        self.painter.setPen(_pen)
+        pen.setWidth(self.scaled_number(WIDTH_CROSS))
+        self.painter.setPen(pen)
         for i in range(player.start_pos, player.end_pos+1):
-            self.draw_cross((i-player.start_pos) * alpha_step, (player.xy[i][0], player.xy[i][1]))
+            alpha = (i - player.start_pos) * alpha_step
+            xy = player.xy[i]
+            k = player.k[i]
+            self.draw_cross(alpha, xy, grey_out = not bool(k))
         # reset alpha
         self.painter.setOpacity(1)
 
@@ -287,15 +295,15 @@ class _Renderer(QFrame):
         if self.replay_amount > 0:
             for i in range(len(self.players)):
                 player = self.players[i]
-                p = player.cursor_color
+                pen = player.pen
                 self.painter.setPen(PEN_BLANK)
-                self.painter.setBrush(QBrush(p.color()))
+                self.painter.setBrush(QBrush(pen.color()))
                 self.painter.setOpacity(1 if Keys.M1 in Keys(int(player.k[player.end_pos])) else 0.3)
                 self.painter.drawRect(5, 27 - 9 + (11 * i), 10, 10)
                 self.painter.setOpacity(1 if Keys.M2 in Keys(int(player.k[player.end_pos])) else 0.3)
                 self.painter.drawRect(18, 27 - 9 + (11 * i), 10, 10)
                 self.painter.setOpacity(1)
-                self.painter.setPen(p)
+                self.painter.setPen(pen)
                 self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods.short_name()}: {int(player.xy[player.end_pos][0])}, {int(player.xy[player.end_pos][1])}")
             self.painter.setPen(PEN_WHITE)
             if self.replay_amount == 2:
@@ -352,31 +360,44 @@ class _Renderer(QFrame):
 
     def draw_line(self, alpha, start, end):
         """
-        Draws a line using the given painter, pen, and alpha level from Point start to Point end.
+        Draws a line at the given alpha level from the start point to the end point.
 
         Arguments:
-            QPainter painter: The painter.
-            Integer alpha: The alpha level from 0.0-1.0 to set the line to.
+            Float alpha: The alpha level from 0.0-1.0 to set the line to.
                            https://doc.qt.io/qt-5/qcolor.html#alpha-blended-drawing
             List start: The X&Y position of the start of the line.
             List end: The X&Y position of the end of the line.
         """
-
         self.painter.setOpacity(alpha)
         self.painter.drawLine(self.scaled_point(start[0], start[1]), self.scaled_point(end[0], end[1]))
 
-    def draw_cross(self, alpha, point):
+    def draw_cross(self, alpha, point, grey_out):
         """
         Draws a cross.
 
         Args:
-           QPainter painter: The painter.
-           Integer alpha: The alpha level from 0.0-1.0 to set the cross to.
+           Float alpha: The alpha level from 0.0-1.0 to set the cross to.
            List point: The X&Y position of the cross.
+           Boolean grey_out: Whether to grey out the cross or not.
         """
-        half_width = WIDTH_CROSS/2
-        self.draw_line(alpha, [point[0] + half_width, point[1] + half_width], [point[0] - half_width, point[1] - half_width])
-        self.draw_line(alpha, [point[0] - half_width, point[1] + half_width], [point[0] + half_width, point[1] - half_width])
+        prev_pen = None
+        if grey_out:
+            prev_pen = self.painter.pen()
+            PEN_GREY_INACTIVE.setWidth(self.scaled_number(WIDTH_CROSS))
+            self.painter.setPen(PEN_GREY_INACTIVE)
+        half_width = LENGTH_CROSS/2
+        x = point[0]
+        y = point[1]
+        x1 = x + half_width
+        x2 = x - half_width
+        y1 = y + half_width
+        y2 = y - half_width
+
+        self.draw_line(alpha, [x1, y1], [x2, y2])
+        self.draw_line(alpha, [x2, y1], [x1, y2])
+        if grey_out:
+            self.painter.setPen(prev_pen)
+
 
     def draw_hitobject(self, hitobj):
         """
