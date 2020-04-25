@@ -254,7 +254,7 @@ class _Renderer(QFrame):
         Draws a cursor.
 
         Arguments:
-            Player player: The index of the cursor to be drawn.
+            Player player: player to draw the cursor of.
         """
         alpha_step = 1 / FRAMES_ON_SCREEN
         pen = player.pen
