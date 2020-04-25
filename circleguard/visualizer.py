@@ -28,6 +28,7 @@ FRAMES_ON_SCREEN = 15  # how many frames for each replay to draw on screen at a 
 PEN_WHITE = QPen(QColor(200, 200, 200))
 PEN_GRAY = QPen(QColor(75, 75, 75))
 PEN_GREY_INACTIVE = QPen(QColor(133, 125, 125))
+PEN_HIGHLIGHT = QPen(QColor(230, 215, 115))
 PEN_BLANK = QPen(QColor(0, 0, 0, 0))
 
 BRUSH_WHITE = QBrush(QColor(200, 200, 200))
@@ -49,9 +50,13 @@ class _Renderer(QFrame):
     update_signal = pyqtSignal(int)
     analyzer = RunTimeAnalyser(frame_buffer=FRAMETIME_FRAMES)
 
-    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None, speed=1):
+    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None, events=[], speed=1):
         super(_Renderer, self).__init__(parent)
         self.setMinimumSize(GAMEPLAY_WIDTH + GAMEPLAY_PADDING_WIDTH*2, GAMEPLAY_HEIGHT + GAMEPLAY_PADDING_HEIGHT*2)
+
+        # list of timestamps to highlight the frames of in a different color
+        self.events = events
+
         self.painter = QPainter()
         self.scale = 1
         self.x_offset = 0
@@ -268,7 +273,9 @@ class _Renderer(QFrame):
             alpha = (i - player.start_pos) * alpha_step
             xy = player.xy[i]
             k = player.k[i]
-            self.draw_cross(alpha, xy, grey_out = not bool(k))
+            t = player.t[i]
+            highlight = t in self.events
+            self.draw_cross(alpha, xy, grey_out = not bool(k), highlight=highlight)
         # reset alpha
         self.painter.setOpacity(1)
 
@@ -371,7 +378,7 @@ class _Renderer(QFrame):
         self.painter.setOpacity(alpha)
         self.painter.drawLine(self.scaled_point(start[0], start[1]), self.scaled_point(end[0], end[1]))
 
-    def draw_cross(self, alpha, point, grey_out):
+    def draw_cross(self, alpha, point, grey_out, highlight):
         """
         Draws a cross.
 
@@ -379,9 +386,15 @@ class _Renderer(QFrame):
            Float alpha: The alpha level from 0.0-1.0 to set the cross to.
            List point: The X&Y position of the cross.
            Boolean grey_out: Whether to grey out the cross or not.
+           Boolean highlight: Whether to highlight the cross or not. This takes
+               precedence over ``grey_out`` if both are set.
         """
         prev_pen = None
-        if grey_out:
+        if highlight:
+            prev_pen = self.painter.pen()
+            PEN_HIGHLIGHT.setWidth(self.scaled_number(WIDTH_CROSS))
+            self.painter.setPen(PEN_HIGHLIGHT)
+        elif grey_out:
             prev_pen = self.painter.pen()
             PEN_GREY_INACTIVE.setWidth(self.scaled_number(WIDTH_CROSS))
             self.painter.setPen(PEN_GREY_INACTIVE)
@@ -395,7 +408,7 @@ class _Renderer(QFrame):
 
         self.draw_line(alpha, [x1, y1], [x2, y2])
         self.draw_line(alpha, [x2, y1], [x1, y2])
-        if grey_out:
+        if grey_out or highlight:
             self.painter.setPen(prev_pen)
 
 
@@ -623,13 +636,13 @@ class _Renderer(QFrame):
 
 
 class _Interface(QWidget):
-    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None):
+    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, events=[]):
         super(_Interface, self).__init__()
         speed = get_setting("default_speed")
         self.speed_options = get_setting("speed_options")
         self.layout = QVBoxLayout()
 
-        self.renderer = _Renderer(replays, beatmap_id, beatmap_path, speed=speed)
+        self.renderer = _Renderer(replays, beatmap_id, beatmap_path, speed=speed, events=events)
         self.renderer.update_signal.connect(self.update_slider)
 
         self.controls = VisualizerControls(speed)
@@ -695,13 +708,13 @@ class _Interface(QWidget):
 
 
 class VisualizerWindow(QMainWindow):
-    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None):
+    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, events=[]):
         super(VisualizerWindow, self).__init__()
         self.is_fullscreen = False
         self.setAutoFillBackground(True)
         self.setWindowTitle("Visualizer")
         self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
-        self.interface = _Interface(replays, beatmap_id, beatmap_path)
+        self.interface = _Interface(replays, beatmap_id, beatmap_path, events=events)
         self.setCentralWidget(self.interface)
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
         QShortcut(QKeySequence(Qt.Key_Right), self, lambda: self.interface.change_frame(reverse=False))
