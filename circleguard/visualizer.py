@@ -672,7 +672,7 @@ class _Interface(QWidget):
 
     def play_normal(self):
         self.renderer.resume()
-        self.controls.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
+        self.controls.set_paused_state(False)
         self.renderer.play_direction = 1
         self.update_speed(abs(self.renderer.clock.current_speed))
 
@@ -681,7 +681,7 @@ class _Interface(QWidget):
 
     def play_reverse(self):
         self.renderer.resume()
-        self.controls.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
+        self.controls.set_paused_state(False)
         self.renderer.play_direction = -1
         self.update_speed(abs(self.renderer.clock.current_speed))
 
@@ -697,10 +697,10 @@ class _Interface(QWidget):
 
     def pause(self):
         if self.renderer.paused:
-            self.controls.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
+            self.controls.set_paused_state(False)
             self.renderer.resume()
         else:
-            self.controls.pause_button.setIcon(QIcon(str(resource_path("./resources/play.png"))))
+            self.controls.set_paused_state(True)
             self.renderer.pause()
 
     def lower_speed(self):

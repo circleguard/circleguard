@@ -1051,3 +1051,9 @@ class VisualizerControls(QFrame):
         self.layout.setContentsMargins(5, 0, 5, 5)
         self.setLayout(self.layout)
         self.setFixedHeight(25)
+
+    def set_paused_state(self, paused):
+        if paused:
+            self.pause_button.setIcon(QIcon(str(resource_path("./resources/play.png"))))
+        else:
+            self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
