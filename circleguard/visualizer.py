@@ -2,7 +2,7 @@ import threading
 import math
 
 import numpy as np
-from circleguard import Mod, Keys
+from circleguard import Mod, Key
 from slider import Beatmap, Library
 from slider.beatmap import Circle, Slider, Spinner
 from slider.mod import circle_radius, od_to_ms
@@ -314,9 +314,9 @@ class _Renderer(QFrame):
                 pen = player.pen
                 self.painter.setPen(PEN_BLANK)
                 self.painter.setBrush(QBrush(pen.color()))
-                self.painter.setOpacity(1 if Keys.M1 in Keys(int(player.k[player.end_pos])) else 0.3)
+                self.painter.setOpacity(1 if Key.M1 in Key(int(player.k[player.end_pos])) else 0.3)
                 self.painter.drawRect(5, 27 - 9 + (11 * i), 10, 10)
-                self.painter.setOpacity(1 if Keys.M2 in Keys(int(player.k[player.end_pos])) else 0.3)
+                self.painter.setOpacity(1 if Key.M2 in Key(int(player.k[player.end_pos])) else 0.3)
                 self.painter.drawRect(18, 27 - 9 + (11 * i), 10, 10)
                 self.painter.setOpacity(1)
                 self.painter.setPen(pen)
