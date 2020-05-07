@@ -282,7 +282,7 @@ CHANGED = {
     "2.1.1": [
         "speed_options"
     ],
-    "2.3.0": [
+    "2.4.0": [
         "message_relax_found",
         "message_relax_found_display",
         "template_relax"
