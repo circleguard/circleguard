@@ -136,8 +136,8 @@ DEFAULTS = {
         # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
         "message_steal_found":              "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later",
         "message_steal_found_display":      "[{ts:%X}] {sim:.1f} similarity. {replay1.username} +{replay1_mods_short_name} vs {replay2.username} +{replay2_mods_short_name} on map {replay1.map_id}, {r.later_replay.username} set later. Not below threshold",
-        "message_relax_found":              "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "message_relax_found_display":      "[{ts:%X}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
+        "message_relax_found":              "[{ts:%X}] {ur:.1f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "message_relax_found_display":      "[{ts:%X}] {ur:.1f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
         "message_correction_found":         "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
         "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
         # have to use a separate message here because we can't loop in ``.format`` strings, can only loop in f strings which only work in a
@@ -165,7 +165,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
                                 "\n\n"
-                                "ur (ucv): {r.ur:.2f} according to https://circleguard.dev/"),
+                                "cvUR: {r.ur:.2f} according to https://circleguard.dev/"),
         "template_correction": ("[osu!std] {r.replay.username} | Aim Correction"
                                 "\n\n"
                                 "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
@@ -281,6 +281,11 @@ CHANGED = {
     ],
     "2.1.1": [
         "speed_options"
+    ],
+    "2.3.0": [
+        "message_relax_found",
+        "message_relax_found_display",
+        "template_relax"
     ]
 }
 
