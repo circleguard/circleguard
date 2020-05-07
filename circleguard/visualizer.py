@@ -600,15 +600,11 @@ class _Renderer(QFrame):
             Boolean reverse: chooses the search direction
         """
         if not reverse:
-            # len(self.data) is the number of replays being visualized
-            # self.data[0] is for the first replay, as is self.pos[0]
-            # self.pos is a list of current indecies of the replays
-            # self.data[0][self.pos[0]] is the current frame we're on
-            # so seek to the next frame; self.pos[0] + 1
-            next_frame_times = [self.players[x].t[self.players[x].end_pos + 1] for x in range(len(self.players))]
+            # use mod so we wrap around when we reach the end of the replay
+            next_frame_times = [player.t[(player.end_pos + 1) % len(player.xy)] for player in self.players]
             self.seek_to(min(next_frame_times))
         else:
-            previous_frame_times = [self.players[x].t[self.players[x].end_pos - 1] for x in range(len(self.players))]
+            previous_frame_times = [player.t[player.end_pos - 1] for player in self.players]
             self.seek_to(max(previous_frame_times))
 
     def seek_to(self, position):
