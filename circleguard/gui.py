@@ -26,8 +26,8 @@ app.setStyle("Fusion")
 app.setApplicationName("Circleguard")
 
 from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableException,
-                        ReplayMap, ReplayPath, User, Map, Check, MapUser, StealDetect,
-                        RelaxDetect, CorrectionDetect, ReplayStealingResult, RelaxResult, CorrectionResult, Detect)
+                        ReplayMap, ReplayPath, User, Map, Check, MapUser,
+                        StealResult, RelaxResult, CorrectionResult, Detect)
 from circleguard import __version__ as cg_version
 from circleguard.loadable import Loadable
 
@@ -233,7 +233,7 @@ class WindowWrapper(LinkableSetting, QMainWindow):
         label_text = None
         template_text = None
 
-        if isinstance(result, ReplayStealingResult):
+        if isinstance(result, StealResult):
             label_text = get_setting("string_result_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
                                         replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
                                         replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
@@ -646,19 +646,19 @@ class MainTab(QFrame):
             for checkW in run.checks:
                 d = None
                 check_type = None
+                max_angle = None
+                min_distance = None
                 if isinstance(checkW, StealCheckW):
-                    steal_thresh = get_setting("steal_max_sim")
-                    d = StealDetect(steal_thresh)
                     check_type = "Steal"
+                    d = Detect.STEAL
                 if isinstance(checkW, RelaxCheckW):
-                    relax_thresh = get_setting("relax_max_ur")
                     check_type = "Relax"
-                    d = RelaxDetect(relax_thresh)
+                    d = Detect.RELAX
                 if isinstance(checkW, CorrectionCheckW):
                     max_angle = get_setting("correction_max_angle")
                     min_distance = get_setting("correction_min_distance")
-                    d = CorrectionDetect(max_angle, min_distance)
                     check_type = "Aim Correction"
+                    d = Detect.CORRECTION
                 if isinstance(checkW, VisualizerW):
                     d = Detect(0)  # don't run any detection
                     check_type = "Visualization"
@@ -666,10 +666,10 @@ class MainTab(QFrame):
                 if isinstance(checkW, StealCheckW):
                     loadables1 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables1]
                     loadables2 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables2]
-                    c = Check(loadables1, loadables2=loadables2, detect=d)
+                    c = Check(loadables1, cache=None, loadables2=loadables2)
                 else:
                     loadables = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables]
-                    c = Check(loadables, detect=d)
+                    c = Check(loadables, cache=None)
                 message_loading_info = get_setting("message_loading_info").format(ts=datetime.now(), check_type=check_type)
                 self.write_to_terminal_signal.emit(message_loading_info)
                 cg.load_info(c)
@@ -716,7 +716,7 @@ class MainTab(QFrame):
                 else:
                     self.update_label_signal.emit("Investigating Replays")
                     self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
-                    for result in cg.run(c):
+                    for result in cg.run(c.loadables1, d, c.loadables2, max_angle, min_distance):
                         _check_event(event)
                         self.q.put(result)
                 self.print_results_signal.emit() # flush self.q
@@ -750,8 +750,10 @@ class MainTab(QFrame):
                 result = self.q.get_nowait()
                 ts = datetime.now() # ts = timestamp
                 message = None
-                if isinstance(result, ReplayStealingResult):
-                    if result.ischeat:
+                ischeat = False
+                if isinstance(result, StealResult):
+                    if result.similarity < get_setting("steal_max_sim"):
+                        ischeat = True
                         message = get_setting("message_steal_found").format(ts=ts, sim=result.similarity, r=result, replay1=result.replay1, replay2=result.replay2,
                                                 replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
                                                 replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
@@ -761,7 +763,8 @@ class MainTab(QFrame):
                                                 replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
 
                 if isinstance(result, RelaxResult):
-                    if result.ischeat:
+                    if result.ur < get_setting("relax_max_ur"):
+                        ischeat = True
                         message = get_setting("message_relax_found").format(ts=ts, r=result, replay=result.replay, ur=result.ur,
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
                     elif result.ur < get_setting("relax_max_ur_display"):
@@ -769,7 +772,8 @@ class MainTab(QFrame):
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
                 if isinstance(result, CorrectionResult):
-                    if result.ischeat:
+                    if len(result.snaps) > 0:
+                        ischeat = True
                         snap_message = get_setting("message_correction_snaps")
                         snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
                         message = get_setting("message_correction_found").format(ts=ts, r=result, replay=result.replay, snaps=snap_text,
@@ -779,7 +783,7 @@ class MainTab(QFrame):
                 if message:
                     self.write(message)
                 if not isinstance(result, list): # not a list of loadables
-                    if result.ischeat:
+                    if ischeat:
                         QApplication.beep()
                         QApplication.alert(self)
                         # add to Results Tab so it can be played back on demand
