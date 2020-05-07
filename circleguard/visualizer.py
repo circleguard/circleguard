@@ -181,8 +181,9 @@ class _Renderer(QFrame):
 
         current_time = self.clock.get_time()
         # if we're at the end of the track or are at the beginning of the track
-        # (and thus are reversing), dont update
+        # (and thus are reversing), pause and dont update
         if current_time > self.playback_len or current_time < 0:
+            self.pause()
             return
 
         for player in self.players:
