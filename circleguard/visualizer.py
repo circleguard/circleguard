@@ -180,9 +180,10 @@ class _Renderer(QFrame):
             return
 
         current_time = self.clock.get_time()
-        # resets visualizer if at end
+        # if we're at the end of the track or are at the beginning of the track
+        # (and thus are reversing), dont update
         if current_time > self.playback_len or current_time < 0:
-            self.reset(end=True if self.clock.current_speed < 0 else False)
+            return
 
         for player in self.players:
             player.end_pos = np.searchsorted(player.t, current_time, "right") - 1
@@ -580,32 +581,29 @@ class _Renderer(QFrame):
                 steps = max(2, int((self.get_hit_endtime(current_hitobj) - self.get_hit_time(current_hitobj))/SLIDER_TICKRATE))
                 self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve(i / steps) for i in range(steps + 1)]
 
-    def reset(self, end=False):
-        """
-        Reset Visualization. If end is passed, the function will reset to the end of the map,
-        setting the clock to the the max of the cursor data.
-
-        Args:
-            Boolean end: Moves everything to the end of the cursor data.
-        """
-        self.clock.reset()
-        if end:
-            self.clock.time_counter = self.playback_len
-        if self.paused:
-            self.clock.pause()
-
     def search_nearest_frame(self, reverse=False):
         """
         Args:
             Boolean reverse: chooses the search direction
         """
         if not reverse:
-            # use mod so we wrap around when we reach the end of the replay
-            next_frame_times = [player.t[(player.end_pos + 1) % len(player.xy)] for player in self.players]
-            self.seek_to(min(next_frame_times))
+            next_frames = []
+            for player in self.players:
+                pos = player.end_pos + 1
+                # stay at the end of the replay, avoid index error
+                if pos == len(player.xy):
+                    pos -= 1
+                next_frames.append(player.t[pos])
+            self.seek_to(min(next_frames))
         else:
-            previous_frame_times = [player.t[player.end_pos - 1] for player in self.players]
-            self.seek_to(max(previous_frame_times))
+            prev_frames = []
+            for player in self.players:
+                pos = player.end_pos - 1
+                # stay at the beginning of the replay, don't wrap around to end
+                if pos == -1:
+                    pos += 1
+                prev_frames.append(player.t[pos])
+            self.seek_to(max(prev_frames))
 
     def seek_to(self, position):
         """
