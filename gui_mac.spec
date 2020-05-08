@@ -57,6 +57,6 @@ app = BUNDLE(exe,
 print("Creating zip")
 os.chdir("./dist/")
 zipf = zipfile.ZipFile('./Circleguard_osx.app.zip', 'w', zipfile.ZIP_DEFLATED)
-zipdir('./Circleguard.app/', zipf)
+zipdir('./', zipf)
 zipf.close()
 print("Finished zip")
