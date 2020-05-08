@@ -3,6 +3,7 @@
 block_cipher = None
 from os.path import *
 import sys
+import os
 import win32com.client
 import zipfile
 import PyInstaller.config
@@ -21,7 +22,7 @@ def zipdir(path, ziph):
 # pyinstaller build
 PyInstaller.config.CONF['distpath'] = "./dist/Circleguard_win_x86"
 a = Analysis(['circleguard/gui.py'],
-             pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x86', expanduser('~/AppData/Local/Programs/Python/Python37-32/')],
+             pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x86', os.path.dirname(sys.executable)],
              datas=[('circleguard/resources/','resources/'), ('circleguard/examples', 'examples/')],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
@@ -56,7 +57,7 @@ shortcut.Targetpath = abspath(abspath(".\dist\Circleguard_win_x86\Circleguard\Ci
 shortcut.save()
 
 print("Creating zip")
-os. chdir("./dist/")
+os.chdir("./dist/")
 zipf = zipfile.ZipFile('./Circleguard_win_x86.zip', 'w', zipfile.ZIP_DEFLATED)
 zipdir('./Circleguard_win_x86/', zipf)
 zipf.close()
