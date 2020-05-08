@@ -1,0 +1,74 @@
+name: Add files to draft release
+
+on: repository_dispatch
+
+jobs:
+  build_win:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        pip install wheel
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Install build dependencies
+      run: |
+        pip install -r requirements_build_win.txt
+
+    - name: Build x64
+      run: |
+        pyinstaller gui_win_x64.spec --noconfirm
+
+    - name: Build x86
+      run: |
+        pyinstaller gui_win_x86.spec --noconfirm
+
+    - name: Update Release
+      uses: ncipollo/release-action@v1.6.1
+      with:
+        artifacts: "dist/*.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        draft: true
+        allowUpdates: true
+        tag: ${{ github.event.client_payload.version }}
+
+  build_mac:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        pip install wheel
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Install build dependencies
+      run: |
+        pip install -r requirements_build_mac.txt
+
+    - name: Build
+      run: |
+        pyinstaller gui_mac.spec --noconfirm
+
+    - name: Update Release
+      uses: ncipollo/release-action@v1.6.1
+      with:
+        artifacts: "dist/*.zip"
+        token: ${{ secrets.GITHUB_TOKEN }}
+        draft: true
+        allowUpdates: true
+        tag: ${{ github.event.client_payload.version }}
