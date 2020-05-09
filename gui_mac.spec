@@ -55,8 +55,9 @@ app = BUNDLE(exe,
        )
 
 print("Creating zip")
-os.chdir("./dist/")
 zipf = zipfile.ZipFile('./Circleguard_osx.app.zip', 'w', zipfile.ZIP_DEFLATED)
-zipdir('./', zipf)
+zipdir('./dist/', zipf)
 zipf.close()
+print("Moving zip")
+os.rename("./Circleguard_osx.app.zip", "./dist/Circleguard_osx.app.zip")
 print("Finished zip")
