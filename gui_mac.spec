@@ -7,15 +7,19 @@ import zipfile
 os.path.expanduser
 from circleguard import __version__ # circlecore version, not gui
 
-# https://stackoverflow.com/a/42056050
-def zipdir(path, ziph):
-    length = len(path)
 
-    # ziph is zipfile handle
+def zipdir(path, ziph, sub_folder=""):
+    length = len(path)
+    print(os.listdir(path))
     for root, dirs, files in os.walk(path):
         folder = root[length:] # path without "parent"
+        if sub_folder != "":
+            print(f"before{folder}")
+            folder = sub_folder + folder
+            print(f"after{folder}")
         for file in files:
             ziph.write(os.path.join(root, file), os.path.join(folder, file))
+
 
 # pyinstaller build
 a = Analysis(['circleguard/gui.py'],
@@ -56,7 +60,7 @@ app = BUNDLE(exe,
 
 print("Creating zip")
 zipf = zipfile.ZipFile('./Circleguard_osx.app.zip', 'w', zipfile.ZIP_DEFLATED)
-zipdir('./dist/', zipf)
+zipdir('./dist/Circleguard.app', zipf, "./Circleguard.app")
 zipf.close()
 print("Moving zip")
 os.rename("./Circleguard_osx.app.zip", "./dist/Circleguard_osx.app.zip")
