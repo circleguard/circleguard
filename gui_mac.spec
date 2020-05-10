@@ -10,13 +10,10 @@ from circleguard import __version__ # circlecore version, not gui
 
 def zipdir(path, ziph, sub_folder=""):
     length = len(path)
-    print(os.listdir(path))
     for root, dirs, files in os.walk(path):
         folder = root[length:] # path without "parent"
         if sub_folder != "":
-            print(f"before{folder}")
             folder = sub_folder + folder
-            print(f"after{folder}")
         for file in files:
             ziph.write(os.path.join(root, file), os.path.join(folder, file))
 
