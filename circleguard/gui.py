@@ -334,8 +334,6 @@ class MainWindow(QFrame):
         self.tabs.addTab(self.queue_tab, "Queue")
         self.tabs.addTab(self.thresholds_tab, "Thresholds")
         self.tabs.addTab(self.settings_tab, "Settings")
-        # so when we switch from settings tab to main tab, whatever tab we're on gets changed if we delete our api key
-        self.tabs.currentChanged.connect(self.main_tab.check_run_button)
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.tabs)
@@ -343,7 +341,7 @@ class MainWindow(QFrame):
         self.setLayout(self.layout)
 
 
-class MainTab(QFrame):
+class MainTab(LinkableSetting, QFrame):
     set_progressbar_signal = pyqtSignal(int) # max progress
     increment_progressbar_signal = pyqtSignal(int) # increment value
     update_label_signal = pyqtSignal(str)
@@ -357,7 +355,8 @@ class MainTab(QFrame):
     CHECKS_COMBOBOX_REGISTRY = ["Replay Stealing/Remodding", "Relax", "Aim Correction", "Visualize"]
 
     def __init__(self):
-        super().__init__()
+        QFrame.__init__(self)
+        LinkableSetting.__init__(self, "api_key")
 
         self.loadables_combobox = QComboBox(self)
         self.loadables_combobox.setInsertPolicy(QComboBox.NoInsert)
@@ -402,6 +401,8 @@ class MainTab(QFrame):
         self.run_button = QPushButton()
         self.run_button.setText("Run")
         self.run_button.clicked.connect(self.add_circleguard_run)
+        # disable button if no api_key is stored
+        self.on_setting_changed(get_setting("api_key"))
 
         layout = QGridLayout()
         layout.addWidget(self.loadables_combobox, 0, 0, 1, 7)
@@ -414,7 +415,9 @@ class MainTab(QFrame):
         layout.addWidget(self.run_button, 7, 0, 1, 16)
 
         self.setLayout(layout)
-        self.check_run_button() # disable run button if there is no api key
+
+    def on_setting_changed(self, text):
+        self.run_button.setEnabled(text != "")
 
     # am well aware that there's much duplicated code between remove_loadable,
     # remove_check, add_loadable, and add_check. Don't feel like writing
@@ -529,12 +532,6 @@ class MainTab(QFrame):
 
         # called every 1/4 seconds by timer, but force a recheck to not wait for that delay
         self.check_circleguard_queue()
-
-    def check_run_button(self):
-        # this line causes a "QObject::startTimer: Timers cannot be started from another thread" print
-        # statement even though no timer interaction is going on; not sure why it happens but it doesn't
-        # impact functionality. Still might be worth looking into
-        self.run_button.setEnabled(False if get_setting("api_key") == "" else True)
 
 
     def check_circleguard_queue(self):
