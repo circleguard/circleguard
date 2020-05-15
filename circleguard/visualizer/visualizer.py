@@ -640,10 +640,9 @@ class Renderer(QFrame):
 class Interface(QWidget):
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, events=[]):
         super().__init__()
-        speed = get_setting("default_speed")
         self.speed_options = get_setting("speed_options")
-        self.layout = QVBoxLayout()
 
+        speed = get_setting("default_speed")
         self.renderer = Renderer(replays, beatmap_id, beatmap_path, speed=speed, events=events)
         self.renderer.update_signal.connect(self.update_slider)
 
@@ -658,6 +657,7 @@ class Interface(QWidget):
         self.controls.slider.sliderMoved.connect(self.renderer.seek_to)
         self.controls.slider.setRange(0, self.renderer.playback_len)
 
+        self.layout = QVBoxLayout()
         self.layout.addWidget(self.renderer)
         self.layout.addWidget(self.controls)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -698,17 +698,19 @@ class Interface(QWidget):
 
     def lower_speed(self):
         index = self.speed_options.index(abs(self.renderer.clock.current_speed))
-        if index != 0:
-            speed = self.speed_options[index - 1]
-            self.controls.speed_label.setText(str(speed) + "x")
-            self.update_speed(speed)
+        if index == 0:
+            return
+        speed = self.speed_options[index - 1]
+        self.controls.speed_label.setText(str(speed) + "x")
+        self.update_speed(speed)
 
     def increase_speed(self):
         index = self.speed_options.index(abs(self.renderer.clock.current_speed))
-        if index != len(self.speed_options) - 1:
-            speed = self.speed_options[index + 1]
-            self.controls.speed_label.setText(str(speed) + "x")
-            self.update_speed(speed)
+        if index == len(self.speed_options) - 1:
+            return
+        speed = self.speed_options[index + 1]
+        self.controls.speed_label.setText(str(speed) + "x")
+        self.update_speed(speed)
 
 
 class VisualizerWindow(QMainWindow):
