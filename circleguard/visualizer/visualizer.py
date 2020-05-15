@@ -732,7 +732,7 @@ class VisualizerWindow(QMainWindow):
         QShortcut(QKeySequence.FullScreen, self, self.toggle_fullscreen)
         QShortcut(QKeySequence(Qt.Key_F), self, self.toggle_fullscreen)
         QShortcut(QKeySequence(Qt.ALT + Qt.Key_Return), self, self.toggle_fullscreen)
-        QShortcut(QKeySequence('Escape'), self, self.exit_fullscreen)
+        QShortcut(QKeySequence(Qt.Key_Escape), self, self.exit_fullscreen)
         QShortcut(QKeySequence.Paste, self, self.seek_to_paste_contents)
 
     def closeEvent(self, event):
