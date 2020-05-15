@@ -12,7 +12,7 @@ from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIco
 
 from .clock import Timer
 from utils import resource_path, Player
-from settings import get_setting, set_setting
+from settings import get_setting, set_setting, toggle_setting
 from widgets import VisualizerControls
 from .runtime_tracker import RunTimeAnalyser
 
@@ -727,7 +727,7 @@ class VisualizerWindow(QMainWindow):
         QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Left), self, lambda: self.interface.play_reverse())
         QShortcut(QKeySequence(Qt.Key_Up), self, self.interface.increase_speed)
         QShortcut(QKeySequence(Qt.Key_Down), self, self.interface.lower_speed)
-        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F11), self, self.toggle_frametime)
+        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_F11), self, toggle_setting("visualizer_frametime"))
         QShortcut(QKeySequence.FullScreen, self, self.toggle_fullscreen)
         QShortcut(QKeySequence(Qt.Key_F), self, self.toggle_fullscreen)
         QShortcut(QKeySequence(Qt.ALT + Qt.Key_Return), self, self.toggle_fullscreen)
@@ -748,9 +748,6 @@ class VisualizerWindow(QMainWindow):
 
     def exit_fullscreen(self):
         self.setWindowState(Qt.WindowNoState)
-
-    def toggle_frametime(self):
-        set_setting("visualizer_frametime", not get_setting("visualizer_frametime"))
 
     def seek_to_paste_contents(self):
         clipboard = QApplication.clipboard()

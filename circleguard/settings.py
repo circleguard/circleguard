@@ -347,6 +347,25 @@ def get_setting(name):
     v = type_(val)
     return v
 
+def set_setting(name, value):
+    for linkable_setting in LinkableSetting.registered_classes:
+        if linkable_setting.filter(name):
+            linkable_setting.on_setting_changed(value)
+
+    SETTINGS.setValue(name, TYPES[name][0](value))
+
+def toggle_setting(name):
+    """
+    Toggles the given setting.
+
+    Notes
+    -----
+    This method is only valid for settings that hold boolean values.
+    """
+    old_val = get_setting(name)
+    new_val = not old_val
+    SETTINGS.setValue(new_val)
+
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
     last_version = version.parse(last_version.base_version) # remove dev stuff
@@ -390,13 +409,6 @@ def reset_defaults():
         for key,value in d.items():
             set_setting(key, value)
     SETTINGS.sync()
-
-def set_setting(name, value):
-    for linkable_setting in LinkableSetting.registered_classes:
-        if linkable_setting.filter(name):
-            linkable_setting.on_setting_changed(value)
-
-    SETTINGS.setValue(name, TYPES[name][0](value))
 
 
 # overwrites circleguard.cfg with our settings
