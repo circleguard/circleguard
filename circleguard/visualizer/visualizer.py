@@ -714,7 +714,7 @@ class Interface(QWidget):
 class VisualizerWindow(QMainWindow):
     def __init__(self, replays, beatmap_id=None, beatmap_path=None, events=[]):
         super(VisualizerWindow, self).__init__()
-        self.is_fullscreen = False
+
         self.setAutoFillBackground(True)
         self.setWindowTitle("Visualizer")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
