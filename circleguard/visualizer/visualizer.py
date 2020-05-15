@@ -10,11 +10,11 @@ from PyQt5.QtCore import Qt, QTimer, pyqtSignal, QPointF, QRectF
 from PyQt5.QtWidgets import QWidget, QFrame, QMainWindow, QVBoxLayout, QShortcut, QApplication
 from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIcon, QPalette, QBrush
 
-import clock
+from .clock import Timer
 from utils import resource_path, Player
 from settings import get_setting, set_setting
 from widgets import VisualizerControls
-from runtime_tracker import RunTimeAnalyser
+from .runtime_tracker import RunTimeAnalyser
 
 
 PREVIOUS_ERRSTATE = np.seterr('raise')
@@ -116,7 +116,7 @@ class _Renderer(QFrame):
                     d[1] = 384 - d[1]
 
         # clock stuff
-        self.clock = clock.Timer(speed)
+        self.clock = Timer(speed)
         self.paused = False
         self.play_direction = 1
 

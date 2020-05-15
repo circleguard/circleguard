@@ -40,7 +40,7 @@ from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombine
                      CorrectionCheckW, VisualizerW)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting
-from visualizer import VisualizerWindow
+from visualizer.visualizer import VisualizerWindow
 from wizard import CircleguardWizard
 from version import __version__
 

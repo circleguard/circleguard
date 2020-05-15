@@ -1,4 +1,4 @@
-from clock import Timer
+from .clock import Timer
 
 
 class RunTimeAnalyser:
