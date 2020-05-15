@@ -719,7 +719,7 @@ class VisualizerWindow(QMainWindow):
         self.is_fullscreen = False
         self.setAutoFillBackground(True)
         self.setWindowTitle("Visualizer")
-        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
         self.interface = _Interface(replays, beatmap_id, beatmap_path, events=events)
         self.setCentralWidget(self.interface)
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)

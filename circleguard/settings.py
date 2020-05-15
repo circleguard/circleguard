@@ -12,7 +12,6 @@ from packaging import version
 # what attributes are available through string formatting.
 from configparser import ConfigParser
 
-from utils import resource_path
 from version import __version__
 
 

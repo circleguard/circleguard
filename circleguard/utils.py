@@ -1,3 +1,7 @@
+# this is named ``gui_utils`` and not ``utils`` to prevent collision with
+# ``circleguard.utils`` (not our circleguard, but circlecore, which is on pip as
+# circleguard). Yes this is bad. But it works.
+
 from pathlib import Path
 import sys
 import os
@@ -15,18 +19,26 @@ from PyQt5.QtWidgets import QLayout
 #from version import __version__
 
 # placed above local imports to avoid circular import errors
-ROOT_PATH = Path(__file__).parent.absolute()
-def resource_path(str_path):
+ROOT_PATH = Path(__file__).parent.parent.absolute()
+def resource_path(path):
     """
-    Returns a Path representing where to look for resource files for the program,
-    such as databases or images.
+    Get the resource path for a given file.
 
-    This location changes if the program is run from an application built with pyinstaller.
+    This location changes if the program is run from an application built with
+    pyinstaller.
+
+    Returns
+    -------
+    string
+        The absolute path (as a string) to the given file, after taking into
+        account whether we are running in a development setting.
+        Return string because this function is almost always used in a ``QIcon``
+        context, which does not accept a ``Path``.
     """
 
     if hasattr(sys, '_MEIPASS'): # being run from a pyinstall'd app
-        return Path(sys._MEIPASS) / Path(str_path) # pylint: disable=no-member
-    return ROOT_PATH / Path(str_path)
+        return str(Path(sys._MEIPASS) / "resources" / Path(path)) # pylint: disable=no-member
+    return str(ROOT_PATH / "resources" / Path(path))
 
 
 from settings import get_setting, set_setting

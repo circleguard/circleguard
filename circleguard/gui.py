@@ -126,7 +126,7 @@ class WindowWrapper(LinkableSetting, QMainWindow):
         QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, app.quit)
 
         self.setWindowTitle(f"Circleguard v{__version__}")
-        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
         self.start_timer()
         self.debug_window = None
 
@@ -135,7 +135,7 @@ class WindowWrapper(LinkableSetting, QMainWindow):
         handler.setFormatter(formatter)
         handler.new_message.connect(self.log)
 
-        log_dir = resource_path(get_setting("log_dir"))
+        log_dir = get_setting("log_dir")
         log_file = os.path.join(log_dir, "circleguard.log")
         self.file_handler = RotatingFileHandler(log_file, maxBytes=10**6, backupCount=3) # 1 mb max file size
         self.file_handler.setFormatter(formatter)
@@ -308,7 +308,7 @@ class DebugWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Debug Output")
-        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
         terminal = QTextEdit(self)
         terminal.setReadOnly(True)
         terminal.ensureCursorVisible()
@@ -836,7 +836,7 @@ class VisualizeTab(QFrame):
         self.map_id = None
         self.q = Queue()
         self.replays = []
-        cache_path = resource_path(get_setting("cache_dir") + "circleguard.db")
+        cache_path = get_setting("cache_dir") + "circleguard.db"
         self.cg = Circleguard(get_setting("api_key"), cache_path)
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")

@@ -431,7 +431,7 @@ class CheckW(QFrame):
             self.loadables = []
 
         self.delete_button = QPushButton(self)
-        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
         title = QLabel()
@@ -514,7 +514,7 @@ class LoadableInCheck(QFrame):
         self.loadable_id = loadable_id
 
         self.delete_button = QPushButton(self)
-        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda id_: self.remove_loadableincheck_signal.emit(id_), self.loadable_in_check_id))
 
@@ -550,7 +550,7 @@ class LoadableW(QFrame):
         title.setText(f"{name}{t+t if len(name) < 5 else t}(id: {self.loadable_id})")
 
         self.delete_button = QPushButton(self)
-        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setIcon(QIcon(resource_path("resources/delete.png")))
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
         self.layout.addWidget(title, 0, 0, 1, 7)
@@ -1000,37 +1000,37 @@ class VisualizerControls(QFrame):
         self.slider.setStyleSheet("outline: none;")
 
         self.play_reverse_button = QPushButton()
-        self.play_reverse_button.setIcon(QIcon(str(resource_path("./resources/play_reverse.png"))))
+        self.play_reverse_button.setIcon(QIcon(resource_path("visualizer/play_reverse.png")))
         self.play_reverse_button.setFixedSize(20, 20)
         self.play_reverse_button.setToolTip("Plays visualization in reverse")
 
         self.play_normal_button = QPushButton()
-        self.play_normal_button.setIcon(QIcon(str(resource_path("./resources/play_normal.png"))))
+        self.play_normal_button.setIcon(QIcon(resource_path("visualizer/play_normal.png")))
         self.play_normal_button.setFixedSize(20, 20)
         self.play_normal_button.setToolTip("Plays visualization in normally")
 
         self.next_frame_button = QPushButton()
-        self.next_frame_button.setIcon(QIcon(str(resource_path("./resources/frame_next.png"))))
+        self.next_frame_button.setIcon(QIcon(resource_path("visualizer/frame_next.png")))
         self.next_frame_button.setFixedSize(20, 20)
         self.next_frame_button.setToolTip("Displays next frame")
 
         self.previous_frame_button = QPushButton()
-        self.previous_frame_button.setIcon(QIcon(str(resource_path("./resources/frame_back.png"))))
+        self.previous_frame_button.setIcon(QIcon(resource_path("visualizer/frame_back.png")))
         self.previous_frame_button.setFixedSize(20, 20)
         self.previous_frame_button.setToolTip("Displays previous frame")
 
         self.pause_button = QPushButton()
-        self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
+        self.pause_button.setIcon(QIcon(resource_path("visualizer/pause.png")))
         self.pause_button.setFixedSize(20, 20)
         self.pause_button.setToolTip("Pause visualization")
 
         self.speed_up_button = QPushButton()
-        self.speed_up_button.setIcon(QIcon(str(resource_path("./resources/speed_up.png"))))
+        self.speed_up_button.setIcon(QIcon(resource_path("visualizer/speed_up.png")))
         self.speed_up_button.setFixedSize(20, 20)
         self.speed_up_button.setToolTip("Speed up")
 
         self.speed_down_button = QPushButton()
-        self.speed_down_button.setIcon(QIcon(str(resource_path("./resources/speed_down.png"))))
+        self.speed_down_button.setIcon(QIcon(resource_path("visualizer/speed_down.png")))
         self.speed_down_button.setFixedSize(20, 20)
         self.speed_down_button.setToolTip("Speed down")
 
@@ -1054,6 +1054,6 @@ class VisualizerControls(QFrame):
 
     def set_paused_state(self, paused):
         if paused:
-            self.pause_button.setIcon(QIcon(str(resource_path("./resources/play.png"))))
+            self.pause_button.setIcon(QIcon(resource_path("visualizer/play.png")))
         else:
-            self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
+            self.pause_button.setIcon(QIcon(resource_path("visualizer/pause.png")))
