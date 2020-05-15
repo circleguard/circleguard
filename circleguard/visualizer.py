@@ -65,13 +65,11 @@ class _Renderer(QFrame):
         # beatmap init stuff
         self.hitobjs = []
 
-        if not get_setting("render_beatmap"):
-            self.has_beatmap = False
-        elif beatmap_path is not None:
+        if beatmap_path:
             self.beatmap = Beatmap.from_path(beatmap_path)
             self.has_beatmap = True
             self.playback_len = self.get_hit_endtime(self.beatmap.hit_objects[-1])
-        elif beatmap_id is not None:
+        elif beatmap_id:
             self.beatmap = Library(get_setting("cache_dir")).lookup_by_id(beatmap_id, download=True, save=True)
             self.has_beatmap = True
             self.playback_len = self.get_hit_endtime(self.beatmap.hit_objects[-1])
