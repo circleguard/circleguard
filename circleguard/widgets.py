@@ -26,9 +26,10 @@ def set_event_window(window):
 
 
 class LineEdit(QLineEdit):
-    r"""
+    """
     A QLineEdit that overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being used only by the LineEdit.
+    keys to be sent to our window that controls shortcuts, instead of being
+    used only by the LineEdit.
     """
     def __init__(self, parent):
         super().__init__(parent)
@@ -56,8 +57,9 @@ class LineEdit(QLineEdit):
 
 
 class PasswordEdit(LineEdit):
-    r"""
-    A LineEdit that overrides focusInEvent and focusOutEven to show/hide the password on focus.
+    """
+    A LineEdit that overrides focusInEvent and focusOutEven to show/hide the
+    password on focus.
     """
 
     def __init__(self, parent):
@@ -88,7 +90,8 @@ class IDLineEdit(LineEdit):
 class SpinBox(QSpinBox):
     """
     A QSpinBox that overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being used only by the SpinBox.
+    keys to be sent to our window that controls shortcuts, instead of being
+    used only by the SpinBox.
     """
 
     def keyPressEvent(self, event):
@@ -100,8 +103,9 @@ class SpinBox(QSpinBox):
 
 class DoubleSpinBox(QDoubleSpinBox):
     """
-    A QDoubleSpinBox that overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being used only by the DoubleSpinBox.
+    A QDoubleSpinBox that overrides the keyPressEvent to allow the left and
+    right keys to be sent to our window that controls shortcuts, instead of
+    being used only by the DoubleSpinBox.
     """
 
     def keyPressEvent(self, event):
@@ -830,7 +834,8 @@ class FolderChooser(QFrame):
     def __init__(self, title, path=str(Path.home()), folder_mode=True, multiple_files=False, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
         super(FolderChooser, self).__init__()
         self.highlighted = False
-        self.changed = False # if the selection currently differs from the default path
+        # if the selection currently differs from the default path
+        self.changed = False
         self.default_path = path
         self.path = path
         self.display_path = display_path
@@ -854,7 +859,8 @@ class FolderChooser(QFrame):
         if self.display_path:
             self.path_label.setText(path)
         self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
-        self.old_stylesheet = self.combined.styleSheet() # for mousePressedEvent / show_required
+         # for mousePressedEvent / show_required
+        self.old_stylesheet = self.combined.styleSheet()
 
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -937,11 +943,11 @@ class ResetSettings(QFrame):
 
     def reset_settings(self):
         prompt = QMessageBox.question(self, "Reset settings",
-                                      "Are you sure?\n"
-                                      "This will reset all settings to their default value, "
-                                      "and the application will quit.",
-                                      buttons=QMessageBox.No | QMessageBox.Yes,
-                                      defaultButton=QMessageBox.No)
+                        "Are you sure?\n"
+                        "This will reset all settings to their default value, "
+                        "and the application will quit.",
+                        buttons=QMessageBox.No | QMessageBox.Yes,
+                        defaultButton=QMessageBox.No)
         if prompt == QMessageBox.Yes:
             reset_defaults()
             QCoreApplication.quit()
@@ -972,8 +978,10 @@ class BeatmapTest(QFrame):
 class EntryWidget(QFrame):
     pressed_signal = pyqtSignal(object)
     """
-    Represents a single entry of some kind of data, consisting of a title, a button and the data which is stored at self.data.
-    When the button is pressed, pressed_signal is emitted with the data for ease of use.
+    Represents a single entry of some kind of data, consisting of a title, a
+    button and the data which is stored at self.data.
+    When the button is pressed, pressed_signal is emitted with the data for
+    ease of use.
     """
     def __init__(self, title, action_name, data=None):
         super().__init__()
