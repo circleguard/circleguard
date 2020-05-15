@@ -46,12 +46,12 @@ FRAMETIME_FRAMES = 120
 SLIDER_TICKRATE = 50
 
 
-class _Renderer(QFrame):
+class Renderer(QFrame):
     update_signal = pyqtSignal(int)
     analyzer = RunTimeAnalyser(frame_buffer=FRAMETIME_FRAMES)
 
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None, events=[], speed=1):
-        super(_Renderer, self).__init__(parent)
+        super(Renderer, self).__init__(parent)
         self.setMinimumSize(GAMEPLAY_WIDTH + GAMEPLAY_PADDING_WIDTH*2, GAMEPLAY_HEIGHT + GAMEPLAY_PADDING_HEIGHT*2)
 
         # list of timestamps to highlight the frames of in a different color
@@ -637,14 +637,14 @@ class _Renderer(QFrame):
         self.clock.resume()
 
 
-class _Interface(QWidget):
+class Interface(QWidget):
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, events=[]):
-        super(_Interface, self).__init__()
+        super(Interface, self).__init__()
         speed = get_setting("default_speed")
         self.speed_options = get_setting("speed_options")
         self.layout = QVBoxLayout()
 
-        self.renderer = _Renderer(replays, beatmap_id, beatmap_path, speed=speed, events=events)
+        self.renderer = Renderer(replays, beatmap_id, beatmap_path, speed=speed, events=events)
         self.renderer.update_signal.connect(self.update_slider)
 
         self.controls = VisualizerControls(speed)
@@ -712,13 +712,13 @@ class _Interface(QWidget):
 
 
 class VisualizerWindow(QMainWindow):
-    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, events=[]):
+    def __init__(self, replays, beatmap_id=None, beatmap_path=None, events=[]):
         super(VisualizerWindow, self).__init__()
         self.is_fullscreen = False
         self.setAutoFillBackground(True)
         self.setWindowTitle("Visualizer")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
-        self.interface = _Interface(replays, beatmap_id, beatmap_path, events=events)
+        self.interface = Interface(replays, beatmap_id, beatmap_path, events=events)
         self.setCentralWidget(self.interface)
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
         QShortcut(QKeySequence(Qt.Key_Right), self, lambda: self.interface.change_frame(reverse=False))
