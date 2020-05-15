@@ -51,7 +51,7 @@ class Renderer(QFrame):
     analyzer = RunTimeAnalyser(frame_buffer=FRAMETIME_FRAMES)
 
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None, events=[], speed=1):
-        super(Renderer, self).__init__(parent)
+        super().__init__(parent)
         self.setMinimumSize(GAMEPLAY_WIDTH + GAMEPLAY_PADDING_WIDTH*2, GAMEPLAY_HEIGHT + GAMEPLAY_PADDING_HEIGHT*2)
 
         # list of timestamps to highlight the frames of in a different color
@@ -639,7 +639,7 @@ class Renderer(QFrame):
 
 class Interface(QWidget):
     def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, events=[]):
-        super(Interface, self).__init__()
+        super().__init__()
         speed = get_setting("default_speed")
         self.speed_options = get_setting("speed_options")
         self.layout = QVBoxLayout()
@@ -713,7 +713,7 @@ class Interface(QWidget):
 
 class VisualizerWindow(QMainWindow):
     def __init__(self, replays, beatmap_id=None, beatmap_path=None, events=[]):
-        super(VisualizerWindow, self).__init__()
+        super().__init__()
 
         self.setAutoFillBackground(True)
         self.setWindowTitle("Visualizer")
