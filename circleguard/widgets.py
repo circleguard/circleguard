@@ -550,7 +550,7 @@ class LoadableW(QFrame):
         title.setText(f"{name}{t+t if len(name) < 5 else t}(id: {self.loadable_id})")
 
         self.delete_button = QPushButton(self)
-        self.delete_button.setIcon(QIcon(resource_path("resources/delete.png")))
+        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
         self.layout.addWidget(title, 0, 0, 1, 7)
