@@ -573,12 +573,11 @@ class Renderer(QFrame):
         self.draw_progressbar(int((self.sliders_current / self.sliders_total) * 100))
 
     def process_sliders(self):
-        for index in range(len(self.beatmap.hit_objects)):
-            self.sliders_current = index
-            current_hitobj = self.beatmap.hit_objects[index]
-            if isinstance(current_hitobj, Slider):
-                steps = max(2, int((self.get_hit_endtime(current_hitobj) - self.get_hit_time(current_hitobj))/SLIDER_TICKRATE))
-                self.beatmap.hit_objects[index].slider_body = [current_hitobj.curve(i / steps) for i in range(steps + 1)]
+        for i, hitobj in enumerate(self.beatmap.hit_objects):
+            self.sliders_current = i
+            if isinstance(hitobj, Slider):
+                steps = max(2, int((self.get_hit_endtime(hitobj) - self.get_hit_time(hitobj))/SLIDER_TICKRATE))
+                hitobj.slider_body = [hitobj.curve(i / steps) for i in range(steps + 1)]
 
     def search_nearest_frame(self, reverse=False):
         """
