@@ -50,7 +50,7 @@ class Renderer(QFrame):
     update_signal = pyqtSignal(int)
     analyzer = RunTimeAnalyser(frame_buffer=FRAMETIME_FRAMES)
 
-    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, parent=None, events=[], speed=1):
+    def __init__(self, beatmap_info, replays, parent=None, events=[], speed=1):
         super().__init__(parent)
         self.setMinimumSize(GAMEPLAY_WIDTH + GAMEPLAY_PADDING_WIDTH*2, GAMEPLAY_HEIGHT + GAMEPLAY_PADDING_HEIGHT*2)
 
@@ -65,19 +65,21 @@ class Renderer(QFrame):
         # beatmap init stuff
         self.hitobjs = []
 
-        if beatmap_path:
-            self.beatmap = Beatmap.from_path(beatmap_path)
-            self.has_beatmap = True
+
+        if beatmap_info.path:
+            self.beatmap = Beatmap.from_path(beatmap_info.path)
             self.playback_len = self.get_hit_endtime(self.beatmap.hit_objects[-1])
-        elif beatmap_id:
-            self.beatmap = Library(get_setting("cache_dir")).lookup_by_id(beatmap_id, download=True, save=True)
-            self.has_beatmap = True
+        elif beatmap_info.map_id:
+            self.beatmap = Library(get_setting("cache_dir")).lookup_by_id(beatmap_info.map_id, download=True, save=True)
             self.playback_len = self.get_hit_endtime(self.beatmap.hit_objects[-1])
         else:
             self.playback_len = 0
-            self.has_beatmap = False
+
+        self.has_beatmap = beatmap_info.available()
+        # TODO inelegant way to handle this, maybe rename some variables at the least
         if not get_setting("render_beatmap"):
             self.has_beatmap = False
+
         # beatmap stuff
         if self.has_beatmap:
             # values taken from https://github.com/ppy/osu-wiki/blob/master/meta/unused/difficulty-settings.md
@@ -637,12 +639,12 @@ class Renderer(QFrame):
 
 
 class Interface(QWidget):
-    def __init__(self, replays=[], beatmap_id=None, beatmap_path=None, events=[]):
+    def __init__(self, beatmap_info, replays, events=[]):
         super().__init__()
         self.speed_options = get_setting("speed_options")
 
         speed = get_setting("default_speed")
-        self.renderer = Renderer(replays, beatmap_id, beatmap_path, speed=speed, events=events)
+        self.renderer = Renderer(beatmap_info, replays, speed=speed, events=events)
         self.renderer.update_signal.connect(self.update_slider)
 
         self.controls = VisualizerControls(speed)
@@ -713,13 +715,13 @@ class Interface(QWidget):
 
 
 class VisualizerWindow(QMainWindow):
-    def __init__(self, replays, beatmap_id=None, beatmap_path=None, events=[]):
+    def __init__(self, beatmap_info, replays=[], events=[]):
         super().__init__()
 
         self.setAutoFillBackground(True)
         self.setWindowTitle("Visualizer")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
-        self.interface = Interface(replays, beatmap_id, beatmap_path, events=events)
+        self.interface = Interface(beatmap_info, replays, events=events)
         self.setCentralWidget(self.interface)
 
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)

@@ -31,7 +31,7 @@ from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableExcept
 from circleguard import __version__ as cg_version
 from circleguard.loadable import Loadable
 
-from utils import resource_path, run_update_check, Run, parse_mod_string, InvalidModException, delete_widget
+from utils import resource_path, run_update_check, Run, parse_mod_string, InvalidModException, delete_widget, BeatmapInfo
 from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      LoglevelWidget, SliderBoxSetting, BeatmapTest, ResultW, LineEditSetting,
@@ -798,7 +798,8 @@ class MainTab(LinkableSetting, QFrame):
         snaps = []
         if isinstance(result, CorrectionResult):
             snaps = [snap.time for snap in result.snaps]
-        self.visualizer_window = VisualizerWindow(replays=replays, beatmap_id=beatmap_id, events=snaps)
+        beatmap_info = BeatmapInfo(map_id=beatmap_id)
+        self.visualizer_window = VisualizerWindow(beatmap_info, replays, events=snaps)
         self.visualizer_window.show()
 
 

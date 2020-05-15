@@ -127,7 +127,7 @@ class Run():
         self.event = event
 
 
-class Player:
+class Player():
     def __init__(self, replay, pen):
         self.pen = pen
         self.username = replay.username
@@ -140,3 +140,26 @@ class Player:
         self.end_pos = 0
         self.start_pos = 0
         self.mods = replay.mods
+
+class BeatmapInfo():
+    """
+    Represents the information necessary to load a beatmap.
+
+    Notes
+    -----
+    If multiple ways to load a beatmap are known, all ways should be provided so
+    consumers can choose the order of ways to load the beatmap.
+
+    If one way to load a beatmap is *not* available, it should be left as
+    ``None``.
+    """
+
+    def __init__(self, *, map_id=None, path=None):
+        self.map_id = map_id
+        self.path = path
+
+    def available(self):
+        """
+        Whether this beatmap can be loaded with the information we have or not.
+        """
+        return bool(self.map_id) or bool(self.path)
