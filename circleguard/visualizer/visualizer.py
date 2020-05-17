@@ -13,7 +13,7 @@ from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIco
 from .clock import Timer
 from utils import resource_path, Player
 from settings import get_setting, set_setting, toggle_setting
-from visualizer_controls import VisualizerControls
+from .visualizer_controls import VisualizerControls
 from .runtime_tracker import RunTimeAnalyser
 
 
