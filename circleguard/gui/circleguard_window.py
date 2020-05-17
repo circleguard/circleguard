@@ -90,10 +90,6 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.thread = threading.Thread(target=self._change_label_update)
         self.thread.start()
 
-    def event(self, event):
-        print(event)
-        return super().event(event)
-
     def on_setting_changed(self, setting, new_value):
         if setting == "log_save":
             if not new_value:
