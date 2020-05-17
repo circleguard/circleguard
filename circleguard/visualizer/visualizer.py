@@ -13,7 +13,7 @@ from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIco
 from .clock import Timer
 from utils import resource_path, Player
 from settings import get_setting, set_setting, toggle_setting
-from widgets import VisualizerControls
+from visualizer_controls import VisualizerControls
 from .runtime_tracker import RunTimeAnalyser
 
 
@@ -50,8 +50,8 @@ class Renderer(QFrame):
     update_signal = pyqtSignal(int)
     analyzer = RunTimeAnalyser(frame_buffer=FRAMETIME_FRAMES)
 
-    def __init__(self, beatmap_info, replays, parent=None, events=[], speed=1):
-        super().__init__(parent)
+    def __init__(self, beatmap_info, replays, events):
+        super().__init__()
         self.setMinimumSize(GAMEPLAY_WIDTH + GAMEPLAY_PADDING_WIDTH*2, GAMEPLAY_HEIGHT + GAMEPLAY_PADDING_HEIGHT*2)
 
         # list of timestamps to highlight the frames of in a different color
@@ -118,7 +118,7 @@ class Renderer(QFrame):
                     d[1] = 384 - d[1]
 
         # clock stuff
-        self.clock = Timer(speed)
+        self.clock = Timer(get_setting("default_speed"))
         self.paused = False
         self.play_direction = 1
 
@@ -639,15 +639,14 @@ class Renderer(QFrame):
 
 
 class Interface(QWidget):
-    def __init__(self, beatmap_info, replays, events=[]):
+    def __init__(self, beatmap_info, replays, events):
         super().__init__()
         self.speed_options = get_setting("speed_options")
 
-        speed = get_setting("default_speed")
-        self.renderer = Renderer(beatmap_info, replays, speed=speed, events=events)
+        self.renderer = Renderer(beatmap_info, replays, events=events)
         self.renderer.update_signal.connect(self.update_slider)
 
-        self.controls = VisualizerControls(speed)
+        self.controls = VisualizerControls()
         self.controls.pause_button.clicked.connect(self.pause)
         self.controls.play_reverse_button.clicked.connect(self.play_reverse)
         self.controls.play_normal_button.clicked.connect(self.play_normal)
