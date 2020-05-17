@@ -16,11 +16,11 @@ from PyQt5.QtGui import *
 
 from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableException,
                         ReplayMap, ReplayPath, User, Map, Check, MapUser,
-                        StealResult, RelaxResult, CorrectionResult, Detect)
+                        StealResult, RelaxResult, CorrectionResult, Detect, Mod)
 from circleguard import __version__ as cg_version
 from circleguard.loadable import Loadable
 
-from utils import resource_path, run_update_check, Run, parse_mod_string, InvalidModException, delete_widget, BeatmapInfo
+from utils import resource_path, run_update_check, Run, delete_widget, BeatmapInfo
 from widgets import (InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      LoglevelWidget, SliderBoxSetting, BeatmapTest, ResultW, LineEditSetting,
@@ -345,20 +345,20 @@ class MainTab(SingleLinkableSetting, QFrame):
                         loadable = ReplayPath(loadableW.path_input.path)
                     if isinstance(loadableW, ReplayMapW):
                         loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                                             mods=Mod(loadableW.mods_input.field.text()))
                     if isinstance(loadableW, MapW):
                         # use placeholder text (1-50) if the user inputted span is empty
                         span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = "1-100"
                         loadable = Map(int(loadableW.map_id_input.field.text()), span=span,
-                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                                             mods=Mod(loadableW.mods_input.field.text()))
                     if isinstance(loadableW, UserW):
                         span=loadableW.span_input.field.text()
                         if span == "all":
                             span = "1-100"
                         loadable = User(int(loadableW.user_id_input.field.text()), span=span,
-                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                                             mods=Mod(loadableW.mods_input.field.text()))
                     if isinstance(loadableW, MapUserW):
                         span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
                         if span == "all":
@@ -366,7 +366,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                         loadable = MapUser(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
                                            span=span)
                     loadableW_id_to_loadable[loadableW.loadable_id] = loadable
-                except InvalidModException as e:
+                except ValueError as e:
                     self.write_to_terminal_signal.emit(str(e))
                     self.update_label_signal.emit("Invalid arguments")
                     self.update_run_status_signal.emit(run.run_id, "Invalid arguments")
