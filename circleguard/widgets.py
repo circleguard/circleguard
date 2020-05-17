@@ -90,14 +90,14 @@ class SpinBox(QSpinBox):
 
 class QHLine(QFrame):
     def __init__(self, shadow=QFrame.Plain):
-        super(QHLine, self).__init__()
+        super().__init__()
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(shadow)
 
 
 class QVLine(QFrame):
     def __init__(self, shadow=QFrame.Plain):
-        super(QVLine, self).__init__()
+        super().__init__()
         self.setFrameShape(QFrame.VLine)
         self.setFrameShadow(shadow)
 
@@ -109,7 +109,7 @@ class Separator(QFrame):
     """
 
     def __init__(self, title):
-        super(Separator, self).__init__()
+        super().__init__()
 
         label = QLabel(self)
         label.setText(title)
@@ -131,7 +131,7 @@ class InputWidget(QFrame):
     """
 
     def __init__(self, title, tooltip, type_):
-        super(InputWidget, self).__init__()
+        super().__init__()
 
         label = QLabel(self)
         label.setText(title+":")
@@ -167,7 +167,7 @@ class IdWidgetCombined(QFrame):
     """
 
     def __init__(self):
-        super(IdWidgetCombined, self).__init__()
+        super().__init__()
 
         self.map_id = InputWidget("Map Id", "Beatmap id, not the mapset id!", type_="id")
         self.map_id.field.textChanged.connect(self.update_user_enabled)
@@ -242,7 +242,7 @@ class ButtonWidget(QFrame):
     """
 
     def __init__(self, label_title, button_title, tooltip, end=":"):
-        super(ButtonWidget, self).__init__()
+        super().__init__()
 
         label = QLabel(self)
         label.setText(label_title + end)
@@ -260,7 +260,7 @@ class ButtonWidget(QFrame):
 
 class LoglevelWidget(QFrame):
     def __init__(self, tooltip):
-        super(LoglevelWidget, self).__init__()
+        super().__init__()
 
         level_label = QLabel(self)
         level_label.setText("Debug mode:")
