@@ -10,19 +10,11 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit, QM
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint, QMimeData
 
-from settings import get_setting, reset_defaults, LinkableSetting, set_setting
+from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting, set_setting
 from utils import resource_path, delete_widget
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
-
-def set_event_window(window):
-    """
-    To emulate keypresses, we need a window to send the keypress to.
-    This main window is created in gui.pyw, so we need to set it here as well.
-    """
-    global WINDOW
-    WINDOW = window
 
 
 class LineEdit(QLineEdit):
@@ -42,7 +34,7 @@ class LineEdit(QLineEdit):
     def keyPressEvent(self, event):
         key = event.key()
         if key == Qt.Key_Left or key == Qt.Key_Right:
-            QCoreApplication.sendEvent(WINDOW, event)
+            event.ignore()
         super().keyPressEvent(event)
 
     def focusInEvent(self, event):
@@ -93,26 +85,7 @@ class SpinBox(QSpinBox):
     keys to be sent to our window that controls shortcuts, instead of being
     used only by the SpinBox.
     """
-
-    def keyPressEvent(self, event):
-        key = event.key()
-        if key == Qt.Key_Left or key == Qt.Key_Right:
-            QCoreApplication.sendEvent(WINDOW, event)
-        super().keyPressEvent(event)
-
-
-class DoubleSpinBox(QDoubleSpinBox):
-    """
-    A QDoubleSpinBox that overrides the keyPressEvent to allow the left and
-    right keys to be sent to our window that controls shortcuts, instead of
-    being used only by the DoubleSpinBox.
-    """
-
-    def keyPressEvent(self, event):
-        key = event.key()
-        if key == Qt.Key_Left or key == Qt.Key_Right:
-            QCoreApplication.sendEvent(WINDOW, event)
-        super().keyPressEvent(event)
+    # TODO actually get overriding inputs to work
 
 
 class QHLine(QFrame):
@@ -216,7 +189,7 @@ class IdWidgetCombined(QFrame):
         self.user_id.setEnabled(self.map_id.field.text() != "")
 
 
-class OptionWidget(LinkableSetting, QFrame):
+class OptionWidget(SingleLinkableSetting, QFrame):
     """
     A container class of widgets that represents an option with a boolean state.
     This class holds a Label and CheckBox.
@@ -226,7 +199,7 @@ class OptionWidget(LinkableSetting, QFrame):
         """
         String setting: The name of the setting to link this OptionWidget to.
         """
-        LinkableSetting.__init__(self, setting)
+        SingleLinkableSetting.__init__(self, setting)
         QFrame.__init__(self)
 
         label = QLabel(self)
@@ -243,7 +216,7 @@ class OptionWidget(LinkableSetting, QFrame):
         self.layout.addWidget(item, 0, 1, 1, 1, Qt.AlignRight)
         self.setLayout(self.layout)
 
-    def on_setting_changed(self, new_value):
+    def on_setting_changed(self, setting, new_value):
         self.box.setChecked(new_value)
 
 
@@ -751,7 +724,7 @@ class RunWidget(QFrame):
 
 
 
-class SliderBoxSetting(LinkableSetting, QFrame):
+class SliderBoxSetting(SingleLinkableSetting, QFrame):
     """
     A container class of a QLabel, QSlider, and SpinBox, and links the slider
     and spinbox to a setting (ie the default values of the slider and spinbox
@@ -759,9 +732,9 @@ class SliderBoxSetting(LinkableSetting, QFrame):
     spinbox will affect the setting).
     """
 
-    def __init__(self, display, tooltip, setting, max_):
-        LinkableSetting.__init__(self, setting)
-        QFrame.__init__(self)
+    def __init__(self, parent, display, tooltip, setting, max_):
+        SingleLinkableSetting.__init__(self, setting)
+        QFrame.__init__(self, parent)
 
         label = QLabel(self)
         label.setText(display)
@@ -774,14 +747,14 @@ class SliderBoxSetting(LinkableSetting, QFrame):
         slider.setValue(self.setting_value)
         self.slider = slider
 
-        spinbox = SpinBox(self)
+        spinbox = SpinBox()
         spinbox.setRange(0, max_)
         spinbox.setSingleStep(1)
         spinbox.setFixedWidth(100)
         spinbox.setValue(self.setting_value)
         spinbox.setAlignment(Qt.AlignCenter)
         self.spinbox = spinbox
-        self.combined = WidgetCombiner(slider, spinbox)
+        self.combined = WidgetCombiner(self, slider, spinbox)
 
         self.slider.valueChanged.connect(self.on_setting_changed_from_gui)
         self.spinbox.valueChanged.connect(self.on_setting_changed_from_gui)
@@ -794,18 +767,18 @@ class SliderBoxSetting(LinkableSetting, QFrame):
 
         self.setLayout(self.layout)
 
-    def on_setting_changed(self, new_value):
+    def on_setting_changed(self, setting, new_value):
         self.slider.setValue(new_value)
         self.spinbox.setValue(new_value)
 
-class LineEditSetting(LinkableSetting, QFrame):
+class LineEditSetting(SingleLinkableSetting, QFrame):
     """
     A container class of a QLabel and InputWidget that links the input widget
     to a setting (ie the default value of the widget will be the value of the
     setting, and changes made to the widget will affect the setting).
     """
     def __init__(self, display, tooltip, type_, setting):
-        LinkableSetting.__init__(self, setting)
+        SingleLinkableSetting.__init__(self, setting)
         QFrame.__init__(self)
         self.input_ = InputWidget(display, tooltip, type_=type_)
         self.input_.field.setText(self.setting_value)
@@ -815,12 +788,15 @@ class LineEditSetting(LinkableSetting, QFrame):
         self.layout.addWidget(self.input_)
         self.setLayout(self.layout)
 
-    def on_setting_changed(self, new_value):
+    def on_setting_changed(self, setting, new_value):
         self.input_.field.setText(new_value)
 
 class WidgetCombiner(QFrame):
-    def __init__(self, widget1, widget2):
-        super(WidgetCombiner, self).__init__()
+    def __init__(self, parent, widget1, widget2):
+        super(WidgetCombiner, self).__init__(parent)
+        # these widgets get created outside of WidgetCombiner
+        widget1.setParent(self)
+        widget2.setParent(self)
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(widget1, 0, 0, 1, 1)
@@ -858,7 +834,7 @@ class FolderChooser(QFrame):
         self.path_label = QLabel(self)
         if self.display_path:
             self.path_label.setText(path)
-        self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
+        self.combined = WidgetCombiner(self, self.path_label, self.file_chooser_button)
          # for mousePressedEvent / show_required
         self.old_stylesheet = self.combined.styleSheet()
 

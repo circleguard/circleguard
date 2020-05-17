@@ -292,40 +292,73 @@ CHANGED = {
 
 class LinkableSetting():
     """
-    XXX IMPLEMENTATION NOTE FOR SUBCLASSES:
-    all python classes must come before c classes (like QWidget) or super calls break.
-    Further reading: https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
+    Subclass this to indicate you would like to receive a method call
+    (``on_setting_changed``) whenever one of the settings you subscribe to
+    changes.
+
+    Warnings
+    --------
+    Implementation warning for subclases - all python classes must come before c
+    classes (like QWidget) or super calls will break. Further reading:
+    https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
 
     eg, def MyClass(LinkableSetting, QFrame) NOT def MyClass(QFrame, LinkableSetting)
     """
     registered_classes = []
-    def __init__(self, setting):
-        self.setting = setting
+    def __init__(self, settings):
+        self.settings = settings
         self.registered_classes.append(self)
-        self.setting_value = get_setting(setting)
+        self.setting_values = {}
+        for setting in settings:
+            val = get_setting(setting)
+            self.setting_values[setting] = val
 
     @abc.abstractmethod
-    def on_setting_changed(self, new_value):
+    def on_setting_changed(self, setting, new_value):
         """
-        Called when the internal setting this class is linked to is changed, from
-        a source other than this class. An extremely common use case - and the
-        intended one - is to change the value of a slider/label/other widget to
-        reflect the new setting value, so all settings are in sync (gui and internal).
+        Called when the internal setting this class is linked to is changed,
+        from a source other than this class. An extremely common use case - and
+        the intended one - is to change the value of a slider/label/other widget
+        to reflect the new setting value, so all settings are in sync (gui and
+        internal).
         """
         pass
 
-    def filter(self, setting_changed):
+    def filter(self, changed_setting):
         """
-        A predicate that returns true if this class should accept signals when the given
-        setting is changed (signals in the form of a call to on_setting_changed)
+        A predicate that returns true if this class should accept signals when
+        the given setting is changed (signals in the form of a call to
+        on_setting_changed)
         """
-        return self.setting == setting_changed
+        return changed_setting in self.settings
 
-    def on_setting_changed_from_gui(self, value):
+    def on_setting_changed_from_gui(self, setting, value):
         """
         Called when our setting is changed from the gui,
         and our internal settings need to be updated to reflect that.
         """
+        if setting not in self.settings:
+            raise ValueError(f"expected setting to be one of the subscribed "
+                f"settings ({self.settings}). Got {setting} instead.")
+        set_setting(setting, value)
+
+
+class SingleLinkableSetting(LinkableSetting):
+    """
+    Provided as a conveneince for the common use case of only wanting to
+    subscribe to a single setting.
+    """
+    def __init__(self, setting):
+        super().__init__([setting])
+        self.setting = setting
+        self.setting_value = self.setting_values[setting]
+
+    # TODO maybe also override on_setting_changed to have a signature of
+    # def on_setting_changed(self, new_value), since single linkable settings
+    # don't care about the name (they already know it!). Would require changing
+    # how we dispatch to this method though.
+
+    def on_setting_changed_from_gui(self, value):
         set_setting(self.setting, value)
 
 
@@ -350,7 +383,7 @@ def get_setting(name):
 def set_setting(name, value):
     for linkable_setting in LinkableSetting.registered_classes:
         if linkable_setting.filter(name):
-            linkable_setting.on_setting_changed(value)
+            linkable_setting.on_setting_changed(name, value)
 
     SETTINGS.setValue(name, TYPES[name][0](value))
 
