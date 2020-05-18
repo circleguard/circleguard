@@ -47,7 +47,7 @@ SLIDER_TICKRATE = 50
 
 
 class Renderer(QFrame):
-    update_signal = pyqtSignal(int)
+    update_time_signal = pyqtSignal(int)
     analyzer = RunTimeAnalyser(frame_buffer=FRAMETIME_FRAMES)
 
     def __init__(self, beatmap_info, replays, events):
@@ -192,7 +192,7 @@ class Renderer(QFrame):
 
         if self.has_beatmap:
             self.get_hitobjects()
-        self.update_signal.emit(current_time)
+        self.update_time_signal.emit(current_time)
         self.update()
 
     @analyzer.track
@@ -644,7 +644,7 @@ class Interface(QWidget):
         self.speed_options = get_setting("speed_options")
 
         self.renderer = Renderer(beatmap_info, replays, events)
-        self.renderer.update_signal.connect(self.update_slider)
+        self.renderer.update_time_signal.connect(self.update_slider)
 
         self.controls = VisualizerControls()
         self.controls.pause_button.clicked.connect(self.pause)
