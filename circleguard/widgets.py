@@ -31,12 +31,6 @@ class LineEdit(QLineEdit):
         self.old_stylesheet = self.styleSheet()
         self.highlighted = False
 
-    def keyPressEvent(self, event):
-        key = event.key()
-        if key == Qt.Key_Left or key == Qt.Key_Right:
-            event.ignore()
-        super().keyPressEvent(event)
-
     def focusInEvent(self, event):
         super().focusInEvent(event)
         if self.highlighted:
