@@ -10,6 +10,8 @@ from datetime import datetime
 import math
 import time
 
+# TODO this might cause a performance hit (we only import * for convenience),
+# investigate
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
