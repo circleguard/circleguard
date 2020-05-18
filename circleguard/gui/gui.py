@@ -346,21 +346,25 @@ class MainTab(SingleLinkableSetting, QFrame):
                     if isinstance(loadableW, ReplayPathW):
                         loadable = ReplayPath(loadableW.path_input.path)
                     if isinstance(loadableW, ReplayMapW):
+                        # Mod init errors on empty string, so just assign None
+                        mods = Mod(loadableW.mods_input.field.text()) if loadableW.mods_input.field.text() else None
                         loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                             mods=Mod(loadableW.mods_input.field.text()))
+                                             mods=mods)
                     if isinstance(loadableW, MapW):
+                        mods = Mod(loadableW.mods_input.field.text()) if loadableW.mods_input.field.text() else None
                         # use placeholder text (1-50) if the user inputted span is empty
                         span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = "1-100"
                         loadable = Map(int(loadableW.map_id_input.field.text()), span=span,
-                                             mods=Mod(loadableW.mods_input.field.text()))
+                                             mods=mods)
                     if isinstance(loadableW, UserW):
+                        mods = Mod(loadableW.mods_input.field.text()) if loadableW.mods_input.field.text() else None
                         span=loadableW.span_input.field.text()
                         if span == "all":
                             span = "1-100"
                         loadable = User(int(loadableW.user_id_input.field.text()), span=span,
-                                             mods=Mod(loadableW.mods_input.field.text()))
+                                             mods=mods)
                     if isinstance(loadableW, MapUserW):
                         span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
                         if span == "all":
