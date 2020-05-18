@@ -281,7 +281,6 @@ class LoglevelWidget(LinkableSetting, QFrame):
         level_combobox.addItem("TRACE", 5)
         level_combobox.setInsertPolicy(QComboBox.NoInsert)
         LOG_MAPPING = {50: 0, 40: 1, 30: 2, 20: 3, 10: 4, 5: 5}
-        print(self.setting_values)
         level_combobox.setCurrentIndex(LOG_MAPPING[self.setting_values["log_level"]])
         level_combobox.currentIndexChanged.connect(lambda: self.on_setting_changed_from_gui("log_level", level_combobox.currentData()))
         self.level_combobox = level_combobox
