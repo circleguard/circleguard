@@ -68,14 +68,16 @@ class PasswordEdit(LineEdit):
 
 
 class IDLineEdit(LineEdit):
-    r"""
+    """
     A LineEdit that does not allow anything but digits to be entered.
-    Specifically, anything not matched by regex ``\d*`` is not registered.
+
+    Notes
+    -----
+    Specifically, anything not matched by the regex ``\d*`` is not registered.
     """
 
     def __init__(self, parent):
         super().__init__(parent)
-        # r prefix isn't necessary but pylint was annoying
         validator = QRegExpValidator(QRegExp(r"\d*"))
         self.setValidator(validator)
 
