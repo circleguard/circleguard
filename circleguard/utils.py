@@ -70,6 +70,8 @@ def get_idle_setting_str():
         return "Idle"
 
 
+# TODO figure out if ``delete_widget`` (and ``clear_layout``) are really necessary
+# instead of just using ``widget.deleteLater``
 def delete_widget(widget):
     if widget.layout is not None:
         clear_layout(widget.layout)
