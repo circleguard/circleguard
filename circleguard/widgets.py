@@ -66,6 +66,7 @@ class PasswordEdit(LineEdit):
         super().focusOutEvent(event)
         self.setEchoMode(QLineEdit.Password)
 
+
 class IDLineEdit(LineEdit):
     r"""
     A LineEdit that does not allow anything but digits to be entered.
@@ -77,15 +78,6 @@ class IDLineEdit(LineEdit):
         # r prefix isn't necessary but pylint was annoying
         validator = QRegExpValidator(QRegExp(r"\d*"))
         self.setValidator(validator)
-
-
-class SpinBox(QSpinBox):
-    """
-    A QSpinBox that overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being
-    used only by the SpinBox.
-    """
-    # TODO actually get overriding inputs to work
 
 
 class QHLine(QFrame):
@@ -758,7 +750,7 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         slider.setValue(self.setting_value)
         self.slider = slider
 
-        spinbox = SpinBox()
+        spinbox = QSpinBox()
         spinbox.setRange(0, max_)
         spinbox.setSingleStep(1)
         spinbox.setFixedWidth(100)
