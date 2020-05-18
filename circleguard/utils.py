@@ -108,10 +108,10 @@ class BeatmapInfo():
 
     Notes
     -----
-    If multiple ways to load a beatmap are known, all ways should be provided so
-    consumers can choose the order of ways to load the beatmap.
+    If multiple ways to load a beatmap are known, all ways should be provided
+    so consumers can choose the order of ways to load the beatmap.
 
-    If one way to load a beatmap is *not* available, it should be left as
+    If a way to load a beatmap is *not* available, it should be left as
     ``None``.
     """
 
