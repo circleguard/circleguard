@@ -104,13 +104,13 @@ class Renderer(QFrame):
             self.is_loading = False
 
         # replay stuff
-        self.replay_amount = len(replays)
+        self.num_replays = len(replays)
         self.players = []
-        for replay in replays:
+        for i, replay in enumerate(replays):
             self.players.append(
                 Player(replay=replay,
-                       pen=QPen(QColor().fromHslF(replays.index(replay) / self.replay_amount, 0.75, 0.5)),))
-        self.playback_len = max(max(player.t) for player in self.players) if self.replay_amount > 0 else self.playback_len
+                       pen=QPen(QColor().fromHslF(i / self.num_replays, 0.75, 0.5)),))
+        self.playback_len = max(max(player.t) for player in self.players) if self.num_replays > 0 else self.playback_len
         # flip all replays with hr
         for player in self.players:
             if Mod.HardRock in player.mods:
@@ -310,9 +310,8 @@ class Renderer(QFrame):
         self.painter.setPen(PEN_WHITE)
         self.painter.setOpacity(1)
         self.painter.drawText(5, 15, f"Clock: {round(self.clock.get_time())} ms | Cursor count: {len(self.players)}")
-        if self.replay_amount > 0:
-            for i in range(len(self.players)):
-                player = self.players[i]
+        if self.num_replays > 0:
+            for i, player in enumerate(self.players):
                 pen = player.pen
                 self.painter.setPen(PEN_BLANK)
                 self.painter.setBrush(QBrush(pen.color()))
@@ -324,7 +323,7 @@ class Renderer(QFrame):
                 self.painter.setPen(pen)
                 self.painter.drawText(31, 27 + (11 * i), f"{player.username} {player.mods.short_name()}: {int(player.xy[player.end_pos][0])}, {int(player.xy[player.end_pos][1])}")
             self.painter.setPen(PEN_WHITE)
-            if self.replay_amount == 2:
+            if self.num_replays == 2:
                 try:
                     player = self.players[1]
                     prev_player = self.players[0]
