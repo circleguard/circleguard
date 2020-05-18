@@ -16,12 +16,9 @@ from utils import resource_path, delete_widget
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
 
-
+# TODO cmd + z doesn't undo operations here, figure out why
 class LineEdit(QLineEdit):
     """
-    A QLineEdit that overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being
-    used only by the LineEdit.
     """
     def __init__(self, parent):
         super().__init__(parent)
@@ -32,10 +29,10 @@ class LineEdit(QLineEdit):
         self.highlighted = False
 
     def focusInEvent(self, event):
-        super().focusInEvent(event)
         if self.highlighted:
             self.setStyleSheet(self.old_stylesheet)
             self.highlighted = False
+        return super().focusInEvent(event)
 
     def show_required(self):
         self.setStyleSheet(get_setting("required_style"))
@@ -44,7 +41,7 @@ class LineEdit(QLineEdit):
 
 class PasswordEdit(LineEdit):
     """
-    A LineEdit that overrides focusInEvent and focusOutEven to show/hide the
+    A LineEdit that makes the to show/hide the
     password on focus.
     """
 
@@ -53,12 +50,12 @@ class PasswordEdit(LineEdit):
         self.setEchoMode(QLineEdit.Password)
 
     def focusInEvent(self, event):
-        super().focusInEvent(event)
         self.setEchoMode(QLineEdit.Normal)
+        return super().focusInEvent(event)
 
     def focusOutEvent(self, event):
-        super().focusOutEvent(event)
         self.setEchoMode(QLineEdit.Password)
+        return super().focusOutEvent(event)
 
 
 class IDLineEdit(LineEdit):
