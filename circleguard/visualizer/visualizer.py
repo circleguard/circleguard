@@ -11,10 +11,11 @@ from PyQt5.QtWidgets import QWidget, QFrame, QMainWindow, QVBoxLayout, QShortcut
 from PyQt5.QtGui import QColor, QPainterPath, QPainter, QPen, QKeySequence, QIcon, QPalette, QBrush
 
 from .clock import Timer
-from utils import resource_path, Player
+from utils import resource_path
 from settings import get_setting, set_setting, toggle_setting
 from .visualizer_controls import VisualizerControls
 from .runtime_tracker import RunTimeAnalyser
+from .player import Player
 
 
 PREVIOUS_ERRSTATE = np.seterr('raise')
