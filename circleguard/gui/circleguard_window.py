@@ -58,9 +58,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.main_window.queue_tab.cancel_run_signal.connect(self.cancel_run)
 
         self.setCentralWidget(self.main_window)
-        QShortcut(QKeySequence(Qt.Key_Control + Qt.Key_Right), self, self.tab_right)
-        QShortcut(QKeySequence(Qt.Key_Control + Qt.Key_Left), self, self.tab_left)
-        QShortcut(QKeySequence(Qt.Key_Control + Qt.Key_Q), self, app.quit)
+        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Right), self, self.tab_right)
+        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Left), self, self.tab_left)
+        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Q), self, app.quit)
 
         self.setWindowTitle(f"Circleguard v{__version__}")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
