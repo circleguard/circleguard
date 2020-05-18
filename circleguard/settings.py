@@ -8,9 +8,9 @@ import logging
 
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
 from packaging import version
-# it's tempting to use QSettings builtin ini file support instead of configparser,
-# but that doesn't let us write comments, which is rather important to explain
-# what attributes are available through string formatting.
+# it's tempting to use QSettings builtin ini file support instead of
+# configparser, but that doesn't let us write comments, which is rather
+# important for users.
 from configparser import ConfigParser
 
 from version import __version__
@@ -189,7 +189,8 @@ DEFAULTS = {
         "visualizer_black_bg": False,
         "visualizer_frametime": False,
         "render_beatmap": True,
-        "default_speed": float(1),  # so type() returns float, since we want to allow float values, not just int
+        # so type() returns float, since we want to allow float values, not just int
+        "default_speed": float(1),
         "speed_options": [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 3.0, 5.0, 10.0]
 
     },
@@ -227,10 +228,12 @@ DEFAULTS = {
     },
     "Core": {
         "ran": False,
-        "last_version": "0.0.0", # force run update_settings if the user previously had a version without this key
+        # force run update_settings if the user previously had a version without this key
+        "last_version": "0.0.0",
         "api_key": "",
         "timestamp_format": "%Y/%m/%d %H:%M:%S",
-        "last_update_check": "1970/01/01 00:00:00", # aka datetime.min, but formatted
+        # aka datetime.min, but formatted
+        "last_update_check": "1970/01/01 00:00:00",
         "latest_version": __version__
     }
 }
@@ -302,11 +305,12 @@ class LinkableSetting():
 
     Warnings
     --------
-    Implementation warning for subclases - all python classes must come before c
-    classes (like QWidget) or super calls will break. Further reading:
+    Implementation warning for subclases - all python classes must come before
+    c classes (like QWidget) or super calls will break. Further reading:
     https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
 
-    eg, def MyClass(LinkableSetting, QFrame) NOT def MyClass(QFrame, LinkableSetting)
+    eg, def MyClass(LinkableSetting, QFrame)
+    NOT def MyClass(QFrame, LinkableSetting)
     """
     registered_classes = []
     def __init__(self, settings):
@@ -372,12 +376,13 @@ def get_setting(name):
     type_ = TYPES[name][0]
     val = SETTINGS.value(name)
     # windows registry keys doesnt properly preserve types, so convert "false"
-    # keys to a True/False value instead of bool("false") which would return True.
-    # see second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
+    # keys to a True/False value instead of bool("false") which would return
+    # True. See second bullet here:
+    # https://doc.qt.io/qt-5/qsettings.html#platform-limitations
     if type_ is bool:
         return False if val in ["false", "False"] else bool(val)
-    # val is eg. ['0.10', '1.00', '1.25', '1.50', '2.00'] so convert it to a list
-    # of floats, not strings
+    # val is eg. ['0.10', '1.00', '1.25', '1.50', '2.00'] so convert it to a
+    # list of floats, not strings
     if type_ is list:
         val = [float(x) for x in val]
         return val
@@ -424,8 +429,8 @@ def overwrite_outdated_settings():
         if last_version < version.parse(ver):
             for setting in changed_arr:
                 if setting not in TYPES:
-                    # happens if the key is in CHANGED but was deleted in a later version,
-                    # like message_cheater_found.
+                    # happens if the key is in CHANGED but was deleted in a
+                    # later version, like message_cheater_found.
                     continue
                 set_setting(setting, DEFAULTS[TYPES[setting][1]][setting])
     set_setting("last_version", __version__)
@@ -535,8 +540,8 @@ def initialize_dirs():
         if not path.exists():
             path.mkdir(parents=True)
 
-# assemble dict of {key: [type, section], ...} since we have nested dicts in DEFAULTS
-# double list comprehension feels sooo backwards to write
+# assemble dict of {key: [type, section], ...} since we have nested dicts in
+# DEFAULTS double list comprehension feels sooo backwards to write
 # eg {"cache_location": [<class "str">, "Locations"], ...}
 TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
 SETTINGS = QSettings("Circleguard", "Circleguard")
@@ -544,7 +549,8 @@ SETTINGS = QSettings("Circleguard", "Circleguard")
 # we don't want the global keys on macos when calling allkeys
 SETTINGS.setFallbacksEnabled(False)
 
-# add setting if missing (occurs between updates if we add a new default setting)
+# add setting if missing (occurs between updates if we add a new default
+# setting)
 for d in DEFAULTS.values():
     for key,value in d.items():
         if not SETTINGS.contains(key):
@@ -554,8 +560,8 @@ for d in DEFAULTS.values():
 CFG_PATH = get_setting("config_location") + "/circleguard.cfg"
 
 
-# overwrite our settings with the config settings (if the user changed them while
-# the application was closed)
+# overwrite our settings with the config settings (if the user changed them
+# while the application was closed)
 overwrite_with_config_settings()
 
 # overwrite setting key if they were changed in a release
