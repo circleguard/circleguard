@@ -700,8 +700,10 @@ class SettingsTab(QFrame):
 
 class ScrollableSettingsWidget(QFrame):
     """
-    This class contains all of the actual settings content - SettingsTab just has a
-    QScrollArea wrapped around this widget so that it can be scrolled down.
+    This class contains all of the actual settings content - SettingsTab just
+    has a QScrollArea wrapped around this widget so that it can be scrolled
+    down.
+
     """
     def __init__(self):
         super().__init__()
@@ -718,8 +720,6 @@ class ScrollableSettingsWidget(QFrame):
         self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
         self.loglevel = LoglevelWidget("")
-        self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
-        self.set_loglevel() # set the default loglevel in cg, not just in gui
 
         self.run_wizard = ButtonWidget("Run Wizard", "Run", "")
         self.run_wizard.button.clicked.connect(self.show_wizard)
@@ -747,10 +747,6 @@ class ScrollableSettingsWidget(QFrame):
         self.beatmaptest.button.clicked.connect(self.visualize)
         self.layout.addWidget(self.beatmaptest)
         self.setLayout(self.layout)
-
-    def set_loglevel(self):
-        for logger in logging.root.manager.loggerDict:
-            logging.getLogger(logger).setLevel(self.loglevel.level_combobox.currentData())
 
     def show_wizard(self):
         self.wizard.show()

@@ -258,9 +258,10 @@ class ButtonWidget(QFrame):
         self.setLayout(self.layout)
 
 
-class LoglevelWidget(QFrame):
+class LoglevelWidget(LinkableSetting, QFrame):
     def __init__(self, tooltip):
-        super().__init__()
+        LinkableSetting.__init__(self, ["log_level", "log_output"])
+        QFrame.__init__(self)
 
         level_label = QLabel(self)
         level_label.setText("Debug mode:")
@@ -279,6 +280,10 @@ class LoglevelWidget(QFrame):
         level_combobox.addItem("DEBUG", 10)
         level_combobox.addItem("TRACE", 5)
         level_combobox.setInsertPolicy(QComboBox.NoInsert)
+        LOG_MAPPING = {50: 0, 40: 1, 30: 2, 20: 3, 10: 4, 5: 5}
+        print(self.setting_values)
+        level_combobox.setCurrentIndex(LOG_MAPPING[self.setting_values["log_level"]])
+        level_combobox.currentIndexChanged.connect(lambda: self.on_setting_changed_from_gui("log_level", level_combobox.currentData()))
         self.level_combobox = level_combobox
 
         output_combobox = QComboBox(self)
@@ -289,24 +294,31 @@ class LoglevelWidget(QFrame):
         output_combobox.addItem("BOTH")
         output_combobox.setInsertPolicy(QComboBox.NoInsert)
         output_combobox.setCurrentIndex(0) # NONE by default
+        output_combobox.setCurrentIndex(self.setting_values["log_output"])
+        output_combobox.currentIndexChanged.connect(lambda val: self.on_setting_changed_from_gui("log_output", val))
         self.output_combobox = output_combobox
 
-        self.level_combobox.setCurrentIndex(get_setting("log_mode"))
-        self.level_combobox.currentIndexChanged.connect(partial(set_setting, "log_mode"))
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(level_label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.level_combobox, 0, 2, 1, 3, Qt.AlignRight)
+        layout.addWidget(output_label, 1, 0, 1, 1)
+        layout.addItem(SPACER, 1, 1, 1, 1)
+        layout.addWidget(self.output_combobox, 1, 2, 1, 3, Qt.AlignRight)
 
-        self.output_combobox.setCurrentIndex(get_setting("log_output"))
-        self.output_combobox.currentIndexChanged.connect(partial(set_setting, "log_output"))
+        self.setLayout(layout)
 
-        self.layout = QGridLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(level_label, 0, 0, 1, 1)
-        self.layout.addItem(SPACER, 0, 1, 1, 1)
-        self.layout.addWidget(self.level_combobox, 0, 2, 1, 3, Qt.AlignRight)
-        self.layout.addWidget(output_label, 1, 0, 1, 1)
-        self.layout.addItem(SPACER, 1, 1, 1, 1)
-        self.layout.addWidget(self.output_combobox, 1, 2, 1, 3, Qt.AlignRight)
+    def on_setting_changed(self, setting, value):
+        if setting == "log_level":
+            # combobox doesn't expose items as an iterable :(
+            for i in range(self.level_combobox.count()):
+                if self.level_combobox.itemData(i) == value:
+                    self.level_combobox.setCurrentIndex(i)
+                    break
+        elif setting == "log_output":
+            self.output_combobox.setCurrentIndex(value)
 
-        self.setLayout(self.layout)
 
 
 

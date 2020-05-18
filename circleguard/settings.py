@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import abc
 import json
+import logging
 
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
 from packaging import version
@@ -88,14 +89,14 @@ COMMENTS = {
     },
     "Logs": {
         "log_save": "Whether to save logs to a file (whose path is defined by Locations/log_dir)",
-        "log_mode": "All logs with a severity level at or higher than this value will be outputted.\n"
-                "Critical: 0\n"
-                "Error: 1\n"
-                "Warning: 2\n"
-                "Info: 3\n"
-                "Debug: 4\n"
+        "log_level": "All logs with a severity level at or higher than this value will be outputted.\n"
+                "Critical: 50\n"
+                "Error: 40\n"
+                "Warning: 30\n"
+                "Info: 20\n"
+                "Debug: 10\n"
                 "Trace: 5",
-        "log_output": "Where to output logs. This setting has no relation to log_save, so if log_output is 0 and log_save is True, logs will still be written to the log file at the level defined by log_mode.\n"
+        "log_output": "Where to output logs. This setting has no relation to log_save, so if log_output is 0 and log_save is True, logs will still be written to the log file at the level defined by log_level.\n"
                 "Nowhere: 0\n"
                 "Terminal: 1\n"
                 "Debug Window: 2\n"
@@ -214,7 +215,7 @@ DEFAULTS = {
     },
     "Logs": {
         "log_save": True,
-        "log_mode": 1, # ERROR
+        "log_level": 40, # ERROR
         "log_output": 1, # TERMINAL
         "log_format": "[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)"
     },
@@ -285,6 +286,9 @@ CHANGED = {
         "message_relax_found",
         "message_relax_found_display",
         "template_relax"
+    ],
+    "3.0.0": [
+        "log_level"
     ]
 }
 
@@ -381,10 +385,24 @@ def get_setting(name):
     return v
 
 def set_setting(name, value):
+    """
+    Sets the setting with the given name to have the given value.
+
+    Notes
+    -----
+    This function also handles any general purpose actions (not relating to gui)
+    that need to be taken when settings change, eg setting the log level for all
+    loggers when ``log_level`` changes.
+    """
+
+    if name == "log_level":
+        # set root logger's level
+        logging.getLogger().setLevel(value)
+
     for linkable_setting in LinkableSetting.registered_classes:
         if linkable_setting.filter(name):
             linkable_setting.on_setting_changed(name, value)
-
+    print(name, value)
     SETTINGS.setValue(name, TYPES[name][0](value))
 
 def toggle_setting(name):
