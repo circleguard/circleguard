@@ -715,9 +715,6 @@ class ScrollableSettingsWidget(QFrame):
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
         self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
-        self.cache_location = FolderChooser("Cache Location", get_setting("cache_dir"), folder_mode=True)
-        self.cache_location.path_signal.connect(partial(set_setting, "cache_dir"))
-        self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
         self.loglevel = LoglevelWidget("")
 

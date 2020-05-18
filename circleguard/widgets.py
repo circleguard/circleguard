@@ -855,7 +855,6 @@ class FolderChooser(QFrame):
         self.layout.addItem(SPACER, 0, 1, 1, 1)
         self.layout.addWidget(self.combined, 0, 2, 1, 3)
         self.setLayout(self.layout)
-        self.switch_enabled(True)
 
     def set_dir(self):
         parent_path_old = self.path if self.folder_mode else str(Path(self.path[0]).parent)
@@ -889,11 +888,6 @@ class FolderChooser(QFrame):
             label = label[:50] + '...' if len(label) > 50 else label
             self.path_label.setText(label)
         self.path_signal.emit(self.path)
-
-    def switch_enabled(self, state):
-        self.label.setStyleSheet("color:grey" if not state else "")
-        self.path_label.setStyleSheet("color:grey" if not state else "")
-        self.file_chooser_button.setEnabled(state)
 
     def show_required(self):
         self.combined.setStyleSheet(get_setting("required_style"))
