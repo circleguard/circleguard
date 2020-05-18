@@ -407,7 +407,6 @@ def set_setting(name, value):
     for linkable_setting in LinkableSetting.registered_classes:
         if linkable_setting.filter(name):
             linkable_setting.on_setting_changed(name, value)
-    print(name, value)
     SETTINGS.setValue(name, TYPES[name][0](value))
 
 def toggle_setting(name):
