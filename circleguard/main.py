@@ -1,3 +1,7 @@
+"""
+This file exists to provide a top-level entry point so local imports will work
+in other files.
+"""
 import sys
 import threading
 import traceback
