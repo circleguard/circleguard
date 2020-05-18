@@ -643,7 +643,7 @@ class Interface(QWidget):
         super().__init__()
         self.speed_options = get_setting("speed_options")
 
-        self.renderer = Renderer(beatmap_info, replays, events=events)
+        self.renderer = Renderer(beatmap_info, replays, events)
         self.renderer.update_signal.connect(self.update_slider)
 
         self.controls = VisualizerControls()
@@ -720,7 +720,7 @@ class VisualizerWindow(QMainWindow):
         self.setAutoFillBackground(True)
         self.setWindowTitle("Visualizer")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
-        self.interface = Interface(beatmap_info, replays, events=events)
+        self.interface = Interface(beatmap_info, replays, events)
         self.setCentralWidget(self.interface)
 
         QShortcut(QKeySequence(Qt.Key_Space), self, self.interface.pause)
