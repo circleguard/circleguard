@@ -657,11 +657,11 @@ class Interface(QWidget):
         self.controls.slider.sliderMoved.connect(self.renderer.seek_to)
         self.controls.slider.setRange(0, self.renderer.playback_len)
 
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.renderer)
-        self.layout.addWidget(self.controls)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.layout)
+        layout = QVBoxLayout()
+        layout.addWidget(self.renderer)
+        layout.addWidget(self.controls)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
 
     def play_normal(self):
         self.renderer.resume()
