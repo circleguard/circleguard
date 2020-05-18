@@ -420,7 +420,7 @@ def toggle_setting(name):
     """
     old_val = get_setting(name)
     new_val = not old_val
-    SETTINGS.setValue(name, new_val)
+    set_setting(name, new_val)
 
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
