@@ -240,8 +240,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         """Called when the app.aboutToQuit signal is emitted"""
         if self.debug_window is not None:
             self.debug_window.close()
-        if self.main_window.main_tab.visualizer_window is not None:
-            self.main_window.main_tab.visualizer_window.close()
+        if self.main_window.main_tab.visualizer is not None:
+            self.main_window.main_tab.visualizer.close()
         overwrite_config()
 
     def switch_theme(self, dark):
