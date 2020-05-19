@@ -21,8 +21,10 @@ from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableExcept
                         StealResult, RelaxResult, CorrectionResult, Detect, Mod)
 from circleguard import __version__ as cg_version
 from circleguard.loadable import Loadable
+from circlevis import BeatmapInfo
+from slider import Library
 
-from utils import resource_path, run_update_check, Run, delete_widget, BeatmapInfo
+from utils import resource_path, run_update_check, Run, delete_widget
 from widgets import (InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
                      LoglevelWidget, SliderBoxSetting, BeatmapTest, ResultW, LineEditSetting,
@@ -31,7 +33,7 @@ from widgets import (InputWidget, ResetSettings, WidgetCombiner,
                      CorrectionCheckW, VisualizerW)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting, SingleLinkableSetting
-from visualizer.visualizer import VisualizerWindow
+from .visualizer import CGVisualizer
 from wizard import CircleguardWizard
 from version import __version__
 
@@ -93,6 +95,8 @@ class MainTab(SingleLinkableSetting, QFrame):
         QFrame.__init__(self)
         SingleLinkableSetting.__init__(self, "api_key")
 
+        self.library = Library(get_setting("cache_dir"))
+
         self.loadables_combobox = QComboBox(self)
         self.loadables_combobox.setInsertPolicy(QComboBox.NoInsert)
         for loadable in MainTab.LOADABLES_COMBOBOX_REGISTRY:
@@ -125,7 +129,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.helper_thread_running = False
         self.runs = [] # Run objects for canceling runs
         self.run_id = 0
-        self.visualizer_window = None
+        self.visualizer = None
 
         terminal = QTextEdit(self)
         terminal.setFocusPolicy(Qt.ClickFocus)
@@ -532,14 +536,19 @@ class MainTab(SingleLinkableSetting, QFrame):
 
     def visualize(self, replays, beatmap_id, result):
         # only run one instance at a time
-        if self.visualizer_window is not None:
-            self.visualizer_window.close()
+        if self.visualizer is not None:
+            self.visualizer.close()
         snaps = []
         if isinstance(result, CorrectionResult):
             snaps = [snap.time for snap in result.snaps]
         beatmap_info = BeatmapInfo(map_id=beatmap_id)
-        self.visualizer_window = VisualizerWindow(beatmap_info, replays, events=snaps)
-        self.visualizer_window.show()
+        if not get_setting("render_beatmap"):
+            # don't give the visualizer any beatmap info if the user doesn't
+            # want it rendered
+            beatmap_info = BeatmapInfo()
+        paint_info = get_setting("visualizer_info")
+        self.visualizer = CGVisualizer(beatmap_info, replays, events=snaps, library=self.library, paint_info=paint_info)
+        self.visualizer.show()
 
 
 class TrackerLoader(Loader, QObject):
@@ -713,7 +722,7 @@ class ScrollableSettingsWidget(QFrame):
     """
     def __init__(self):
         super().__init__()
-        self.visualizer_window = None
+        self.visualizer = None
         self.wizard = CircleguardWizard()
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
@@ -755,10 +764,14 @@ class ScrollableSettingsWidget(QFrame):
         self.wizard.show()
 
     def visualize(self):
-        if self.visualizer_window is not None:
-            self.visualizer_window.close()
-        self.visualizer_window = VisualizerWindow(beatmap_path=self.beatmaptest.file_chooser.path)
-        self.visualizer_window.show()
+        if self.visualizer is not None:
+            self.visualizer.close()
+        beatmap_info = BeatmapInfo(path=self.beatmaptest.file_chooser.path)
+        # TODO pass the library we define in MainTab to CGVIsualizer,
+        # probably will have to rework some things entirely
+        paint_info = get_setting("visualizer_info")
+        self.visualizer = CGVisualizer(beatmap_info, paint_info=paint_info)
+        self.visualizer.show()
 
 
 class ResultsTab(QFrame):
