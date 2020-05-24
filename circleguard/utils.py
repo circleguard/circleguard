@@ -1,15 +1,6 @@
-# this is named ``gui_utils`` and not ``utils`` to prevent collision with
-# ``circleguard.utils`` (not our circleguard, but circlecore, which is on pip as
-# circleguard). Yes this is bad. But it works.
-
 from pathlib import Path
 import sys
-import os
-from datetime import datetime, timedelta
 
-from circleguard import Mod
-import requests
-from requests import RequestException
 from PyQt5.QtWidgets import QLayout
 
 # placed above local imports to avoid circular import errors
