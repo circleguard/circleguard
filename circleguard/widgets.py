@@ -149,36 +149,6 @@ class InputWidget(QFrame):
         return self.field.text()
 
 
-class IdWidgetCombined(QFrame):
-    """
-    A container class of widgets that represents user input for a map id and user id.
-    If no map id is given the user id field will be disabled.
-
-    This class holds 2 rows of a Label and IDLineEdit.
-    """
-
-    def __init__(self):
-        super().__init__()
-
-        self.map_id = InputWidget("Map Id", "Beatmap id, not the mapset id!", type_="id")
-        self.map_id.field.textChanged.connect(self.update_user_enabled)
-
-        self.user_id = InputWidget("User Id", "User id, as seen in the profile url", type_="id")
-
-        self.update_user_enabled()
-
-        self.layout = QGridLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.map_id, 0, 0, 1, 1)
-        self.layout.addWidget(self.user_id, 1, 0, 1, 1)
-        self.setLayout(self.layout)
-
-    def update_user_enabled(self):
-        """
-        Enables the user id field if the map field has any text in it. Otherwise, disables the user id field.
-        """
-        self.user_id.setEnabled(self.map_id.value() != "")
-
 
 class OptionWidget(SingleLinkableSetting, QFrame):
     """

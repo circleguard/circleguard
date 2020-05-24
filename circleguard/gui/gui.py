@@ -26,7 +26,7 @@ from slider import Library
 
 from utils import resource_path, run_update_check, Run, delete_widget
 from widgets import (InputWidget, ResetSettings, WidgetCombiner,
-                     FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
+                     FolderChooser, Separator, OptionWidget, ButtonWidget,
                      LoglevelWidget, SliderBoxSetting, BeatmapTest, ResultW, LineEditSetting,
                      EntryWidget, RunWidget, ScrollableLoadablesWidget, ScrollableChecksWidget,
                      ReplayMapW, ReplayPathW, MapW, UserW, MapUserW, StealCheckW, RelaxCheckW,
