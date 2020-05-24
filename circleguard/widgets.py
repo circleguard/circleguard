@@ -149,7 +149,6 @@ class InputWidget(QFrame):
         return self.field.text()
 
 
-
 class OptionWidget(SingleLinkableSetting, QFrame):
     """
     A container class of widgets that represents an option with a boolean state.
@@ -278,8 +277,6 @@ class LoglevelWidget(LinkableSetting, QFrame):
                     break
         elif setting == "log_output":
             self.output_combobox.setCurrentIndex(value)
-
-
 
 
 class ScrollableLoadablesWidget(QFrame):
