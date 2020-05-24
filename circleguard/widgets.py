@@ -10,25 +10,15 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit, QM
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint, QMimeData
 
-from settings import get_setting, reset_defaults, LinkableSetting, set_setting
+from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting, set_setting
 from utils import resource_path, delete_widget
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
 
-def set_event_window(window):
-    """
-    To emulate keypresses, we need a window to send the keypress to.
-    This main window is created in gui.pyw, so we need to set it here as well.
-    """
-    global WINDOW
-    WINDOW = window
-
-
+# TODO cmd + z doesn't undo operations here, figure out why
 class LineEdit(QLineEdit):
-    r"""
-    A QLineEdit that overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being used only by the LineEdit.
+    """
     """
     def __init__(self, parent):
         super().__init__(parent)
@@ -38,17 +28,11 @@ class LineEdit(QLineEdit):
         self.old_stylesheet = self.styleSheet()
         self.highlighted = False
 
-    def keyPressEvent(self, event):
-        key = event.key()
-        if key == Qt.Key_Left or key == Qt.Key_Right:
-            QCoreApplication.sendEvent(WINDOW, event)
-        super().keyPressEvent(event)
-
     def focusInEvent(self, event):
-        super().focusInEvent(event)
         if self.highlighted:
             self.setStyleSheet(self.old_stylesheet)
             self.highlighted = False
+        return super().focusInEvent(event)
 
     def show_required(self):
         self.setStyleSheet(get_setting("required_style"))
@@ -56,8 +40,9 @@ class LineEdit(QLineEdit):
 
 
 class PasswordEdit(LineEdit):
-    r"""
-    A LineEdit that overrides focusInEvent and focusOutEven to show/hide the password on focus.
+    """
+    A LineEdit that makes the to show/hide the
+    password on focus.
     """
 
     def __init__(self, parent):
@@ -65,62 +50,39 @@ class PasswordEdit(LineEdit):
         self.setEchoMode(QLineEdit.Password)
 
     def focusInEvent(self, event):
-        super().focusInEvent(event)
         self.setEchoMode(QLineEdit.Normal)
+        return super().focusInEvent(event)
 
     def focusOutEvent(self, event):
-        super().focusOutEvent(event)
         self.setEchoMode(QLineEdit.Password)
+        return super().focusOutEvent(event)
+
 
 class IDLineEdit(LineEdit):
-    r"""
+    """
     A LineEdit that does not allow anything but digits to be entered.
-    Specifically, anything not matched by regex ``\d*`` is not registered.
+
+    Notes
+    -----
+    Specifically, anything not matched by the regex ``\d*`` is not registered.
     """
 
     def __init__(self, parent):
         super().__init__(parent)
-        # r prefix isn't necessary but pylint was annoying
         validator = QRegExpValidator(QRegExp(r"\d*"))
         self.setValidator(validator)
 
 
-class SpinBox(QSpinBox):
-    """
-    A QSpinBox that overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being used only by the SpinBox.
-    """
-
-    def keyPressEvent(self, event):
-        key = event.key()
-        if key == Qt.Key_Left or key == Qt.Key_Right:
-            QCoreApplication.sendEvent(WINDOW, event)
-        super().keyPressEvent(event)
-
-
-class DoubleSpinBox(QDoubleSpinBox):
-    """
-    A QDoubleSpinBox that overrides the keyPressEvent to allow the left and right
-    keys to be sent to our window that controls shortcuts, instead of being used only by the DoubleSpinBox.
-    """
-
-    def keyPressEvent(self, event):
-        key = event.key()
-        if key == Qt.Key_Left or key == Qt.Key_Right:
-            QCoreApplication.sendEvent(WINDOW, event)
-        super().keyPressEvent(event)
-
-
 class QHLine(QFrame):
     def __init__(self, shadow=QFrame.Plain):
-        super(QHLine, self).__init__()
+        super().__init__()
         self.setFrameShape(QFrame.HLine)
         self.setFrameShadow(shadow)
 
 
 class QVLine(QFrame):
     def __init__(self, shadow=QFrame.Plain):
-        super(QVLine, self).__init__()
+        super().__init__()
         self.setFrameShape(QFrame.VLine)
         self.setFrameShadow(shadow)
 
@@ -132,7 +94,7 @@ class Separator(QFrame):
     """
 
     def __init__(self, title):
-        super(Separator, self).__init__()
+        super().__init__()
 
         label = QLabel(self)
         label.setText(title)
@@ -154,7 +116,7 @@ class InputWidget(QFrame):
     """
 
     def __init__(self, title, tooltip, type_):
-        super(InputWidget, self).__init__()
+        super().__init__()
 
         label = QLabel(self)
         label.setText(title+":")
@@ -180,39 +142,14 @@ class InputWidget(QFrame):
         """
         self.field.show_required()
 
-
-class IdWidgetCombined(QFrame):
-    """
-    A container class of widgets that represents user input for a map id and user id.
-    If no map id is given the user id field will be disabled.
-
-    This class holds 2 rows of a Label and IDLineEdit.
-    """
-
-    def __init__(self):
-        super(IdWidgetCombined, self).__init__()
-
-        self.map_id = InputWidget("Map Id", "Beatmap id, not the mapset id!", type_="id")
-        self.map_id.field.textChanged.connect(self.update_user_enabled)
-
-        self.user_id = InputWidget("User Id", "User id, as seen in the profile url", type_="id")
-
-        self.update_user_enabled()
-
-        self.layout = QGridLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.map_id, 0, 0, 1, 1)
-        self.layout.addWidget(self.user_id, 1, 0, 1, 1)
-        self.setLayout(self.layout)
-
-    def update_user_enabled(self):
+    def value(self):
         """
-        Enables the user id field if the map field has any text in it. Otherwise, disables the user id field.
+        Retrieves the string value of the field in this input widget.
         """
-        self.user_id.setEnabled(self.map_id.field.text() != "")
+        return self.field.text()
 
 
-class OptionWidget(LinkableSetting, QFrame):
+class OptionWidget(SingleLinkableSetting, QFrame):
     """
     A container class of widgets that represents an option with a boolean state.
     This class holds a Label and CheckBox.
@@ -222,7 +159,7 @@ class OptionWidget(LinkableSetting, QFrame):
         """
         String setting: The name of the setting to link this OptionWidget to.
         """
-        LinkableSetting.__init__(self, setting)
+        SingleLinkableSetting.__init__(self, setting)
         QFrame.__init__(self)
 
         label = QLabel(self)
@@ -239,7 +176,7 @@ class OptionWidget(LinkableSetting, QFrame):
         self.layout.addWidget(item, 0, 1, 1, 1, Qt.AlignRight)
         self.setLayout(self.layout)
 
-    def on_setting_changed(self, new_value):
+    def on_setting_changed(self, setting, new_value):
         self.box.setChecked(new_value)
 
 
@@ -265,7 +202,7 @@ class ButtonWidget(QFrame):
     """
 
     def __init__(self, label_title, button_title, tooltip, end=":"):
-        super(ButtonWidget, self).__init__()
+        super().__init__()
 
         label = QLabel(self)
         label.setText(label_title + end)
@@ -281,9 +218,10 @@ class ButtonWidget(QFrame):
         self.setLayout(self.layout)
 
 
-class LoglevelWidget(QFrame):
+class LoglevelWidget(LinkableSetting, QFrame):
     def __init__(self, tooltip):
-        super(LoglevelWidget, self).__init__()
+        LinkableSetting.__init__(self, ["log_level", "log_output"])
+        QFrame.__init__(self)
 
         level_label = QLabel(self)
         level_label.setText("Debug mode:")
@@ -302,6 +240,9 @@ class LoglevelWidget(QFrame):
         level_combobox.addItem("DEBUG", 10)
         level_combobox.addItem("TRACE", 5)
         level_combobox.setInsertPolicy(QComboBox.NoInsert)
+        LOG_MAPPING = {50: 0, 40: 1, 30: 2, 20: 3, 10: 4, 5: 5}
+        level_combobox.setCurrentIndex(LOG_MAPPING[self.setting_values["log_level"]])
+        level_combobox.currentIndexChanged.connect(lambda: self.on_setting_changed_from_gui("log_level", level_combobox.currentData()))
         self.level_combobox = level_combobox
 
         output_combobox = QComboBox(self)
@@ -312,25 +253,30 @@ class LoglevelWidget(QFrame):
         output_combobox.addItem("BOTH")
         output_combobox.setInsertPolicy(QComboBox.NoInsert)
         output_combobox.setCurrentIndex(0) # NONE by default
+        output_combobox.setCurrentIndex(self.setting_values["log_output"])
+        output_combobox.currentIndexChanged.connect(lambda val: self.on_setting_changed_from_gui("log_output", val))
         self.output_combobox = output_combobox
 
-        self.level_combobox.setCurrentIndex(get_setting("log_mode"))
-        self.level_combobox.currentIndexChanged.connect(partial(set_setting, "log_mode"))
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(level_label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.level_combobox, 0, 2, 1, 3, Qt.AlignRight)
+        layout.addWidget(output_label, 1, 0, 1, 1)
+        layout.addItem(SPACER, 1, 1, 1, 1)
+        layout.addWidget(self.output_combobox, 1, 2, 1, 3, Qt.AlignRight)
 
-        self.output_combobox.setCurrentIndex(get_setting("log_output"))
-        self.output_combobox.currentIndexChanged.connect(partial(set_setting, "log_output"))
+        self.setLayout(layout)
 
-        self.layout = QGridLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(level_label, 0, 0, 1, 1)
-        self.layout.addItem(SPACER, 0, 1, 1, 1)
-        self.layout.addWidget(self.level_combobox, 0, 2, 1, 3, Qt.AlignRight)
-        self.layout.addWidget(output_label, 1, 0, 1, 1)
-        self.layout.addItem(SPACER, 1, 1, 1, 1)
-        self.layout.addWidget(self.output_combobox, 1, 2, 1, 3, Qt.AlignRight)
-
-        self.setLayout(self.layout)
-
+    def on_setting_changed(self, setting, value):
+        if setting == "log_level":
+            # combobox doesn't expose items as an iterable :(
+            for i in range(self.level_combobox.count()):
+                if self.level_combobox.itemData(i) == value:
+                    self.level_combobox.setCurrentIndex(i)
+                    break
+        elif setting == "log_output":
+            self.output_combobox.setCurrentIndex(value)
 
 
 class ScrollableLoadablesWidget(QFrame):
@@ -431,7 +377,7 @@ class CheckW(QFrame):
             self.loadables = []
 
         self.delete_button = QPushButton(self)
-        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
         title = QLabel()
@@ -514,7 +460,7 @@ class LoadableInCheck(QFrame):
         self.loadable_id = loadable_id
 
         self.delete_button = QPushButton(self)
-        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda id_: self.remove_loadableincheck_signal.emit(id_), self.loadable_in_check_id))
 
@@ -550,7 +496,7 @@ class LoadableW(QFrame):
         title.setText(f"{name}{t+t if len(name) < 5 else t}(id: {self.loadable_id})")
 
         self.delete_button = QPushButton(self)
-        self.delete_button.setIcon(QIcon(str(resource_path("./resources/delete.png"))))
+        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
         self.layout.addWidget(title, 0, 0, 1, 7)
@@ -588,7 +534,7 @@ class LoadableW(QFrame):
         all_filled = True
         for input_widget in self.required_input_widgets:
             # don't count inputs with defaults as empty
-            filled = input_widget.field.text() != "" or input_widget.field.placeholderText() != ""
+            filled = input_widget.value() != "" or input_widget.field.placeholderText() != ""
             if not filled:
                 input_widget.show_required()
                 all_filled = False
@@ -747,7 +693,7 @@ class RunWidget(QFrame):
 
 
 
-class SliderBoxSetting(LinkableSetting, QFrame):
+class SliderBoxSetting(SingleLinkableSetting, QFrame):
     """
     A container class of a QLabel, QSlider, and SpinBox, and links the slider
     and spinbox to a setting (ie the default values of the slider and spinbox
@@ -755,9 +701,9 @@ class SliderBoxSetting(LinkableSetting, QFrame):
     spinbox will affect the setting).
     """
 
-    def __init__(self, display, tooltip, setting, max_):
-        LinkableSetting.__init__(self, setting)
-        QFrame.__init__(self)
+    def __init__(self, parent, display, tooltip, setting, max_):
+        SingleLinkableSetting.__init__(self, setting)
+        QFrame.__init__(self, parent)
 
         label = QLabel(self)
         label.setText(display)
@@ -770,14 +716,14 @@ class SliderBoxSetting(LinkableSetting, QFrame):
         slider.setValue(self.setting_value)
         self.slider = slider
 
-        spinbox = SpinBox(self)
+        spinbox = QSpinBox()
         spinbox.setRange(0, max_)
         spinbox.setSingleStep(1)
         spinbox.setFixedWidth(100)
         spinbox.setValue(self.setting_value)
         spinbox.setAlignment(Qt.AlignCenter)
         self.spinbox = spinbox
-        self.combined = WidgetCombiner(slider, spinbox)
+        self.combined = WidgetCombiner(self, slider, spinbox)
 
         self.slider.valueChanged.connect(self.on_setting_changed_from_gui)
         self.spinbox.valueChanged.connect(self.on_setting_changed_from_gui)
@@ -790,18 +736,18 @@ class SliderBoxSetting(LinkableSetting, QFrame):
 
         self.setLayout(self.layout)
 
-    def on_setting_changed(self, new_value):
+    def on_setting_changed(self, setting, new_value):
         self.slider.setValue(new_value)
         self.spinbox.setValue(new_value)
 
-class LineEditSetting(LinkableSetting, QFrame):
+class LineEditSetting(SingleLinkableSetting, QFrame):
     """
     A container class of a QLabel and InputWidget that links the input widget
     to a setting (ie the default value of the widget will be the value of the
     setting, and changes made to the widget will affect the setting).
     """
     def __init__(self, display, tooltip, type_, setting):
-        LinkableSetting.__init__(self, setting)
+        SingleLinkableSetting.__init__(self, setting)
         QFrame.__init__(self)
         self.input_ = InputWidget(display, tooltip, type_=type_)
         self.input_.field.setText(self.setting_value)
@@ -811,12 +757,15 @@ class LineEditSetting(LinkableSetting, QFrame):
         self.layout.addWidget(self.input_)
         self.setLayout(self.layout)
 
-    def on_setting_changed(self, new_value):
+    def on_setting_changed(self, setting, new_value):
         self.input_.field.setText(new_value)
 
 class WidgetCombiner(QFrame):
-    def __init__(self, widget1, widget2):
-        super(WidgetCombiner, self).__init__()
+    def __init__(self, parent, widget1, widget2):
+        super(WidgetCombiner, self).__init__(parent)
+        # these widgets get created outside of WidgetCombiner
+        widget1.setParent(self)
+        widget2.setParent(self)
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(widget1, 0, 0, 1, 1)
@@ -830,7 +779,8 @@ class FolderChooser(QFrame):
     def __init__(self, title, path=str(Path.home()), folder_mode=True, multiple_files=False, file_ending="osu! Beatmapfile (*.osu)", display_path=True):
         super(FolderChooser, self).__init__()
         self.highlighted = False
-        self.changed = False # if the selection currently differs from the default path
+        # if the selection currently differs from the default path
+        self.changed = False
         self.default_path = path
         self.path = path
         self.display_path = display_path
@@ -853,8 +803,9 @@ class FolderChooser(QFrame):
         self.path_label = QLabel(self)
         if self.display_path:
             self.path_label.setText(path)
-        self.combined = WidgetCombiner(self.path_label, self.file_chooser_button)
-        self.old_stylesheet = self.combined.styleSheet() # for mousePressedEvent / show_required
+        self.combined = WidgetCombiner(self, self.path_label, self.file_chooser_button)
+         # for mousePressedEvent / show_required
+        self.old_stylesheet = self.combined.styleSheet()
 
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -862,7 +813,6 @@ class FolderChooser(QFrame):
         self.layout.addItem(SPACER, 0, 1, 1, 1)
         self.layout.addWidget(self.combined, 0, 2, 1, 3)
         self.setLayout(self.layout)
-        self.switch_enabled(True)
 
     def set_dir(self):
         parent_path_old = self.path if self.folder_mode else str(Path(self.path[0]).parent)
@@ -896,11 +846,6 @@ class FolderChooser(QFrame):
             label = label[:50] + '...' if len(label) > 50 else label
             self.path_label.setText(label)
         self.path_signal.emit(self.path)
-
-    def switch_enabled(self, state):
-        self.label.setStyleSheet("color:grey" if not state else "")
-        self.path_label.setStyleSheet("color:grey" if not state else "")
-        self.file_chooser_button.setEnabled(state)
 
     def show_required(self):
         self.combined.setStyleSheet(get_setting("required_style"))
@@ -937,11 +882,11 @@ class ResetSettings(QFrame):
 
     def reset_settings(self):
         prompt = QMessageBox.question(self, "Reset settings",
-                                      "Are you sure?\n"
-                                      "This will reset all settings to their default value, "
-                                      "and the application will quit.",
-                                      buttons=QMessageBox.No | QMessageBox.Yes,
-                                      defaultButton=QMessageBox.No)
+                        "Are you sure?\n"
+                        "This will reset all settings to their default value, "
+                        "and the application will quit.",
+                        buttons=QMessageBox.No | QMessageBox.Yes,
+                        defaultButton=QMessageBox.No)
         if prompt == QMessageBox.Yes:
             reset_defaults()
             QCoreApplication.quit()
@@ -972,8 +917,10 @@ class BeatmapTest(QFrame):
 class EntryWidget(QFrame):
     pressed_signal = pyqtSignal(object)
     """
-    Represents a single entry of some kind of data, consisting of a title, a button and the data which is stored at self.data.
-    When the button is pressed, pressed_signal is emitted with the data for ease of use.
+    Represents a single entry of some kind of data, consisting of a title, a
+    button and the data which is stored at self.data.
+    When the button is pressed, pressed_signal is emitted with the data for
+    ease of use.
     """
     def __init__(self, title, action_name, data=None):
         super().__init__()
@@ -989,71 +936,3 @@ class EntryWidget(QFrame):
 
     def button_pressed(self, _):
         self.pressed_signal.emit(self.data)
-
-
-class VisualizerControls(QFrame):
-    def __init__(self, speed):
-        super().__init__()
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setValue(0)
-        self.slider.setFixedHeight(20)
-        self.slider.setStyleSheet("outline: none;")
-
-        self.play_reverse_button = QPushButton()
-        self.play_reverse_button.setIcon(QIcon(str(resource_path("./resources/play_reverse.png"))))
-        self.play_reverse_button.setFixedSize(20, 20)
-        self.play_reverse_button.setToolTip("Plays visualization in reverse")
-
-        self.play_normal_button = QPushButton()
-        self.play_normal_button.setIcon(QIcon(str(resource_path("./resources/play_normal.png"))))
-        self.play_normal_button.setFixedSize(20, 20)
-        self.play_normal_button.setToolTip("Plays visualization in normally")
-
-        self.next_frame_button = QPushButton()
-        self.next_frame_button.setIcon(QIcon(str(resource_path("./resources/frame_next.png"))))
-        self.next_frame_button.setFixedSize(20, 20)
-        self.next_frame_button.setToolTip("Displays next frame")
-
-        self.previous_frame_button = QPushButton()
-        self.previous_frame_button.setIcon(QIcon(str(resource_path("./resources/frame_back.png"))))
-        self.previous_frame_button.setFixedSize(20, 20)
-        self.previous_frame_button.setToolTip("Displays previous frame")
-
-        self.pause_button = QPushButton()
-        self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))
-        self.pause_button.setFixedSize(20, 20)
-        self.pause_button.setToolTip("Pause visualization")
-
-        self.speed_up_button = QPushButton()
-        self.speed_up_button.setIcon(QIcon(str(resource_path("./resources/speed_up.png"))))
-        self.speed_up_button.setFixedSize(20, 20)
-        self.speed_up_button.setToolTip("Speed up")
-
-        self.speed_down_button = QPushButton()
-        self.speed_down_button.setIcon(QIcon(str(resource_path("./resources/speed_down.png"))))
-        self.speed_down_button.setFixedSize(20, 20)
-        self.speed_down_button.setToolTip("Speed down")
-
-        self.speed_label = QLabel(str(speed) + "x")
-        self.speed_label.setFixedSize(40, 20)
-        self.speed_label.setAlignment(Qt.AlignCenter | Qt.AlignVCenter)
-
-        self.layout = QGridLayout()
-        self.layout.addWidget(self.play_reverse_button, 16, 0, 1, 1)
-        self.layout.addWidget(self.previous_frame_button, 16, 1, 1, 1)
-        self.layout.addWidget(self.pause_button, 16, 2, 1, 1)
-        self.layout.addWidget(self.next_frame_button, 16, 3, 1, 1)
-        self.layout.addWidget(self.play_normal_button, 16, 4, 1, 1)
-        self.layout.addWidget(self.slider, 16, 5, 1, 9)
-        self.layout.addWidget(self.speed_label, 16, 14, 1, 1)
-        self.layout.addWidget(self.speed_down_button, 16, 15, 1, 1)
-        self.layout.addWidget(self.speed_up_button, 16, 16, 1, 1)
-        self.layout.setContentsMargins(5, 0, 5, 5)
-        self.setLayout(self.layout)
-        self.setFixedHeight(25)
-
-    def set_paused_state(self, paused):
-        if paused:
-            self.pause_button.setIcon(QIcon(str(resource_path("./resources/play.png"))))
-        else:
-            self.pause_button.setIcon(QIcon(str(resource_path("./resources/pause.png"))))

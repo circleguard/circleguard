@@ -15,9 +15,9 @@ class WizardPage(QWizardPage):
         # "In ClassicStyle and ModernStyle, using subtitles is necessary to make the header appear"
         # https://doc.qt.io/qt-5/qwizardpage.html#subTitle-prop
         self.setSubTitle(" ")
-        banner = QPixmap(str(resource_path("resources/banner.png")))
+        banner = QPixmap(resource_path("wizard/banner.png"))
         self.setPixmap(QWizard.BannerPixmap, banner)
-        image = QPixmap(str(resource_path("resources/logo.png"))).scaled(QSize(banner.height()*0.85, banner.height()*0.85), transformMode=Qt.SmoothTransformation)
+        image = QPixmap(resource_path("logo/logo.png")).scaled(QSize(banner.height() * 0.85, banner.height() * 0.85), transformMode=Qt.SmoothTransformation)
         self.setPixmap(QWizard.LogoPixmap, image)
 
 
@@ -25,7 +25,7 @@ class CircleguardWizard(QWizard):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Wizard")
-        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
         self.SetupPage = SetupPage()
         self.addPage(IntroPage())
         self.addPage(self.SetupPage)
@@ -147,7 +147,7 @@ class TutorialPageLoadables(WizardPage):
                 "<p>A Map Replay represents a replay by a single User on a Map.</p>")
         image = QLabel()
         # SmoothTransformation necessary for half decent image quality
-        image.setPixmap(QPixmap(str(resource_path("resources/tutorial/map_replay_empty.png"))).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/map_replay_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
         label2 = WizardLabel("<p>If you wanted cookiezi's replay on Freedom Dive, for instance you would enter 129891 "
                 " as the Map id and 124493 as the User id.</p>"
                 "<p>By default (when Mods is left empty), the highest scoring replay by that user will be used in a Map Replay. "
@@ -167,7 +167,7 @@ class TutorialPageLoadableLocal(WizardPage):
         self.setTitle("Tutorial (Loadables - Local Replay)")
         label = WizardLabel("<p>A Local Replay represents a replay stored in a .osr file on your computer.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(str(resource_path("resources/tutorial/local_replay_empty.png"))).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/local_replay_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
         label2 = WizardLabel("<p>Not much more to say here, just select the location of the .osr file you want to represent.</p>")
 
         layout = QVBoxLayout()
@@ -182,7 +182,7 @@ class TutorialPageLoadableMap(WizardPage):
         self.setTitle("Tutorial (Loadables - Map)")
         label = WizardLabel("<p>A Map represents one or more replays on a map's leaderboard.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(str(resource_path("resources/tutorial/map_empty.png"))).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/map_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
         label2 = WizardLabel("<p>If you wanted the top 50 replays on <a href=\"https://osu.ppy.sh/beatmapsets/79498#osu/221777\">"
                 "https://osu.ppy.sh/beatmapsets/79498#osu/221777</a>, you would enter 221777 as the Map id and 1-50 "
                 "as the Span (which happens to be the default).</p>"
@@ -210,7 +210,7 @@ class TutorialPageLoadableUser(WizardPage):
         self.setTitle("Tutorial (Loadables - User)")
         label = WizardLabel("<p>A User represents one or more of a User's top plays.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(str(resource_path("resources/tutorial/user_empty.png"))).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/user_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
         label2 = WizardLabel("<p>All fields work similarly to the other Loadables we've explained. "
                 "If you wanted Cookiezi's top 50 replays, you would enter 124493 as the User id and 1-50 as the Span. "
                 "If you wanted his top 20 DT replays, you would enter DT in Mods and 1-20 in Span.</p>"
@@ -230,7 +230,7 @@ class TutorialPageLoadableUsersAll(WizardPage):
         self.setTitle("Tutorial (Loadables - All Map Replays by User)")
         label = WizardLabel("<p>This Loadable (with quite an unwieldy name — apologies for that) represents all the replays by a User on a Map.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(str(resource_path("resources/tutorial/mapuser_empty.png"))).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/mapuser_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
         label2 = WizardLabel("<p>Again, all fields work similarly to other Loadables. \"all\" in Span is a shorthand way to say you want "
                 "all possible replays available from the api by this user on this map. It can also be used in the Span of a Map and User, "
                 "and is equivalent to a span of 1-100 in both of those Loadables.</p>"
@@ -251,7 +251,7 @@ class TutorialPageChecks(WizardPage):
         label = WizardLabel("<p>Now that you can represent Replays with Loadables, you can start investigating them for cheats. Circleguard "
                             "supports four different kinds of Checks.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(str(resource_path("resources/tutorial/checks_dropdown.png"))).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/checks_dropdown.png")).scaledToWidth(500, Qt.SmoothTransformation))
         label2 = WizardLabel("<p>Each of these should be self explanatory. If you want to check a Loadable for a certain cheat, just drag and "
                 "drop it onto the appropriate Check, then hit run.</p>"
                 "<p>Replay Stealing and Visualize are both different from the others. Replay Stealing has two areas for you to drag Loadables "

@@ -1,3 +1,7 @@
+# this is named ``gui_utils`` and not ``utils`` to prevent collision with
+# ``circleguard.utils`` (not our circleguard, but circlecore, which is on pip as
+# circleguard). Yes this is bad. But it works.
+
 from pathlib import Path
 import sys
 import os
@@ -15,18 +19,26 @@ from PyQt5.QtWidgets import QLayout
 #from version import __version__
 
 # placed above local imports to avoid circular import errors
-ROOT_PATH = Path(__file__).parent.absolute()
-def resource_path(str_path):
+ROOT_PATH = Path(__file__).parent.parent.absolute()
+def resource_path(path):
     """
-    Returns a Path representing where to look for resource files for the program,
-    such as databases or images.
+    Get the resource path for a given file.
 
-    This location changes if the program is run from an application built with pyinstaller.
+    This location changes if the program is run from an application built with
+    pyinstaller.
+
+    Returns
+    -------
+    string
+        The absolute path (as a string) to the given file, after taking into
+        account whether we are running in a development setting.
+        Return string because this function is almost always used in a ``QIcon``
+        context, which does not accept a ``Path``.
     """
 
     if hasattr(sys, '_MEIPASS'): # being run from a pyinstall'd app
-        return Path(sys._MEIPASS) / Path(str_path) # pylint: disable=no-member
-    return ROOT_PATH / Path(str_path)
+        return str(Path(sys._MEIPASS) / "resources" / Path(path)) # pylint: disable=no-member
+    return str(ROOT_PATH / "resources" / Path(path))
 
 
 from settings import get_setting, set_setting
@@ -57,34 +69,9 @@ def get_idle_setting_str():
     else:
         return "Idle"
 
-class InvalidModException(Exception):
-    """
-    We were asked to parse an invalid mod string.
-    """
 
-def parse_mod_string(mod_string):
-    """
-    Takes a string made up of two letter mod names and converts them
-    to a circlecore ModCombination.
-
-    Returns None if the string is empty (mod_string == "")
-    """
-    if mod_string == "":
-        return None
-    if len(mod_string) % 2 != 0:
-        raise InvalidModException(f"Invalid mod string {mod_string} (not of even length)")
-    # slightly hacky, using ``Mod.NM`` our "no mod present" mod
-    mod = Mod.NM
-    for i in range(2, len(mod_string) + 1, 2):
-        single_mod_string = mod_string[i - 2: i]
-        # there better only be one Mod that has an acronym matching ours, but a comp + 0 index works too
-        matching_mods = [mod for mod in Mod.ORDER if mod.short_name() == single_mod_string]
-        if not matching_mods:
-            raise InvalidModException(f"Invalid mod string (no matching mod found for {single_mod_string})")
-        mod += matching_mods[0]
-    return mod
-
-
+# TODO figure out if ``delete_widget`` (and ``clear_layout``) are really
+# necessary instead of just using ``widget.deleteLater``
 def delete_widget(widget):
     if widget.layout is not None:
         clear_layout(widget.layout)
@@ -113,18 +100,3 @@ class Run():
         self.checks = checks
         self.run_id = run_id
         self.event = event
-
-
-class Player:
-    def __init__(self, replay, pen):
-        self.pen = pen
-        self.username = replay.username
-        self.t = replay.t
-        # copy so we don't flip the actual replay's xy coordinates when we
-        # account for hr (not doing this causes replays to be flipped on odd
-        # runs of the visualizer and correct on even runs of the visualizer)
-        self.xy = replay.xy.copy()
-        self.k = replay.k
-        self.end_pos = 0
-        self.start_pos = 0
-        self.mods = replay.mods

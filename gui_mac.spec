@@ -21,7 +21,7 @@ def zipdir(path, ziph, sub_folder=""):
 # pyinstaller build
 a = Analysis(['circleguard/gui.py'],
              pathex=['.'],
-             datas=[('circleguard/resources/','resources/'), ('circleguard/examples', 'examples/')],
+             datas=[('circleguard/resources/','resources/')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],

@@ -4,15 +4,15 @@ from pathlib import Path
 from datetime import datetime, timedelta
 import abc
 import json
+import logging
 
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
 from packaging import version
-# it's tempting to use QSettings builtin ini file support instead of configparser,
-# but that doesn't let us write comments, which is rather important to explain
-# what attributes are available through string formatting.
+# it's tempting to use QSettings builtin ini file support instead of
+# configparser, but that doesn't let us write comments, which is rather
+# important for users.
 from configparser import ConfigParser
 
-from utils import resource_path
 from version import __version__
 
 
@@ -89,14 +89,14 @@ COMMENTS = {
     },
     "Logs": {
         "log_save": "Whether to save logs to a file (whose path is defined by Locations/log_dir)",
-        "log_mode": "All logs with a severity level at or higher than this value will be outputted.\n"
-                "Critical: 0\n"
-                "Error: 1\n"
-                "Warning: 2\n"
-                "Info: 3\n"
-                "Debug: 4\n"
+        "log_level": "All logs with a severity level at or higher than this value will be outputted.\n"
+                "Critical: 50\n"
+                "Error: 40\n"
+                "Warning: 30\n"
+                "Info: 20\n"
+                "Debug: 10\n"
                 "Trace: 5",
-        "log_output": "Where to output logs. This setting has no relation to log_save, so if log_output is 0 and log_save is True, logs will still be written to the log file at the level defined by log_mode.\n"
+        "log_output": "Where to output logs. This setting has no relation to log_save, so if log_output is 0 and log_save is True, logs will still be written to the log file at the level defined by log_level.\n"
                 "Nowhere: 0\n"
                 "Terminal: 1\n"
                 "Debug Window: 2\n"
@@ -189,7 +189,8 @@ DEFAULTS = {
         "visualizer_black_bg": False,
         "visualizer_frametime": False,
         "render_beatmap": True,
-        "default_speed": float(1),  # so type() returns float, since we want to allow float values, not just int
+        # so type() returns float, since we want to allow float values, not just int
+        "default_speed": float(1),
         "speed_options": [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 3.0, 5.0, 10.0]
 
     },
@@ -215,7 +216,7 @@ DEFAULTS = {
     },
     "Logs": {
         "log_save": True,
-        "log_mode": 1, # ERROR
+        "log_level": 40, # ERROR
         "log_output": 1, # TERMINAL
         "log_format": "[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)"
     },
@@ -227,10 +228,12 @@ DEFAULTS = {
     },
     "Core": {
         "ran": False,
-        "last_version": "0.0.0", # force run update_settings if the user previously had a version without this key
+        # force run update_settings if the user previously had a version without this key
+        "last_version": "0.0.0",
         "api_key": "",
         "timestamp_format": "%Y/%m/%d %H:%M:%S",
-        "last_update_check": "1970/01/01 00:00:00", # aka datetime.min, but formatted
+        # aka datetime.min, but formatted
+        "last_update_check": "1970/01/01 00:00:00",
         "latest_version": __version__
     }
 }
@@ -286,6 +289,9 @@ CHANGED = {
         "message_relax_found",
         "message_relax_found_display",
         "template_relax"
+    ],
+    "3.0.0": [
+        "log_level"
     ]
 }
 
@@ -293,40 +299,74 @@ CHANGED = {
 
 class LinkableSetting():
     """
-    XXX IMPLEMENTATION NOTE FOR SUBCLASSES:
-    all python classes must come before c classes (like QWidget) or super calls break.
-    Further reading: https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
+    Subclass this to indicate you would like to receive a method call
+    (``on_setting_changed``) whenever one of the settings you subscribe to
+    changes.
 
-    eg, def MyClass(LinkableSetting, QFrame) NOT def MyClass(QFrame, LinkableSetting)
+    Warnings
+    --------
+    Implementation warning for subclases - all python classes must come before
+    c classes (like QWidget) or super calls will break. Further reading:
+    https://www.riverbankcomputing.com/pipermail/pyqt/2017-January/038650.html
+
+    eg, def MyClass(LinkableSetting, QFrame)
+    NOT def MyClass(QFrame, LinkableSetting)
     """
     registered_classes = []
-    def __init__(self, setting):
-        self.setting = setting
+    def __init__(self, settings):
+        self.settings = settings
         self.registered_classes.append(self)
-        self.setting_value = get_setting(setting)
+        self.setting_values = {}
+        for setting in settings:
+            val = get_setting(setting)
+            self.setting_values[setting] = val
 
     @abc.abstractmethod
-    def on_setting_changed(self, new_value):
+    def on_setting_changed(self, setting, new_value):
         """
-        Called when the internal setting this class is linked to is changed, from
-        a source other than this class. An extremely common use case - and the
-        intended one - is to change the value of a slider/label/other widget to
-        reflect the new setting value, so all settings are in sync (gui and internal).
+        Called when the internal setting this class is linked to is changed,
+        from a source other than this class. An extremely common use case - and
+        the intended one - is to change the value of a slider/label/other widget
+        to reflect the new setting value, so all settings are in sync (gui and
+        internal).
         """
         pass
 
-    def filter(self, setting_changed):
+    def filter(self, changed_setting):
         """
-        A predicate that returns true if this class should accept signals when the given
-        setting is changed (signals in the form of a call to on_setting_changed)
+        A predicate that returns true if this class should accept signals when
+        the given setting is changed (signals in the form of a call to
+        on_setting_changed)
         """
-        return self.setting == setting_changed
+        return changed_setting in self.settings
 
-    def on_setting_changed_from_gui(self, value):
+    def on_setting_changed_from_gui(self, setting, value):
         """
         Called when our setting is changed from the gui,
         and our internal settings need to be updated to reflect that.
         """
+        if setting not in self.settings:
+            raise ValueError(f"expected setting to be one of the subscribed "
+                f"settings ({self.settings}). Got {setting} instead.")
+        set_setting(setting, value)
+
+
+class SingleLinkableSetting(LinkableSetting):
+    """
+    Provided as a conveneince for the common use case of only wanting to
+    subscribe to a single setting.
+    """
+    def __init__(self, setting):
+        super().__init__([setting])
+        self.setting = setting
+        self.setting_value = self.setting_values[setting]
+
+    # TODO maybe also override on_setting_changed to have a signature of
+    # def on_setting_changed(self, new_value), since single linkable settings
+    # don't care about the name (they already know it!). Would require changing
+    # how we dispatch to this method though.
+
+    def on_setting_changed_from_gui(self, value):
         set_setting(self.setting, value)
 
 
@@ -336,17 +376,50 @@ def get_setting(name):
     type_ = TYPES[name][0]
     val = SETTINGS.value(name)
     # windows registry keys doesnt properly preserve types, so convert "false"
-    # keys to a True/False value instead of bool("false") which would return True.
-    # see second bullet here: https://doc.qt.io/qt-5/qsettings.html#platform-limitations
+    # keys to a True/False value instead of bool("false") which would return
+    # True. See second bullet here:
+    # https://doc.qt.io/qt-5/qsettings.html#platform-limitations
     if type_ is bool:
         return False if val in ["false", "False"] else bool(val)
-    # val is eg. ['0.10', '1.00', '1.25', '1.50', '2.00'] so convert it to a list
-    # of floats, not strings
+    # val is eg. ['0.10', '1.00', '1.25', '1.50', '2.00'] so convert it to a
+    # list of floats, not strings
     if type_ is list:
         val = [float(x) for x in val]
         return val
     v = type_(val)
     return v
+
+def set_setting(name, value):
+    """
+    Sets the setting with the given name to have the given value.
+
+    Notes
+    -----
+    This function also handles any general purpose actions (not relating to gui)
+    that need to be taken when settings change, eg setting the log level for all
+    loggers when ``log_level`` changes.
+    """
+
+    if name == "log_level":
+        # set root logger's level
+        logging.getLogger().setLevel(value)
+
+    for linkable_setting in LinkableSetting.registered_classes:
+        if linkable_setting.filter(name):
+            linkable_setting.on_setting_changed(name, value)
+    SETTINGS.setValue(name, TYPES[name][0](value))
+
+def toggle_setting(name):
+    """
+    Toggles the given setting.
+
+    Notes
+    -----
+    This method is only valid for settings that hold boolean values.
+    """
+    old_val = get_setting(name)
+    new_val = not old_val
+    set_setting(name, new_val)
 
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
@@ -355,8 +428,8 @@ def overwrite_outdated_settings():
         if last_version < version.parse(ver):
             for setting in changed_arr:
                 if setting not in TYPES:
-                    # happens if the key is in CHANGED but was deleted in a later version,
-                    # like message_cheater_found.
+                    # happens if the key is in CHANGED but was deleted in a
+                    # later version, like message_cheater_found.
                     continue
                 set_setting(setting, DEFAULTS[TYPES[setting][1]][setting])
     set_setting("last_version", __version__)
@@ -391,13 +464,6 @@ def reset_defaults():
         for key,value in d.items():
             set_setting(key, value)
     SETTINGS.sync()
-
-def set_setting(name, value):
-    for linkable_setting in LinkableSetting.registered_classes:
-        if linkable_setting.filter(name):
-            linkable_setting.on_setting_changed(value)
-
-    SETTINGS.setValue(name, TYPES[name][0](value))
 
 
 # overwrites circleguard.cfg with our settings
@@ -473,8 +539,8 @@ def initialize_dirs():
         if not path.exists():
             path.mkdir(parents=True)
 
-# assemble dict of {key: [type, section], ...} since we have nested dicts in DEFAULTS
-# double list comprehension feels sooo backwards to write
+# assemble dict of {key: [type, section], ...} since we have nested dicts in
+# DEFAULTS double list comprehension feels sooo backwards to write
 # eg {"cache_location": [<class "str">, "Locations"], ...}
 TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
 SETTINGS = QSettings("Circleguard", "Circleguard")
@@ -482,7 +548,8 @@ SETTINGS = QSettings("Circleguard", "Circleguard")
 # we don't want the global keys on macos when calling allkeys
 SETTINGS.setFallbacksEnabled(False)
 
-# add setting if missing (occurs between updates if we add a new default setting)
+# add setting if missing (occurs between updates if we add a new default
+# setting)
 for d in DEFAULTS.values():
     for key,value in d.items():
         if not SETTINGS.contains(key):
@@ -492,8 +559,8 @@ for d in DEFAULTS.values():
 CFG_PATH = get_setting("config_location") + "/circleguard.cfg"
 
 
-# overwrite our settings with the config settings (if the user changed them while
-# the application was closed)
+# overwrite our settings with the config settings (if the user changed them
+# while the application was closed)
 overwrite_with_config_settings()
 
 # overwrite setting key if they were changed in a release

@@ -1,314 +1,51 @@
 import os
 import sys
 from pathlib import Path
-from multiprocessing.pool import ThreadPool
 from queue import Queue, Empty
 from functools import partial
 import logging
 from logging.handlers import RotatingFileHandler
-import colorsys
-import traceback
 import threading
 from datetime import datetime
 import math
 import time
-import json
 
-from PyQt5.QtCore import Qt, QTimer, qInstallMessageHandler, QObject, pyqtSignal, QUrl
-from PyQt5.QtWidgets import (QWidget, QFrame, QTabWidget, QTextEdit, QPushButton, QLabel, QScrollArea, QFrame, QProgressBar,
-                             QVBoxLayout, QShortcut, QGridLayout, QApplication, QMainWindow, QSizePolicy, QComboBox, QSpacerItem)
-from PyQt5.QtGui import QPalette, QColor, QIcon, QKeySequence, QTextCursor, QPainter, QDesktopServices, QPixmap
-
-# app needs to be initialized before settings is imported so QStandardPaths resolves
-# corerctly with the applicationName
-app = QApplication([])
-app.setStyle("Fusion")
-app.setApplicationName("Circleguard")
+# TODO this might cause a performance hit (we only import * for convenience),
+# investigate
+from PyQt5.QtCore import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
 
 from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableException,
                         ReplayMap, ReplayPath, User, Map, Check, MapUser,
-                        StealResult, RelaxResult, CorrectionResult, Detect)
+                        StealResult, RelaxResult, CorrectionResult, Detect, Mod)
 from circleguard import __version__ as cg_version
 from circleguard.loadable import Loadable
+from circlevis import BeatmapInfo
+from slider import Library
 
-from utils import resource_path, run_update_check, Run, parse_mod_string, InvalidModException, delete_widget
-from widgets import (set_event_window, InputWidget, ResetSettings, WidgetCombiner,
-                     FolderChooser, IdWidgetCombined, Separator, OptionWidget, ButtonWidget,
+from utils import resource_path, run_update_check, Run, delete_widget
+from widgets import (InputWidget, ResetSettings, WidgetCombiner,
+                     FolderChooser, Separator, OptionWidget, ButtonWidget,
                      LoglevelWidget, SliderBoxSetting, BeatmapTest, ResultW, LineEditSetting,
                      EntryWidget, RunWidget, ScrollableLoadablesWidget, ScrollableChecksWidget,
                      ReplayMapW, ReplayPathW, MapW, UserW, MapUserW, StealCheckW, RelaxCheckW,
                      CorrectionCheckW, VisualizerW)
 
-from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting
-from visualizer import VisualizerWindow
+from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting, SingleLinkableSetting
+from .visualizer import CGVisualizer
 from wizard import CircleguardWizard
 from version import __version__
 
 
 log = logging.getLogger(__name__)
 
-# save old excepthook
-sys._excepthook = sys.excepthook
-
-# this allows us to log any and all exceptions thrown to a log file -
-# pyqt likes to eat exceptions and quit silently
-def my_excepthook(exctype, value, tb):
-    # call original excepthook before ours
-    log.exception("sys.excepthook error\n"
-              "Type: " + str(value) + "\n"
-              "Value: " + str(value) + "\n"
-              "Traceback: " + "".join(traceback.format_tb(tb)) + '\n')
-    sys._excepthook(exctype, value, tb)
-
-sys.excepthook = my_excepthook
-
-# sys.excepthook doesn't persist across threads
-# (http://bugs.python.org/issue1230540). This is a hacky workaround that overrides
-# the threading init method to use our excepthook.
-# https://stackoverflow.com/a/31622038
-threading_init = threading.Thread.__init__
-def init(self, *args, **kwargs):
-    threading_init(self, *args, **kwargs)
-    run_original = self.run
-
-    def run_with_except_hook(*args2, **kwargs2):
-        try:
-            run_original(*args2, **kwargs2)
-        except Exception:
-            sys.excepthook(*sys.exc_info())
-    self.run = run_with_except_hook
-threading.Thread.__init__ = init
-
-
-# logging methodology heavily adapted from https://stackoverflow.com/q/28655198/12164878
-class Handler(QObject, logging.Handler):
-    new_message = pyqtSignal(object)
-
-    def __init__(self):
-        super().__init__()
-
-    def emit(self, record):
-        message = self.format(record)
-        self.new_message.emit(message)
-
-
-class WindowWrapper(LinkableSetting, QMainWindow):
-    def __init__(self):
-        QMainWindow.__init__(self)
-        LinkableSetting.__init__(self, "log_save")
-
-        self.clipboard = QApplication.clipboard()
-        self.progressbar = QProgressBar()
-        self.progressbar.setFixedWidth(250)
-        self.current_state_label = QLabel("Idle")
-        self.current_state_label.setTextFormat(Qt.RichText)
-        self.current_state_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
-        self.current_state_label.setOpenExternalLinks(True)
-        # statusBar() is a qt function that will create a status bar tied to the window
-        # if it doesnt exist, and access the existing one if it does.
-        self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label))
-        self.statusBar().setSizeGripEnabled(False)
-        self.statusBar().setContentsMargins(8, 2, 10, 2)
-
-        self.main_window = MainWindow()
-        self.main_window.main_tab.set_progressbar_signal.connect(self.set_progressbar)
-        self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
-        self.main_window.main_tab.update_label_signal.connect(self.update_label)
-        self.main_window.main_tab.add_result_signal.connect(self.add_result)
-        self.main_window.main_tab.write_to_terminal_signal.connect(self.main_window.main_tab.write)
-        self.main_window.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
-        self.main_window.main_tab.update_run_status_signal.connect(self.update_run_status)
-        self.main_window.queue_tab.cancel_run_signal.connect(self.cancel_run)
-
-        self.setCentralWidget(self.main_window)
-        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Right), self, self.tab_right)
-        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Left), self, self.tab_left)
-        QShortcut(QKeySequence(Qt.CTRL+Qt.Key_Q), self, app.quit)
-
-        self.setWindowTitle(f"Circleguard v{__version__}")
-        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
-        self.start_timer()
-        self.debug_window = None
-
-        formatter = logging.Formatter(get_setting("log_format"), datefmt=get_setting("timestamp_format"))
-        handler = Handler()
-        handler.setFormatter(formatter)
-        handler.new_message.connect(self.log)
-
-        log_dir = resource_path(get_setting("log_dir"))
-        log_file = os.path.join(log_dir, "circleguard.log")
-        self.file_handler = RotatingFileHandler(log_file, maxBytes=10**6, backupCount=3) # 1 mb max file size
-        self.file_handler.setFormatter(formatter)
-
-        logging.getLogger("circleguard").addHandler(handler)
-        logging.getLogger("circleguard").addHandler(self.file_handler)
-        logging.getLogger("ossapi").addHandler(handler)
-        logging.getLogger("ossapi").addHandler(self.file_handler)
-        logging.getLogger(__name__).addHandler(handler)
-        logging.getLogger(__name__).addHandler(self.file_handler)
-        self.on_setting_changed(get_setting("log_save")) # manually disable logging if it wasn't checked when we started
-
-        self.thread = threading.Thread(target=self._change_label_update)
-        self.thread.start()
-
-    def on_setting_changed(self, new_value):
-        log_save = new_value
-        if not log_save:
-            self.file_handler.setLevel(51) # same as disabling the handler (CRITICAL=50)
-        else:
-            self.file_handler.setLevel(logging.NOTSET) # same as default (passes all records to the attached logger)
-
-    def tab_right(self):
-        tabs = self.main_window.tabs
-        tabs.setCurrentIndex(tabs.currentIndex() + 1)
-
-    def tab_left(self):
-        tabs = self.main_window.tabs
-        tabs.setCurrentIndex(tabs.currentIndex() - 1)
-
-    def mousePressEvent(self, event):
-        focused = self.focusWidget()
-        if focused is not None and not isinstance(focused, QTextEdit):
-            focused.clearFocus()
-        super(WindowWrapper, self).mousePressEvent(event)
-
-    def start_timer(self):
-        timer = QTimer(self)
-        timer.timeout.connect(self.run_timer)
-        timer.start(250)
-
-    def run_timer(self):
-        """
-        check for stderr messages (because logging prints to stderr not stdout, and
-        it's nice to have stdout reserved) and then print cg results
-        """
-        self.main_window.main_tab.print_results()
-        self.main_window.main_tab.check_circleguard_queue()
-
-    def log(self, message):
-        """
-        Message is the string message sent to the io stream
-        """
-
-        # TERMINAL / BOTH
-        if get_setting("log_output") in [1, 3]:
-            self.main_window.main_tab.write(message)
-
-        # NEW WINDOW / BOTH
-        if get_setting("log_output") in [2, 3]:
-            if self.debug_window and self.debug_window.isVisible():
-                self.debug_window.write(message)
-            else:
-                self.debug_window = DebugWindow()
-                self.debug_window.show()
-                self.debug_window.write(message)
-
-    def update_label(self, text):
-        self.current_state_label.setText(text)
-
-    def _change_label_update(self):
-        self.update_label(run_update_check())
-
-    def increment_progressbar(self, increment):
-        self.progressbar.setValue(self.progressbar.value() + increment)
-
-    def set_progressbar(self, max_value):
-        # if -1, reset progressbar and remove its text
-        if max_value == -1:
-            # removes cases where range was set to (0,0)
-            self.progressbar.setRange(0, 1)
-            # remove ``0%`` text on the progressbar (doesn't look good)
-            self.progressbar.reset()
-            return
-        self.progressbar.setValue(0)
-        self.progressbar.setRange(0, max_value)
-
-    def add_result(self, result):
-        # this function right here could very well lead to some memory issues.
-        # I tried to avoid leaving a reference to result's replays in this
-        # method, but it's quite possible things are still not very clean.
-        # Ideally only ResultW would have a reference to the two replays, and
-        # nothing else.
-        timestamp = datetime.now()
-        label_text = None
-        template_text = None
-
-        if isinstance(result, StealResult):
-            label_text = get_setting("string_result_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
-                                        replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
-                                        replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
-            template_text = get_setting("template_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
-                                        replay1_mods_short_name=result.replay1.mods.short_name(), replay1_mods_long_name=result.replay1.mods.long_name(),
-                                        replay2_mods_short_name=result.replay2.mods.short_name(), replay2_mods_long_name=result.replay2.mods.long_name())
-            replays = [result.replay1, result.replay2]
-
-        elif isinstance(result, RelaxResult):
-            label_text = get_setting("string_result_relax").format(ts=timestamp, ur=result.ur, r=result,
-                                        replay=result.replay, mods_short_name=result.replay.mods.short_name(),
-                                        mods_long_name=result.replay.mods.long_name())
-            template_text = get_setting("template_relax").format(ts=timestamp, ur=result.ur, r=result,
-                                        replay=result.replay, mods_short_name=result.replay.mods.short_name(),
-                                        mods_long_name=result.replay.mods.long_name())
-            replays = [result.replay]
-        elif isinstance(result, CorrectionResult):
-            label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, num_snaps=len(result.snaps), replay=result.replay,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
-
-            snap_table = ("| Time (ms) | Angle (°) | Distance (px) |\n"
-                            "| :-: | :-: | :-: |\n")
-            for snap in result.snaps:
-                snap_table += "| {:.0f} | {:.2f} | {:.2f} |\n".format(snap.time, snap.angle, snap.distance)
-            template_text = get_setting("template_correction").format(ts=timestamp, r=result, replay=result.replay, snap_table=snap_table,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
-            replays = [result.replay]
-        elif isinstance(result, list) and isinstance(result[0], Loadable):  # a list of loadables
-            label_text = get_setting("string_result_visualization").format(ts=timestamp, replay_amount=len(result), map_id=result[0].map_id)
-            replays = result
-
-        result_widget = ResultW(label_text, result, replays)
-        # set button signal connections (visualize and copy template to clipboard)
-        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id, result_widget.result))
-        if template_text:
-            result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard, template_text))
-        else: # hide template button if there is no template
-            result_widget.button_clipboard.hide()
-        # remove info text if shown
-        if not self.main_window.results_tab.results.info_label.isHidden():
-            self.main_window.results_tab.results.info_label.hide()
-        self.main_window.results_tab.results.layout.insertWidget(0,result_widget)
-
-    def copy_to_clipboard(self, text):
-        self.clipboard.setText(text)
-
-    def add_run_to_queue(self, run):
-        self.main_window.queue_tab.add_run(run)
-
-    def update_run_status(self, run_id, status):
-        self.main_window.queue_tab.update_status(run_id, status)
-
-    def cancel_run(self, run_id):
-        self.main_window.main_tab.runs[run_id].event.set()
-
-    def cancel_all_runs(self):
-        """called when lastWindowClosed signal emits. Cancel all our runs so
-        we don't hang the application on loading/comparing while trying to quit"""
-        for run in self.main_window.main_tab.runs:
-            run.event.set()
-
-    def on_application_quit(self):
-        """Called when the app.aboutToQuit signal is emitted"""
-        if self.debug_window is not None:
-            self.debug_window.close()
-        if self.main_window.main_tab.visualizer_window is not None:
-            self.main_window.main_tab.visualizer_window.close()
-        overwrite_config()
-
 
 class DebugWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Debug Output")
-        self.setWindowIcon(QIcon(str(resource_path("resources/logo.ico"))))
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
         terminal = QTextEdit(self)
         terminal.setReadOnly(True)
         terminal.ensureCursorVisible()
@@ -320,14 +57,14 @@ class DebugWindow(QMainWindow):
         self.terminal.append(message)
 
 class MainWindow(QFrame):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
 
         self.tabs = QTabWidget()
         self.main_tab = MainTab()
         self.results_tab = ResultsTab()
         self.queue_tab = QueueTab()
-        self.thresholds_tab = ThresholdsTab()
+        self.thresholds_tab = ThresholdsTab(self)
         self.settings_tab = SettingsTab()
         self.tabs.addTab(self.main_tab, "Main")
         self.tabs.addTab(self.results_tab, "Results")
@@ -341,7 +78,7 @@ class MainWindow(QFrame):
         self.setLayout(self.layout)
 
 
-class MainTab(LinkableSetting, QFrame):
+class MainTab(SingleLinkableSetting, QFrame):
     set_progressbar_signal = pyqtSignal(int) # max progress
     increment_progressbar_signal = pyqtSignal(int) # increment value
     update_label_signal = pyqtSignal(str)
@@ -356,7 +93,9 @@ class MainTab(LinkableSetting, QFrame):
 
     def __init__(self):
         QFrame.__init__(self)
-        LinkableSetting.__init__(self, "api_key")
+        SingleLinkableSetting.__init__(self, "api_key")
+
+        self.library = Library(get_setting("cache_dir"))
 
         self.loadables_combobox = QComboBox(self)
         self.loadables_combobox.setInsertPolicy(QComboBox.NoInsert)
@@ -390,7 +129,7 @@ class MainTab(LinkableSetting, QFrame):
         self.helper_thread_running = False
         self.runs = [] # Run objects for canceling runs
         self.run_id = 0
-        self.visualizer_window = None
+        self.visualizer = None
 
         terminal = QTextEdit(self)
         terminal.setFocusPolicy(Qt.ClickFocus)
@@ -402,7 +141,7 @@ class MainTab(LinkableSetting, QFrame):
         self.run_button.setText("Run")
         self.run_button.clicked.connect(self.add_circleguard_run)
         # disable button if no api_key is stored
-        self.on_setting_changed(get_setting("api_key"))
+        self.on_setting_changed("api_key", get_setting("api_key"))
 
         layout = QGridLayout()
         layout.addWidget(self.loadables_combobox, 0, 0, 1, 7)
@@ -416,7 +155,7 @@ class MainTab(LinkableSetting, QFrame):
 
         self.setLayout(layout)
 
-    def on_setting_changed(self, text):
+    def on_setting_changed(self, setting, text):
         self.run_button.setEnabled(text != "")
 
     # am well aware that there's much duplicated code between remove_loadable,
@@ -611,29 +350,29 @@ class MainTab(LinkableSetting, QFrame):
                     if isinstance(loadableW, ReplayPathW):
                         loadable = ReplayPath(loadableW.path_input.path)
                     if isinstance(loadableW, ReplayMapW):
-                        loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                        # Mod init errors on empty string, so just assign None
+                        mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
+                        loadable = ReplayMap(int(loadableW.map_id_input.value()), int(loadableW.user_id_input.value()), mods=mods)
                     if isinstance(loadableW, MapW):
+                        mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
                         # use placeholder text (1-50) if the user inputted span is empty
-                        span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
+                        span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = "1-100"
-                        loadable = Map(int(loadableW.map_id_input.field.text()), span=span,
-                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                        loadable = Map(int(loadableW.map_id_input.value()), span=span, mods=mods)
                     if isinstance(loadableW, UserW):
-                        span=loadableW.span_input.field.text()
+                        mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
+                        span=loadableW.span_input.value()
                         if span == "all":
                             span = "1-100"
-                        loadable = User(int(loadableW.user_id_input.field.text()), span=span,
-                                             mods=parse_mod_string(loadableW.mods_input.field.text()))
+                        loadable = User(int(loadableW.user_id_input.value()), span=span, mods=mods)
                     if isinstance(loadableW, MapUserW):
-                        span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
+                        span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = "1-100"
-                        loadable = MapUser(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                           span=span)
+                        loadable = MapUser(int(loadableW.map_id_input.value()), int(loadableW.user_id_input.value()), span=span)
                     loadableW_id_to_loadable[loadableW.loadable_id] = loadable
-                except InvalidModException as e:
+                except ValueError as e:
                     self.write_to_terminal_signal.emit(str(e))
                     self.update_label_signal.emit("Invalid arguments")
                     self.update_run_status_signal.emit(run.run_id, "Invalid arguments")
@@ -793,13 +532,18 @@ class MainTab(LinkableSetting, QFrame):
 
     def visualize(self, replays, beatmap_id, result):
         # only run one instance at a time
-        if self.visualizer_window is not None:
-            self.visualizer_window.close()
+        if self.visualizer is not None:
+            self.visualizer.close()
         snaps = []
         if isinstance(result, CorrectionResult):
             snaps = [snap.time for snap in result.snaps]
-        self.visualizer_window = VisualizerWindow(replays=replays, beatmap_id=beatmap_id, events=snaps)
-        self.visualizer_window.show()
+        beatmap_info = BeatmapInfo(map_id=beatmap_id)
+        if not get_setting("render_beatmap"):
+            # don't give the visualizer any beatmap info if the user doesn't
+            # want it rendered
+            beatmap_info = BeatmapInfo()
+        self.visualizer = CGVisualizer(beatmap_info, replays, snaps, self.library)
+        self.visualizer.show()
 
 
 class TrackerLoader(Loader, QObject):
@@ -836,7 +580,7 @@ class VisualizeTab(QFrame):
         self.map_id = None
         self.q = Queue()
         self.replays = []
-        cache_path = resource_path(get_setting("cache_dir") + "circleguard.db")
+        cache_path = get_setting("cache_dir") + "circleguard.db"
         self.cg = Circleguard(get_setting("api_key"), cache_path)
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
@@ -947,7 +691,7 @@ class SettingsTab(QFrame):
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
-        self.setting_buttons = WidgetCombiner(self.open_settings, self.sync_settings)
+        self.setting_buttons = WidgetCombiner(self, self.open_settings, self.sync_settings)
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0,0,1,1, alignment=Qt.AlignLeft)
@@ -966,34 +710,23 @@ class SettingsTab(QFrame):
 
 class ScrollableSettingsWidget(QFrame):
     """
-    This class contains all of the actual settings content - SettingsTab just has a
-    QScrollArea wrapped around this widget so that it can be scrolled down.
+    This class contains all of the actual settings content - SettingsTab just
+    has a QScrollArea wrapped around this widget so that it can be scrolled
+    down.
+
     """
     def __init__(self):
         super().__init__()
-        self._rainbow_speed = 0.005
-        self._rainbow_counter = 0
-        self.visualizer_window = None
-        self.timer = QTimer(self)
-        self.timer.timeout.connect(self.next_color)
+        self.visualizer = None
         self.wizard = CircleguardWizard()
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
-        self.darkmode.box.stateChanged.connect(self.reload_theme)
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
         self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
-        self.cache_location = FolderChooser("Cache Location", get_setting("cache_dir"), folder_mode=True)
-        self.cache_location.path_signal.connect(partial(set_setting, "cache_dir"))
-        self.cache.box.stateChanged.connect(self.cache_location.switch_enabled)
 
         self.loglevel = LoglevelWidget("")
-        self.loglevel.level_combobox.currentIndexChanged.connect(self.set_loglevel)
-        self.set_loglevel() # set the default loglevel in cg, not just in gui
-
-        self.rainbow = OptionWidget("Rainbow mode", "This is an experimental function, it may cause unintended behavior!", "rainbow_accent")
-        self.rainbow.box.stateChanged.connect(self.switch_rainbow)
 
         self.run_wizard = ButtonWidget("Run Wizard", "Run", "")
         self.run_wizard.button.clicked.connect(self.show_wizard)
@@ -1016,49 +749,24 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(ResetSettings())
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Dev"))
-        self.layout.addWidget(self.rainbow)
         self.layout.addWidget(self.run_wizard)
         self.beatmaptest = BeatmapTest()
         self.beatmaptest.button.clicked.connect(self.visualize)
         self.layout.addWidget(self.beatmaptest)
         self.setLayout(self.layout)
 
-        # we never actually set the theme to dark anywhere
-        # (even if the setting is true), it should really be
-        # in the main application but uh this works too
-        self.reload_theme()
-
-    def set_loglevel(self):
-        for logger in logging.root.manager.loggerDict:
-            logging.getLogger(logger).setLevel(self.loglevel.level_combobox.currentData())
-
-    def next_color(self):
-        (r, g, b) = colorsys.hsv_to_rgb(self._rainbow_counter, 1.0, 1.0)
-        color = QColor(int(255 * r), int(255 * g), int(255 * b))
-        switch_theme(get_setting("dark_theme"), color)
-        self._rainbow_counter += self._rainbow_speed
-        if self._rainbow_counter >= 1:
-            self._rainbow_counter = 0
-
-    def switch_rainbow(self, state):
-        set_setting("rainbow_accent", 1 if state else 0)
-        if get_setting("rainbow_accent"):
-            self.timer.start(1000/15)
-        else:
-            self.timer.stop()
-            switch_theme(get_setting("dark_theme"))
-
     def show_wizard(self):
         self.wizard.show()
 
-    def reload_theme(self):
-        switch_theme(get_setting("dark_theme"))
-
     def visualize(self):
-        if self.visualizer_window is not None:
-            self.visualizer_window.close()
-        self.visualizer_window = VisualizerWindow(beatmap_path=self.beatmaptest.file_chooser.path)
-        self.visualizer_window.show()
+        if self.visualizer is not None:
+            self.visualizer.close()
+        beatmap_info = BeatmapInfo(path=self.beatmaptest.file_chooser.path)
+        # TODO pass the library we define in MainTab to CGVIsualizer,
+        # probably will have to rework some things entirely
+        paint_info = get_setting("visualizer_info")
+        self.visualizer = CGVisualizer(beatmap_info, paint_info=paint_info)
+        self.visualizer.show()
 
 
 class ResultsTab(QFrame):
@@ -1125,10 +833,10 @@ class QueueFrame(QFrame):
         self.setLayout(self.layout)
 
 class ThresholdsTab(QFrame):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent):
+        super().__init__(parent)
         self.qscrollarea = QScrollArea(self)
-        self.qscrollarea.setWidget(ScrollableThresholdsWidget())
+        self.qscrollarea.setWidget(ScrollableThresholdsWidget(self))
         self.qscrollarea.setWidgetResizable(True)
 
         self.layout = QVBoxLayout()
@@ -1136,24 +844,24 @@ class ThresholdsTab(QFrame):
         self.setLayout(self.layout)
 
 class ScrollableThresholdsWidget(QFrame):
-    def __init__(self):
-        super().__init__()
-        self.steal_max_sim = SliderBoxSetting("Max similarity", "ReplaySteal comparisons that score below this "
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.steal_max_sim = SliderBoxSetting(self, "Max similarity", "ReplaySteal comparisons that score below this "
                 "will be stored so you can view them, and printed to the console", "steal_max_sim", 100)
-        self.steal_max_sim_display = SliderBoxSetting("Max similarity display", "ReplaySteal comparisons that "
+        self.steal_max_sim_display = SliderBoxSetting(self, "Max similarity display", "ReplaySteal comparisons that "
                 "score below this will be printed to the console", "steal_max_sim_display", 100)
-        self.relax_max_ur = SliderBoxSetting("Max ur", "Replays that have a ur lower than this will be stored "
+        self.relax_max_ur = SliderBoxSetting(self, "Max ur", "Replays that have a ur lower than this will be stored "
                 "so you can view them, and printed to the console", "relax_max_ur", 300)
-        self.relax_max_ur_display = SliderBoxSetting("Max ur display", "Replays with a ur lower than this "
+        self.relax_max_ur_display = SliderBoxSetting(self, "Max ur display", "Replays with a ur lower than this "
                 "will be printed to the console", "relax_max_ur_display", 300)
         # display options for correction are more confusing than they're worth,
         # especially when we don't have a good mechanism for storing Snaps in
         # the Result tab or visualizer support for the Snap timestamps. TODO
         # potentially add back if we can provide good support for them.
-        self.correction_max_angle = SliderBoxSetting("Max angle", "Replays with a set of three points "
+        self.correction_max_angle = SliderBoxSetting(self, "Max angle", "Replays with a set of three points "
                 "making an angle less than this (*and* also satisfying correction_min_distance) will be stored so "
                 "you can view them, and printed to the console.", "correction_max_angle", 360)
-        self.correction_min_distance = SliderBoxSetting("Min distance", "Replays with a set of three points "
+        self.correction_min_distance = SliderBoxSetting(self, "Min distance", "Replays with a set of three points "
                 "where either the distance from AB or BC is greater than this (*and* also satisfying correction_max_angle) "
                 "will be stored so you can view them, and printed to the console.", "correction_min_distance", 100)
 
@@ -1170,96 +878,3 @@ class ScrollableThresholdsWidget(QFrame):
 
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
-
-def switch_theme(dark, accent=QColor(71, 174, 247)):
-    set_setting("dark_theme", dark)
-    if dark:
-        dark_p = QPalette()
-
-        dark_p.setColor(QPalette.Window, QColor(53, 53, 53))
-        dark_p.setColor(QPalette.WindowText, Qt.white)
-        dark_p.setColor(QPalette.Base, QColor(25, 25, 25))
-        dark_p.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-        dark_p.setColor(QPalette.ToolTipBase, QColor(53, 53, 53))
-        dark_p.setColor(QPalette.ToolTipText, Qt.white)
-        dark_p.setColor(QPalette.Text, Qt.white)
-        dark_p.setColor(QPalette.Button, QColor(53, 53, 53))
-        dark_p.setColor(QPalette.ButtonText, Qt.white)
-        dark_p.setColor(QPalette.BrightText, Qt.red)
-        dark_p.setColor(QPalette.Highlight, accent)
-        dark_p.setColor(QPalette.Inactive, QPalette.Highlight, Qt.lightGray)
-        dark_p.setColor(QPalette.HighlightedText, Qt.black)
-        dark_p.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
-        dark_p.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
-        dark_p.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
-        dark_p.setColor(QPalette.Disabled, QPalette.Base, QColor(53, 53, 53))
-        dark_p.setColor(QPalette.Link, accent)
-        dark_p.setColor(QPalette.LinkVisited, accent)
-
-        app.setPalette(dark_p)
-        app.setStyleSheet("""
-                QToolTip {
-                    color: #ffffff;
-                    background-color: #2a2a2a;
-                    border: 1px solid white;
-                }
-                QLabel {
-                        font-weight: Normal;
-                }
-                QTextEdit {
-                        background-color: #212121;
-                }
-                LoadableW {
-                        border: 1.5px solid #272727;
-                }
-                CheckW {
-                        border: 1.5px solid #272727;
-                }
-                DragWidget {
-                        border: 1.5px solid #272727;
-                }""")
-    else:
-        app.setPalette(app.style().standardPalette())
-        updated_palette = QPalette()
-        # fixes inactive items not being greyed out
-        updated_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
-        updated_palette.setColor(QPalette.Highlight, accent)
-        updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
-        updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, Qt.darkGray)
-        updated_palette.setColor(QPalette.Link, accent)
-        updated_palette.setColor(QPalette.LinkVisited, accent)
-        app.setPalette(updated_palette)
-        app.setStyleSheet("""
-                QToolTip {
-                    color: #000000;
-                    background-color: #D5D5D5;
-                    border: 1px solid white;
-                }
-                QLabel {
-                    font-weight: Normal;
-                }
-                LoadableW {
-                    border: 1.5px solid #bfbfbf;
-                }
-                CheckW {
-                    border: 1.5px solid #bfbfbf;
-                }
-                DragWidget {
-                    border: 1.5px solid #bfbfbf;
-                }""")
-
-
-if __name__ == "__main__":
-    # app is initialized at the top of the file
-    WINDOW = WindowWrapper()
-    set_event_window(WINDOW)
-    WINDOW.resize(900, 750)
-    WINDOW.show()
-    if not get_setting("ran"):
-        welcome = CircleguardWizard()
-        welcome.show()
-        set_setting("ran", True)
-
-    app.aboutToQuit.connect(WINDOW.cancel_all_runs)
-    app.aboutToQuit.connect(WINDOW.on_application_quit)
-    app.exec_()
