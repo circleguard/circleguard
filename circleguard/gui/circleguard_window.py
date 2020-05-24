@@ -76,7 +76,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
 
         log_dir = get_setting("log_dir")
         log_file = os.path.join(log_dir, "circleguard.log")
-        self.file_handler = RotatingFileHandler(log_file, maxBytes=10**6, backupCount=3) # 1 mb max file size
+        # 1 mb max file size, with 3 rotating files.
+        self.file_handler = RotatingFileHandler(log_file, maxBytes=10**6, backupCount=3)
         self.file_handler.setFormatter(formatter)
 
         logging.getLogger("circleguard").addHandler(handler)
