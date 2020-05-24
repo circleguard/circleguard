@@ -915,14 +915,14 @@ class BeatmapTest(QFrame):
 
 
 class EntryWidget(QFrame):
-    pressed_signal = pyqtSignal(object)
     """
     Represents a single entry of some kind of data, consisting of a title, a
     button and the data which is stored at self.data.
-    When the button is pressed, pressed_signal is emitted with the data for
-    ease of use.
+    When the button is pressed, pressed_signal is emitted with the data.
     """
-    def __init__(self, title, action_name, data=None):
+    pressed_signal = pyqtSignal(object)
+
+    def __init__(self, title, action_name, data):
         super().__init__()
         self.data = data
         self.button = QPushButton(action_name)
