@@ -3,17 +3,20 @@ from logging.handlers import RotatingFileHandler
 import os
 from functools import partial
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from circleguard import *
+from packaging import version
+import requests
+from requests import RequestException
 
-from settings import LinkableSetting, get_setting, overwrite_config
+from settings import LinkableSetting, get_setting, set_setting, overwrite_config
 from widgets import WidgetCombiner, ResultW
 from .gui import MainWindow, DebugWindow
-from utils import resource_path, run_update_check
+from utils import resource_path
 from version import __version__
 
 
@@ -86,7 +89,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.on_setting_changed("log_save", self.setting_values["log_save"])
         self.on_setting_changed("dark_theme", self.setting_values["dark_theme"])
 
-        self.thread = threading.Thread(target=self._change_label_update)
+        self.thread = threading.Thread(target=self.run_update_check)
         self.thread.start()
 
     def on_setting_changed(self, setting, new_value):
@@ -146,8 +149,30 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
     def update_label(self, text):
         self.current_state_label.setText(text)
 
-    def _change_label_update(self):
-        self.update_label(run_update_check())
+    def run_update_check(self):
+        last_check = datetime.strptime(get_setting("last_update_check"), get_setting("timestamp_format"))
+        next_check = last_check + timedelta(hours=1)
+        if next_check > datetime.now():
+            self.update_label(self.get_version_update_str())
+            return
+        try:
+            # check for new version
+            git_request = requests.get("https://api.github.com/repos/circleguard/circleguard/releases/latest").json()
+            git_version = version.parse(git_request["name"])
+            set_setting("latest_version", git_version)
+            set_setting("last_update_check", datetime.now().strftime(get_setting("timestamp_format")))
+        except RequestException:
+            # user is probably offline
+            pass
+        self.update_label(self.get_version_update_str())
+
+
+    def get_version_update_str(self):
+        current_version = version.parse(__version__)
+        if current_version < version.parse(get_setting("latest_version")):
+            return "<a href=\'https://circleguard.dev/download'>Update available!</a>"
+        else:
+            return "Idle"
 
     def increment_progressbar(self, increment):
         self.progressbar.setValue(self.progressbar.value() + increment)

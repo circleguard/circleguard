@@ -24,7 +24,7 @@ from circleguard.loadable import Loadable
 from circlevis import BeatmapInfo
 from slider import Library
 
-from utils import resource_path, run_update_check, delete_widget
+from utils import resource_path, delete_widget
 from widgets import (InputWidget, ResetSettings, WidgetCombiner,
                      FolderChooser, Separator, OptionWidget, ButtonWidget,
                      LoglevelWidget, SliderBoxSetting, BeatmapTest, ResultW, LineEditSetting,
