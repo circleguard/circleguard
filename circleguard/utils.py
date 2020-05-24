@@ -88,15 +88,3 @@ def clear_layout(layout):
             if isinstance(child.widget().layout, QLayout):
                 clear_layout(child.widget().layout)
             child.widget().deleteLater()
-
-
-class Run():
-    """
-    Represents a click of the Run button on the Main tab, which can contain
-    multiple Checks, each of which contains a set of Loadables.
-    """
-
-    def __init__(self, checks, run_id, event):
-        self.checks = checks
-        self.run_id = run_id
-        self.event = event
