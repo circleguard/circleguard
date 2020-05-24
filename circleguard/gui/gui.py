@@ -123,6 +123,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.checks = [] # for deleting later
 
         self.print_results_signal.connect(self.print_results)
+        self.write_to_terminal_signal.connect(self.write)
 
         self.q = Queue()
         self.cg_q = Queue()

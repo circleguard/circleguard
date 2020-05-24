@@ -52,7 +52,6 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
         self.main_window.main_tab.update_label_signal.connect(self.update_label)
         self.main_window.main_tab.add_result_signal.connect(self.add_result)
-        self.main_window.main_tab.write_to_terminal_signal.connect(self.main_window.main_tab.write)
         self.main_window.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
         self.main_window.main_tab.update_run_status_signal.connect(self.update_run_status)
         self.main_window.queue_tab.cancel_run_signal.connect(self.cancel_run)
