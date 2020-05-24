@@ -142,6 +142,12 @@ class InputWidget(QFrame):
         """
         self.field.show_required()
 
+    def value(self):
+        """
+        Retrieves the string value of the field in this input widget.
+        """
+        return self.field.text()
+
 
 class IdWidgetCombined(QFrame):
     """
@@ -171,7 +177,7 @@ class IdWidgetCombined(QFrame):
         """
         Enables the user id field if the map field has any text in it. Otherwise, disables the user id field.
         """
-        self.user_id.setEnabled(self.map_id.field.text() != "")
+        self.user_id.setEnabled(self.map_id.value() != "")
 
 
 class OptionWidget(SingleLinkableSetting, QFrame):
@@ -561,7 +567,7 @@ class LoadableW(QFrame):
         all_filled = True
         for input_widget in self.required_input_widgets:
             # don't count inputs with defaults as empty
-            filled = input_widget.field.text() != "" or input_widget.field.placeholderText() != ""
+            filled = input_widget.value() != "" or input_widget.field.placeholderText() != ""
             if not filled:
                 input_widget.show_required()
                 all_filled = False

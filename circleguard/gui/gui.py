@@ -351,30 +351,26 @@ class MainTab(SingleLinkableSetting, QFrame):
                         loadable = ReplayPath(loadableW.path_input.path)
                     if isinstance(loadableW, ReplayMapW):
                         # Mod init errors on empty string, so just assign None
-                        mods = Mod(loadableW.mods_input.field.text()) if loadableW.mods_input.field.text() else None
-                        loadable = ReplayMap(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                             mods=mods)
+                        mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
+                        loadable = ReplayMap(int(loadableW.map_id_input.value()), int(loadableW.user_id_input.value()), mods=mods)
                     if isinstance(loadableW, MapW):
-                        mods = Mod(loadableW.mods_input.field.text()) if loadableW.mods_input.field.text() else None
+                        mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
                         # use placeholder text (1-50) if the user inputted span is empty
-                        span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
+                        span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = "1-100"
-                        loadable = Map(int(loadableW.map_id_input.field.text()), span=span,
-                                             mods=mods)
+                        loadable = Map(int(loadableW.map_id_input.value()), span=span, mods=mods)
                     if isinstance(loadableW, UserW):
-                        mods = Mod(loadableW.mods_input.field.text()) if loadableW.mods_input.field.text() else None
-                        span=loadableW.span_input.field.text()
+                        mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
+                        span=loadableW.span_input.value()
                         if span == "all":
                             span = "1-100"
-                        loadable = User(int(loadableW.user_id_input.field.text()), span=span,
-                                             mods=mods)
+                        loadable = User(int(loadableW.user_id_input.value()), span=span, mods=mods)
                     if isinstance(loadableW, MapUserW):
-                        span = loadableW.span_input.field.text() or loadableW.span_input.field.placeholderText()
+                        span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = "1-100"
-                        loadable = MapUser(int(loadableW.map_id_input.field.text()), int(loadableW.user_id_input.field.text()),
-                                           span=span)
+                        loadable = MapUser(int(loadableW.map_id_input.value()), int(loadableW.user_id_input.value()), span=span)
                     loadableW_id_to_loadable[loadableW.loadable_id] = loadable
                 except ValueError as e:
                     self.write_to_terminal_signal.emit(str(e))
