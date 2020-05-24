@@ -546,8 +546,7 @@ class MainTab(SingleLinkableSetting, QFrame):
             # don't give the visualizer any beatmap info if the user doesn't
             # want it rendered
             beatmap_info = BeatmapInfo()
-        paint_info = get_setting("visualizer_info")
-        self.visualizer = CGVisualizer(beatmap_info, replays, events=snaps, library=self.library, paint_info=paint_info)
+        self.visualizer = CGVisualizer(beatmap_info, replays, snaps, self.library)
         self.visualizer.show()
 
 
