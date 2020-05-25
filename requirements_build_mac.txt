@@ -1,1 +1,1 @@
-pyinstaller
+pyinstaller==3.6
