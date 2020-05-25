@@ -8,6 +8,10 @@ os.path.expanduser
 from circleguard import __version__ # circlecore version, not gui
 
 
+# https://github.com/pyinstaller/pyinstaller/wiki/Recipe-remove-tkinter-tcl
+import sys
+sys.modules['FixTk'] = None
+
 def zipdir(path, ziph, sub_folder=""):
     length = len(path)
     for root, dirs, files in os.walk(path):
@@ -17,15 +21,19 @@ def zipdir(path, ziph, sub_folder=""):
         for file in files:
             ziph.write(os.path.join(root, file), os.path.join(folder, file))
 
+# Analysis options documentation here
+# https://github.com/pyinstaller/pyinstaller/blob/develop/PyInstaller/building/build_main.py#L133
 
-# pyinstaller build
+# build with pyinstaller
 a = Analysis(['circleguard/main.py'],
              pathex=['.'],
              datas=[('resources/','resources/')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
-             excludes=[],
+             # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-remove-tkinter-tcl for
+             # tkinter excludes, the others are added by us
+             excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'PIL', 'IPython', 'matplotlib'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher,
