@@ -52,7 +52,7 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False , icon='./resources/logo/logo_mac.ico')
+          console=False , icon='./resources/logo/logo_mac.icns')
 app = BUNDLE(exe,
              name='Circleguard.app',
              icon='./resources/logo/logo_mac.icns',
