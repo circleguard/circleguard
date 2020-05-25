@@ -46,7 +46,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.current_state_label.setOpenExternalLinks(True)
         # statusBar() is a qt function that will create a status bar tied to the window
         # if it doesnt exist, and access the existing one if it does.
-        self.statusBar().addWidget(WidgetCombiner(self, self.progressbar, self.current_state_label))
+        self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label, self))
         self.statusBar().setSizeGripEnabled(False)
         self.statusBar().setContentsMargins(8, 2, 10, 2)
 
