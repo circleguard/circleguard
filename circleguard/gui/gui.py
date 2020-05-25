@@ -198,7 +198,7 @@ class SettingsTab(QFrame):
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
-        self.setting_buttons = WidgetCombiner(self, self.open_settings, self.sync_settings)
+        self.setting_buttons = WidgetCombiner(self.open_settings, self.sync_settings, self)
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0,0,1,1, alignment=Qt.AlignLeft)

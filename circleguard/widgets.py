@@ -723,7 +723,7 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         spinbox.setValue(self.setting_value)
         spinbox.setAlignment(Qt.AlignCenter)
         self.spinbox = spinbox
-        self.combined = WidgetCombiner(self, slider, spinbox)
+        self.combined = WidgetCombiner(slider, spinbox, self)
 
         self.slider.valueChanged.connect(self.on_setting_changed_from_gui)
         self.spinbox.valueChanged.connect(self.on_setting_changed_from_gui)
@@ -761,7 +761,7 @@ class LineEditSetting(SingleLinkableSetting, QFrame):
         self.input_.field.setText(new_value)
 
 class WidgetCombiner(QFrame):
-    def __init__(self, parent, widget1, widget2):
+    def __init__(self, widget1, widget2, parent):
         super(WidgetCombiner, self).__init__(parent)
         # these widgets get created outside of WidgetCombiner and might
         # have had a different parent - but they're our children now!
@@ -804,8 +804,8 @@ class FolderChooser(QFrame):
         self.path_label = QLabel(self)
         if self.display_path:
             self.path_label.setText(path)
-        self.combined = WidgetCombiner(self, self.path_label, self.file_chooser_button)
-         # for mousePressedEvent / show_required
+        self.combined = WidgetCombiner(self.path_label, self.file_chooser_button, self)
+        # for mousePressedEvent / show_required
         self.old_stylesheet = self.combined.styleSheet()
 
         self.layout = QGridLayout()
