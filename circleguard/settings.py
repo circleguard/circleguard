@@ -290,7 +290,7 @@ CHANGED = {
         "message_relax_found_display",
         "template_relax"
     ],
-    "3.0.0": [
+    "2.5.0": [
         "log_level"
     ]
 }
