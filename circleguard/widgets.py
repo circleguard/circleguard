@@ -763,7 +763,8 @@ class LineEditSetting(SingleLinkableSetting, QFrame):
 class WidgetCombiner(QFrame):
     def __init__(self, parent, widget1, widget2):
         super(WidgetCombiner, self).__init__(parent)
-        # these widgets get created outside of WidgetCombiner
+        # these widgets get created outside of WidgetCombiner and might
+        # have had a different parent - but they're our children now!
         widget1.setParent(self)
         widget2.setParent(self)
         self.layout = QGridLayout()
