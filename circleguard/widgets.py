@@ -558,8 +558,7 @@ class ReplayMapW(LoadableW):
 
 class ReplayPathW(LoadableW):
     def __init__(self):
-        self.path_input = FolderChooser(".osr path", folder_mode=False, file_ending="osu! Replayfile (*.osr)")
-
+        self.path_input = ReplayChooser("Choose Replays")
         super().__init__("Local Replay", [self.path_input])
 
         self.layout.addWidget(self.path_input, 1, 0, 1, 8)
@@ -567,7 +566,7 @@ class ReplayPathW(LoadableW):
     def check_required_fields(self):
         all_filled = True
         for input_widget in self.required_input_widgets:
-            filled = input_widget.changed
+            filled = input_widget.selection_made
             if not filled:
                 input_widget.show_required()
                 all_filled = False
@@ -774,6 +773,92 @@ class WidgetCombiner(QFrame):
         self.setLayout(self.layout)
 
 
+class FileChooser(QFrame):
+    path_chosen_signal = pyqtSignal(Path) # emits the path chosen
+
+    def __init__(self, button_text, name_filters):
+        super().__init__()
+        self.name_filters = name_filters
+        self.selection_made = False
+        self.path = None
+
+        self.choose_files_button = QPushButton(button_text, self)
+        self.choose_files_button.clicked.connect(self.open_dialog)
+        # button steals mousePressEvent so connect it manually
+        self.choose_files_button.clicked.connect(self.reset_highlight)
+        self.path_label = QLabel()
+        self.label_and_button = WidgetCombiner(self.path_label, self.choose_files_button, self)
+
+        # for mousePressedEvent / show_required
+        self.old_stylesheet = self.choose_files_button.styleSheet()
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.label_and_button, 0, 0, 1, 1)
+        layout.setAlignment(self.label_and_button, Qt.AlignRight)
+        self.setLayout(layout)
+
+    def open_dialog(self):
+        """
+        Opens a file chooser dialog to the user.
+        """
+        # regarding #setFileMode and why we don't use it:
+        # QFileDialog.ExistingFiles appears to override QFileDialog.Directory,
+        # so I don't see a way to support selecting multiple files and selecting
+        # directories in the same widget, unless we make our own QDialog class.
+        self.dialog = QFileDialog(self)
+        self.dialog.setNameFilters(self.name_filters)
+        self.start_dir = self.dialog.directory().absolutePath()
+
+        # recommended over #exec by qt https://doc.qt.io/qt-5/qdialog.html#exec
+        self.dialog.open()
+        self.dialog.finished.connect(self.process_selection)
+
+    def process_selection(self):
+        """
+        process whatever the user has chosen (either a folder, file, or
+        multiple files).
+        """
+        # will only ever be one file
+        path = self.dialog.selectedFiles()[0]
+        self.selection_made = path != self.start_dir
+
+        # TODO truncate path, ideally with qt size policies but might not be
+        # possible with those alone
+        self.path_label.setText(path)
+        path = Path(path)
+        self.path = path
+        self.path_chosen_signal.emit(path)
+
+    def show_required(self):
+        self.label_and_button.setStyleSheet(get_setting("required_style"))
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        self.reset_highlight()
+
+    def reset_highlight(self):
+        self.label_and_button.setStyleSheet(self.old_stylesheet)
+
+
+
+class ReplayChooser(FileChooser):
+    """
+    A FileChooser which can only select a single .osr file, or a folder.
+    """
+    def __init__(self, button_text):
+        super().__init__(button_text, ["osu! Replay File (*.osr)"])
+
+
+# TODO don't allow selecting folders
+class BeatmapChooser(FileChooser):
+    """
+    A FileChooser which can only select a single .osu file.
+    """
+    def __init__(self, button_text):
+        super().__init__(button_text, ["osu! Beatmap File (*.osu)"])
+
+
 class FolderChooser(QFrame):
     path_signal = pyqtSignal(object) # an iterable if multiple_files is True, str otherwise
 
@@ -898,7 +983,7 @@ class BeatmapTest(QFrame):
         super(BeatmapTest, self).__init__()
         self.visualizer_window = None
 
-        self.file_chooser = FolderChooser("Beatmap File", folder_mode=False)
+        self.file_chooser = BeatmapChooser("Beatmap File")
         self.label = QLabel(self)
         self.label.setText("Test Beatmap:")
 

@@ -295,7 +295,10 @@ class MainTab(SingleLinkableSetting, QFrame):
                 loadable = None
                 try:
                     if isinstance(loadableW, ReplayPathW):
-                        loadable = ReplayPath(loadableW.path_input.path)
+                        if loadableW.path_input.path.is_dir():
+                            loadable = ReplayDir(loadableW.path_input.path)
+                        else:
+                            loadable = ReplayPath(loadableW.path_input.path)
                     if isinstance(loadableW, ReplayMapW):
                         # Mod init errors on empty string, so just assign None
                         mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None

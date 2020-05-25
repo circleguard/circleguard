@@ -79,6 +79,7 @@ class MainWindow(QFrame):
         self.setLayout(self.layout)
 
 
+# TODO needs to be updated to work with ReplayChooser instead of FolderChooser
 class VisualizeTab(QFrame):
     def __init__(self):
         super().__init__()
