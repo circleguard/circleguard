@@ -19,9 +19,9 @@ def zipdir(path, ziph, sub_folder=""):
 
 
 # pyinstaller build
-a = Analysis(['circleguard/gui.py'],
+a = Analysis(['circleguard/main.py'],
              pathex=['.'],
-             datas=[('circleguard/resources/','resources/')],
+             datas=[('resources/','resources/')],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
@@ -44,10 +44,10 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False , icon='./circleguard/resources/logo_mac.ico')
+          console=False , icon='./resources/logo/logo_mac.ico')
 app = BUNDLE(exe,
              name='Circleguard.app',
-             icon='./circleguard/resources/logo_mac.icns',
+             icon='./resources/logo/logo_mac.icns',
              bundle_identifier=None,
              info_plist={
               'NSHighResolutionCapable': 'True',

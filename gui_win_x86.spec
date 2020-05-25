@@ -21,9 +21,9 @@ def zipdir(path, ziph):
 
 # pyinstaller build
 PyInstaller.config.CONF['distpath'] = "./dist/Circleguard_win_x86"
-a = Analysis(['circleguard/gui.py'],
+a = Analysis(['circleguard/main.py'],
              pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x86', os.path.dirname(sys.executable)],
-             datas=[('circleguard/resources/','resources/')],
+             datas=[('resources/','resources/')],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher,
@@ -39,7 +39,7 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False , icon='./circleguard/resources/logo.ico')
+          console=False , icon='./resources/logo/logo.ico')
 coll = COLLECT(
           exe,
           a.binaries,
