@@ -29,7 +29,7 @@ a = Analysis(['circleguard/main.py'],
              pathex=['.'],
              datas=[('resources/','resources/')],
              hiddenimports=[],
-             hookspath=[],
+             hookspath=["."],
              runtime_hooks=[],
              # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-remove-tkinter-tcl for
              # tkinter excludes, the others are added by us

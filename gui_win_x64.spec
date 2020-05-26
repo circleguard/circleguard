@@ -24,6 +24,7 @@ PyInstaller.config.CONF['distpath'] = "./dist/Circleguard_win_x64"
 a = Analysis(['circleguard/main.py'],
              pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x64', os.path.dirname(sys.executable)],
              datas=[('resources/','resources/')],
+             hookspath=["."],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher,
