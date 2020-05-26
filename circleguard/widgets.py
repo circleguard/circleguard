@@ -6,7 +6,8 @@ import json
 
 from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit, QMessageBox,
                              QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
-                             QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout)
+                             QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
+                             QHBoxLayout)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint, QMimeData
 
@@ -558,7 +559,7 @@ class ReplayMapW(LoadableW):
 
 class ReplayPathW(LoadableW):
     def __init__(self):
-        self.path_input = ReplayChooser("Choose Replays")
+        self.path_input = ReplayChooser()
         super().__init__("Local Replay", [self.path_input])
 
         self.layout.addWidget(self.path_input, 1, 0, 1, 8)
@@ -773,30 +774,16 @@ class WidgetCombiner(QFrame):
         self.setLayout(self.layout)
 
 
-class FileChooser(QFrame):
-    path_chosen_signal = pyqtSignal(Path) # emits the path chosen
+class FileChooserButton(QPushButton):
+    path_chosen_signal = pyqtSignal(Path) # emits the selected path
 
-    def __init__(self, button_text, name_filters):
+    def __init__(self, text, file_mode=QFileDialog.AnyFile, name_filters=None):
         super().__init__()
         self.name_filters = name_filters
         self.selection_made = False
         self.path = None
-
-        self.choose_files_button = QPushButton(button_text, self)
-        self.choose_files_button.clicked.connect(self.open_dialog)
-        # button steals mousePressEvent so connect it manually
-        self.choose_files_button.clicked.connect(self.reset_highlight)
-        self.path_label = QLabel()
-        self.label_and_button = WidgetCombiner(self.path_label, self.choose_files_button, self)
-
-        # for mousePressedEvent / show_required
-        self.old_stylesheet = self.choose_files_button.styleSheet()
-
-        layout = QGridLayout()
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.label_and_button, 0, 0, 1, 1)
-        layout.setAlignment(self.label_and_button, Qt.AlignRight)
-        self.setLayout(layout)
+        self.setText(text)
+        self.clicked.connect(self.open_dialog)
 
     def open_dialog(self):
         """
@@ -807,7 +794,8 @@ class FileChooser(QFrame):
         # so I don't see a way to support selecting multiple files and selecting
         # directories in the same widget, unless we make our own QDialog class.
         self.dialog = QFileDialog(self)
-        self.dialog.setNameFilters(self.name_filters)
+        if self.name_filters:
+            self.dialog.setNameFilters(self.name_filters)
         self.start_dir = self.dialog.directory().absolutePath()
 
         # recommended over #exec by qt https://doc.qt.io/qt-5/qdialog.html#exec
@@ -825,38 +813,67 @@ class FileChooser(QFrame):
 
         # TODO truncate path, ideally with qt size policies but might not be
         # possible with those alone
-        self.path_label.setText(path)
         path = Path(path)
         self.path = path
         self.path_chosen_signal.emit(path)
 
+
+class ReplayChooser(QFrame):
+    """
+    Two FileChoosers (one for files, one for folders), which can select
+    .osr files and folders of osr files respectively. Only one can be
+    in effect at a time, and the path label shows the latest chosen one.
+    """
+    def __init__(self):
+        super().__init__()
+        self.path_label = QLabel()
+        self.selection_made = False
+        self.old_stylesheet = self.styleSheet()
+        self.path = None
+        # give all space to the label
+        expanding = QSizePolicy()
+        expanding.setHorizontalPolicy(QSizePolicy.Expanding)
+        self.path_label.setSizePolicy(expanding)
+        self.file_chooser = FileChooserButton("Choose replay", QFileDialog.ExistingFile, ["osu! Replay File (*.osr)"])
+        self.folder_chooser = FileChooserButton("Choose folder", QFileDialog.Directory)
+
+        # the buttons will steal the mousePressEvent so connect them manually
+        self.file_chooser.clicked.connect(self.reset_required)
+        self.folder_chooser.clicked.connect(self.reset_required)
+
+        self.file_chooser.path_chosen_signal.connect(self.handle_new_path)
+        self.folder_chooser.path_chosen_signal.connect(self.handle_new_path)
+
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.path_label)
+        layout.addWidget(self.file_chooser)
+        layout.addWidget(self.folder_chooser)
+        self.setLayout(layout)
+
+    def handle_new_path(self, path):
+        self.path = path
+        self.path_label.setText(str(path))
+        self.selection_made = self.file_chooser.selection_made or self.folder_chooser.selection_made
+
     def show_required(self):
-        self.label_and_button.setStyleSheet(get_setting("required_style"))
+        self.setStyleSheet("ReplayChooser { border: 1px solid red; border-radius: 4px; padding: 2px }")
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
-        self.reset_highlight()
+        self.reset_required()
 
-    def reset_highlight(self):
-        self.label_and_button.setStyleSheet(self.old_stylesheet)
-
-
-
-class ReplayChooser(FileChooser):
-    """
-    A FileChooser which can only select a single .osr file, or a folder.
-    """
-    def __init__(self, button_text):
-        super().__init__(button_text, ["osu! Replay File (*.osr)"])
+    def reset_required(self):
+        self.setStyleSheet(self.old_stylesheet)
 
 
 # TODO don't allow selecting folders
-class BeatmapChooser(FileChooser):
+class BeatmapChooser(FileChooserButton):
     """
     A FileChooser which can only select a single .osu file.
     """
-    def __init__(self, button_text):
-        super().__init__(button_text, ["osu! Beatmap File (*.osu)"])
+    def __init__(self, text):
+        super().__init__(text, name_filters=["osu! Beatmap File (*.osu)"])
 
 
 class FolderChooser(QFrame):
