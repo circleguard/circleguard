@@ -779,6 +779,7 @@ class FileChooserButton(QPushButton):
 
     def __init__(self, text, file_mode=QFileDialog.AnyFile, name_filters=None):
         super().__init__()
+        self.file_mode = file_mode
         self.name_filters = name_filters
         self.selection_made = False
         self.path = None
@@ -794,6 +795,7 @@ class FileChooserButton(QPushButton):
         # so I don't see a way to support selecting multiple files and selecting
         # directories in the same widget, unless we make our own QDialog class.
         self.dialog = QFileDialog(self)
+        self.dialog.setFileMode(self.file_mode)
         if self.name_filters:
             self.dialog.setNameFilters(self.name_filters)
         self.start_dir = self.dialog.directory().absolutePath()
