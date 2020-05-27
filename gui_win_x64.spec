@@ -1,7 +1,7 @@
 # -*- mode: python -*-
 
 block_cipher = None
-from os.path import *
+from pathlib import Path
 import sys
 import os
 import win32com.client
@@ -53,8 +53,9 @@ coll = COLLECT(
 
 # post-build script
 shell = win32com.client.Dispatch("WScript.Shell")
-shortcut = shell.CreateShortCut("./dist/Circleguard_win_x64/Circleguard.lnk")
-shortcut.Targetpath = abspath(abspath(".\dist\Circleguard_win_x64\Circleguard\Circleguard.exe"))
+ROOT_PATH = Path(__file__).parent
+shortcut = shell.CreateShortCut(str(ROOT_PATH / "dist/Circleguard_win_x64/Circleguard.lnk"))
+shortcut.Targetpath = str(ROOT_PATH / "dist/Circleguard_win_x64/Circleguard/Circleguard.exe")
 shortcut.save()
 
 print("Creating zip")
