@@ -262,7 +262,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             run.event.set()
 
     def on_application_quit(self):
-        """Called when the app.aboutToQuit signal is emitted"""
+        """
+        Called when the app.aboutToQuit signal is emitted.
+        """
         if self.debug_window is not None:
             self.debug_window.close()
         if self.main_window.main_tab.visualizer is not None:
