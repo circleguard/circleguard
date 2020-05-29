@@ -1,3 +1,2 @@
-winshell
 pyinstaller==3.6
-pypiwin32
+pywin32
