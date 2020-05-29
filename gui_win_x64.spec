@@ -4,7 +4,7 @@ block_cipher = None
 from pathlib import Path
 import sys
 import os
-import win32com.client
+from win32com.client import Dispatch
 import zipfile
 import PyInstaller.config
 os.path.expanduser
@@ -52,10 +52,10 @@ coll = COLLECT(
 )
 
 # post-build script
-shell = win32com.client.Dispatch("WScript.Shell")
-ROOT_PATH = Path(__file__).parent
-shortcut = shell.CreateShortCut(str(ROOT_PATH / "dist/Circleguard_win_x64/Circleguard.lnk"))
-shortcut.Targetpath = str(ROOT_PATH / "dist/Circleguard_win_x64/Circleguard/Circleguard.exe")
+shell = Dispatch("WScript.Shell")
+# Path().resolve() first to deal with relative paths, also converts / to \ because windows
+shortcut = shell.CreateShortCut(str(Path("./dist/Circleguard_win_x64/Circleguard.lnk").resolve()))
+shortcut.Targetpath = str(Path("./dist/Circleguard_win_x64/Circleguard/Circleguard.exe").resolve())
 shortcut.save()
 
 print("Creating zip")
