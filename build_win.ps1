@@ -1,3 +1,6 @@
+# cd to the directory this file is in
+Set-Location $PSScriptRoot
+
 Write-Output "creating venv"
 python -m venv build-env --clear
 
