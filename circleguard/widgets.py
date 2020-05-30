@@ -1007,8 +1007,7 @@ class BeatmapTest(QFrame):
         self.visualizer_window = None
 
         self.file_chooser = BeatmapChooser("Beatmap File")
-        self.label = QLabel(self)
-        self.label.setText("Test Beatmap:")
+        self.label = QLabel("Test Beatmap:", self)
 
         self.button = QPushButton(self)
         self.button.setText("Visualize")
