@@ -259,7 +259,7 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(Separator("Dev"))
         self.layout.addWidget(self.run_wizard)
         self.beatmaptest = BeatmapTest()
-        self.beatmaptest.button.clicked.connect(self.visualize)
+        self.beatmaptest.visualize_button.clicked.connect(self.visualize)
         self.layout.addWidget(self.beatmaptest)
         self.setLayout(self.layout)
 

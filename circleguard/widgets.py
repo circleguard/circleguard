@@ -170,7 +170,7 @@ class OptionWidget(SingleLinkableSetting, QFrame):
         self.box.setChecked(self.setting_value)
         self.box.stateChanged.connect(self.on_setting_changed_from_gui)
         item = CenteredWidget(self.box)
-        item.setFixedWidth(100)
+        item.setFixedWidth(120)
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(label, 0, 0, 1, 1)
@@ -209,7 +209,7 @@ class ButtonWidget(QFrame):
         label.setText(label_title + end)
         label.setToolTip(tooltip)
         self.button = QPushButton(button_title)
-        self.button.setFixedWidth(100)
+        self.button.setFixedWidth(120)
 
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -233,7 +233,7 @@ class LoglevelWidget(LinkableSetting, QFrame):
         output_label.setToolTip(tooltip)
 
         level_combobox = QComboBox(self)
-        level_combobox.setFixedWidth(100)
+        level_combobox.setFixedWidth(120)
         level_combobox.addItem("CRITICAL", 50)
         level_combobox.addItem("ERROR", 40)
         level_combobox.addItem("WARNING", 30)
@@ -247,7 +247,7 @@ class LoglevelWidget(LinkableSetting, QFrame):
         self.level_combobox = level_combobox
 
         output_combobox = QComboBox(self)
-        output_combobox.setFixedWidth(100)
+        output_combobox.setFixedWidth(120)
         output_combobox.addItem("NONE")
         output_combobox.addItem("TERMINAL")
         output_combobox.addItem("NEW WINDOW")
@@ -719,7 +719,7 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         spinbox = QSpinBox()
         spinbox.setRange(0, max_)
         spinbox.setSingleStep(1)
-        spinbox.setFixedWidth(100)
+        spinbox.setFixedWidth(120)
         spinbox.setValue(self.setting_value)
         spinbox.setAlignment(Qt.AlignCenter)
         self.spinbox = spinbox
@@ -906,7 +906,7 @@ class FolderChooser(QFrame):
         self.file_chooser_button.clicked.connect(self.reset_highlight)
         self.file_chooser_button.clicked.connect(self.set_dir)
 
-        self.file_chooser_button.setFixedWidth(100)
+        self.file_chooser_button.setFixedWidth(120)
 
         self.path_label = QLabel(self)
         if self.display_path:
@@ -979,7 +979,7 @@ class ResetSettings(QFrame):
         self.button = QPushButton(self)
         self.button.setText("Reset")
         self.button.clicked.connect(self.reset_settings)
-        self.button.setFixedWidth(100)
+        self.button.setFixedWidth(120)
 
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -1005,20 +1005,25 @@ class BeatmapTest(QFrame):
         super(BeatmapTest, self).__init__()
         self.visualizer_window = None
 
-        self.file_chooser = BeatmapChooser("Beatmap File")
-        self.label = QLabel("Test Beatmap:", self)
+        self.file_chooser = BeatmapChooser("Choose beatmap")
+        self.file_chooser.setFixedWidth(120)
+        file_chooser_label = QLabel("Beatmap file:", self)
 
-        self.button = QPushButton(self)
-        self.button.setText("Visualize")
-        self.button.setFixedWidth(100)
+        visualize_label = QLabel("Visualize beatmap:", self)
+        self.visualize_button = QPushButton("Visualize", self)
+        self.visualize_button.setFixedWidth(120)
 
-        self.layout = QGridLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.label, 1, 0, 1, 1)
-        self.layout.addWidget(self.file_chooser, 0, 0, 1, 3)
-        self.layout.addItem(SPACER, 1, 1, 1, 1)
-        self.layout.addWidget(self.button, 1, 2, 1, 1)
-        self.setLayout(self.layout)
+        layout = QGridLayout()
+
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(file_chooser_label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.file_chooser, 0, 2, 1, 1)
+
+        layout.addWidget(visualize_label, 1, 0, 1, 1)
+        layout.addItem(SPACER, 1, 1, 1, 1)
+        layout.addWidget(self.visualize_button, 1, 2, 1, 1)
+        self.setLayout(layout)
 
 
 class EntryWidget(QFrame):
