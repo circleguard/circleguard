@@ -873,13 +873,12 @@ class ReplayChooser(QFrame):
         self.setStyleSheet(self.old_stylesheet)
 
 
-# TODO don't allow selecting folders
 class BeatmapChooser(FileChooserButton):
     """
     A FileChooser which can only select a single .osu file.
     """
     def __init__(self, text):
-        super().__init__(text, name_filters=["osu! Beatmap File (*.osu)"])
+        super().__init__(text, file_mode=QFileDialog.ExistingFile, name_filters=["osu! Beatmap File (*.osu)"])
 
 
 class FolderChooser(QFrame):
