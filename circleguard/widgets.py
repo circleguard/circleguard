@@ -1015,8 +1015,8 @@ class BeatmapTest(QFrame):
 
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.file_chooser, 0, 0, 1, 3)
         self.layout.addWidget(self.label, 1, 0, 1, 1)
+        self.layout.addWidget(self.file_chooser, 0, 0, 1, 3)
         self.layout.addItem(SPACER, 1, 1, 1, 1)
         self.layout.addWidget(self.button, 1, 2, 1, 1)
         self.setLayout(self.layout)
