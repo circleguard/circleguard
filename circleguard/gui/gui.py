@@ -272,8 +272,7 @@ class ScrollableSettingsWidget(QFrame):
         beatmap_info = BeatmapInfo(path=self.beatmaptest.file_chooser.path)
         # TODO pass the library we define in MainTab to CGVIsualizer,
         # probably will have to rework some things entirely
-        paint_info = get_setting("visualizer_info")
-        self.visualizer = CGVisualizer(beatmap_info, paint_info=paint_info)
+        self.visualizer = CGVisualizer(beatmap_info)
         self.visualizer.show()
 
 
