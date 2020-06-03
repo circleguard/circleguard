@@ -227,6 +227,12 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             template_text = get_setting("template_correction").format(ts=timestamp, r=result, replay=result.replay, snap_table=snap_table,
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
             replays = [result.replay]
+        elif isinstance(result, TimewarpResult):
+            label_text = get_setting("string_result_timewarp").format(ts=timestamp, r=result, replay=result.replay, frametime=result.frametime,
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+            template_text = get_setting("template_timewarp").format(ts=timestamp, r=result, frametime=result.frametime,
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+            replays = [result.replay]
         elif isinstance(result, list) and isinstance(result[0], Loadable):  # a list of loadables
             label_text = get_setting("string_result_visualization").format(ts=timestamp, replay_amount=len(result), map_id=result[0].map_id)
             replays = result

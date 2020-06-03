@@ -140,6 +140,8 @@ DEFAULTS = {
         "message_relax_found_display":      "[{ts:%X}] {ur:.1f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
         "message_correction_found":         "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
         "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
+        "message_timewarp_found":           "[{ts:%X}] {frametime:.1f} avg frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "message_timewarp_found_display":   "[{ts:%X}] {frametime:.1f} avg frametime. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
         # have to use a separate message here because we can't loop in ``.format`` strings, can only loop in f strings which only work in a
         # local context and aren't usable for us. Passed as ``snaps=snaps`` in message_correction_found, once formatted. Each snap formats
         # this setting and does a ``"\n".join(snap_message)`` to create ``snaps``.
@@ -176,12 +178,22 @@ DEFAULTS = {
                                 "\n\n"
                                 "Snaps according to https://circleguard.dev/:"
                                 "\n\n"
-                                "{snap_table}")
+                                "{snap_table}"),
+        "template_timewarp":   ("[osu!std] {r.replay.username} | Timewarp"
+                                "\n\n"
+                                "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
+                                "\n\n"
+                                "Map: https://osu.ppy.sh/b/{r.replay.map_id}"
+                                "\n\n"
+                                "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
+                                "\n\n"
+                                "{frametime:.1f} average frametime accrording to https://circleguard.dev/")
     },
     "Strings": {
         "string_result_steal":         "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{replay1_mods_short_name} (set later) vs {r.earlier_replay.username} +{replay2_mods_short_name} on map {r1.map_id}",
         "string_result_relax":         "[{ts:%x %H:%M}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
         "string_result_correction":    "[{ts:%x %H:%M}] {num_snaps} snaps. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "string_result_timewarp":      "[{ts:%x %H:%M}] {frametime:.1f} avg frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
         "string_result_visualization": "[{ts:%x %H:%M}] {replay_amount} Replays on map {map_id}"
     },
     "Visualizer": {
@@ -207,7 +219,9 @@ DEFAULTS = {
         "correction_max_angle": 10,
         "correction_max_angle_display": 10,
         "correction_min_distance": 8,
-        "correction_min_distance_display": 8
+        "correction_min_distance_display": 8,
+        "timewarp_max_frametime": 13,
+        "timewarp_max_frametime_display": 13
     },
     "Appearance": {
         "dark_theme": True,
@@ -292,6 +306,14 @@ CHANGED = {
     ],
     "2.5.0": [
         "log_level"
+    ],
+    "2.6.0": [
+        "timewarp_max_frametime",
+        "timewarp_max_frametime_display"
+        "message_timewarp_found",
+        "message_timewarp_found_display",
+        "string_result_timewarp",
+        "template_timewarp"
     ]
 }
 

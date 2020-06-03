@@ -353,35 +353,44 @@ class ThresholdsTab(QFrame):
 class ScrollableThresholdsWidget(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
-        self.steal_max_sim = SliderBoxSetting(self, "Max similarity", "ReplaySteal comparisons that score below this "
+        steal_max_sim = SliderBoxSetting(self, "Max similarity", "ReplaySteal comparisons that score below this "
                 "will be stored so you can view them, and printed to the console", "steal_max_sim", 100)
-        self.steal_max_sim_display = SliderBoxSetting(self, "Max similarity display", "ReplaySteal comparisons that "
+        steal_max_sim_display = SliderBoxSetting(self, "Max similarity display", "ReplaySteal comparisons that "
                 "score below this will be printed to the console", "steal_max_sim_display", 100)
-        self.relax_max_ur = SliderBoxSetting(self, "Max ur", "Replays that have a ur lower than this will be stored "
+        relax_max_ur = SliderBoxSetting(self, "Max ur", "Replays that have a ur lower than this will be stored "
                 "so you can view them, and printed to the console", "relax_max_ur", 300)
-        self.relax_max_ur_display = SliderBoxSetting(self, "Max ur display", "Replays with a ur lower than this "
+        relax_max_ur_display = SliderBoxSetting(self, "Max ur display", "Replays with a ur lower than this "
                 "will be printed to the console", "relax_max_ur_display", 300)
         # display options for correction are more confusing than they're worth,
         # especially when we don't have a good mechanism for storing Snaps in
         # the Result tab or visualizer support for the Snap timestamps. TODO
         # potentially add back if we can provide good support for them.
-        self.correction_max_angle = SliderBoxSetting(self, "Max angle", "Replays with a set of three points "
+        correction_max_angle = SliderBoxSetting(self, "Max angle", "Replays with a set of three points "
                 "making an angle less than this (*and* also satisfying correction_min_distance) will be stored so "
                 "you can view them, and printed to the console.", "correction_max_angle", 360)
-        self.correction_min_distance = SliderBoxSetting(self, "Min distance", "Replays with a set of three points "
+        correction_min_distance = SliderBoxSetting(self, "Min distance", "Replays with a set of three points "
                 "where either the distance from AB or BC is greater than this (*and* also satisfying correction_max_angle) "
                 "will be stored so you can view them, and printed to the console.", "correction_min_distance", 100)
 
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(Separator("Replay Stealing"))
-        self.layout.addWidget(self.steal_max_sim)
-        self.layout.addWidget(self.steal_max_sim_display)
-        self.layout.addWidget(Separator("Relax"))
-        self.layout.addWidget(self.relax_max_ur)
-        self.layout.addWidget(self.relax_max_ur_display)
-        self.layout.addWidget(Separator("Aim Correction"))
-        self.layout.addWidget(self.correction_max_angle)
-        self.layout.addWidget(self.correction_min_distance)
+        timewarp_max_frametime = SliderBoxSetting(self, "Max frametime", "Replays with an average frametime "
+                "lower than this will be stored so you can view them, and printed to the console", "timewarp_max_frametime", 50)
+        timewarp_max_frametime_display = SliderBoxSetting(self, "Max frametime display", "Replays with an average frametime "
+                "lower than this will be printed to the console", "timewarp_max_frametime_display", 50)
 
-        self.layout.setAlignment(Qt.AlignTop)
-        self.setLayout(self.layout)
+
+        layout = QVBoxLayout()
+        layout.addWidget(Separator("Replay Stealing"))
+        layout.addWidget(steal_max_sim)
+        layout.addWidget(steal_max_sim_display)
+        layout.addWidget(Separator("Relax"))
+        layout.addWidget(relax_max_ur)
+        layout.addWidget(relax_max_ur_display)
+        layout.addWidget(Separator("Aim Correction"))
+        layout.addWidget(correction_max_angle)
+        layout.addWidget(correction_min_distance)
+        layout.addWidget(Separator("Timewarp"))
+        layout.addWidget(timewarp_max_frametime)
+        layout.addWidget(timewarp_max_frametime_display)
+
+        layout.setAlignment(Qt.AlignTop)
+        self.setLayout(layout)

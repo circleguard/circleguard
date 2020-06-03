@@ -16,7 +16,7 @@ from circlevis import BeatmapInfo
 
 from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
     ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
-    CorrectionCheckW, VisualizerW)
+    CorrectionCheckW, TimewarpCheckW, VisualizerW)
 from settings import SingleLinkableSetting, get_setting
 from utils import delete_widget
 from .visualizer import CGVisualizer
@@ -35,7 +35,7 @@ class MainTab(SingleLinkableSetting, QFrame):
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
     LOADABLES_COMBOBOX_REGISTRY = ["Map Replay", "Local Replay", "Map", "User", "All Map Replays by User"]
-    CHECKS_COMBOBOX_REGISTRY = ["Replay Stealing/Remodding", "Relax", "Aim Correction", "Visualize"]
+    CHECKS_COMBOBOX_REGISTRY = ["Replay Stealing/Remodding", "Relax", "Aim Correction", "Timewarp", "Visualize"]
 
     def __init__(self):
         QFrame.__init__(self)
@@ -155,6 +155,8 @@ class MainTab(SingleLinkableSetting, QFrame):
             w = RelaxCheckW()
         if button_data == "Aim Correction":
             w = CorrectionCheckW()
+        if button_data == "Timewarp":
+            w = TimewarpCheckW()
         if button_data == "Visualize":
             w = VisualizerW()
         w.remove_check_signal.connect(self.remove_check)
@@ -345,6 +347,9 @@ class MainTab(SingleLinkableSetting, QFrame):
                     min_distance = get_setting("correction_min_distance")
                     check_type = "Aim Correction"
                     d = Detect.CORRECTION
+                if isinstance(checkW, TimewarpCheckW):
+                    check_type = "Timewarp"
+                    d = Detect.TIMEWARP
                 if isinstance(checkW, VisualizerW):
                     d = Detect(0)  # don't run any detection
                     check_type = "Visualization"
@@ -478,6 +483,16 @@ class MainTab(SingleLinkableSetting, QFrame):
                         snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
                         message = get_setting("message_correction_found").format(ts=ts, r=result, replay=result.replay, snaps=snap_text,
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+
+                if isinstance(result, TimewarpResult):
+                    if result.frametime < get_setting("timewarp_max_frametime"):
+                        ischeat = True
+                        message = get_setting("message_timewarp_found").format(ts=ts, r=result, replay=result.replay, frametime=result.frametime,
+                                                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                    elif result.frametime < get_setting("timewarp_max_frametime_display"):
+                        message = get_setting("message_timewarp_found_display").format(ts=ts, r=result, replay=result.replay, frametime=result.frametime,
+                                                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+
                 # message is None if the result isn't a cheat and doesn't
                 # satisfy its display threshold
                 if message:

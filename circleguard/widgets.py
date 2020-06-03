@@ -428,6 +428,10 @@ class CorrectionCheckW(CheckW):
     def __init__(self):
         super().__init__("Aim Correction Check")
 
+class TimewarpCheckW(CheckW):
+    def __init__(self):
+        super().__init__("Timewarp Check")
+
 class VisualizerW(CheckW):
     def __init__(self):
         super().__init__("Visualize")
