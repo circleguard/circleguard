@@ -2,4 +2,4 @@ PyQt5==5.14.2
 circleguard==4.3.1
 packaging>=17.0
 slider==0.2.1
-circlevis==0.1.2
+circlevis==0.1.3
