@@ -187,7 +187,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
                                 "\n\n"
-                                "{frametime:.1f} average frametime accrording to https://circleguard.dev/")
+                                "{frametime:.1f} average frametime according to https://circleguard.dev/")
     },
     "Strings": {
         "string_result_steal":         "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{replay1_mods_short_name} (set later) vs {r.earlier_replay.username} +{replay2_mods_short_name} on map {r1.map_id}",
@@ -313,6 +313,9 @@ CHANGED = {
         "message_timewarp_found",
         "message_timewarp_found_display",
         "string_result_timewarp",
+        "template_timewarp"
+    ],
+    "2.6.2": [
         "template_timewarp"
     ]
 }
