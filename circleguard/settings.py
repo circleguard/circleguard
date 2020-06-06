@@ -553,7 +553,7 @@ def _index_by_defaults_dict(key):
         return 0
     section = TYPES[key][1]
     keys = DEFAULTS[section].keys()
-    # https://stackoverflow.com/a/14539017/12164878 for the list cast
+    # https://stackoverflow.com/a/14539017 for the list cast
     index = list(keys).index(key)
     return index
 

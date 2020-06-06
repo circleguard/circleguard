@@ -20,7 +20,7 @@ from utils import resource_path
 from version import __version__
 
 
-# logging methodology heavily adapted from https://stackoverflow.com/q/28655198/12164878
+# logging methodology heavily adapted from https://stackoverflow.com/q/28655198/
 class Handler(QObject, logging.Handler):
     new_message = pyqtSignal(object)
 

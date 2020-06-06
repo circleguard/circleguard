@@ -496,7 +496,7 @@ class LoadableW(QFrame):
         self.layout = QGridLayout()
         title = QLabel(self)
         self.loadable_id = LoadableW.ID
-        t = "\t" # https://stackoverflow.com/a/44780467/12164878
+        t = "\t" # https://stackoverflow.com/a/44780467/
         # double tabs on short names to align with longer ones
         title.setText(f"{name}{t+t if len(name) < 5 else t}(id: {self.loadable_id})")
 
@@ -512,13 +512,13 @@ class LoadableW(QFrame):
     # qt tutorial           https://doc.qt.io/qt-5/qtwidgets-draganddrop-draggableicons-example.html
     # qdrag docs            https://doc.qt.io/qt-5/qdrag.html
     # real example code     https://lists.qt-project.org/pipermail/qt-interest-old/2011-June/034531.html
-    # bad example code      https://stackoverflow.com/q/7737913/12164878
+    # bad example code      https://stackoverflow.com/q/7737913/
     def mouseMoveEvent(self, event):
         # 1=all the way to the right/down, 0=all the way to the left/up
         x_ratio = event.pos().x() / self.width()
         y_ratio = event.pos().y() / self.height()
         self.drag = QDrag(self)
-        # https://stackoverflow.com/a/53538805/12164878
+        # https://stackoverflow.com/a/53538805/
         pixmap = DragWidget(f"{self.name} (Id: {self.loadable_id})").grab()
         # put cursor in the same relative position on the dragwidget as
         # it clicked on the real Loadable widget.
