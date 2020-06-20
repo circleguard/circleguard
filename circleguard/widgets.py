@@ -7,7 +7,7 @@ import json
 from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit, QMessageBox,
                              QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
                              QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
-                             QHBoxLayout)
+                             QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint, QMimeData
 
@@ -359,7 +359,6 @@ class DropArea(QFrame):
 
 class SingleDropArea(DropArea):
     def add_loadable(self, id_, name):
-        print("single add")
         if len(self.loadables) == 1:
             return
         super().add_loadable(id_, name)
@@ -631,7 +630,6 @@ class MapUserW(LoadableW):
         self.layout.addWidget(self.span_input, 3, 0, 1, 8)
 
 
-
 class ResultW(QFrame):
     """
     Stores the result of a comparison that can be replayed at any time.
@@ -650,7 +648,9 @@ class ResultW(QFrame):
 
         self.button_clipboard = QPushButton(self)
         self.button_clipboard.setText("Copy Template")
+        self._setLayout()
 
+    def _setLayout(self):
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(self.label, 0, 0, 1, 1)
@@ -659,6 +659,83 @@ class ResultW(QFrame):
         self.layout.addWidget(self.button_clipboard, 0, 3, 1, 1)
 
         self.setLayout(self.layout)
+
+class AnalysisResultW(ResultW):
+    def __init__(self, text, result, replays):
+        super().__init__(text, result, replays)
+
+    def _setLayout(self):
+        # don't show anything special with more than one replay (for now)
+        if len(self.replays) > 1:
+            super()._setLayout()
+            return
+
+        self.actions_combobox = QComboBox()
+        self.actions_combobox.addItem("Analysis")
+        self.actions_combobox.addItem("View Frametime Graph", "View Frametime Graph")
+        self.actions_combobox.addItem("View Raw Replay Data", "View Raw Replay Data")
+        self.actions_combobox.setInsertPolicy(QComboBox.NoInsert)
+        self.actions_combobox.activated.connect(self.action_combobox_activated)
+
+        self.layout = QGridLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.label, 0, 0, 1, 4)
+        self.layout.addItem(SPACER, 0, 4, 1, 1)
+        self.layout.addWidget(self.button, 0, 5, 1, 3)
+        self.layout.addWidget(self.actions_combobox, 0, 8, 1, 1)
+
+        self.setLayout(self.layout)
+
+    def action_combobox_activated(self):
+        if self.actions_combobox.currentData() == "View Frametime Graph":
+            ...
+        if self.actions_combobox.currentData() == "View Raw Replay Data":
+            self.replay_data_window = ReplayDataWindow(self.replays[0])
+            self.replay_data_window.show()
+        self.actions_combobox.setCurrentIndex(0)
+
+
+class ReplayDataWindow(QMainWindow):
+    def __init__(self, replay):
+        super().__init__()
+        self.setWindowTitle("Raw Replay Data")
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
+
+        replay_data_table = ReplayDataTable(replay)
+        self.setCentralWidget(replay_data_table)
+        self.resize(500, 700)
+
+class ReplayDataTable(QFrame):
+    def __init__(self, replay):
+        super().__init__()
+        self.replay = replay
+
+        table = QTableWidget()
+        table.setColumnCount(4)
+        table.setRowCount(len(replay.t))
+        table.setHorizontalHeaderLabels(["Time (ms)", "x", "y", "keys pressed"])
+        # https://forum.qt.io/topic/82749/how-to-make-qtablewidget-read-only
+        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        for i, data in enumerate(zip(replay.t, replay.xy, replay.k)):
+            t, xy, k = data
+            item = QTableWidgetItem(str(t))
+            table.setItem(i, 0, item)
+
+            item = QTableWidgetItem(str(xy[0]))
+            table.setItem(i, 1, item)
+
+            item = QTableWidgetItem(str(xy[1]))
+            table.setItem(i, 2, item)
+
+            item = QTableWidgetItem(str(k))
+            table.setItem(i, 3, item)
+
+        layout = QVBoxLayout()
+        layout.addWidget(table)
+
+        self.setLayout(layout)
+
 
 class RunWidget(QFrame):
     """

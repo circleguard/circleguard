@@ -18,7 +18,7 @@ from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
     ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
     CorrectionCheckW, TimewarpCheckW, AnalyzeW)
 from settings import SingleLinkableSetting, get_setting
-from utils import delete_widget
+from utils import delete_widget, AnalysisResult
 from .visualizer import CGVisualizer
 
 
@@ -390,7 +390,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                 # stripes sliding horizontally) to indicate we're processing
                 # the data
                 self.set_progressbar_signal.emit(0)
-                setting = "message_starting_investigation_visualization" if isinstance(checkW, AnalyzeW) else "message_starting_investigation"
+                setting = "message_starting_investigation_analysis" if isinstance(checkW, AnalyzeW) else "message_starting_investigation"
                 message_starting_investigation = get_setting(setting).format(ts=datetime.now(),
                                 num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
                                 check_type=check_type)
@@ -403,7 +403,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                         self.update_run_status_signal.emit(run.run_id, "Visualizer Error (Multiple maps)")
                         self.set_progressbar_signal.emit(-1)
                         sys.exit(0)
-                    self.q.put(replays)
+                    self.q.put(AnalysisResult(replays))
                 else:
                     self.update_label_signal.emit("Investigating Replays")
                     self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
@@ -497,14 +497,14 @@ class MainTab(SingleLinkableSetting, QFrame):
                 # satisfy its display threshold
                 if message:
                     self.write(message)
-                if not isinstance(result, list): # not a list of loadables
+                if isinstance(result, AnalysisResult):
+                    self.add_result_signal.emit(result)
+                else:
                     if ischeat:
                         QApplication.beep()
                         QApplication.alert(self)
                         # add to Results Tab so it can be played back on demand
                         self.add_result_signal.emit(result)
-                else:
-                    self.add_result_signal.emit(result)
 
         except Empty:
             pass

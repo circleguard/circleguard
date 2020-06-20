@@ -64,3 +64,8 @@ class DebugWidget(QFrame):
             for i in range(layout.count()):
                 self.paintLayout(painter, layout.itemAt(i))
         painter.drawRect(item.geometry())
+
+
+class AnalysisResult():
+    def __init__(self, replays):
+        self.replays = replays

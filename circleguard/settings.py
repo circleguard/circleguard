@@ -130,7 +130,7 @@ DEFAULTS = {
         "message_loading_replays":         "[{ts:%X}] Loading {num_unloaded} of {num_total} replays ({num_previously_loaded} replays previously loaded)",
         "message_ratelimited":             "[{ts:%X}] Ratelimited, waiting for {s} seconds",
         "message_starting_investigation":  "[{ts:%X}] Running {check_type} check",
-        "message_starting_investigation_visualization":  "[{ts:%X}] Running visualization check, you can visualize from the Results tab when finished",
+        "message_starting_investigation_analysis":  "[{ts:%X}] Running Manual Analysis check, you can visualize (and more) from the Results tab when finished",
         "message_finished_investigation":  "[{ts:%X}] Done",
         # it is possible though extremely unusual for the replays to have different map ids. This is good enough
         # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
@@ -320,6 +320,9 @@ CHANGED = {
         "message_steal_found",
         "message_steal_found_display",
         "string_result_steal"
+    ],
+    "2.7.0": [
+        "message_starting_investigation_analysis"
     ]
 }
 
