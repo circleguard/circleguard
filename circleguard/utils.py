@@ -1,7 +1,8 @@
 from pathlib import Path
 import sys
 
-from PyQt5.QtWidgets import QLayout
+from PyQt5.QtWidgets import QLayout, QFrame
+from PyQt5.QtGui import QPainter
 
 # placed above local imports to avoid circular import errors
 ROOT_PATH = Path(__file__).parent.parent.absolute()
@@ -44,3 +45,22 @@ def clear_layout(layout):
             if isinstance(child.widget().layout, QLayout):
                 clear_layout(child.widget().layout)
             child.widget().deleteLater()
+
+
+class DebugWidget(QFrame):
+    """
+    A class intended to be subclassed by widgets when debugging. This draws
+    rectangles around all items of the class's layout.
+    """
+
+    # methods adapted from https://doc.qt.io/qt-5/qlayout.html#itemAt
+    def paintEvent(self, paintEvent):
+        painter = QPainter(self)
+        self.paintLayout(painter, self.layout)
+
+    def paintLayout(self, painter, item):
+        layout = item.layout()
+        if layout:
+            for i in range(layout.count()):
+                self.paintLayout(painter, layout.itemAt(i))
+        painter.drawRect(item.geometry())
