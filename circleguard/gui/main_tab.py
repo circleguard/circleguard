@@ -34,8 +34,8 @@ class MainTab(SingleLinkableSetting, QFrame):
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
-    LOADABLES_COMBOBOX_REGISTRY = ["Map Replay", "Local Replay", "Map", "User", "All Map Replays by User"]
-    CHECKS_COMBOBOX_REGISTRY = ["Replay Stealing/Remodding", "Relax", "Aim Correction", "Timewarp", "Visualize"]
+    LOADABLES_COMBOBOX_REGISTRY = ["Add a Loadable", "+ Map Replay", "+ Local Replay", "+ Map", "+ User", "+ All User Replays on Map"]
+    CHECKS_COMBOBOX_REGISTRY = ["Add a Check", "+ Replay Stealing", "+ Relax", "+ Aim Correction", "+ Timewarp", "+ Visualize"]
 
     def __init__(self):
         QFrame.__init__(self)
@@ -47,15 +47,13 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.loadables_combobox.setInsertPolicy(QComboBox.NoInsert)
         for loadable in MainTab.LOADABLES_COMBOBOX_REGISTRY:
             self.loadables_combobox.addItem(loadable, loadable)
-        self.loadables_button = QPushButton("Add", self)
-        self.loadables_button.clicked.connect(self.add_loadable)
+        self.loadables_combobox.activated.connect(self.add_loadable)
 
         self.checks_combobox = QComboBox(self)
         self.checks_combobox.setInsertPolicy(QComboBox.NoInsert)
         for check in MainTab.CHECKS_COMBOBOX_REGISTRY:
             self.checks_combobox.addItem(check, check)
-        self.checks_button = QPushButton("Add", self)
-        self.checks_button.clicked.connect(self.add_check)
+        self.checks_combobox.activated.connect(self.add_check)
 
         self.loadables_scrollarea = QScrollArea(self)
         self.loadables_scrollarea.setWidget(ScrollableLoadablesWidget())
@@ -91,10 +89,8 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.on_setting_changed("api_key", get_setting("api_key"))
 
         layout = QGridLayout()
-        layout.addWidget(self.loadables_combobox, 0, 0, 1, 7)
-        layout.addWidget(self.loadables_button, 0, 7, 1, 1)
-        layout.addWidget(self.checks_combobox, 0, 8, 1, 7)
-        layout.addWidget(self.checks_button, 0, 15, 1, 1)
+        layout.addWidget(self.loadables_combobox, 0, 0, 1, 4)
+        layout.addWidget(self.checks_combobox, 0, 8, 1, 4)
         layout.addWidget(self.loadables_scrollarea, 1, 0, 4, 8)
         layout.addWidget(self.checks_scrollarea, 1, 8, 4, 8)
         layout.addWidget(self.terminal, 5, 0, 2, 16)
@@ -132,32 +128,40 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.checks.remove(check)
 
     def add_loadable(self):
+        # don't do anything if they selected the default text
+        if self.loadables_combobox.currentIndex() == 0:
+            return
         button_data = self.loadables_combobox.currentData()
-        if button_data == "Map Replay":
+        # go back to default text
+        self.loadables_combobox.setCurrentIndex(0)
+        if button_data == "+ Map Replay":
             w = ReplayMapW()
-        if button_data == "Local Replay":
+        if button_data == "+ Local Replay":
             w = ReplayPathW()
-        if button_data == "Map":
+        if button_data == "+ Map":
             w = MapW()
-        if button_data == "User":
+        if button_data == "+ User":
             w = UserW()
-        if button_data == "All Map Replays by User":
+        if button_data == "+ All User Replays on Map":
             w = MapUserW()
         w.remove_loadable_signal.connect(self.remove_loadable)
         self.loadables_scrollarea.widget().layout.addWidget(w)
         self.loadables.append(w)
 
     def add_check(self):
+        if self.checks_combobox.currentIndex() == 0:
+            return
         button_data = self.checks_combobox.currentData()
-        if button_data == "Replay Stealing/Remodding":
+        self.checks_combobox.setCurrentIndex(0)
+        if button_data == "+ Replay Stealing":
             w = StealCheckW()
-        if button_data == "Relax":
+        if button_data == "+ Relax":
             w = RelaxCheckW()
-        if button_data == "Aim Correction":
+        if button_data == "+ Aim Correction":
             w = CorrectionCheckW()
-        if button_data == "Timewarp":
+        if button_data == "+ Timewarp":
             w = TimewarpCheckW()
-        if button_data == "Visualize":
+        if button_data == "+ Visualize":
             w = VisualizerW()
         w.remove_check_signal.connect(self.remove_check)
         self.checks_scrollarea.widget().layout.addWidget(w)
