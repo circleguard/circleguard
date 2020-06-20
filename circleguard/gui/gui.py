@@ -25,12 +25,9 @@ from circlevis import BeatmapInfo
 from slider import Library
 
 from utils import resource_path, delete_widget
-from widgets import (InputWidget, ResetSettings, WidgetCombiner,
-                     FolderChooser, Separator, OptionWidget, ButtonWidget,
-                     LoglevelWidget, SliderBoxSetting, BeatmapTest, ResultW, LineEditSetting,
-                     EntryWidget, RunWidget, ScrollableLoadablesWidget, ScrollableChecksWidget,
-                     ReplayMapW, ReplayPathW, MapW, UserW, MapUserW, StealCheckW, RelaxCheckW,
-                     CorrectionCheckW, VisualizerW)
+from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
+                     LoglevelWidget, ButtonWidget, OptionWidget, SliderBoxSetting,
+                     BeatmapTest, LineEditSetting, EntryWidget, RunWidget)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting, SingleLinkableSetting
 from .visualizer import CGVisualizer

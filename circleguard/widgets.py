@@ -331,6 +331,9 @@ class DropArea(QFrame):
         name = data[1]
         if id_ in self.loadable_ids:
             return
+        self.add_loadable(id_, name)
+
+    def add_loadable(self, id_, name):
         self.loadable_ids.append(id_)
         loadable = LoadableInCheck(name + f" (id: {id_})", id_)
         self.layout.addWidget(loadable)
@@ -354,12 +357,18 @@ class DropArea(QFrame):
         self.loadables.remove(loadable)
         self.loadable_ids.remove(loadable.loadable_id)
 
+class SingleDropArea(DropArea):
+    def add_loadable(self, id_, name):
+        print("single add")
+        if len(self.loadables) == 1:
+            return
+        super().add_loadable(id_, name)
 
 class CheckW(QFrame):
     remove_check_signal = pyqtSignal(int) # check id
     ID = 0
 
-    def __init__(self, name, double_drop_area=False):
+    def __init__(self, name, double_drop_area=False, single_loadable_drop_area=False):
         super().__init__()
         CheckW.ID += 1
         # so we get the DropEvent
@@ -393,7 +402,10 @@ class CheckW(QFrame):
             self.layout.addWidget(self.drop_area1, 1, 0, 1, 4)
             self.layout.addWidget(self.drop_area2, 1, 4, 1, 4)
         else:
-            self.drop_area = DropArea()
+            if single_loadable_drop_area:
+                self.drop_area = SingleDropArea()
+            else:
+                self.drop_area = DropArea()
             self.layout.addWidget(self.drop_area, 1, 0, 1, 8)
         self.setLayout(self.layout)
 
@@ -432,9 +444,9 @@ class TimewarpCheckW(CheckW):
     def __init__(self):
         super().__init__("Timewarp Check")
 
-class VisualizerW(CheckW):
+class AnalyzeW(CheckW):
     def __init__(self):
-        super().__init__("Visualize")
+        super().__init__("Manual Analysis", single_loadable_drop_area=True)
 
 
 class DragWidget(QFrame):
