@@ -10,6 +10,11 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit, QM
                              QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint, QMimeData
+# XXX make sure to import matplotlib after pyqt, so it knows to use that and not
+# re-import it.
+from matplotlib.backends.backend_qt5agg import FigureCanvas
+from matplotlib.figure import Figure
+from circleguard import Circleguard, TimewarpResult
 
 from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting, set_setting
 from utils import resource_path, delete_widget
@@ -689,12 +694,50 @@ class ResultW(QFrame):
 
     def action_combobox_activated(self):
         if self.actions_combobox.currentData() == "View Frametime Graph":
-            ...
+            self.frametime_window = FrametimeWindow(self.result, self.replays[0])
+            self.frametime_window.show()
         if self.actions_combobox.currentData() == "View Raw Replay Data":
             self.replay_data_window = ReplayDataWindow(self.replays[0])
             self.replay_data_window.show()
         self.actions_combobox.setCurrentIndex(0)
 
+
+class FrametimeWindow(QMainWindow):
+    def __init__(self, result, replay):
+        super().__init__()
+        self.setWindowTitle("Replay Frametime")
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
+
+        frametime_graph = FrametimeGraph(result, replay)
+        self.setCentralWidget(frametime_graph)
+        self.resize(600, 500)
+
+
+class FrametimeGraph(QFrame):
+    def __init__(self, result, replay):
+        super().__init__()
+
+        frametimes = None
+        if isinstance(result, TimewarpResult):
+            frametimes = result.frametimes
+        else:
+            # just recalulate from circleguard, replay is already loaded so
+            # this should be fast
+            frametimes = self.get_frametimes(replay)
+
+        canvas = FigureCanvas(Figure(figsize=(5, 5)))
+        ax = canvas.figure.subplots()
+        ax.hist(frametimes)
+
+        layout = QVBoxLayout()
+        layout.addWidget(canvas)
+        self.setLayout(layout)
+
+    @classmethod
+    def get_frametimes(self, replay):
+        cg = Circleguard(get_setting("api_key"))
+        result = list(cg.timewarp_check(replay))
+        return result[0].frametimes
 
 class ReplayDataWindow(QMainWindow):
     def __init__(self, replay):
@@ -709,7 +752,6 @@ class ReplayDataWindow(QMainWindow):
 class ReplayDataTable(QFrame):
     def __init__(self, replay):
         super().__init__()
-        self.replay = replay
 
         table = QTableWidget()
         table.setColumnCount(4)
@@ -734,7 +776,6 @@ class ReplayDataTable(QFrame):
 
         layout = QVBoxLayout()
         layout.addWidget(table)
-
         self.setLayout(layout)
 
 
