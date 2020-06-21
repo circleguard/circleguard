@@ -665,8 +665,8 @@ class ResultW(QFrame):
     def setLayoutAnalysis(self):
         self.actions_combobox = QComboBox()
         self.actions_combobox.addItem("More")
-        self.actions_combobox.addItem("View Frametime Graph", "View Frametime Graph")
-        self.actions_combobox.addItem("View Raw Replay Data", "View Raw Replay Data")
+        self.actions_combobox.addItem("View Frametimes", "View Frametimes")
+        self.actions_combobox.addItem("View Replay Data", "View Replay Data")
         self.actions_combobox.setInsertPolicy(QComboBox.NoInsert)
         self.actions_combobox.activated.connect(self.action_combobox_activated)
 
@@ -694,10 +694,10 @@ class ResultW(QFrame):
         self.setLayout(layout)
 
     def action_combobox_activated(self):
-        if self.actions_combobox.currentData() == "View Frametime Graph":
+        if self.actions_combobox.currentData() == "View Frametimes":
             self.frametime_window = FrametimeWindow(self.result, self.replays[0])
             self.frametime_window.show()
-        if self.actions_combobox.currentData() == "View Raw Replay Data":
+        if self.actions_combobox.currentData() == "View Replay Data":
             self.replay_data_window = ReplayDataWindow(self.replays[0])
             self.replay_data_window.show()
         self.actions_combobox.setCurrentIndex(0)
