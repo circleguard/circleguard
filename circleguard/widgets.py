@@ -635,56 +635,57 @@ class ResultW(QFrame):
     Stores the result of a comparison that can be replayed at any time.
     Contains a QLabel, QPushButton (visualize) and QPushButton (copy to clipboard).
     """
+    template_button_pressed_signal = pyqtSignal()
+    visualize_button_pressed_signal = pyqtSignal()
 
     def __init__(self, text, result, replays):
         super().__init__()
         self.result = result
         self.replays = replays
+
         self.label = QLabel(self)
         self.label.setText(text)
+        self.visualize_button = QPushButton(self)
+        self.visualize_button.setText("Visualize")
+        self.visualize_button.clicked.connect(lambda: self.visualize_button_pressed_signal.emit())
 
-        self.button = QPushButton(self)
-        self.button.setText("Visualize")
+        if len(replays) == 1:
+            self.setLayoutAnalysis()
+        # at the moment, this only happens for replay stealing and when
+        # visualizing multiple replays
+        else:
+            self.setLayoutNormal()
 
-        self.button_clipboard = QPushButton(self)
-        self.button_clipboard.setText("Copy Template")
-        self._setLayout()
-
-    def _setLayout(self):
-        self.layout = QGridLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.label, 0, 0, 1, 1)
-        self.layout.addItem(SPACER, 0, 1, 1, 1)
-        self.layout.addWidget(self.button, 0, 2, 1, 1)
-        self.layout.addWidget(self.button_clipboard, 0, 3, 1, 1)
-
-        self.setLayout(self.layout)
-
-class AnalysisResultW(ResultW):
-    def __init__(self, text, result, replays):
-        super().__init__(text, result, replays)
-
-    def _setLayout(self):
-        # don't show anything special with more than one replay (for now)
-        if len(self.replays) > 1:
-            super()._setLayout()
-            return
-
+    def setLayoutAnalysis(self):
         self.actions_combobox = QComboBox()
-        self.actions_combobox.addItem("Analysis")
+        self.actions_combobox.addItem("More")
         self.actions_combobox.addItem("View Frametime Graph", "View Frametime Graph")
         self.actions_combobox.addItem("View Raw Replay Data", "View Raw Replay Data")
         self.actions_combobox.setInsertPolicy(QComboBox.NoInsert)
         self.actions_combobox.activated.connect(self.action_combobox_activated)
 
-        self.layout = QGridLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.label, 0, 0, 1, 4)
-        self.layout.addItem(SPACER, 0, 4, 1, 1)
-        self.layout.addWidget(self.button, 0, 5, 1, 3)
-        self.layout.addWidget(self.actions_combobox, 0, 8, 1, 1)
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.label, 0, 0, 1, 4)
+        layout.addItem(SPACER, 0, 4, 1, 1)
+        layout.addWidget(self.visualize_button, 0, 5, 1, 3)
+        layout.addWidget(self.actions_combobox, 0, 8, 1, 1)
 
-        self.setLayout(self.layout)
+        self.setLayout(layout)
+
+    def setLayoutNormal(self):
+        template_button = QPushButton(self)
+        template_button.setText("Copy Template")
+        template_button.clicked.connect(lambda: self.template_button_pressed_signal.emit())
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.visualize_button, 0, 2, 1, 1)
+        layout.addWidget(template_button, 0, 3, 1, 1)
+
+        self.setLayout(layout)
 
     def action_combobox_activated(self):
         if self.actions_combobox.currentData() == "View Frametime Graph":
