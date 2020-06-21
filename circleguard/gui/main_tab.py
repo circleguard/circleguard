@@ -16,9 +16,9 @@ from circlevis import BeatmapInfo
 
 from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
     ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
-    CorrectionCheckW, TimewarpCheckW, VisualizerW)
+    CorrectionCheckW, TimewarpCheckW, AnalyzeW)
 from settings import SingleLinkableSetting, get_setting
-from utils import delete_widget
+from utils import delete_widget, AnalysisResult
 from .visualizer import CGVisualizer
 
 
@@ -35,7 +35,7 @@ class MainTab(SingleLinkableSetting, QFrame):
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
     LOADABLES_COMBOBOX_REGISTRY = ["Add a Loadable", "+ Map Replay", "+ Local Replay", "+ Map", "+ User", "+ All User Replays on Map"]
-    CHECKS_COMBOBOX_REGISTRY = ["Add a Check", "+ Replay Stealing", "+ Relax", "+ Aim Correction", "+ Timewarp", "+ Visualize"]
+    CHECKS_COMBOBOX_REGISTRY = ["Add a Check", "+ Replay Stealing", "+ Relax", "+ Aim Correction", "+ Timewarp", "+ Manual Analysis"]
 
     def __init__(self):
         QFrame.__init__(self)
@@ -161,8 +161,8 @@ class MainTab(SingleLinkableSetting, QFrame):
             w = CorrectionCheckW()
         if button_data == "+ Timewarp":
             w = TimewarpCheckW()
-        if button_data == "+ Visualize":
-            w = VisualizerW()
+        if button_data == "+ Manual Analysis":
+            w = AnalyzeW()
         w.remove_check_signal.connect(self.remove_check)
         self.checks_scrollarea.widget().layout.addWidget(w)
         self.checks.append(w)
@@ -354,7 +354,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                 if isinstance(checkW, TimewarpCheckW):
                     check_type = "Timewarp"
                     d = Detect.TIMEWARP
-                if isinstance(checkW, VisualizerW):
+                if isinstance(checkW, AnalyzeW):
                     d = Detect(0)  # don't run any detection
                     check_type = "Visualization"
                 # retrieve loadable objects from loadableW ids
@@ -394,12 +394,12 @@ class MainTab(SingleLinkableSetting, QFrame):
                 # stripes sliding horizontally) to indicate we're processing
                 # the data
                 self.set_progressbar_signal.emit(0)
-                setting = "message_starting_investigation_visualization" if isinstance(checkW, VisualizerW) else "message_starting_investigation"
+                setting = "message_starting_investigation_analysis" if isinstance(checkW, AnalyzeW) else "message_starting_investigation"
                 message_starting_investigation = get_setting(setting).format(ts=datetime.now(),
                                 num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
                                 check_type=check_type)
                 self.write_to_terminal_signal.emit(message_starting_investigation)
-                if isinstance(checkW, VisualizerW):
+                if isinstance(checkW, AnalyzeW):
                     map_ids = [r.map_id for r in replays]
                     if len(set(map_ids)) != 1:
                         self.write_to_terminal_signal.emit(f"Visualizer expected replays from a single map, but got multiple {set(map_ids)}. Please use a different Visualizer Object for each map")
@@ -407,7 +407,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                         self.update_run_status_signal.emit(run.run_id, "Visualizer Error (Multiple maps)")
                         self.set_progressbar_signal.emit(-1)
                         sys.exit(0)
-                    self.q.put(replays)
+                    self.q.put(AnalysisResult(replays))
                 else:
                     self.update_label_signal.emit("Investigating Replays")
                     self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
@@ -501,14 +501,14 @@ class MainTab(SingleLinkableSetting, QFrame):
                 # satisfy its display threshold
                 if message:
                     self.write(message)
-                if not isinstance(result, list): # not a list of loadables
+                if isinstance(result, AnalysisResult):
+                    self.add_result_signal.emit(result)
+                else:
                     if ischeat:
                         QApplication.beep()
                         QApplication.alert(self)
                         # add to Results Tab so it can be played back on demand
                         self.add_result_signal.emit(result)
-                else:
-                    self.add_result_signal.emit(result)
 
         except Empty:
             pass

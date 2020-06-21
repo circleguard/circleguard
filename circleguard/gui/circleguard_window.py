@@ -16,7 +16,7 @@ from requests import RequestException
 from settings import LinkableSetting, get_setting, set_setting, overwrite_config
 from widgets import WidgetCombiner, ResultW
 from .gui import MainWindow, DebugWindow
-from utils import resource_path
+from utils import resource_path, AnalysisResult
 from version import __version__
 
 
@@ -233,17 +233,15 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             template_text = get_setting("template_timewarp").format(ts=timestamp, r=result, frametime=result.frametime,
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
             replays = [result.replay]
-        elif isinstance(result, list) and isinstance(result[0], Loadable):  # a list of loadables
-            label_text = get_setting("string_result_visualization").format(ts=timestamp, replay_amount=len(result), map_id=result[0].map_id)
-            replays = result
+        elif isinstance(result, AnalysisResult):
+            label_text = get_setting("string_result_visualization").format(ts=timestamp, replay_amount=len(result.replays), map_id=result.replays[0].map_id)
+            replays = result.replays
+
 
         result_widget = ResultW(label_text, result, replays)
         # set button signal connections (visualize and copy template to clipboard)
-        result_widget.button.clicked.connect(partial(self.main_window.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id, result_widget.result))
-        if template_text:
-            result_widget.button_clipboard.clicked.connect(partial(self.copy_to_clipboard, template_text))
-        else: # hide template button if there is no template
-            result_widget.button_clipboard.hide()
+        result_widget.visualize_button_pressed_signal.connect(partial(self.main_window.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id, result_widget.result))
+        result_widget.template_button_pressed_signal.connect(partial(self.copy_to_clipboard, template_text))
         # remove info text if shown
         if not self.main_window.results_tab.results.info_label.isHidden():
             self.main_window.results_tab.results.info_label.hide()

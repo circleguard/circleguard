@@ -7,9 +7,15 @@ import json
 from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit, QMessageBox,
                              QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
                              QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
-                             QHBoxLayout)
+                             QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint, QMimeData
+# XXX make sure to import matplotlib after pyqt, so it knows to use that and not
+# re-import it.
+# Not sure why pylint doesn't think FigureCanvas exists...
+from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
+from matplotlib.figure import Figure
+from circleguard import Circleguard, TimewarpResult
 
 from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting, set_setting
 from utils import resource_path, delete_widget
@@ -331,6 +337,9 @@ class DropArea(QFrame):
         name = data[1]
         if id_ in self.loadable_ids:
             return
+        self.add_loadable(id_, name)
+
+    def add_loadable(self, id_, name):
         self.loadable_ids.append(id_)
         loadable = LoadableInCheck(name + f" (id: {id_})", id_)
         self.layout.addWidget(loadable)
@@ -354,12 +363,17 @@ class DropArea(QFrame):
         self.loadables.remove(loadable)
         self.loadable_ids.remove(loadable.loadable_id)
 
+class SingleDropArea(DropArea):
+    def add_loadable(self, id_, name):
+        if len(self.loadables) == 1:
+            return
+        super().add_loadable(id_, name)
 
 class CheckW(QFrame):
     remove_check_signal = pyqtSignal(int) # check id
     ID = 0
 
-    def __init__(self, name, double_drop_area=False):
+    def __init__(self, name, double_drop_area=False, single_loadable_drop_area=False):
         super().__init__()
         CheckW.ID += 1
         # so we get the DropEvent
@@ -393,7 +407,10 @@ class CheckW(QFrame):
             self.layout.addWidget(self.drop_area1, 1, 0, 1, 4)
             self.layout.addWidget(self.drop_area2, 1, 4, 1, 4)
         else:
-            self.drop_area = DropArea()
+            if single_loadable_drop_area:
+                self.drop_area = SingleDropArea()
+            else:
+                self.drop_area = DropArea()
             self.layout.addWidget(self.drop_area, 1, 0, 1, 8)
         self.setLayout(self.layout)
 
@@ -432,9 +449,9 @@ class TimewarpCheckW(CheckW):
     def __init__(self):
         super().__init__("Timewarp Check")
 
-class VisualizerW(CheckW):
+class AnalyzeW(CheckW):
     def __init__(self):
-        super().__init__("Visualize")
+        super().__init__("Manual Analysis", single_loadable_drop_area=True)
 
 
 class DragWidget(QFrame):
@@ -619,34 +636,149 @@ class MapUserW(LoadableW):
         self.layout.addWidget(self.span_input, 3, 0, 1, 8)
 
 
-
 class ResultW(QFrame):
     """
     Stores the result of a comparison that can be replayed at any time.
     Contains a QLabel, QPushButton (visualize) and QPushButton (copy to clipboard).
     """
+    template_button_pressed_signal = pyqtSignal()
+    visualize_button_pressed_signal = pyqtSignal()
 
     def __init__(self, text, result, replays):
         super().__init__()
         self.result = result
         self.replays = replays
+
         self.label = QLabel(self)
         self.label.setText(text)
+        self.visualize_button = QPushButton(self)
+        self.visualize_button.setText("Visualize")
+        self.visualize_button.clicked.connect(lambda: self.visualize_button_pressed_signal.emit())
 
-        self.button = QPushButton(self)
-        self.button.setText("Visualize")
+        if len(replays) == 1:
+            self.setLayoutAnalysis()
+        # at the moment, this only happens for replay stealing and when
+        # visualizing multiple replays
+        else:
+            self.setLayoutNormal()
 
-        self.button_clipboard = QPushButton(self)
-        self.button_clipboard.setText("Copy Template")
+    def setLayoutAnalysis(self):
+        self.actions_combobox = QComboBox()
+        self.actions_combobox.addItem("More")
+        self.actions_combobox.addItem("View Frametime Graph", "View Frametime Graph")
+        self.actions_combobox.addItem("View Raw Replay Data", "View Raw Replay Data")
+        self.actions_combobox.setInsertPolicy(QComboBox.NoInsert)
+        self.actions_combobox.activated.connect(self.action_combobox_activated)
 
-        self.layout = QGridLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.label, 0, 0, 1, 1)
-        self.layout.addItem(SPACER, 0, 1, 1, 1)
-        self.layout.addWidget(self.button, 0, 2, 1, 1)
-        self.layout.addWidget(self.button_clipboard, 0, 3, 1, 1)
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.label, 0, 0, 1, 4)
+        layout.addItem(SPACER, 0, 4, 1, 1)
+        layout.addWidget(self.visualize_button, 0, 5, 1, 3)
+        layout.addWidget(self.actions_combobox, 0, 8, 1, 1)
 
-        self.setLayout(self.layout)
+        self.setLayout(layout)
+
+    def setLayoutNormal(self):
+        template_button = QPushButton(self)
+        template_button.setText("Copy Template")
+        template_button.clicked.connect(lambda: self.template_button_pressed_signal.emit())
+
+        layout = QGridLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.label, 0, 0, 1, 1)
+        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addWidget(self.visualize_button, 0, 2, 1, 1)
+        layout.addWidget(template_button, 0, 3, 1, 1)
+
+        self.setLayout(layout)
+
+    def action_combobox_activated(self):
+        if self.actions_combobox.currentData() == "View Frametime Graph":
+            self.frametime_window = FrametimeWindow(self.result, self.replays[0])
+            self.frametime_window.show()
+        if self.actions_combobox.currentData() == "View Raw Replay Data":
+            self.replay_data_window = ReplayDataWindow(self.replays[0])
+            self.replay_data_window.show()
+        self.actions_combobox.setCurrentIndex(0)
+
+
+class FrametimeWindow(QMainWindow):
+    def __init__(self, result, replay):
+        super().__init__()
+        self.setWindowTitle("Replay Frametime")
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
+
+        frametime_graph = FrametimeGraph(result, replay)
+        self.setCentralWidget(frametime_graph)
+        self.resize(600, 500)
+
+
+class FrametimeGraph(QFrame):
+    def __init__(self, result, replay):
+        super().__init__()
+
+        frametimes = None
+        if isinstance(result, TimewarpResult):
+            frametimes = result.frametimes
+        else:
+            # just recalulate from circleguard, replay is already loaded so
+            # this should be fast
+            frametimes = self.get_frametimes(replay)
+
+        canvas = FigureCanvas(Figure(figsize=(5, 5)))
+        ax = canvas.figure.subplots()
+        ax.hist(frametimes)
+
+        layout = QVBoxLayout()
+        layout.addWidget(canvas)
+        self.setLayout(layout)
+
+    @classmethod
+    def get_frametimes(self, replay):
+        cg = Circleguard(get_setting("api_key"))
+        result = list(cg.timewarp_check(replay))
+        return result[0].frametimes
+
+class ReplayDataWindow(QMainWindow):
+    def __init__(self, replay):
+        super().__init__()
+        self.setWindowTitle("Raw Replay Data")
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
+
+        replay_data_table = ReplayDataTable(replay)
+        self.setCentralWidget(replay_data_table)
+        self.resize(500, 700)
+
+class ReplayDataTable(QFrame):
+    def __init__(self, replay):
+        super().__init__()
+
+        table = QTableWidget()
+        table.setColumnCount(4)
+        table.setRowCount(len(replay.t))
+        table.setHorizontalHeaderLabels(["Time (ms)", "x", "y", "keys pressed"])
+        # https://forum.qt.io/topic/82749/how-to-make-qtablewidget-read-only
+        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
+        for i, data in enumerate(zip(replay.t, replay.xy, replay.k)):
+            t, xy, k = data
+            item = QTableWidgetItem(str(t))
+            table.setItem(i, 0, item)
+
+            item = QTableWidgetItem(str(xy[0]))
+            table.setItem(i, 1, item)
+
+            item = QTableWidgetItem(str(xy[1]))
+            table.setItem(i, 2, item)
+
+            item = QTableWidgetItem(str(k))
+            table.setItem(i, 3, item)
+
+        layout = QVBoxLayout()
+        layout.addWidget(table)
+        self.setLayout(layout)
+
 
 class RunWidget(QFrame):
     """
