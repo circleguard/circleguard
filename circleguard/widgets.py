@@ -18,7 +18,7 @@ from matplotlib.figure import Figure
 from circleguard import Circleguard, TimewarpResult
 
 from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting, set_setting
-from utils import resource_path, delete_widget
+from utils import resource_path, delete_widget, AnalysisResult
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
@@ -656,13 +656,13 @@ class ResultW(QFrame):
         self.visualize_button.clicked.connect(lambda: self.visualize_button_pressed_signal.emit())
 
         if len(replays) == 1:
-            self.setLayoutAnalysis()
+            self.set_layout_single()
         # at the moment, this only happens for replay stealing and when
         # visualizing multiple replays
         else:
-            self.setLayoutNormal()
+            self.set_layout_multiple()
 
-    def setLayoutAnalysis(self):
+    def set_layout_single(self):
         self.actions_combobox = QComboBox()
         self.actions_combobox.addItem("More")
         self.actions_combobox.addItem("View Frametimes", "View Frametimes")
@@ -674,22 +674,29 @@ class ResultW(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.label, 0, 0, 1, 4)
         layout.addItem(SPACER, 0, 4, 1, 1)
-        layout.addWidget(self.visualize_button, 0, 5, 1, 3)
-        layout.addWidget(self.actions_combobox, 0, 8, 1, 1)
+        if isinstance(self.result, AnalysisResult):
+            layout.addWidget(self.visualize_button, 0, 5, 1, 3)
+            layout.addWidget(self.actions_combobox, 0, 8, 1, 1)
+        else:
+            template_button = self.new_template_button()
+
+            layout.addWidget(self.visualize_button, 0, 5, 1, 2)
+            layout.addWidget(template_button, 0, 7, 1, 1)
+            layout.addWidget(self.actions_combobox, 0, 8, 1, 1)
 
         self.setLayout(layout)
 
-    def setLayoutNormal(self):
-        template_button = QPushButton(self)
-        template_button.setText("Copy Template")
-        template_button.clicked.connect(lambda: self.template_button_pressed_signal.emit())
-
+    def set_layout_multiple(self):
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.visualize_button, 0, 2, 1, 1)
-        layout.addWidget(template_button, 0, 3, 1, 1)
+        if isinstance(self.result, AnalysisResult):
+            layout.addWidget(self.visualize_button, 0, 2, 1, 2)
+        else:
+            template_button = self.new_template_button()
+            layout.addWidget(self.visualize_button, 0, 2, 1, 1)
+            layout.addWidget(template_button, 0, 3, 1, 1)
 
         self.setLayout(layout)
 
@@ -702,6 +709,11 @@ class ResultW(QFrame):
             self.replay_data_window.show()
         self.actions_combobox.setCurrentIndex(0)
 
+    def new_template_button(self):
+        template_button = QPushButton(self)
+        template_button.setText("Copy Template")
+        template_button.clicked.connect(lambda: self.template_button_pressed_signal.emit())
+        return template_button
 
 class FrametimeWindow(QMainWindow):
     def __init__(self, result, replay):
