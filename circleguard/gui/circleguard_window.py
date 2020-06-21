@@ -237,7 +237,6 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             label_text = get_setting("string_result_visualization").format(ts=timestamp, replay_amount=len(result.replays), map_id=result.replays[0].map_id)
             replays = result.replays
 
-
         result_widget = ResultW(label_text, result, replays)
         # set button signal connections (visualize and copy template to clipboard)
         result_widget.visualize_button_pressed_signal.connect(partial(self.main_window.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id, result_widget.result))
