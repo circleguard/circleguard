@@ -387,7 +387,14 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.write_to_terminal_signal.emit(message_loading_replays)
                 for replay in replays:
                     _check_event(event)
-                    cg.load(replay)
+                    try:
+                        cg.load(replay)
+                    except UnknownAPIException as e:
+                        self.write_to_terminal_signal.emit("osu! api provided an invalid response: " + str(e) +
+                                                           ". The replay " + str(replay) + " has been skipped because of this.")
+                        # the replay very likely (perhaps certainly) didn't get loaded if the above exception fired. just skip it.
+                        replays.remove(replay)
+                        continue
                     self.increment_progressbar_signal.emit(1)
                 c.loaded = True
                 # change progressbar into an undetermined state (animation with
@@ -401,7 +408,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.write_to_terminal_signal.emit(message_starting_investigation)
                 if isinstance(checkW, AnalyzeW):
                     map_ids = [r.map_id for r in replays]
-                    if len(set(map_ids)) != 1:
+                    if len(set(map_ids)) > 1:
                         self.write_to_terminal_signal.emit(f"Visualizer expected replays from a single map, but got multiple {set(map_ids)}. Please use a different Visualizer Object for each map")
                         self.update_label_signal.emit("Visualizer Error (Multiple maps)")
                         self.update_run_status_signal.emit(run.run_id, "Visualizer Error (Multiple maps)")
