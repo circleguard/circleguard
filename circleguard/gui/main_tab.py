@@ -408,7 +408,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.write_to_terminal_signal.emit(message_starting_investigation)
                 if isinstance(checkW, AnalyzeW):
                     map_ids = [r.map_id for r in replays]
-                    if len(set(map_ids)) != 1:
+                    if len(set(map_ids)) > 1:
                         self.write_to_terminal_signal.emit(f"Visualizer expected replays from a single map, but got multiple {set(map_ids)}. Please use a different Visualizer Object for each map")
                         self.update_label_signal.emit("Visualizer Error (Multiple maps)")
                         self.update_run_status_signal.emit(run.run_id, "Visualizer Error (Multiple maps)")
