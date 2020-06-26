@@ -409,9 +409,10 @@ class MainTab(SingleLinkableSetting, QFrame):
                 if isinstance(checkW, AnalyzeW):
                     map_ids = [r.map_id for r in replays]
                     if len(set(map_ids)) > 1:
-                        self.write_to_terminal_signal.emit(f"Visualizer expected replays from a single map, but got multiple {set(map_ids)}. Please use a different Visualizer Object for each map")
-                        self.update_label_signal.emit("Visualizer Error (Multiple maps)")
-                        self.update_run_status_signal.emit(run.run_id, "Visualizer Error (Multiple maps)")
+                        self.write_to_terminal_signal.emit(f"Manual analysis expected replays from a single map, but got replays from maps {set(map_ids)}. "
+                                                            "Please use a different Manual Analysis Check for each map.")
+                        self.update_label_signal.emit("Analysis Error (Multiple maps)")
+                        self.update_run_status_signal.emit(run.run_id, "Analysis Error (Multiple maps)")
                         self.set_progressbar_signal.emit(-1)
                         sys.exit(0)
                     self.q.put(AnalysisResult(replays))
