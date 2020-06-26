@@ -451,7 +451,7 @@ class TimewarpCheckW(CheckW):
 
 class AnalyzeW(CheckW):
     def __init__(self):
-        super().__init__("Manual Analysis", single_loadable_drop_area=True)
+        super().__init__("Manual Analysis")
 
 
 class DragWidget(QFrame):
