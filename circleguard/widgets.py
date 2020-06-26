@@ -13,7 +13,7 @@ from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint
 # XXX make sure to import matplotlib after pyqt, so it knows to use that and not
 # re-import it.
 # Not sure why pylint doesn't think FigureCanvas exists...
-from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
+from matplotlib.backends.backend_qt5agg import FigureCanvas, NavigationToolbar2QT # pylint: disable=no-name-in-module
 from matplotlib.figure import Figure
 from circleguard import Circleguard, TimewarpResult
 
@@ -722,11 +722,16 @@ class FrametimeWindow(QMainWindow):
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
 
         frametime_graph = FrametimeGraph(result, replay)
+        self.addToolBar(NavigationToolbar2QT(frametime_graph.canvas, self))
         self.setCentralWidget(frametime_graph)
         self.resize(600, 500)
 
 
 class FrametimeGraph(QFrame):
+    # for any frametimes larger than this, chuck them into a single bin.
+    # matplotlib can't really handle that many bins otherwise
+    MAX_FRAMETIME = 50
+
     def __init__(self, result, replay):
         super().__init__()
 
@@ -738,13 +743,43 @@ class FrametimeGraph(QFrame):
             # this should be fast
             frametimes = self.get_frametimes(replay)
 
-        canvas = FigureCanvas(Figure(figsize=(5, 5)))
-        ax = canvas.figure.subplots()
-        ax.hist(frametimes)
+        # figsize is in inches for whatever reason lol
+        self.canvas = FigureCanvas(Figure(figsize=(5, 5)))
+
+        self.max_frametime = max(frametimes)
+        if self.max_frametime > self.MAX_FRAMETIME:
+            self.plot_with_break(frametimes)
+        else:
+            self.plot_normal(frametimes)
 
         layout = QVBoxLayout()
-        layout.addWidget(canvas)
+        layout.addWidget(self.canvas)
         self.setLayout(layout)
+
+
+    def plot_normal(self, frametimes):
+        ax = self.canvas.figure.subplots()
+        bins = range(0, self.max_frametime)
+        ax.hist(frametimes, bins)
+
+    # adapted from https://matplotlib.org/examples/pylab_examples/broken_axis.html
+    def plot_with_break(self, frametimes):
+        # gridspec_kw to make outlier plot smaller than the main one. https://stackoverflow.com/a/35881382
+        ax1, ax2 = self.canvas.figure.subplots(1, 2, sharey=True, gridspec_kw={"width_ratios": [3, 1]})
+        ax1.spines["right"].set_visible(False)
+        ax2.spines["left"].set_visible(False)
+
+        ax2.tick_params(left=False)
+
+        low_frametime_truth_arr = frametimes <= self.MAX_FRAMETIME
+        low_frametimes = frametimes[low_frametime_truth_arr]
+        high_frametimes = frametimes[~low_frametime_truth_arr]
+
+        bins = range(0, self.MAX_FRAMETIME)
+        ax1.hist(low_frametimes, bins)
+        # -1 in case high_frametimes has only one frame
+        bins = [min(high_frametimes) - 1, self.max_frametime]
+        ax2.hist(high_frametimes, bins)
 
     @classmethod
     def get_frametimes(self, replay):
