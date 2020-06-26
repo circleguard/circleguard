@@ -387,7 +387,14 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.write_to_terminal_signal.emit(message_loading_replays)
                 for replay in replays:
                     _check_event(event)
-                    cg.load(replay)
+                    try:
+                        cg.load(replay)
+                    except UnknownAPIException as e:
+                        self.write_to_terminal_signal.emit("osu! api provided an invalid response: " + str(e) +
+                                                           ". The replay " + str(replay) + " has been skipped because of this.")
+                        # the replay very likely (perhaps certainly) didn't get loaded if the above exception fired. just skip it.
+                        replays.remove(replay)
+                        continue
                     self.increment_progressbar_signal.emit(1)
                 c.loaded = True
                 # change progressbar into an undetermined state (animation with
