@@ -20,7 +20,7 @@ from circlevis import BeatmapInfo
 from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
     ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
     CorrectionCheckW, TimewarpCheckW, AnalyzeW)
-from settings import SingleLinkableSetting, get_setting
+from settings import SingleLinkableSetting, get_setting, set_setting
 from utils import delete_widget, AnalysisResult
 from .visualizer import CGVisualizer
 
@@ -153,6 +153,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         w.remove_loadable_signal.connect(self.remove_loadable)
         self.loadables_scrollarea.widget().layout.addWidget(w)
         self.loadables.append(w)
+        self.check_drag_loadables_tutorial()
 
     def add_check(self):
         if self.checks_combobox.currentIndex() == 0:
@@ -172,6 +173,22 @@ class MainTab(SingleLinkableSetting, QFrame):
         w.remove_check_signal.connect(self.remove_check)
         self.checks_scrollarea.widget().layout.addWidget(w)
         self.checks.append(w)
+        self.check_drag_loadables_tutorial()
+
+    def check_drag_loadables_tutorial(self):
+        # don't play the message if they don't have both a loadable and a check
+        if len(self.loadables) < 1 or len(self.checks) < 1:
+            return
+        # don't play the message more than once
+        if get_setting("tutorial_drag_loadables_seen"):
+            return
+
+        message_box = QMessageBox()
+        message_box.setText("In order to investigate a Loadable, drag it from "
+            "the left <------- and drop it onto a Check on the right ------>")
+        message_box.exec()
+
+        set_setting("tutorial_drag_loadables_seen", True)
 
     def write(self, message):
         self.terminal.append(str(message).strip())

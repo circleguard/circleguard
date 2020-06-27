@@ -106,6 +106,9 @@ COMMENTS = {
     "Caching": {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
     },
+    "Tutorial": {
+        "section": "Whether you have seen certain tutorial messages or not. These only play once."
+    },
     "Experimental": {
         "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk.",
         "rainbow_accent": "Makes the accent color (defines the color of the highlight around the currently focused widget, among other things) constantly cycle through colors"
@@ -237,6 +240,9 @@ DEFAULTS = {
     "Caching": {
         "caching": True
     },
+    "Tutorial": {
+        "tutorial_drag_loadables_seen": False
+    },
     "Experimental": {
         "rainbow_accent": False
     },
@@ -323,6 +329,9 @@ CHANGED = {
     ],
     "2.7.0": [
         "message_starting_investigation_analysis"
+    ],
+    "2.8.0": [
+        "tutorial_drag_loadables_seen"
     ]
 }
 
