@@ -7,10 +7,12 @@ import time
 from functools import partial
 import logging
 
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
-from circleguard import *
+from PyQt5.QtCore import pyqtSignal, QObject, Qt
+from PyQt5.QtWidgets import QMessageBox, QFrame, QGridLayout, QComboBox, QTextEdit, QScrollArea, QPushButton, QApplication
+from PyQt5.QtGui import QTextCursor
+from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod, UnknownAPIException,
+    NoInfoAvailableException, ReplayMap, Map, User, MapUser, Detect, Check,
+TimewarpResult, RelaxResult, CorrectionResult, StealResult, Loader)
 from slider import Library
 from circlevis import BeatmapInfo
 
