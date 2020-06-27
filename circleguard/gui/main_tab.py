@@ -9,7 +9,7 @@ import logging
 import re
 
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
-from PyQt5.QtWidgets import QMessageBox, QFrame, QGridLayout, QComboBox, QTextEdit, QScrollArea, QPushButton, QApplication
+from PyQt5.QtWidgets import QMessageBox, QFrame, QGridLayout, QComboBox, QTextEdit, QScrollArea, QPushButton, QApplication, QToolTip
 from PyQt5.QtGui import QTextCursor
 from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod, UnknownAPIException,
     NoInfoAvailableException, ReplayMap, Map, User, MapUser, Detect, Check,
@@ -85,7 +85,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         terminal.ensureCursorVisible()
         self.terminal = terminal
 
-        self.run_button = QPushButton()
+        self.run_button = RunButton()
         self.run_button.setText("Run")
         self.run_button.clicked.connect(self.add_circleguard_run)
         # disable button if no api_key is stored
@@ -606,3 +606,12 @@ class Run():
         self.checks = checks
         self.run_id = run_id
         self.event = event
+
+class RunButton(QPushButton):
+
+    def __init__(self):
+        super().__init__()
+
+    def enterEvent(self, event):
+        if not self.isEnabled():
+            QToolTip.showText(event.globalPos(), "You cannot run an investigation until you enter an api key in settings.")
