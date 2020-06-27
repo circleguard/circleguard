@@ -185,7 +185,7 @@ class MainTab(SingleLinkableSetting, QFrame):
 
         message_box = QMessageBox()
         message_box.setText("In order to investigate a Loadable, drag it from "
-            "the left <------- and drop it onto a Check on the right ------>")
+            "the left <------- and drop it onto a Check on the right ------>, then hit run.")
         message_box.exec()
 
         set_setting("tutorial_drag_loadables_seen", True)
