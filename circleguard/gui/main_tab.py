@@ -6,6 +6,7 @@ import math
 import time
 from functools import partial
 import logging
+import re
 
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from PyQt5.QtWidgets import QMessageBox, QFrame, QGridLayout, QComboBox, QTextEdit, QScrollArea, QPushButton, QApplication
@@ -101,6 +102,9 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.setLayout(layout)
 
     def on_setting_changed(self, setting, text):
+        # TODO `setting_value` should be updated automatically by
+        # `LinkableSetting`
+        self.setting_value = text
         self.run_button.setEnabled(text != "")
 
     # am well aware that there's much duplicated code between remove_loadable,
@@ -179,6 +183,17 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.terminal.setTextCursor(cursor)
 
     def add_circleguard_run(self):
+        # osu!api v2 uses a client secret which is still 40 chars long but
+        # includes characters after f, unlike v1's key which is in hex.
+        if re.search("[g-z]", self.setting_value):
+            message_box = QMessageBox()
+            message_box.setTextFormat(Qt.RichText)
+            message_box.setText("Your api key is invalid. You are likely using "
+                    "an api v2 key.\n"
+                    "Please ensure your api key comes from "
+                    "<a href=\"https://osu.ppy.sh/p/api\">https://osu.ppy.sh/p/api</a>.")
+            message_box.exec()
+            return
         checks = self.checks
         if not checks:
             return
