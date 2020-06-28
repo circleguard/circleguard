@@ -489,6 +489,9 @@ class MainTab(SingleLinkableSetting, QFrame):
             self.set_progressbar_signal.emit(-1)
 
         except Exception:
+            # if the error happens before we set the progressbar it stays at
+            # 100%. make sure we reset it here
+            self.set_progressbar_signal.emit(-1)
             log.exception("Error while running circlecore. Please "
                           "report this to the developers through discord or github.\n")
 
