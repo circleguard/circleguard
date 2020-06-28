@@ -139,6 +139,7 @@ DEFAULTS = {
         "message_starting_investigation":  "[{ts:%X}] Running {check_type} check",
         "message_starting_investigation_analysis":  "[{ts:%X}] Running Manual Analysis check, you can visualize (and more) from the Results tab when finished",
         "message_finished_investigation":  "[{ts:%X}] Done",
+        "message_no_cheat_found":           "[{ts:%X}] Found nothing below the set thresholds",
         # it is possible though extremely unusual for the replays to have different map ids. This is good enough
         # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
         "message_steal_found":              "[{ts:%X}] {sim:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {replay1.map_id}",

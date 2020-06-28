@@ -73,6 +73,10 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.write_to_terminal_signal.connect(self.write)
 
         self.q = Queue()
+        # reset at the beginning of every run, used to print something after
+        # every run only if a cheat wasn't found
+        self.show_no_cheat_found = True
+        self.print_results_event = threading.Event()
         self.cg_q = Queue()
         self.helper_thread_running = False
         self.runs = [] # Run objects for canceling runs
@@ -292,6 +296,8 @@ class MainTab(SingleLinkableSetting, QFrame):
     def run_circleguard(self, run):
         self.update_label_signal.emit("Loading Replays")
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
+        # reset every run
+        self.show_no_cheat_found = True
         event = run.event
         try:
             core_cache = get_setting("cache_dir") + "circleguard.db"
@@ -459,6 +465,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.print_results_signal.emit() # flush self.q
 
             self.set_progressbar_signal.emit(-1) # empty progressbar
+            # this event is necessary because `print_results` will set
+            # `show_no_cheat_found`, and since it happens asynchronously we need
+            # to wait for it to finish before checking it. So we clear it here,
+            # then wait for it to get set before proceeding.
+            self.print_results_event.clear()
             # 'flush' self.q so there's no more results left and message_finished_investigation
             # won't print before results from that investigation which looks strange.
             # Signal instead of call to be threadsafe and avoid
@@ -468,6 +479,9 @@ class MainTab(SingleLinkableSetting, QFrame):
             # ```
             # warning
             self.print_results_signal.emit()
+            self.print_results_event.wait()
+            if self.show_no_cheat_found:
+                self.write_to_terminal_signal.emit(get_setting("message_no_cheat_found").format(ts=datetime.now()))
             self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=datetime.now()))
             # prevents an error when a user closes the application. Because
             # we're running inside a new thread, if we don't do this, cg (and)
@@ -542,8 +556,8 @@ class MainTab(SingleLinkableSetting, QFrame):
                         message = get_setting("message_timewarp_found_display").format(ts=ts, r=result, replay=result.replay, frametime=result.frametime,
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
-                # message is None if the result isn't a cheat and doesn't
-                # satisfy its display threshold
+                if message or isinstance(result, AnalysisResult):
+                    self.show_no_cheat_found = False
                 if message:
                     self.write(message)
                 if isinstance(result, AnalysisResult):
@@ -557,6 +571,7 @@ class MainTab(SingleLinkableSetting, QFrame):
 
         except Empty:
             pass
+        self.print_results_event.set()
 
     def visualize(self, replays, beatmap_id, result):
         # only run one instance at a time
