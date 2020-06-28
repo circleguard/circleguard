@@ -26,10 +26,9 @@ class CircleguardWizard(QWizard):
         super().__init__()
         self.setWindowTitle("Wizard")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
-        self.SetupPage = SetupPage()
         self.addPage(IntroPage())
-        self.addPage(self.SetupPage)
         self.addPage(ApiKeyPage())
+        self.addPage(SettingsSetupPage())
         self.addPage(TutorialPageId())
         self.addPage(TutorialPageLoadables())
         self.addPage(TutorialPageLoadableLocal())
@@ -75,7 +74,26 @@ class IntroPage(WizardPage):
         self.setLayout(layout)
 
 
-class SetupPage(WizardPage):
+class ApiKeyPage(WizardPage):
+    def __init__(self):
+        super().__init__()
+        self.setTitle("API Key")
+        label = WizardLabel("<p>Circleguard needs your api key to make requests and download replays. "
+                "<p>If you already have your api key, paste it in the box below. If you don't, go to "
+                "<a href=\"https://old.ppy.sh/p/api\">https://old.ppy.sh/p/api</a>, enter <b>Circleguard</b> "
+                "as your application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
+                "as your application url. Paste the api key you receive into the box below.</p>"
+                "<p>Your api key will be stored locally, and is never sent anywhere but osu! servers.</p>"
+                "<p>If you skip this step, you will not be able to use Circleguard.</p>")
+
+        apikey_widget = LineEditSetting("Api Key", "", "normal", "api_key")
+
+        layout = QGridLayout()
+        layout.addWidget(label, 0, 0, 1, 1)
+        layout.addWidget(apikey_widget, 1, 0, 1, 1)
+        self.setLayout(layout)
+
+class SettingsSetupPage(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Settings")
@@ -94,26 +112,6 @@ class SetupPage(WizardPage):
         layout.addWidget(self.darkmode)
         layout.addWidget(cache_label)
         layout.addWidget(self.caching)
-        self.setLayout(layout)
-
-
-class ApiKeyPage(WizardPage):
-    def __init__(self):
-        super().__init__()
-        self.setTitle("API Key")
-        label = WizardLabel("<p>Circleguard needs your api key to make requests and download replays. "
-                "<p>If you already have your api key, paste it in the box below. If you don't, go to "
-                "<a href=\"https://old.ppy.sh/p/api\">https://old.ppy.sh/p/api</a>, enter <b>Circleguard</b> "
-                "as your application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
-                "as your application url. Paste the api key you receive into the box below.</p>"
-                "<p>Your api key will be stored locally, and is never sent anywhere but osu! servers.</p>"
-                "<p>If you skip this step, you will not be able to use Circleguard.</p>")
-
-        apikey_widget = LineEditSetting("Api Key", "", "normal", "api_key")
-
-        layout = QGridLayout()
-        layout.addWidget(label, 0, 0, 1, 1)
-        layout.addWidget(apikey_widget, 1, 0, 1, 1)
         self.setLayout(layout)
 
 
@@ -136,6 +134,7 @@ class TutorialPageId(WizardPage):
         layout = QVBoxLayout()
         layout.addWidget(label)
         self.setLayout(layout)
+
 
 class TutorialPageLoadables(WizardPage):
     def __init__(self):
@@ -161,6 +160,7 @@ class TutorialPageLoadables(WizardPage):
         layout.addWidget(label2)
         self.setLayout(layout)
 
+
 class TutorialPageLoadableLocal(WizardPage):
     def __init__(self):
         super().__init__()
@@ -175,6 +175,7 @@ class TutorialPageLoadableLocal(WizardPage):
         layout.addWidget(image)
         layout.addWidget(label2)
         self.setLayout(layout)
+
 
 class TutorialPageLoadableMap(WizardPage):
     def __init__(self):
@@ -224,11 +225,12 @@ class TutorialPageLoadableUser(WizardPage):
         layout.addWidget(label2)
         self.setLayout(layout)
 
+
 class TutorialPageLoadableUsersAll(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Tutorial (Loadables - All Map Replays by User)")
-        label = WizardLabel("<p>This Loadable (with quite an unwieldy name — apologies for that) represents all the replays by a User on a Map.</p>")
+        label = WizardLabel("<p>This Loadable represents all the replays by a User on a Map, not just their top score.</p>")
         image = QLabel()
         image.setPixmap(QPixmap(resource_path("wizard/mapuser_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
         label2 = WizardLabel("<p>Again, all fields work similarly to other Loadables. \"all\" in Span is a shorthand way to say you want "
@@ -243,6 +245,7 @@ class TutorialPageLoadableUsersAll(WizardPage):
         layout.addWidget(image)
         layout.addWidget(label2)
         self.setLayout(layout)
+
 
 class TutorialPageChecks(WizardPage):
     def __init__(self):
@@ -302,6 +305,7 @@ class ConclusionPage(WizardPage):
         layout = QVBoxLayout()
         layout.addWidget(label)
         self.setLayout(layout)
+
 
 class WizardLabel(QLabel):
     """

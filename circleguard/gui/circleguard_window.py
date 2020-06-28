@@ -84,8 +84,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         logging.getLogger("circleguard").addHandler(self.file_handler)
         logging.getLogger("ossapi").addHandler(handler)
         logging.getLogger("ossapi").addHandler(self.file_handler)
-        logging.getLogger(__name__).addHandler(handler)
-        logging.getLogger(__name__).addHandler(self.file_handler)
+        logging.getLogger("circleguard_gui").addHandler(handler)
+        logging.getLogger("circleguard_gui").addHandler(self.file_handler)
         # apply setting values on application start
         self.on_setting_changed("log_save", self.setting_values["log_save"])
         self.on_setting_changed("dark_theme", self.setting_values["dark_theme"])

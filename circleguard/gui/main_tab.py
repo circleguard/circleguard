@@ -9,7 +9,7 @@ import logging
 import re
 
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
-from PyQt5.QtWidgets import QMessageBox, QFrame, QGridLayout, QComboBox, QTextEdit, QScrollArea, QPushButton, QApplication
+from PyQt5.QtWidgets import QMessageBox, QFrame, QGridLayout, QComboBox, QTextEdit, QScrollArea, QPushButton, QApplication, QToolTip
 from PyQt5.QtGui import QTextCursor
 from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod, UnknownAPIException,
     NoInfoAvailableException, ReplayMap, Map, User, MapUser, Detect, Check,
@@ -20,12 +20,12 @@ from circlevis import BeatmapInfo
 from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
     ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
     CorrectionCheckW, TimewarpCheckW, AnalyzeW)
-from settings import SingleLinkableSetting, get_setting
+from settings import SingleLinkableSetting, get_setting, set_setting
 from utils import delete_widget, AnalysisResult
 from .visualizer import CGVisualizer
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("circleguard_gui")
 
 class MainTab(SingleLinkableSetting, QFrame):
     set_progressbar_signal = pyqtSignal(int) # max progress
@@ -73,6 +73,10 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.write_to_terminal_signal.connect(self.write)
 
         self.q = Queue()
+        # reset at the beginning of every run, used to print something after
+        # every run only if a cheat wasn't found
+        self.show_no_cheat_found = True
+        self.print_results_event = threading.Event()
         self.cg_q = Queue()
         self.helper_thread_running = False
         self.runs = [] # Run objects for canceling runs
@@ -85,7 +89,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         terminal.ensureCursorVisible()
         self.terminal = terminal
 
-        self.run_button = QPushButton()
+        self.run_button = RunButton()
         self.run_button.setText("Run")
         self.run_button.clicked.connect(self.add_circleguard_run)
         # disable button if no api_key is stored
@@ -153,6 +157,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         w.remove_loadable_signal.connect(self.remove_loadable)
         self.loadables_scrollarea.widget().layout.addWidget(w)
         self.loadables.append(w)
+        self.check_drag_loadables_tutorial()
 
     def add_check(self):
         if self.checks_combobox.currentIndex() == 0:
@@ -172,6 +177,22 @@ class MainTab(SingleLinkableSetting, QFrame):
         w.remove_check_signal.connect(self.remove_check)
         self.checks_scrollarea.widget().layout.addWidget(w)
         self.checks.append(w)
+        self.check_drag_loadables_tutorial()
+
+    def check_drag_loadables_tutorial(self):
+        # don't play the message if they don't have both a loadable and a check
+        if len(self.loadables) < 1 or len(self.checks) < 1:
+            return
+        # don't play the message more than once
+        if get_setting("tutorial_drag_loadables_seen"):
+            return
+
+        message_box = QMessageBox()
+        message_box.setText("In order to investigate a Loadable, drag it from "
+            "the left <------- and drop it onto a Check on the right ------>, then hit run.")
+        message_box.exec()
+
+        set_setting("tutorial_drag_loadables_seen", True)
 
     def write(self, message):
         self.terminal.append(str(message).strip())
@@ -275,6 +296,8 @@ class MainTab(SingleLinkableSetting, QFrame):
     def run_circleguard(self, run):
         self.update_label_signal.emit("Loading Replays")
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
+        # reset every run
+        self.show_no_cheat_found = True
         event = run.event
         try:
             core_cache = get_setting("cache_dir") + "circleguard.db"
@@ -328,16 +351,16 @@ class MainTab(SingleLinkableSetting, QFrame):
                         loadable = ReplayMap(int(loadableW.map_id_input.value()), int(loadableW.user_id_input.value()), mods=mods)
                     if isinstance(loadableW, MapW):
                         mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
-                        # use placeholder text (1-50) if the user inputted span is empty
+                        # use placeholder text (eg 1-50) if the user inputted span is empty
                         span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
-                            span = "1-100"
+                            span = Loader.MAX_MAP_SPAN
                         loadable = Map(int(loadableW.map_id_input.value()), span=span, mods=mods)
                     if isinstance(loadableW, UserW):
                         mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
-                        span=loadableW.span_input.value()
+                        span=loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
-                            span = "1-100"
+                            span = Loader.MAX_USER_SPAN
                         loadable = User(int(loadableW.user_id_input.value()), span=span, mods=mods)
                     if isinstance(loadableW, MapUserW):
                         span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
@@ -442,6 +465,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.print_results_signal.emit() # flush self.q
 
             self.set_progressbar_signal.emit(-1) # empty progressbar
+            # this event is necessary because `print_results` will set
+            # `show_no_cheat_found`, and since it happens asynchronously we need
+            # to wait for it to finish before checking it. So we clear it here,
+            # then wait for it to get set before proceeding.
+            self.print_results_event.clear()
             # 'flush' self.q so there's no more results left and message_finished_investigation
             # won't print before results from that investigation which looks strange.
             # Signal instead of call to be threadsafe and avoid
@@ -451,6 +479,9 @@ class MainTab(SingleLinkableSetting, QFrame):
             # ```
             # warning
             self.print_results_signal.emit()
+            self.print_results_event.wait()
+            if self.show_no_cheat_found:
+                self.write_to_terminal_signal.emit(get_setting("message_no_cheat_found").format(ts=datetime.now()))
             self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=datetime.now()))
             # prevents an error when a user closes the application. Because
             # we're running inside a new thread, if we don't do this, cg (and)
@@ -472,6 +503,9 @@ class MainTab(SingleLinkableSetting, QFrame):
             self.set_progressbar_signal.emit(-1)
 
         except Exception:
+            # if the error happens before we set the progressbar it stays at
+            # 100%. make sure we reset it here
+            self.set_progressbar_signal.emit(-1)
             log.exception("Error while running circlecore. Please "
                           "report this to the developers through discord or github.\n")
 
@@ -522,8 +556,8 @@ class MainTab(SingleLinkableSetting, QFrame):
                         message = get_setting("message_timewarp_found_display").format(ts=ts, r=result, replay=result.replay, frametime=result.frametime,
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
-                # message is None if the result isn't a cheat and doesn't
-                # satisfy its display threshold
+                if message or isinstance(result, AnalysisResult):
+                    self.show_no_cheat_found = False
                 if message:
                     self.write(message)
                 if isinstance(result, AnalysisResult):
@@ -537,6 +571,7 @@ class MainTab(SingleLinkableSetting, QFrame):
 
         except Empty:
             pass
+        self.print_results_event.set()
 
     def visualize(self, replays, beatmap_id, result):
         # only run one instance at a time
@@ -589,3 +624,12 @@ class Run():
         self.checks = checks
         self.run_id = run_id
         self.event = event
+
+class RunButton(QPushButton):
+
+    def __init__(self):
+        super().__init__()
+
+    def enterEvent(self, event):
+        if not self.isEnabled():
+            QToolTip.showText(event.globalPos(), "You cannot run an investigation until you enter an api key in settings.")

@@ -70,6 +70,10 @@ COMMENTS = {
         "config_location": "Where the circelguard.cfg file (this very file) resides",
         "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
     },
+    "Loadables": {
+        "default_span_map": "The default span to use for a Map loadable",
+        "default_span_user": "The default span to use for a User loadable"
+    },
     "Thresholds": {
         "section": "Thresholds for when to store results and when to display results for various types of cheats.\n"
                 "Although possible to set _display settings lower than their respective _cheat setting, it is not advised.",
@@ -106,6 +110,9 @@ COMMENTS = {
     "Caching": {
         "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
     },
+    "Tutorial": {
+        "section": "Whether you have seen certain tutorial messages or not. These only play once."
+    },
     "Experimental": {
         "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk.",
         "rainbow_accent": "Makes the accent color (defines the color of the highlight around the currently focused widget, among other things) constantly cycle through colors"
@@ -132,6 +139,7 @@ DEFAULTS = {
         "message_starting_investigation":  "[{ts:%X}] Running {check_type} check",
         "message_starting_investigation_analysis":  "[{ts:%X}] Running Manual Analysis check, you can visualize (and more) from the Results tab when finished",
         "message_finished_investigation":  "[{ts:%X}] Done",
+        "message_no_cheat_found":           "[{ts:%X}] Found nothing below the set thresholds",
         # it is possible though extremely unusual for the replays to have different map ids. This is good enough
         # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
         "message_steal_found":              "[{ts:%X}] {sim:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {replay1.map_id}",
@@ -140,8 +148,8 @@ DEFAULTS = {
         "message_relax_found_display":      "[{ts:%X}] {ur:.1f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
         "message_correction_found":         "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
         "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
-        "message_timewarp_found":           "[{ts:%X}] {frametime:.1f} avg frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "message_timewarp_found_display":   "[{ts:%X}] {frametime:.1f} avg frametime. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
+        "message_timewarp_found":           "[{ts:%X}] {frametime:.1f} avg cv frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "message_timewarp_found_display":   "[{ts:%X}] {frametime:.1f} avg cv frametime. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
         # have to use a separate message here because we can't loop in ``.format`` strings, can only loop in f strings which only work in a
         # local context and aren't usable for us. Passed as ``snaps=snaps`` in message_correction_found, once formatted. Each snap formats
         # this setting and does a ``"\n".join(snap_message)`` to create ``snaps``.
@@ -187,7 +195,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
                                 "\n\n"
-                                "{frametime:.1f} average frametime according to https://circleguard.dev/")
+                                "{frametime:.1f} cv average frametime according to https://circleguard.dev/")
     },
     "Strings": {
         "string_result_steal":         "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {r1.map_id}",
@@ -210,6 +218,10 @@ DEFAULTS = {
         "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
         "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
         "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
+    },
+    "Loadables": {
+        "default_span_map": "1-50",
+        "default_span_user": ""
     },
     "Thresholds": {
         "steal_max_sim": 18,
@@ -236,6 +248,9 @@ DEFAULTS = {
     },
     "Caching": {
         "caching": True
+    },
+    "Tutorial": {
+        "tutorial_drag_loadables_seen": False
     },
     "Experimental": {
         "rainbow_accent": False
@@ -323,6 +338,12 @@ CHANGED = {
     ],
     "2.7.0": [
         "message_starting_investigation_analysis"
+    ],
+    "2.8.0": [
+        "tutorial_drag_loadables_seen",
+        "template_timewarp",
+        "message_timewarp_found",
+        "message_timewarp_found_display"
     ]
 }
 

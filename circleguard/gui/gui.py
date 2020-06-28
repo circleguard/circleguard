@@ -26,8 +26,8 @@ from slider import Library
 
 from utils import resource_path, delete_widget
 from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
-                     LoglevelWidget, ButtonWidget, OptionWidget, SliderBoxSetting,
-                     BeatmapTest, LineEditSetting, EntryWidget, RunWidget)
+                     LoglevelWidget, ButtonWidget, OptionWidget, SliderBoxMaxInfSetting,
+                     SliderBoxSetting, BeatmapTest, LineEditSetting, EntryWidget, RunWidget)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting, SingleLinkableSetting
 from .visualizer import CGVisualizer
@@ -36,7 +36,7 @@ from wizard import CircleguardWizard
 from version import __version__
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("circleguard_gui")
 
 
 class DebugWindow(QMainWindow):
@@ -230,6 +230,8 @@ class ScrollableSettingsWidget(QFrame):
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
         self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
+        self.default_span_map = LineEditSetting("Map span defaults to", "", "normal", "default_span_map")
+        self.default_span_user = LineEditSetting("User span defaults to", "", "normal", "default_span_user")
 
         self.loglevel = LoglevelWidget("")
 
@@ -243,6 +245,10 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(Separator("General"))
         self.layout.addWidget(self.apikey_widget)
         self.layout.addWidget(self.cache)
+        self.layout.addItem(vert_spacer)
+        self.layout.addWidget(Separator("Loadables"))
+        self.layout.addWidget(self.default_span_user)
+        self.layout.addWidget(self.default_span_map)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Appearance"))
         self.layout.addWidget(self.darkmode)
@@ -350,13 +356,13 @@ class ThresholdsTab(QFrame):
 class ScrollableThresholdsWidget(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
-        steal_max_sim = SliderBoxSetting(self, "Max similarity", "ReplaySteal comparisons that score below this "
+        steal_max_sim = SliderBoxMaxInfSetting(self, "Max similarity", "ReplaySteal comparisons that score below this "
                 "will be stored so you can view them, and printed to the console", "steal_max_sim", 100)
-        steal_max_sim_display = SliderBoxSetting(self, "Max similarity display", "ReplaySteal comparisons that "
+        steal_max_sim_display = SliderBoxMaxInfSetting(self, "Max similarity display", "ReplaySteal comparisons that "
                 "score below this will be printed to the console", "steal_max_sim_display", 100)
-        relax_max_ur = SliderBoxSetting(self, "Max ur", "Replays that have a ur lower than this will be stored "
+        relax_max_ur = SliderBoxMaxInfSetting(self, "Max ur", "Replays that have a ur lower than this will be stored "
                 "so you can view them, and printed to the console", "relax_max_ur", 300)
-        relax_max_ur_display = SliderBoxSetting(self, "Max ur display", "Replays with a ur lower than this "
+        relax_max_ur_display = SliderBoxMaxInfSetting(self, "Max ur display", "Replays with a ur lower than this "
                 "will be printed to the console", "relax_max_ur_display", 300)
         # display options for correction are more confusing than they're worth,
         # especially when we don't have a good mechanism for storing Snaps in
@@ -365,13 +371,13 @@ class ScrollableThresholdsWidget(QFrame):
         correction_max_angle = SliderBoxSetting(self, "Max angle", "Replays with a set of three points "
                 "making an angle less than this (*and* also satisfying correction_min_distance) will be stored so "
                 "you can view them, and printed to the console.", "correction_max_angle", 360)
-        correction_min_distance = SliderBoxSetting(self, "Min distance", "Replays with a set of three points "
+        correction_min_distance = SliderBoxMaxInfSetting(self, "Min distance", "Replays with a set of three points "
                 "where either the distance from AB or BC is greater than this (*and* also satisfying correction_max_angle) "
                 "will be stored so you can view them, and printed to the console.", "correction_min_distance", 100)
 
-        timewarp_max_frametime = SliderBoxSetting(self, "Max frametime", "Replays with an average frametime "
+        timewarp_max_frametime = SliderBoxMaxInfSetting(self, "Max frametime", "Replays with an average frametime "
                 "lower than this will be stored so you can view them, and printed to the console", "timewarp_max_frametime", 50)
-        timewarp_max_frametime_display = SliderBoxSetting(self, "Max frametime display", "Replays with an average frametime "
+        timewarp_max_frametime_display = SliderBoxMaxInfSetting(self, "Max frametime display", "Replays with an average frametime "
                 "lower than this will be printed to the console", "timewarp_max_frametime_display", 50)
 
 

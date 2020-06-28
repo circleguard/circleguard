@@ -13,7 +13,9 @@ from gui.circleguard_window import CircleguardWindow
 from settings import get_setting, set_setting
 from wizard import CircleguardWizard
 
-log = logging.getLogger(__name__)
+# use one logger across all of circleguard. So named to avoid conflict with
+# circlecore's logger.
+log = logging.getLogger("circleguard_gui")
 
 ## dirty hacks below! goal is to make execption handling work with threads
 # save old excepthook
@@ -24,7 +26,7 @@ sys._excepthook = sys.excepthook
 def my_excepthook(exctype, value, tb):
     # call original excepthook before ours
     log.exception("sys.excepthook error\n"
-              "Type: " + str(value) + "\n"
+              "Type: " + str(exctype) + "\n"
               "Value: " + str(value) + "\n"
               "Traceback: " + "".join(traceback.format_tb(tb)) + '\n')
     sys._excepthook(exctype, value, tb)
