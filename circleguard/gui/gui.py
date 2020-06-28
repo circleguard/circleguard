@@ -27,7 +27,7 @@ from slider import Library
 from utils import resource_path, delete_widget
 from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
                      LoglevelWidget, ButtonWidget, OptionWidget, SliderBoxMaxInfSetting,
-                     BeatmapTest, LineEditSetting, EntryWidget, RunWidget)
+                     SliderBoxSetting, BeatmapTest, LineEditSetting, EntryWidget, RunWidget)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting, SingleLinkableSetting
 from .visualizer import CGVisualizer
@@ -368,7 +368,7 @@ class ScrollableThresholdsWidget(QFrame):
         # especially when we don't have a good mechanism for storing Snaps in
         # the Result tab or visualizer support for the Snap timestamps. TODO
         # potentially add back if we can provide good support for them.
-        correction_max_angle = SliderBoxMaxInfSetting(self, "Max angle", "Replays with a set of three points "
+        correction_max_angle = SliderBoxSetting(self, "Max angle", "Replays with a set of three points "
                 "making an angle less than this (*and* also satisfying correction_min_distance) will be stored so "
                 "you can view them, and printed to the console.", "correction_max_angle", 360)
         correction_min_distance = SliderBoxMaxInfSetting(self, "Min distance", "Replays with a set of three points "
