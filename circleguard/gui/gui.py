@@ -230,6 +230,8 @@ class ScrollableSettingsWidget(QFrame):
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
         self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
+        self.default_span_map = LineEditSetting("Map span defaults to", "", "normal", "default_span_map")
+        self.default_span_user = LineEditSetting("User span defaults to", "", "normal", "default_span_user")
 
         self.loglevel = LoglevelWidget("")
 
@@ -243,6 +245,10 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(Separator("General"))
         self.layout.addWidget(self.apikey_widget)
         self.layout.addWidget(self.cache)
+        self.layout.addItem(vert_spacer)
+        self.layout.addWidget(Separator("Loadables"))
+        self.layout.addWidget(self.default_span_user)
+        self.layout.addWidget(self.default_span_map)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Appearance"))
         self.layout.addWidget(self.darkmode)

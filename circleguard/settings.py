@@ -70,6 +70,10 @@ COMMENTS = {
         "config_location": "Where the circelguard.cfg file (this very file) resides",
         "log_dir": "Where to write logs. We currently use a single log file (circleguard.log), but the setting is a directory to allow for future expansion"
     },
+    "Loadables": {
+        "default_span_map": "The default span to use for a Map loadable",
+        "default_span_user": "The default span to use for a User loadable"
+    },
     "Thresholds": {
         "section": "Thresholds for when to store results and when to display results for various types of cheats.\n"
                 "Although possible to set _display settings lower than their respective _cheat setting, it is not advised.",
@@ -213,6 +217,10 @@ DEFAULTS = {
         "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
         "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
         "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
+    },
+    "Loadables": {
+        "default_span_map": "1-50",
+        "default_span_user": ""
     },
     "Thresholds": {
         "steal_max_sim": 18,

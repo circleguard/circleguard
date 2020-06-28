@@ -345,14 +345,14 @@ class MainTab(SingleLinkableSetting, QFrame):
                         loadable = ReplayMap(int(loadableW.map_id_input.value()), int(loadableW.user_id_input.value()), mods=mods)
                     if isinstance(loadableW, MapW):
                         mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
-                        # use placeholder text (1-50) if the user inputted span is empty
+                        # use placeholder text (eg 1-50) if the user inputted span is empty
                         span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = "1-100"
                         loadable = Map(int(loadableW.map_id_input.value()), span=span, mods=mods)
                     if isinstance(loadableW, UserW):
                         mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
-                        span=loadableW.span_input.value()
+                        span=loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = "1-100"
                         loadable = User(int(loadableW.user_id_input.value()), span=span, mods=mods)

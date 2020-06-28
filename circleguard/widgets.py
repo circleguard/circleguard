@@ -599,7 +599,7 @@ class MapW(LoadableW):
 
         self.map_id_input = InputWidget("Map id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
-        self.span_input.field.setPlaceholderText("1-50")
+        self.span_input.field.setPlaceholderText(get_setting("default_span_map"))
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
 
         super().__init__("Map", [self.map_id_input, self.span_input])
@@ -614,6 +614,7 @@ class UserW(LoadableW):
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+        self.span_input.field.setPlaceholderText(get_setting("default_span_user"))
 
         super().__init__("User", [self.user_id_input, self.span_input])
 
