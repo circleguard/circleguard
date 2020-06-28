@@ -25,7 +25,7 @@ from utils import delete_widget, AnalysisResult
 from .visualizer import CGVisualizer
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("circleguard_gui")
 
 class MainTab(SingleLinkableSetting, QFrame):
     set_progressbar_signal = pyqtSignal(int) # max progress

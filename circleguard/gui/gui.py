@@ -36,7 +36,7 @@ from wizard import CircleguardWizard
 from version import __version__
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("circleguard_gui")
 
 
 class DebugWindow(QMainWindow):

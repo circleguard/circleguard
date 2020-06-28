@@ -13,7 +13,9 @@ from gui.circleguard_window import CircleguardWindow
 from settings import get_setting, set_setting
 from wizard import CircleguardWizard
 
-log = logging.getLogger(__name__)
+# use one logger across all of circleguard. So named to avoid conflict with
+# circlecore's logger.
+log = logging.getLogger("circleguard_gui")
 
 ## dirty hacks below! goal is to make execption handling work with threads
 # save old excepthook
