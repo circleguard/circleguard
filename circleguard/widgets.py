@@ -16,6 +16,7 @@ from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint
 from matplotlib.backends.backend_qt5agg import FigureCanvas, NavigationToolbar2QT # pylint: disable=no-name-in-module
 from matplotlib.figure import Figure
 from circleguard import Circleguard, TimewarpResult
+import numpy as np
 
 from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting, set_setting
 from utils import resource_path, delete_widget, AnalysisResult
@@ -889,6 +890,8 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         SingleLinkableSetting.__init__(self, setting)
         QFrame.__init__(self, parent)
 
+        self.max_ = max_
+
         label = QLabel(self)
         label.setText(display)
         label.setToolTip(tooltip)
@@ -897,10 +900,11 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         slider = QSlider(Qt.Horizontal)
         slider.setFocusPolicy(Qt.ClickFocus)
         slider.setRange(0, max_)
-        slider.setValue(self.setting_value)
+        # avoid errors when the setting is 2147483647 aka inf
+        slider.setValue(np.clip(0, max_, self.setting_value))
         self.slider = slider
 
-        spinbox = QSpinBox()
+        spinbox = self.spin_box()
         spinbox.setRange(0, max_)
         spinbox.setSingleStep(1)
         spinbox.setFixedWidth(120)
@@ -923,6 +927,36 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
     def on_setting_changed(self, setting, new_value):
         self.slider.setValue(new_value)
         self.spinbox.setValue(new_value)
+
+    def spin_box(self):
+        """
+        The spinbox to use for this class.
+        """
+        return QSpinBox()
+
+class SliderBoxMaxInfSetting(SliderBoxSetting):
+    """
+    a `SliderBoxSetting` which has special behavior when the slider or spinbox
+    is at its max value - namely that it sets the associated setting to infinity
+    (or an equivalently large value).
+    """
+
+    def spin_box(self):
+        return SpinBoxMaxInf()
+
+class SpinBoxMaxInf(QSpinBox):
+
+    def textFromValue(self, value):
+        if value == self.maximum():
+            return "inf"
+        return super().textFromValue(value)
+
+    def valueFromText(self, text):
+        if text == "inf":
+            # can't use `sys.maxsize` because it overflows qt / c's 32bit int
+            return 2147483647
+        return super().valueFromText(text)
+
 
 class LineEditSetting(SingleLinkableSetting, QFrame):
     """
