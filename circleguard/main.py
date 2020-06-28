@@ -24,7 +24,7 @@ sys._excepthook = sys.excepthook
 def my_excepthook(exctype, value, tb):
     # call original excepthook before ours
     log.exception("sys.excepthook error\n"
-              "Type: " + str(value) + "\n"
+              "Type: " + str(exctype) + "\n"
               "Value: " + str(value) + "\n"
               "Traceback: " + "".join(traceback.format_tb(tb)) + '\n')
     sys._excepthook(exctype, value, tb)
