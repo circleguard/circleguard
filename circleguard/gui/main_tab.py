@@ -348,7 +348,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                         # use placeholder text (eg 1-50) if the user inputted span is empty
                         span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
-                            span = "1-100"
+                            span = Loader.MAX_MAP_SPAN
                         loadable = Map(int(loadableW.map_id_input.value()), span=span, mods=mods)
                     if isinstance(loadableW, UserW):
                         mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
@@ -359,7 +359,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                     if isinstance(loadableW, MapUserW):
                         span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
-                            span = Loader.MAX_MAP_SPAN
+                            span = "1-100"
                         loadable = MapUser(int(loadableW.map_id_input.value()), int(loadableW.user_id_input.value()), span=span)
                     loadableW_id_to_loadable[loadableW.loadable_id] = loadable
                 except ValueError as e:
