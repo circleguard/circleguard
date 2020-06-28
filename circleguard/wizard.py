@@ -230,7 +230,7 @@ class TutorialPageLoadableUsersAll(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Tutorial (Loadables - All Map Replays by User)")
-        label = WizardLabel("<p>This Loadable (with quite an unwieldy name — apologies for that) represents all the replays by a User on a Map.</p>")
+        label = WizardLabel("<p>This Loadable represents all the replays by a User on a Map, not just their top score.</p>")
         image = QLabel()
         image.setPixmap(QPixmap(resource_path("wizard/mapuser_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
         label2 = WizardLabel("<p>Again, all fields work similarly to other Loadables. \"all\" in Span is a shorthand way to say you want "
