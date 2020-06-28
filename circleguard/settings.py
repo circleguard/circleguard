@@ -143,8 +143,8 @@ DEFAULTS = {
         "message_relax_found_display":      "[{ts:%X}] {ur:.1f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
         "message_correction_found":         "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
         "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
-        "message_timewarp_found":           "[{ts:%X}] {frametime:.1f} avg frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "message_timewarp_found_display":   "[{ts:%X}] {frametime:.1f} avg frametime. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
+        "message_timewarp_found":           "[{ts:%X}] {frametime:.1f} avg cv frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "message_timewarp_found_display":   "[{ts:%X}] {frametime:.1f} avg cv frametime. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
         # have to use a separate message here because we can't loop in ``.format`` strings, can only loop in f strings which only work in a
         # local context and aren't usable for us. Passed as ``snaps=snaps`` in message_correction_found, once formatted. Each snap formats
         # this setting and does a ``"\n".join(snap_message)`` to create ``snaps``.
@@ -190,7 +190,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
                                 "\n\n"
-                                "{frametime:.1f} average frametime according to https://circleguard.dev/")
+                                "{frametime:.1f} cv average frametime according to https://circleguard.dev/")
     },
     "Strings": {
         "string_result_steal":         "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {r1.map_id}",
@@ -331,7 +331,10 @@ CHANGED = {
         "message_starting_investigation_analysis"
     ],
     "2.8.0": [
-        "tutorial_drag_loadables_seen"
+        "tutorial_drag_loadables_seen",
+        "template_timewarp",
+        "message_timewarp_found",
+        "message_timewarp_found_display"
     ]
 }
 
