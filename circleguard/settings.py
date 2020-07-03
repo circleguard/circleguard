@@ -242,7 +242,7 @@ DEFAULTS = {
     },
     "Logs": {
         "log_save": True,
-        "log_level": 40, # ERROR
+        "log_level": 30, # ERROR
         "log_output": 1, # TERMINAL
         "log_format": "[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)"
     },
@@ -344,6 +344,9 @@ CHANGED = {
         "template_timewarp",
         "message_timewarp_found",
         "message_timewarp_found_display"
+    ],
+    "2.8.1": [
+        "log_level"
     ]
 }
 
