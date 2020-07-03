@@ -232,11 +232,11 @@ class LoglevelWidget(LinkableSetting, QFrame):
         QFrame.__init__(self)
 
         level_label = QLabel(self)
-        level_label.setText("Debug mode:")
+        level_label.setText("Log Level:")
         level_label.setToolTip(tooltip)
 
         output_label = QLabel(self)
-        output_label.setText("Debug Output:")
+        output_label.setText("Log Output:")
         output_label.setToolTip(tooltip)
 
         level_combobox = QComboBox(self)
