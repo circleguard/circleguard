@@ -7,6 +7,7 @@ import time
 from functools import partial
 import logging
 import re
+from lzma import LZMAError
 
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from PyQt5.QtWidgets import QMessageBox, QFrame, QGridLayout, QComboBox, QTextEdit, QScrollArea, QPushButton, QApplication, QToolTip
@@ -431,8 +432,14 @@ class MainTab(SingleLinkableSetting, QFrame):
                         cg.load(replay)
                     except UnknownAPIException as e:
                         self.write_to_terminal_signal.emit("osu! api provided an invalid response: " + str(e) +
-                                                           ". The replay " + str(replay) + " has been skipped because of this.")
+                                ". The replay " + str(replay) + " has been skipped because of this.")
                         # the replay very likely (perhaps certainly) didn't get loaded if the above exception fired. just skip it.
+                        replays.remove(replay)
+                        continue
+                    except LZMAError as e:
+                        self.write_to_terminal_signal.emit("lzma error while parsing a replay: " + str(e) +
+                                ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
+                                " has been skipped because of this.")
                         replays.remove(replay)
                         continue
                     self.increment_progressbar_signal.emit(1)
