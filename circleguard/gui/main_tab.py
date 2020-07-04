@@ -435,12 +435,22 @@ class MainTab(SingleLinkableSetting, QFrame):
                                 ". The replay " + str(replay) + " has been skipped because of this.")
                         # the replay very likely (perhaps certainly) didn't get loaded if the above exception fired. just skip it.
                         replays.remove(replay)
+                        # check has already been initialized with the replay, remove it here too or cg will try and
+                        # load it again when the check is ran
+                        if replay in c.loadables1:
+                            c.loadables1.remove(replay)
+                        if replay in c.loadables2:
+                            c.loadables2.remove(replay)
                         continue
                     except LZMAError as e:
                         self.write_to_terminal_signal.emit("lzma error while parsing a replay: " + str(e) +
                                 ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
                                 " has been skipped because of this.")
                         replays.remove(replay)
+                        if replay in c.loadables1:
+                            c.loadables1.remove(replay)
+                        if replay in c.loadables2:
+                            c.loadables2.remove(replay)
                         continue
                     self.increment_progressbar_signal.emit(1)
                 c.loaded = True
