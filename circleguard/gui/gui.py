@@ -227,6 +227,10 @@ class ScrollableSettingsWidget(QFrame):
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.darkmode = OptionWidget("Dark mode", "Come join the dark side", "dark_theme")
+        # TODO this should really be a dropdown (combobox), but those are a PITA to add right now. Could be implemented much
+        # cleaner if we had two settings per dropdown, one for the current value and one for the list of options to choose
+        # from. This would clean up `LoglevelWidget` as well (or rather, converted into a generic DropdownSetting).
+        self.display_cv_frametime = OptionWidget("Display cv frametimes instead of ucv in histogram", "", "display_cv_frametimes_histogram")
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
         self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
@@ -245,6 +249,7 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(Separator("General"))
         self.layout.addWidget(self.apikey_widget)
         self.layout.addWidget(self.cache)
+        self.layout.addWidget(self.display_cv_frametime)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Loadables"))
         self.layout.addWidget(self.default_span_user)

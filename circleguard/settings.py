@@ -113,6 +113,10 @@ COMMENTS = {
     "Tutorial": {
         "section": "Whether you have seen certain tutorial messages or not. These only play once."
     },
+    "Misc": {
+        "section": "Settings that don't fit in neatly to other sections.",
+        "display_cv_frametimes_histogram": "If True, displays cv frametimes in the frametime histogram. Otherwise, displays ucv frametimes."
+    },
     "Experimental": {
         "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk.",
         "rainbow_accent": "Makes the accent color (defines the color of the highlight around the currently focused widget, among other things) constantly cycle through colors"
@@ -212,7 +216,6 @@ DEFAULTS = {
         # so type() returns float, since we want to allow float values, not just int
         "default_speed": float(1),
         "speed_options": [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 3.0, 5.0, 10.0]
-
     },
     "Locations": {
         "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
@@ -251,6 +254,9 @@ DEFAULTS = {
     },
     "Tutorial": {
         "tutorial_drag_loadables_seen": False
+    },
+    "Misc": {
+        "display_cv_frametimes_histogram": False
     },
     "Experimental": {
         "rainbow_accent": False
@@ -346,7 +352,8 @@ CHANGED = {
         "message_timewarp_found_display"
     ],
     "2.8.1": [
-        "log_level"
+        "log_level",
+        "display_cv_frametimes_histogram"
     ]
 }
 

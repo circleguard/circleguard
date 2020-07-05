@@ -747,7 +747,8 @@ class FrametimeGraph(QFrame):
 
         # figsize is in inches for whatever reason lol
         self.canvas = FigureCanvas(Figure(figsize=(5, 5)))
-        self.canvas.figure.suptitle("(ucv) Frametime Histogram")
+        self.is_cv = get_setting("display_cv_frametimes_histogram")
+        self.canvas.figure.suptitle(f"({'cv' if self.is_cv else 'ucv'}) Frametime Histogram")
 
         self.max_frametime = max(frametimes)
         if self.max_frametime > self.MAX_FRAMETIME:
@@ -761,8 +762,11 @@ class FrametimeGraph(QFrame):
 
 
     def plot_normal(self, frametimes):
+        frametimes = self.convert_frametimes(frametimes)
         ax = self.canvas.figure.subplots()
-        bins = range(0, self.max_frametime + 1)
+
+        step = 2/3 if self.is_cv else 1
+        bins = np.arange(0, self.convert_statistic(self.max_frametime) + 1, step)
         ax.hist(frametimes, bins)
         ax.set_xlabel("Frametime")
         ax.set_ylabel("Count")
@@ -782,11 +786,31 @@ class FrametimeGraph(QFrame):
         low_frametimes = frametimes[low_frametime_truth_arr]
         high_frametimes = frametimes[~low_frametime_truth_arr]
 
-        bins = range(0, self.MAX_FRAMETIME)
+        low_frametimes = self.convert_frametimes(low_frametimes)
+        high_frametimes = self.convert_frametimes(high_frametimes)
+
+        step = 2/3 if self.is_cv else 1
+        bins = np.arange(0, self.convert_statistic(self.MAX_FRAMETIME) + 1, step)
         ax1.hist(low_frametimes, bins)
         # -1 in case high_frametimes has only one frame
-        bins = [min(high_frametimes) - 1, self.max_frametime + 1]
+        bins = [self.convert_statistic(min(high_frametimes) - 1), self.convert_statistic(self.max_frametime)]
         ax2.hist(high_frametimes, bins)
+
+    # the way we deal with cv / ucv is a mess currently because some things need
+    # to be converted sometimes and not others and I just didn't want to deal
+    # with the headache of abstraction. I'm sure a clean way to do this exists,
+    # but the messy solution will work for now.
+    def convert_frametimes(self, frametimes):
+        if self.is_cv:
+            frametimes = frametimes * (1/1.5)
+        return frametimes
+
+    def convert_statistic(self, statistic):
+        if self.is_cv:
+            statistic = statistic * (1/1.5)
+        return statistic
+
+
 
     @classmethod
     def get_frametimes(self, replay):
