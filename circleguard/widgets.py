@@ -761,7 +761,7 @@ class FrametimeGraph(QFrame):
 
     def plot_normal(self, frametimes):
         ax = self.canvas.figure.subplots()
-        bins = range(0, self.max_frametime)
+        bins = range(0, self.max_frametime + 1)
         ax.hist(frametimes, bins)
 
     # adapted from https://matplotlib.org/examples/pylab_examples/broken_axis.html
