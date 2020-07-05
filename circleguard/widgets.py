@@ -747,6 +747,7 @@ class FrametimeGraph(QFrame):
 
         # figsize is in inches for whatever reason lol
         self.canvas = FigureCanvas(Figure(figsize=(5, 5)))
+        self.canvas.figure.suptitle("(ucv) Frametime Histogram")
 
         self.max_frametime = max(frametimes)
         if self.max_frametime > self.MAX_FRAMETIME:
@@ -763,6 +764,8 @@ class FrametimeGraph(QFrame):
         ax = self.canvas.figure.subplots()
         bins = range(0, self.max_frametime + 1)
         ax.hist(frametimes, bins)
+        ax.set_xlabel("Frametime")
+        ax.set_ylabel("Count")
 
     # adapted from https://matplotlib.org/examples/pylab_examples/broken_axis.html
     def plot_with_break(self, frametimes):
@@ -770,6 +773,8 @@ class FrametimeGraph(QFrame):
         ax1, ax2 = self.canvas.figure.subplots(1, 2, sharey=True, gridspec_kw={"width_ratios": [3, 1]})
         ax1.spines["right"].set_visible(False)
         ax2.spines["left"].set_visible(False)
+        ax1.set_xlabel("Frametime")
+        ax1.set_ylabel("Count")
 
         ax2.tick_params(left=False)
 
