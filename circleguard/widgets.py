@@ -785,7 +785,7 @@ class FrametimeGraph(QFrame):
         bins = range(0, self.MAX_FRAMETIME)
         ax1.hist(low_frametimes, bins)
         # -1 in case high_frametimes has only one frame
-        bins = [min(high_frametimes) - 1, self.max_frametime]
+        bins = [min(high_frametimes) - 1, self.max_frametime + 1]
         ax2.hist(high_frametimes, bins)
 
     @classmethod
