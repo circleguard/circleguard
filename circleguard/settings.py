@@ -115,7 +115,7 @@ COMMENTS = {
     },
     "Misc": {
         "section": "Settings that don't fit in neatly to other sections.",
-        "display_cv_frametimes_histogram": "If True, displays cv frametimes in the frametime histogram. Otherwise, displays ucv frametimes."
+        "show_cv_frametimes_in_histogram": "If True, displays cv frametimes in the frametime histogram. Otherwise, displays ucv frametimes."
     },
     "Experimental": {
         "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk.",
@@ -256,7 +256,7 @@ DEFAULTS = {
         "tutorial_drag_loadables_seen": False
     },
     "Misc": {
-        "display_cv_frametimes_histogram": False
+        "show_cv_frametimes_in_histogram": False
     },
     "Experimental": {
         "rainbow_accent": False
@@ -353,7 +353,7 @@ CHANGED = {
     ],
     "2.8.1": [
         "log_level",
-        "display_cv_frametimes_histogram"
+        "show_cv_frametimes_in_histogram"
     ]
 }
 

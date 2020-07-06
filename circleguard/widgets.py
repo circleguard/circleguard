@@ -15,7 +15,7 @@ from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint
 # Not sure why pylint doesn't think FigureCanvas exists...
 from matplotlib.backends.backend_qt5agg import FigureCanvas, NavigationToolbar2QT # pylint: disable=no-name-in-module
 from matplotlib.figure import Figure
-from circleguard import Circleguard, TimewarpResult
+from circleguard import Circleguard, TimewarpResult, Mod
 import numpy as np
 
 from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting, set_setting
@@ -738,6 +738,8 @@ class FrametimeGraph(QFrame):
         super().__init__()
 
         frametimes = None
+        self.show_cv = get_setting("show_cv_frametimes_in_histogram")
+        self.conversion_factor = self._conversion_factor(replay)
         if isinstance(result, TimewarpResult):
             frametimes = result.frametimes
         else:
@@ -747,8 +749,7 @@ class FrametimeGraph(QFrame):
 
         # figsize is in inches for whatever reason lol
         self.canvas = FigureCanvas(Figure(figsize=(5, 5)))
-        self.is_cv = get_setting("display_cv_frametimes_histogram")
-        self.canvas.figure.suptitle(f"({'cv' if self.is_cv else 'ucv'}) Frametime Histogram")
+        self.canvas.figure.suptitle(f"({'cv' if self.show_cv else 'ucv'}) Frametime Histogram")
 
         self.max_frametime = max(frametimes)
         if self.max_frametime > self.MAX_FRAMETIME:
@@ -762,11 +763,10 @@ class FrametimeGraph(QFrame):
 
 
     def plot_normal(self, frametimes):
-        frametimes = self.convert_frametimes(frametimes)
+        frametimes = self.conversion_factor * frametimes
         ax = self.canvas.figure.subplots()
 
-        step = 2/3 if self.is_cv else 1
-        bins = np.arange(0, self.convert_statistic(self.max_frametime) + 1, step)
+        bins = np.arange(0, (self.conversion_factor * self.max_frametime) + 1, self.conversion_factor)
         ax.hist(frametimes, bins)
         ax.set_xlabel("Frametime")
         ax.set_ylabel("Count")
@@ -786,31 +786,28 @@ class FrametimeGraph(QFrame):
         low_frametimes = frametimes[low_frametime_truth_arr]
         high_frametimes = frametimes[~low_frametime_truth_arr]
 
-        low_frametimes = self.convert_frametimes(low_frametimes)
-        high_frametimes = self.convert_frametimes(high_frametimes)
+        low_frametimes = self.conversion_factor * low_frametimes
+        high_frametimes = self.conversion_factor * high_frametimes
 
-        step = 2/3 if self.is_cv else 1
-        bins = np.arange(0, self.convert_statistic(self.MAX_FRAMETIME) + 1, step)
+        bins = np.arange(0, (self.conversion_factor * self.MAX_FRAMETIME) + 1, self.conversion_factor)
         ax1.hist(low_frametimes, bins)
         # -1 in case high_frametimes has only one frame
-        bins = [self.convert_statistic(min(high_frametimes) - 1), self.convert_statistic(self.max_frametime)]
+        bins = [(self.conversion_factor * min(high_frametimes)) - 1, self.conversion_factor * self.max_frametime]
         ax2.hist(high_frametimes, bins)
 
     # the way we deal with cv / ucv is a mess currently because some things need
     # to be converted sometimes and not others and I just didn't want to deal
     # with the headache of abstraction. I'm sure a clean way to do this exists,
     # but the messy solution will work for now.
-    def convert_frametimes(self, frametimes):
-        if self.is_cv:
-            frametimes = frametimes * (1/1.5)
-        return frametimes
 
-    def convert_statistic(self, statistic):
-        if self.is_cv:
-            statistic = statistic * (1/1.5)
-        return statistic
-
-
+    def _conversion_factor(self, replay):
+        if not self.show_cv:
+            return 1
+        if Mod.DT in replay.mods:
+            return 1 / 1.5
+        if Mod.HT in replay.mods:
+            return 1 / 0.75
+        return 1
 
     @classmethod
     def get_frametimes(self, replay):
