@@ -452,7 +452,8 @@ class MainTab(SingleLinkableSetting, QFrame):
                         if replay in c.loadables2:
                             c.loadables2.remove(replay)
                         continue
-                    self.increment_progressbar_signal.emit(1)
+                    finally:
+                        self.increment_progressbar_signal.emit(1)
                 c.loaded = True
                 # change progressbar into an undetermined state (animation with
                 # stripes sliding horizontally) to indicate we're processing
