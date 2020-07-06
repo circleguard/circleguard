@@ -228,8 +228,8 @@ DEFAULTS = {
         "default_span_user": ""
     },
     "Thresholds": {
-        "steal_max_sim": 18,
-        "steal_max_sim_display": 25,
+        "steal_max_sim": 17,
+        "steal_max_sim_display": 18,
         "relax_max_ur": 50,
         "relax_max_ur_display": 90,
         "correction_max_angle": 10,
