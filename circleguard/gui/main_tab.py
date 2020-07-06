@@ -426,7 +426,9 @@ class MainTab(SingleLinkableSetting, QFrame):
                                 num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
                                 check_type=check_type)
                 self.write_to_terminal_signal.emit(message_loading_replays)
-                for replay in replays:
+                # `[:]` implicitly copies the list, so we don't run into trouble
+                #  when removing elements from it while iterating
+                for replay in replays[:]:
                     _check_event(event)
                     try:
                         cg.load(replay)
