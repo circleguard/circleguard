@@ -206,7 +206,8 @@ DEFAULTS = {
         "string_result_relax":         "[{ts:%x %H:%M}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
         "string_result_correction":    "[{ts:%x %H:%M}] {num_snaps} snaps. {replay.username} +{mods_short_name} on map {replay.map_id}",
         "string_result_timewarp":      "[{ts:%x %H:%M}] {frametime:.1f} avg frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "string_result_visualization": "[{ts:%x %H:%M}] {replay_amount} Replays on map {map_id}"
+        "string_result_visualization": "[{ts:%x %H:%M}] {replay_amount} Replays on map {map_id}",
+        "string_result_visualization_single": "[{ts:%x %H:%M}] {replay.username} +{mods_short_name} on map {replay.map_id}"
     },
     "Visualizer": {
         "visualizer_info": True,
@@ -353,7 +354,8 @@ CHANGED = {
     ],
     "2.8.1": [
         "log_level",
-        "show_cv_frametimes_in_histogram"
+        "show_cv_frametimes_in_histogram",
+        "string_result_visualization_single"
     ]
 }
 

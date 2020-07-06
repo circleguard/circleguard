@@ -234,8 +234,14 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
             replays = [result.replay]
         elif isinstance(result, AnalysisResult):
-            label_text = get_setting("string_result_visualization").format(ts=timestamp, replay_amount=len(result.replays), map_id=result.replays[0].map_id)
             replays = result.replays
+            # special case that occurs often, we can show more info if there's only a single replay
+            if len(replays) == 1:
+                r = replays[0]
+                label_text = get_setting("string_result_visualization_single").format(ts=timestamp, replay=r, mods_short_name=r.mods.short_name(),
+                                        mods_long_name=r.mods.long_name())
+            else:
+                label_text = get_setting("string_result_visualization").format(ts=timestamp, replay_amount=len(result.replays), map_id=result.replays[0].map_id)
 
         result_widget = ResultW(label_text, result, replays)
         # set button signal connections (visualize and copy template to clipboard)
