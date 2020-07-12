@@ -8,6 +8,7 @@ from functools import partial
 import logging
 import re
 from lzma import LZMAError
+import traceback
 
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from PyQt5.QtWidgets import QMessageBox, QFrame, QGridLayout, QComboBox, QTextEdit, QScrollArea, QPushButton, QApplication, QToolTip
@@ -409,12 +410,12 @@ class MainTab(SingleLinkableSetting, QFrame):
                 message_loading_info = get_setting("message_loading_info").format(ts=datetime.now(), check_type=check_type)
                 self.write_to_terminal_signal.emit(message_loading_info)
                 cg.load_info(c)
-                replays = c.all_replays()
+                all_replays = c.all_replays()
                 # don't show "loading 2 replays" if they were already loaded
                 # by a previous check, would be misleading
                 num_unloaded = 0
-                num_total = len(c.all_replays())
-                for r in replays:
+                num_total = len(all_replays)
+                for r in all_replays:
                     if not r.loaded:
                         num_unloaded += 1
                 if num_unloaded != 0:
@@ -426,9 +427,14 @@ class MainTab(SingleLinkableSetting, QFrame):
                                 num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
                                 check_type=check_type)
                 self.write_to_terminal_signal.emit(message_loading_replays)
+                # copy the replays out of the check, we need to be able to remove
+                # on a per replay basis and we can't do that while only accessing
+                # the `Check`s loadables (which could be `ReplayContainer`s).
+                replays1 = c.all_replays1()
+                replays2 = c.all_replays2()
                 # `[:]` implicitly copies the list, so we don't run into trouble
                 #  when removing elements from it while iterating
-                for replay in replays[:]:
+                for replay in all_replays[:]:
                     _check_event(event)
                     try:
                         cg.load(replay)
@@ -436,23 +442,23 @@ class MainTab(SingleLinkableSetting, QFrame):
                         self.write_to_terminal_signal.emit("osu! api provided an invalid response: " + str(e) +
                                 ". The replay " + str(replay) + " has been skipped because of this.")
                         # the replay very likely (perhaps certainly) didn't get loaded if the above exception fired. just skip it.
-                        replays.remove(replay)
+                        all_replays.remove(replay)
                         # check has already been initialized with the replay, remove it here too or cg will try and
                         # load it again when the check is ran
-                        if replay in c.loadables1:
-                            c.loadables1.remove(replay)
-                        if replay in c.loadables2:
-                            c.loadables2.remove(replay)
+                        if replay in replays1:
+                            replays1.remove(replay)
+                        if replay in replays2:
+                            replays2.remove(replay)
                         continue
                     except LZMAError as e:
                         self.write_to_terminal_signal.emit("lzma error while parsing a replay: " + str(e) +
                                 ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
                                 " has been skipped because of this.")
-                        replays.remove(replay)
-                        if replay in c.loadables1:
-                            c.loadables1.remove(replay)
-                        if replay in c.loadables2:
-                            c.loadables2.remove(replay)
+                        all_replays.remove(replay)
+                        if replay in replays1:
+                            replays1.remove(replay)
+                        if replay in replays2:
+                            replays2.remove(replay)
                         continue
                     finally:
                         self.increment_progressbar_signal.emit(1)
@@ -467,7 +473,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                                 check_type=check_type)
                 self.write_to_terminal_signal.emit(message_starting_investigation)
                 if isinstance(checkW, AnalyzeW):
-                    map_ids = [r.map_id for r in replays]
+                    map_ids = [r.map_id for r in all_replays]
                     if len(set(map_ids)) > 1:
                         self.write_to_terminal_signal.emit(f"Manual analysis expected replays from a single map, but got replays from maps {set(map_ids)}. "
                                                             "Please use a different Manual Analysis Check for each map.")
@@ -475,11 +481,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                         self.update_run_status_signal.emit(run.run_id, "Analysis Error (Multiple maps)")
                         self.set_progressbar_signal.emit(-1)
                         sys.exit(0)
-                    self.q.put(AnalysisResult(replays))
+                    self.q.put(AnalysisResult(all_replays))
                 else:
                     self.update_label_signal.emit("Investigating Replays")
                     self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
-                    for result in cg.run(c.loadables1, d, c.loadables2, max_angle, min_distance):
+                    for result in cg.run(replays1, d, replays2, max_angle, min_distance):
                         _check_event(event)
                         self.q.put(result)
                 self.print_results_signal.emit() # flush self.q
