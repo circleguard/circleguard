@@ -460,6 +460,18 @@ class MainTab(SingleLinkableSetting, QFrame):
                         if replay in replays2:
                             replays2.remove(replay)
                         continue
+                    except Exception as e:
+                        # print full traceback here for more debugging info. Don't do it for the previous
+                        # exceptions because the cause of those is well understood, but that's not necessarily
+                        # the case for generic exceptions here.
+                        self.write_to_terminal_signal.emit("error while loading a replay: " + str(e) + "\n" +
+                                traceback.format_exc() +
+                                "The replay " + str(replay) + " has been skipped because of this.")
+                        all_replays.remove(replay)
+                        if replay in replays1:
+                            replays1.remove(replay)
+                        if replay in replays2:
+                            replays2.remove(replay)
                     finally:
                         self.increment_progressbar_signal.emit(1)
                 c.loaded = True
