@@ -375,7 +375,7 @@ FORCE_UPDATE = {
         "show_cv_frametimes_in_histogram",
         "string_result_visualization_single"
     ],
-    "2.8.2": [
+    "2.9.0": [
         "log_output"
     ]
 }
