@@ -274,7 +274,7 @@ DEFAULTS = {
     }
 }
 
-CHANGED = {
+FORCE_UPDATE = {
     "1.1.0": [
         "message_cheater_found",
         "message_no_cheater_found",
@@ -488,11 +488,11 @@ def toggle_setting(name):
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
     last_version = version.parse(last_version.base_version) # remove dev stuff
-    for ver, changed_arr in CHANGED.items():
+    for ver, changed_arr in FORCE_UPDATE.items():
         if last_version < version.parse(ver):
             for setting in changed_arr:
                 if setting not in TYPES:
-                    # happens if the key is in CHANGED but was deleted in a
+                    # happens if the key is in FORCE_UPDATE but was deleted in a
                     # later version, like message_cheater_found.
                     continue
                 set_setting(setting, DEFAULTS[TYPES[setting][1]][setting])
