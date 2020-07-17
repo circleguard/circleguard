@@ -247,7 +247,21 @@ DEFAULTS = {
     "Logs": {
         "log_save": True,
         "log_level": 30, # ERROR
-        "log_output": 1, # TERMINAL
+        "log_level_options": {
+            "TRACE": 5,
+            "DEBUG": 10,
+            "INFO": 20,
+            "WARNING": 30,
+            "ERROR": 40,
+            "CRITICAL": 50
+        },
+        "log_output": "terminal",
+        "log_output_options": {
+            "NONE": "none",
+            "TERMINAL": "terminal",
+            "NEW WINDOW": "new_window",
+            "BOTH": "both"
+        },
         "log_format": "[%(levelname)s] %(asctime)s.%(msecs)04d %(message)s (%(name)s, %(filename)s:%(lineno)d)"
     },
     "Caching": {
@@ -257,7 +271,11 @@ DEFAULTS = {
         "tutorial_drag_loadables_seen": False
     },
     "Misc": {
-        "show_cv_frametimes_in_histogram": False
+        "frametime_graph_display": "cv",
+        "frametime_graph_display_options": {
+            "ucv": "ucv",
+            "cv": "cv"
+        }
     },
     "Experimental": {
         "rainbow_accent": False
@@ -356,6 +374,9 @@ FORCE_UPDATE = {
         "log_level",
         "show_cv_frametimes_in_histogram",
         "string_result_visualization_single"
+    ],
+    "2.8.2": [
+        "log_output"
     ]
 }
 
@@ -517,6 +538,12 @@ def overwrite_with_config_settings():
             elif type_ is list:
                 # config.getlist doesn't exist
                 val = json.loads(config.get(section, k))
+            elif type_ is dict:
+                # config.getdict doesn't exist either, but we also need to
+                # convert the single quote representation (which we get when we
+                # have  strings in the dict) to double quotes, because
+                # `json.loads` wants double quotes
+                val = json.loads(config.get(section, k).replace("'", "\""))
             else:
                 val = config.get(section, k)
             set_setting(k, val)

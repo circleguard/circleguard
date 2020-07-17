@@ -225,66 +225,43 @@ class ButtonWidget(QFrame):
         self.layout.addWidget(self.button, 0, 2, 1, 1)
         self.setLayout(self.layout)
 
-
-class LoglevelWidget(LinkableSetting, QFrame):
-    def __init__(self, tooltip):
-        LinkableSetting.__init__(self, ["log_level", "log_output"])
+class ComboboxSetting(LinkableSetting, QFrame):
+    def __init__(self, label_text, tooltip, setting):
+        setting_options = setting + "_options"
+        LinkableSetting.__init__(self, [setting, setting_options])
         QFrame.__init__(self)
 
-        level_label = QLabel(self)
-        level_label.setText("Log Level:")
-        level_label.setToolTip(tooltip)
+        self.setting = setting
 
-        output_label = QLabel(self)
-        output_label.setText("Log Output:")
-        output_label.setToolTip(tooltip)
+        label = QLabel(self)
+        label.setText(label_text + ":")
+        label.setToolTip(tooltip)
 
-        level_combobox = QComboBox(self)
-        level_combobox.setFixedWidth(120)
-        level_combobox.addItem("CRITICAL", 50)
-        level_combobox.addItem("ERROR", 40)
-        level_combobox.addItem("WARNING", 30)
-        level_combobox.addItem("INFO", 20)
-        level_combobox.addItem("DEBUG", 10)
-        level_combobox.addItem("TRACE", 5)
-        level_combobox.setInsertPolicy(QComboBox.NoInsert)
-        LOG_MAPPING = {50: 0, 40: 1, 30: 2, 20: 3, 10: 4, 5: 5}
-        level_combobox.setCurrentIndex(LOG_MAPPING[self.setting_values["log_level"]])
-        level_combobox.currentIndexChanged.connect(lambda: self.on_setting_changed_from_gui("log_level", level_combobox.currentData()))
-        self.level_combobox = level_combobox
+        combobox = QComboBox(self)
+        combobox.setInsertPolicy(QComboBox.NoInsert)
+        combobox.setMinimumWidth(120)
+        setting_options_dict = self.setting_values[setting_options]
+        for text, value in setting_options_dict.items():
+            combobox.addItem(text, value)
 
-        output_combobox = QComboBox(self)
-        output_combobox.setFixedWidth(120)
-        output_combobox.addItem("NONE")
-        output_combobox.addItem("TERMINAL")
-        output_combobox.addItem("NEW WINDOW")
-        output_combobox.addItem("BOTH")
-        output_combobox.setInsertPolicy(QComboBox.NoInsert)
-        output_combobox.setCurrentIndex(0) # NONE by default
-        output_combobox.setCurrentIndex(self.setting_values["log_output"])
-        output_combobox.currentIndexChanged.connect(lambda val: self.on_setting_changed_from_gui("log_output", val))
-        self.output_combobox = output_combobox
+        # select (in the combobx) the current setting value
+        current_value = self.setting_values[setting]
+        index = list(setting_options_dict.values()).index(current_value)
+        combobox.setCurrentIndex(index)
+
+        combobox.currentIndexChanged.connect(self.selection_changed)
+
+        self.combobox = combobox
 
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(level_label, 0, 0, 1, 1)
+        layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.level_combobox, 0, 2, 1, 3, Qt.AlignRight)
-        layout.addWidget(output_label, 1, 0, 1, 1)
-        layout.addItem(SPACER, 1, 1, 1, 1)
-        layout.addWidget(self.output_combobox, 1, 2, 1, 3, Qt.AlignRight)
-
+        layout.addWidget(combobox, 0, 2, 1, 3, Qt.AlignRight)
         self.setLayout(layout)
 
-    def on_setting_changed(self, setting, value):
-        if setting == "log_level":
-            # combobox doesn't expose items as an iterable :(
-            for i in range(self.level_combobox.count()):
-                if self.level_combobox.itemData(i) == value:
-                    self.level_combobox.setCurrentIndex(i)
-                    break
-        elif setting == "log_output":
-            self.output_combobox.setCurrentIndex(value)
+    def selection_changed(self):
+        self.on_setting_changed_from_gui(self.setting, self.combobox.currentData())
 
 
 class ScrollableLoadablesWidget(QFrame):

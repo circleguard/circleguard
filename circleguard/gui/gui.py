@@ -26,8 +26,9 @@ from slider import Library
 
 from utils import resource_path, delete_widget
 from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
-                     LoglevelWidget, ButtonWidget, OptionWidget, SliderBoxMaxInfSetting,
-                     SliderBoxSetting, BeatmapTest, LineEditSetting, EntryWidget, RunWidget)
+                    ButtonWidget, OptionWidget, SliderBoxMaxInfSetting,
+                     SliderBoxSetting, BeatmapTest, LineEditSetting, EntryWidget, RunWidget,
+                     ComboboxSetting)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting, SingleLinkableSetting
 from .visualizer import CGVisualizer
@@ -230,14 +231,15 @@ class ScrollableSettingsWidget(QFrame):
         # TODO this should really be a dropdown (combobox), but those are a PITA to add right now. Could be implemented much
         # cleaner if we had two settings per dropdown, one for the current value and one for the list of options to choose
         # from. This would clean up `LoglevelWidget` as well (or rather, converted into a generic DropdownSetting).
-        self.show_cv_frametimes = OptionWidget("Show cv frametimes instead of ucv in histogram", "", "show_cv_frametimes_in_histogram")
+        self.show_cv_frametimes = ComboboxSetting("Frametime graph display type", "", "frametime_graph_display")
         self.visualizer_info = OptionWidget("Show Visualizer info", "", "visualizer_info")
         self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
         self.default_span_map = LineEditSetting("Map span defaults to", "", "normal", "default_span_map")
         self.default_span_user = LineEditSetting("User span defaults to", "", "normal", "default_span_user")
 
-        self.loglevel = LoglevelWidget("")
+        self.log_level = ComboboxSetting("Log Level", "", "log_level")
+        self.log_output = ComboboxSetting("Log Output", "", "log_output")
 
         self.run_wizard = ButtonWidget("Run Wizard", "Run", "")
         self.run_wizard.button.clicked.connect(self.show_wizard)
@@ -261,7 +263,8 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(self.visualizer_beatmap)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Debug"))
-        self.layout.addWidget(self.loglevel)
+        self.layout.addWidget(self.log_level)
+        self.layout.addWidget(self.log_output)
         self.layout.addWidget(ResetSettings())
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Dev"))
