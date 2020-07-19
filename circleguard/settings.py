@@ -107,7 +107,7 @@ COMMENTS = {
         "log_format": "What format to use for logging"
     },
     "Caching": {
-        "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_location)"
+        "caching": "Whether to cache downloaded replays to a file (whose path is defined by Locations/cache_dir)"
     },
     "Tutorial": {
         "section": "Whether you have seen certain tutorial messages or not. These only play once."
@@ -635,7 +635,7 @@ def initialize_dirs():
 
 # assemble dict of {key: [type, section], ...} since we have nested dicts in
 # DEFAULTS double list comprehension feels sooo backwards to write
-# eg {"cache_location": [<class "str">, "Locations"], ...}
+# eg {"cache_dir": [<class "str">, "Locations"], ...}
 TYPES = {k:[type(v), section] for section,d in DEFAULTS.items() for k,v in d.items()}
 SETTINGS = QSettings("Circleguard", "Circleguard")
 # see third bullet here https://doc.qt.io/qt-5/qsettings.html#platform-limitations,
