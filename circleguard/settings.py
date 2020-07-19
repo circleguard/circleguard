@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import abc
 import json
 import logging
+from functools import partial
 
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
 from packaging import version
@@ -474,6 +475,15 @@ def get_setting(name):
     if type_ is list:
         val = [float(x) for x in val]
         return val
+    if type_ is dict:
+        # when dicts get stored in qt's settings I don't think order is
+        # preserved, so sort by the order of keys in DEFAULTS.
+        sorted_keys = sorted(val.keys(), key=partial(_index_dict_by_default_dict, name))
+        # sort by the new keys
+        new_val = {}
+        for sorted_key in sorted_keys:
+            new_val[sorted_key] = val[sorted_key]
+        return new_val
     v = type_(val)
     return v
 
@@ -606,8 +616,8 @@ def _index_by_defaults_dict(key):
     }
 
     item1 would have an index in category1 of 0, and item2 would have an index
-    of 1, so item1 gets sorted above item2 (ie _index_bu_defaults_dict(item1))
-    returns 0 and _index_bu_defaults_dict(item2) returns 1.
+    of 1, so item1 gets sorted above item2 (ie _index_by_defaults_dict(item1))
+    returns 0 and _index_by_defaults_dict(item2) returns 1.
 
     Notes
     -----
@@ -623,6 +633,25 @@ def _index_by_defaults_dict(key):
     section = TYPES[key][1]
     keys = DEFAULTS[section].keys()
     # https://stackoverflow.com/a/14539017 for the list cast
+    index = list(keys).index(key)
+    return index
+
+def _index_dict_by_default_dict(setting_key, key):
+    """
+    Returns the index of the key in the dict of the setting of ``setting_key``.
+    The value of ``setting_key`` must be a dict - that is, TYPES[setting_key][0]
+    is a dict.
+
+    Examples
+    --------
+    If ``setting_key`` is eg ``log_output``, ``key`` must then be a key in the
+    dict which has been assigned to the ``log_output`` setting, eg ``WARNING``.
+    The index of this key in the dict is returned.
+    """
+    if setting_key not in TYPES:
+        return 0
+    section = TYPES[setting_key][1]
+    keys = DEFAULTS[section][setting_key].keys()
     index = list(keys).index(key)
     return index
 
