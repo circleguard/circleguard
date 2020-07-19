@@ -148,7 +148,7 @@ class TutorialPageLoadables(WizardPage):
         # SmoothTransformation necessary for half decent image quality
         image.setPixmap(QPixmap(resource_path("wizard/map_replay_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
         label2 = WizardLabel("<p>If you wanted cookiezi's replay on Freedom Dive, for instance you would enter 129891 "
-                " as the Map id and 124493 as the User id.</p>"
+                "as the Map id and 124493 as the User id.</p>"
                 "<p>By default (when Mods is left empty), the highest scoring replay by that user will be used in a Map Replay. "
                 "However, if you specify Mods, the replay with that mod combination will be used instead.<p>"
                 "Mods are specified using a string made up of two letter combinations — enter HDHR for Hidden Hardrock, "
