@@ -34,7 +34,7 @@ class Handler(QObject, logging.Handler):
 class CircleguardWindow(LinkableSetting, QMainWindow):
     def __init__(self, app):
         QMainWindow.__init__(self)
-        LinkableSetting.__init__(self, ["log_save", "dark_theme"])
+        LinkableSetting.__init__(self, ["log_save", "theme"])
         # our QApplication, so we can set the theme from our widgets
         self.app = app
         self.clipboard = QApplication.clipboard()
@@ -88,7 +88,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         logging.getLogger("circleguard_gui").addHandler(self.file_handler)
         # apply setting values on application start
         self.on_setting_changed("log_save", self.setting_values["log_save"])
-        self.on_setting_changed("dark_theme", self.setting_values["dark_theme"])
+        self.on_setting_changed("theme", self.setting_values["theme"])
 
         self.thread = threading.Thread(target=self.run_update_check)
         self.thread.start()
@@ -99,7 +99,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                 self.file_handler.setLevel(51) # same as disabling the handler (CRITICAL=50)
             else:
                 self.file_handler.setLevel(logging.NOTSET) # same as default (passes all records to the attached logger)
-        elif setting == "dark_theme":
+        elif setting == "theme":
             self.switch_theme(new_value)
 
     def tab_right(self):
@@ -280,9 +280,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             self.main_window.main_tab.visualizer.close()
         overwrite_config()
 
-    def switch_theme(self, dark):
+    def switch_theme(self, theme):
         accent = QColor(71, 174, 247)
-        if dark:
+        if theme == "dark":
             dark_p = QPalette()
 
             dark_p.setColor(QPalette.Window, QColor(53, 53, 53))

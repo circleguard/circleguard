@@ -5,7 +5,7 @@ from PyQt5.QtGui import QPixmap, QIcon, QFont, QMovie
 from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
 
 from settings import get_setting, set_setting
-from widgets import OptionWidget, LineEditSetting
+from widgets import OptionWidget, LineEditSetting, ComboboxSetting
 from utils import resource_path
 
 
@@ -98,7 +98,7 @@ class SettingsSetupPage(WizardPage):
         super().__init__()
         self.setTitle("Settings")
         dark_label = WizardLabel("The theme of Circleguard.")
-        self.darkmode = OptionWidget("Dark mode", "", "dark_theme")
+        self.darkmode = ComboboxSetting("Theme", "", "theme")
 
         cache_label = WizardLabel("<br><br>Caching reduces downloading time by storing replays when they are first downloaded. "
                 "We recommend you leave this enabled — replays take up little space. The osu! api ratelimit "

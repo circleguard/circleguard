@@ -88,7 +88,6 @@ COMMENTS = {
     },
     "Appearance": {
         "section": "How Circleguard looks.",
-        "dark_theme": "If True, uses a dark theme for Circleguard",
         "required_style": "The css to apply to a widget if it is required to be filled in to complete an action. This is applied if a required field in a Loadable is empty when you click run, for instance"
     },
     "Logs": {
@@ -240,7 +239,11 @@ DEFAULTS = {
         "timewarp_max_frametime_display": 13
     },
     "Appearance": {
-        "dark_theme": True,
+        "theme": "dark",
+        "theme_options": {
+            "Dark": "dark",
+            "Light": "light"
+        },
         "required_style": "QLineEdit { border: 1px solid red; border-radius: 4px; padding: 2px }\n"
                           "WidgetCombiner { border: 1px solid red; border-radius: 4px; padding: 2px }"
     },
