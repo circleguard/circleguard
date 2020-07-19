@@ -249,7 +249,7 @@ DEFAULTS = {
     },
     "Logs": {
         "log_save": True,
-        "log_level": 30, # ERROR
+        "log_level": 30, # WARNING
         "log_level_options": {
             "TRACE": 5,
             "DEBUG": 10,
