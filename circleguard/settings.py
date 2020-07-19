@@ -460,7 +460,6 @@ class SingleLinkableSetting(LinkableSetting):
 
 
 
-
 def get_setting(name):
     type_ = TYPES[name][0]
     val = SETTINGS.value(name)
