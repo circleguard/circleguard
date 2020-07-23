@@ -134,12 +134,12 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         Message is the string message sent to the io stream
         """
 
-        # TERMINAL / BOTH
-        if get_setting("log_output") in [1, 3]:
+        log_output = get_setting("_log_output")
+        if log_output in ["terminal", "both"]:
             self.main_window.main_tab.write(message)
 
         # NEW WINDOW / BOTH
-        if get_setting("log_output") in [2, 3]:
+        if log_output in ["new_window", "both"]:
             if self.debug_window and self.debug_window.isVisible():
                 self.debug_window.write(message)
             else:
