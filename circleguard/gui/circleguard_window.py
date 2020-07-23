@@ -138,7 +138,6 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         if log_output in ["terminal", "both"]:
             self.main_window.main_tab.write(message)
 
-        # NEW WINDOW / BOTH
         if log_output in ["new_window", "both"]:
             if self.debug_window and self.debug_window.isVisible():
                 self.debug_window.write(message)
