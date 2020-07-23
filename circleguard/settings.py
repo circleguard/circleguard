@@ -144,8 +144,8 @@ DEFAULTS = {
         # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
         "message_steal_found":              "[{ts:%X}] {sim:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {replay1.map_id}",
         "message_steal_found_display":      "[{ts:%X}] {sim:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {replay1.map_id}. Not below threshold",
-        "message_relax_found":              "[{ts:%X}] {ur:.1f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "message_relax_found_display":      "[{ts:%X}] {ur:.1f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
+        "message_relax_found":              "[{ts:%X}] {ur:.2f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "message_relax_found_display":      "[{ts:%X}] {ur:.2f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
         "message_correction_found":         "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
         "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
         "message_timewarp_found":           "[{ts:%X}] {frametime:.1f} avg cv frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
@@ -199,7 +199,7 @@ DEFAULTS = {
     },
     "Strings": {
         "string_result_steal":         "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {r1.map_id}",
-        "string_result_relax":         "[{ts:%x %H:%M}] {ur:.1f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
+        "string_result_relax":         "[{ts:%x %H:%M}] {ur:.2f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
         "string_result_correction":    "[{ts:%x %H:%M}] {num_snaps} snaps. {replay.username} +{mods_short_name} on map {replay.map_id}",
         "string_result_timewarp":      "[{ts:%x %H:%M}] {frametime:.1f} avg frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
         "string_result_visualization": "[{ts:%x %H:%M}] {replay_amount} Replays on map {map_id}",
@@ -382,7 +382,9 @@ FORCE_UPDATE = {
         "string_result_visualization_single"
     ],
     "2.9.0": [
-        "log_output"
+        "message_relax_found",
+        "message_relax_found_display",
+        "string_result_relax"
     ]
 }
 
