@@ -239,7 +239,7 @@ class ScrollableSettingsWidget(QFrame):
         self.default_span_user = LineEditSetting("User span defaults to", "", "normal", "default_span_user")
 
         self.log_level = ComboboxSetting("Log Level", "", "log_level")
-        self.log_output = ComboboxSetting("Log Output", "", "log_output")
+        self.log_output = ComboboxSetting("Log Output", "", "_log_output")
 
         self.run_wizard = ButtonWidget("Run Wizard", "Run", "")
         self.run_wizard.button.clicked.connect(self.show_wizard)

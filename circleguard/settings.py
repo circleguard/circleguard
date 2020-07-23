@@ -100,11 +100,7 @@ COMMENTS = {
                 "Info: 20\n"
                 "Debug: 10\n"
                 "Trace: 5",
-        "log_output": "Where to output logs. This setting has no relation to log_save, so if log_output is 0 and log_save is True, logs will still be written to the log file at the level defined by log_level.\n"
-                "Nowhere: 0\n"
-                "Terminal: 1\n"
-                "Debug Window: 2\n"
-                "Terminal and Debug Window: 3",
+        "_log_output": "Where to output logs. This setting has no relation to log_save, so if _log_output is \"none\" and log_save is True, logs will still be written to the log file at the level defined by log_level",
         "log_format": "What format to use for logging"
     },
     "Caching": {
@@ -259,8 +255,14 @@ DEFAULTS = {
             "ERROR": 40,
             "CRITICAL": 50
         },
-        "log_output": "terminal",
-        "log_output_options": {
+        # we previously had a setting ``log_output`` which stored a string
+        # value. Unfortunately we cannot reuse that setting because if someone
+        # upgrades, writes a dict to ``log_output``, then downgrades, we will
+        # try to convert a dict to a string and crash. The best workaround for
+        # this is to simply avoid changing setting types by using a different
+        # name.
+        "_log_output": "terminal",
+        "_log_output_options": {
             "NONE": "none",
             "TERMINAL": "terminal",
             "NEW WINDOW": "new_window",
@@ -643,8 +645,8 @@ def _index_dict_by_default_dict(setting_key, key):
 
     Examples
     --------
-    If ``setting_key`` is eg ``log_output``, ``key`` must then be a key in the
-    dict which has been assigned to the ``log_output`` setting, eg ``WARNING``.
+    If ``setting_key`` is eg ``_log_output``, ``key`` must then be a key in the
+    dict which has been assigned to the ``_log_output`` setting, eg ``WARNING``.
     The index of this key in the dict is returned.
     """
     if setting_key not in TYPES:
