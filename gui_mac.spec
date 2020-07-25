@@ -52,16 +52,23 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False , icon='./resources/logo/logo_mac.icns')
+          console=False, icon='./resources/logo/logo_mac.icns')
 app = BUNDLE(exe,
-             name='Circleguard.app',
-             icon='./resources/logo/logo_mac.icns',
-             bundle_identifier=None,
-             info_plist={
-              'NSHighResolutionCapable': 'True',
-              'CFBundleShortVersionString': __version__
-             }
-       )
+            name='Circleguard.app',
+            icon='./resources/logo/logo_mac.icns',
+            bundle_identifier=None,
+            info_plist={
+                'NSHighResolutionCapable': 'True',
+                'CFBundleShortVersionString': __version__,
+                # register our ``circleguard://`` scheme
+                "CFBundleIdentifier": "circleguard",
+                "CFBundleURLTypes": [{
+                    "CFBundleURLName": "Circleguard",
+                    "CFBundleURLSchemes": [
+                        "circleguard"
+                    ]
+                }]
+            })
 
 print("Creating zip")
 zipf = zipfile.ZipFile('./Circleguard_osx.app.zip', 'w', zipfile.ZIP_DEFLATED)
