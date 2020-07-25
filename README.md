@@ -15,7 +15,7 @@ Circleguard is a tool to help you catch cheaters. Features include:
 * Unstable Rate (ur) calculation, for relax cheats
 * Finding suspicious movements in replays (called Snaps), for aim correction cheats
 * Frametime analysis, for timewarp cheats
-* viewing the raw replay data (time, position, and keys pressed for each frame) in a formatted table, for very fine-grained analysis
+* Viewing the raw replay data (time, position, and keys pressed for each frame) in a formatted table, for very fine-grained analysis
 
 The replay viewer supports seeking to any timestamp in the replay, slowing down or speeding up time, frame-by-frame movement, and more.
 
