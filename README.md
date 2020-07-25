@@ -52,7 +52,16 @@ Join [our discord](https://discord.gg/VNnkTjm) and ask how you can help, or look
 ## Links
 
 * Discord: <https://discord.gg/VNnkTjm>
+
+Circlecore does most of the heavy lifting for circleguard, such as calculating ur, similarity, frametimes, etc. If you would like to use circlecore in your own project, please see the developer guidance over at its repository:
+
 * Circlecore: <https://github.com/circleguard/circlecore>
+
+The replay viewer is powerful enough that it was split off into its own repository. If you would like to use the replay viewer in your own project, please see the develoer guidance over at its repository:
+
+* Circlevis: <https://github.com/circleguard/circlevis>
+
+Note that the replay viewer is a [Qt](https://doc.qt.io/) widget, and will only work if you are already using the Qt (or [pyqt](https://pypi.org/project/PyQt5/), as we are) GUI framwork.
 
 ## Credits
 
