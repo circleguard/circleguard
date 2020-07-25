@@ -37,11 +37,11 @@ The latest version of circleguard can be found here: <https://github.com/circleg
 
 If you don't trust the downloaded binary, you are more than welcome to build from source yourself. You can validate that the code never sends your api key anywhere by looking at the code in the circleguard and circlecore repositories.
 
-There is a short introduction to the program when you first open it. Everything should be relatively self-explanatory, and if you have any questions, feel free to ask on [our discord](https://discord.gg/VNnkTjm).
+There is a short introduction to the program when you first open it. Everything should be relatively self-explanatory, and if you have any questions, feel free to ask on [the discord](https://discord.gg/VNnkTjm).
 
 ## Building From Source
 
-The gui is bundled into a single program using [pyinstaller](https://pyinstaller.readthedocs.io/en/stable/). You will need to download the source code of this repository and read the pyinstaller [documentation for your specific platform](https://pyinstaller.readthedocs.io/en/stable/requirements.html) - the OS may not be supported, or you may need to install some package for it to work. Run pyinstaller on main.py with the --one-file option to generate an executable. You may find that further tweaking is required depending on your platform - I'm afraid that our journey together ends there, and you must forge ahead on your own. I'll do my best to assist you if you ask in [the discord](https://discord.gg/VNnkTjm).
+The gui is bundled into a single program using [pyinstaller](https://pyinstaller.readthedocs.io/en/stable/). You will need to download the source code of this repository and read the pyinstaller [documentation for your specific platform](https://pyinstaller.readthedocs.io/en/stable/requirements.html) - the OS may not be supported, or you may need to install some package for it to work. Run pyinstaller on main.py with the --one-file option to generate an executable. You may find that further tweaking is required depending on your platform - I'm afraid you'll have to figure it out on your own from there. I'll do my best to assist you if you ask in [the discord](https://discord.gg/VNnkTjm).
 
 If you are building for windows or mac, you can find premade specfiles for easy building. You can run `pyinstaller path-to-specfile` to generate an app for your platform as an alternative to using pyinstaller options.
 
@@ -71,4 +71,4 @@ Note that the replay viewer is a [Qt](https://doc.qt.io/) widget, and will only 
 
 Thanks to [kszlim](https://github.com/kszlim), whose [replay parser](https://github.com/kszlim/osu-replay-parser) formed the basis of [circleparse](https://github.com/circleguard/osu-replay-parser).
 
-Thanks to [Accalix](https://twitter.com/Accalix_) for creating our logo. You can check out more of his work [here](https://accalixgfx.com/index.php).
+Thanks to [Accalix](https://twitter.com/Accalix_) for creating circleguard's logo. You can check out more of his work [here](https://accalixgfx.com/index.php).
