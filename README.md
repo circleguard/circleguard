@@ -1,4 +1,6 @@
 
+<img src="readme_resources/logo.png" alt="Gif Demo" width="200" height="200"/>
+
 [![Latest Version](https://img.shields.io/github/release/circleguard/circleguard?label=Latest%20version)](https://circleguard.dev/download)
 [![GitHub Releases Downloads](https://img.shields.io/github/downloads/circleguard/circleguard/total?label=Downloads)](https://circleguard.dev/download)
 [![CodeFactor](https://www.codefactor.io/repository/github/circleguard/circleguard/badge)](https://www.codefactor.io/repository/github/circleguard/circleguard)
@@ -6,13 +8,18 @@
 
 # Circleguard
 
-Circleguard is a player made and maintained cheat detection tool for osu!. We support investigating for Replay Stealing, Remodding, Relax, and Aim Correction, but Circleguard can also be used as an all-purpose replay viewer.
+Circleguard is a tool to help you catch cheaters. Features include:
 
-<img src="demo/cg_demo.gif" alt="Gif Demo" width="728" height="538"/>
+* An all-purpose replay viewer to look at any replay indepth
+* Replay Stealing / Remodding detection
+* Unstable Rate (ur) calculation, for relax cheats
+* Finding suspicious movements in replays (called Snaps), for aim correction cheats
+* Frametime analysis, for timewarp cheats
+* viewing the raw replay data (time, position, and keys pressed for each frame) in a formatted table, for very fine-grained analysis
 
-Circleguard is the frontend gui, which runs circlecore behind the scenes. If you're looking to integrate circlecore into your own project, you can find more about it at [its repository](https://github.com/circleguard/circlecore).
+Our replay viewer supports seeking to any timestamp in the replay, slowing down or speeding up time, frame-by-frame movement, and more.
 
-If you would like to contribute to circleguard, see [Contributing](#contributing) below.
+<img src="readme_resources/demo.gif" alt="Gif Demo" width="728" height="538"/>
 
 Circleguard is developed and maintained by:
 
@@ -40,9 +47,7 @@ If you are building for windows or mac, we provide premade specfiles for easy bu
 
 ## Contributing
 
-If you would like to contribute to Circleguard, join our discord and ask what you can help with, or take a look at the [open issues for circleguard](https://github.com/circleguard/circleguard/issues) and [circlecore](https://github.com/circleguard/circlecore/issues). We're happy to work with you if you have any questions!
-
-You can also help out by opening issues for bugs or feature requests, which helps us and others keep track of what needs to be done next.
+Join [our discord](https://discord.gg/VNnkTjm) and ask how you can help, or look around for open issues which interest you and tackle those. We welcome PR requests!
 
 ## Links
 
