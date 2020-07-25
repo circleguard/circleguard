@@ -65,7 +65,7 @@ The replay viewer is powerful enough that it was split off into its own reposito
 
 <https://github.com/circleguard/circlevis>
 
-Note that the replay viewer is a [Qt](https://doc.qt.io/) widget, and will only work if you are already using the Qt (or [pyqt](https://pypi.org/project/PyQt5/), as we are) GUI framwork.
+Note that the replay viewer is a [Qt](https://doc.qt.io/) widget, and will only work if you are using the Qt (or [pyqt](https://pypi.org/project/PyQt5/), as we are) GUI framwork.
 
 ## Credits
 
