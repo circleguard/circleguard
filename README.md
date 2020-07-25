@@ -17,7 +17,7 @@ Circleguard is a tool to help you catch cheaters. Features include:
 * Frametime analysis, for timewarp cheats
 * viewing the raw replay data (time, position, and keys pressed for each frame) in a formatted table, for very fine-grained analysis
 
-Our replay viewer supports seeking to any timestamp in the replay, slowing down or speeding up time, frame-by-frame movement, and more.
+The replay viewer supports seeking to any timestamp in the replay, slowing down or speeding up time, frame-by-frame movement, and more.
 
 <img src="readme_resources/demo.gif" alt="Gif Demo" width="728" height="538"/>
 
@@ -33,7 +33,7 @@ With contributions from:
 
 ## Download
 
-The latest version of circleguard can be found here: <https://github.com/circleguard/circleguard/releases/latest>. Download the appropriate binary for your OS - circleguard_win_x64.zip or circleguard_win_x86.zip for Windows, and circleguard_osx.app.zip for Mac OS. Circleguard was previously bundled as an exe for Windows but opened unbearably slowly, so we distribute it as a zip and you can run Circleguard.lnk (found inside the zip) in place of an exe. If you are on another OS such as Linux, you will have to build the app yourself. See [Building From Source](#building-from-source).
+The latest version of circleguard can be found here: <https://github.com/circleguard/circleguard/releases/latest>. Download the appropriate binary for your OS - circleguard_win_x64.zip or circleguard_win_x86.zip for Windows, and circleguard_osx.app.zip for Mac OS. Circleguard was previously bundled as an exe for Windows but opened unbearably slowly, so it is distributed as a zip and you can run Circleguard.lnk (found inside the zip) in place of an exe. If you are on another OS such as Linux, you will have to build the app yourself. See [Building From Source](#building-from-source).
 
 If you don't trust the downloaded binary, you are more than welcome to build from source yourself. You can validate that the code never sends your api key anywhere by looking at the code in the circleguard and circlecore repositories.
 
@@ -41,13 +41,13 @@ There is a short introduction to the program when you first open it. Everything 
 
 ## Building From Source
 
-The gui is bundled into a single program using [pyinstaller](https://pyinstaller.readthedocs.io/en/stable/). You will need to download the source code of this repository and read the pyinstaller [documentation for your specific platform](https://pyinstaller.readthedocs.io/en/stable/requirements.html) - the OS may not be supported, or you may need to install some package for it to work. Run pyinstaller on main.py with the --one-file option to generate an executable. You may find that further tweaking is required depending on your platform - I'm afraid that our journey together ends there, and you must forge ahead on your own. We will do our best to assist you if you ask us in our discord.
+The gui is bundled into a single program using [pyinstaller](https://pyinstaller.readthedocs.io/en/stable/). You will need to download the source code of this repository and read the pyinstaller [documentation for your specific platform](https://pyinstaller.readthedocs.io/en/stable/requirements.html) - the OS may not be supported, or you may need to install some package for it to work. Run pyinstaller on main.py with the --one-file option to generate an executable. You may find that further tweaking is required depending on your platform - I'm afraid that our journey together ends there, and you must forge ahead on your own. I'll do my best to assist you if you ask in [the discord](https://discord.gg/VNnkTjm).
 
-If you are building for windows or mac, we provide premade specfiles for easy building. You can run `pyinstaller path-to-specfile` to generate an app for your platform as an alternative to using pyinstaller options.
+If you are building for windows or mac, you can find premade specfiles for easy building. You can run `pyinstaller path-to-specfile` to generate an app for your platform as an alternative to using pyinstaller options.
 
 ## Contributing
 
-Join [our discord](https://discord.gg/VNnkTjm) and ask how you can help, or look around for open issues which interest you and tackle those. We welcome PR requests!
+Join [our discord](https://discord.gg/VNnkTjm) and ask how you can help, or look around for open issues which interest you and tackle those. PR requests are welcome!
 
 ## Links
 
