@@ -83,8 +83,8 @@ def my_excepthook(exctype, value, tb):
 sys.excepthook = my_excepthook
 
 # sys.excepthook doesn't persist across threads
-# (http://bugs.python.org/issue1230540). This is a hacky workaround that overrides
-# the threading init method to use our excepthook.
+# (http://bugs.python.org/issue1230540). This is a hacky workaround that
+# overrides the threading init method to use our excepthook.
 # https://stackoverflow.com/a/31622038
 threading_init = threading.Thread.__init__
 def init(self, *args, **kwargs):
@@ -99,22 +99,6 @@ def init(self, *args, **kwargs):
     self.run = run_with_except_hook
 threading.Thread.__init__ = init
 
-
-# class URLHandlingApplication(QApplication):
-#     url_scheme_called = pyqtSignal(str) # url
-
-#     def __init__(self):
-#         super().__init__([])
-
-#     def event(self, event):
-#         with open("/Users/tybug/Desktop/a.txt", "w+") as f:
-#             f.write(str(event.type() == QEvent.FileOpen))
-#             f.write(str(event.type()) + "\n")
-#             f.write(str(QEvent.FileOpen))
-#             if event.type() == QEvent.FileOpen:
-#                 f.write(str(event.url))
-#                 self.url_scheme_called.emit(str(event.url))
-#         return super().event(event)
 
 app = QApplication([])
 app.setStyle("Fusion")
