@@ -32,12 +32,18 @@ LOCK_FILE = Path(tempfile.gettempdir()) / "circleguard_lock.lck"
 # we can only register url handling for windows at runtime, for macOS we register
 # in our plist file, which is set in ``gui_mac.spec``.
 if sys.platform == "win32":
-    # https://support.shotgunsoftware.com/hc/en-us/articles/219031308-Launching-applications-using-custom-browser-protocols
-    hkey_settings = QSettings("HKEY_CLASSES_ROOT\\circleguard", QSettings.NativeFormat)
-    hkey_settings.setValue(".", "URL:circleguard Protocol")
-    hkey_settings.setValue("URL Protocol", "")
-    hkey_open_settings = QSettings("HKEY_CLASSES_ROOT\\circleguard\\shell\\open\\command", QSettings.NativeFormat)
-    hkey_open_settings.setValue(".", __file__)
+    # most sources I found sait to modify HKEY_CLASSES_ROOT, but that requires 
+    # admin perms. Apparently that registry is just a merger of two other 
+    # registries, which *don't* require admin persm to write to, so we write
+    # there. See https://www.qtcentre.org/threads/7899-QSettings-HKEY_CLASSES_ROOT-access?s=3c32bd8f5e5300b83765040c2d100fe3&p=42379#post42379 
+    # and https://support.shotgunsoftware.com/hc/en-us/articles/219031308-Launching-applications-using-custom-browser-protocols
+    settings = QSettings("HKEY_CURRENT_USER\\Software\\Classes\\circleguard", QSettings.NativeFormat)
+    settings.setValue(".", "URL:circleguard Protocol")
+    settings.setValue("URL Protocol", "")
+    settings = QSettings("HKEY_CURRENT_USER\\Software\\Classes\\circleguard\\DefaultIcon", QSettings.NativeFormat)
+    settings.setValue(".", "\"C:\\Program Files\\circleguard\\circleguard.exe\"")
+    settings = QSettings("HKEY_CURRENT_USER\\Software\\Classes\\circleguard\\shell\\open\\command", QSettings.NativeFormat)
+    settings.setValue(".", "\"C:\\Program Files\\circleguard\\circleguard.exe\" \"%1\"")
 
 # we lock this file when we start so any circleguard instance knows if another
 # instance is running. If so, we pass it our ``argv`` (which came from a url
@@ -126,9 +132,9 @@ def run_server_socket():
     while True:
         try:
             connection, _ = serversocket.accept()
-        except ConnectionAbortedError:
+        except (ConnectionAbortedError, OSError):
             # happens when we close the serversocket when we quit, just silence
-            # the exception
+            # the exception. Former happens on macos, latter on windows
             return
         # arbitrary "large enough" byte receive size
         data = connection.recv(4096)
