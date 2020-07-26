@@ -5,15 +5,15 @@ in other files.
 import sys
 import threading
 import traceback
-import fcntl
 import tempfile
 from pathlib import Path
 import socket
+import logging
 
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtGui import QDesktopServices
-from PyQt5.QtCore import QObject, QSettings, QEvent, pyqtSignal
-import logging
+from PyQt5.QtCore import QSettings
+import portalocker
+from portalocker.exceptions import LockException
 
 from gui.circleguard_window import CircleguardWindow
 from settings import get_setting, set_setting
@@ -49,8 +49,8 @@ if not LOCK_FILE.exists():
 lock_file = open(LOCK_FILE, "r")
 
 try:
-    fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-except IOError:
+    portalocker.lock(lock_file, portalocker.LOCK_EX | portalocker.LOCK_NB)
+except LockException:
     # lock failed, a circleguard application is already running
     clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     clientsocket.connect(("localhost", SOCKET_PORT))
