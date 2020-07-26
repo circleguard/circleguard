@@ -121,8 +121,10 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
     def url_scheme_called(self, url):
         # url is bytes, so decode back to str
         url = url.decode()
-        print(url)
-        # all urls are of the form circleguard://m=221777&u=12092800&t=10241
+        # windows appends an extra slash even if the original url didn't have 
+        # it, so remove it
+        url = url.strip("/")
+        # all urls are of the form circleguard://m=221777&u=2757689&t=150000
         map_id = re.compile(r"m=(.*?)(&|$)").search(url).group(1)
         user_id = re.compile(r"u=(.*?)(&|$)").search(url).group(1)
         timestamp = int(re.compile(r"t=(.*?)(&|$)").search(url).group(1))

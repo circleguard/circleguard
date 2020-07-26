@@ -9,9 +9,9 @@ import tempfile
 from pathlib import Path
 import socket
 import logging
+import winreg
 
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import QSettings
 import portalocker
 from portalocker.exceptions import LockException
 
@@ -25,25 +25,36 @@ SOCKET_PORT = 4183
 LOCK_FILE = Path(tempfile.gettempdir()) / "circleguard_lock.lck"
 
 ## set up url handling for windows, which implements custom url schemes by
-# launching another instance of the application with the url as an arg. This is
-# insanity. We handle the macOS (sane) implementation with
-# ``URLHandlingApplication``.
+## launching another instance of the application with the url as an arg
 
 # we can only register url handling for windows at runtime, for macOS we register
 # in our plist file, which is set in ``gui_mac.spec``.
-if sys.platform == "win32":
-    # most sources I found sait to modify HKEY_CLASSES_ROOT, but that requires 
+# this is a build-time-only feature I'm afraid, since we can't call an exe at dev
+# time because it hasn't been built yet
+if sys.platform == "win32" and hasattr(sys, "_MEIPASS"):   
+    # we update the location of circleguard.exe every time we run, so if the user
+    # ever moves it we'll still correctly redirect the url scheme event to us.
+    # I have no idea how other (professional) applications handle this, nor
+    # what the proper way to update your url scheme registry is (should it
+    # ever be done?).
+    exe_location = str(Path(sys._MEIPASS) / "circleguard.exe") # pylint: disable=no-member
+    # most sources I found said to modify HKEY_CLASSES_ROOT, but that requires 
     # admin perms. Apparently that registry is just a merger of two other 
     # registries, which *don't* require admin persm to write to, so we write
     # there. See https://www.qtcentre.org/threads/7899-QSettings-HKEY_CLASSES_ROOT-access?s=3c32bd8f5e5300b83765040c2d100fe3&p=42379#post42379 
     # and https://support.shotgunsoftware.com/hc/en-us/articles/219031308-Launching-applications-using-custom-browser-protocols
-    settings = QSettings("HKEY_CURRENT_USER\\Software\\Classes\\circleguard", QSettings.NativeFormat)
-    settings.setValue(".", "URL:circleguard Protocol")
-    settings.setValue("URL Protocol", "")
-    settings = QSettings("HKEY_CURRENT_USER\\Software\\Classes\\circleguard\\DefaultIcon", QSettings.NativeFormat)
-    settings.setValue(".", "\"C:\\Program Files\\circleguard\\circleguard.exe\"")
-    settings = QSettings("HKEY_CURRENT_USER\\Software\\Classes\\circleguard\\shell\\open\\command", QSettings.NativeFormat)
-    settings.setValue(".", "\"C:\\Program Files\\circleguard\\circleguard.exe\" \"%1\"")
+    key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard")
+    # empty string to set (default) value
+    winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "URL:circleguard Protocol",)
+    winreg.SetValueEx(key, "URL Protocol", 0, winreg.REG_SZ, "")
+
+    key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\DefaultIcon")
+    winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location)
+    
+    key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\shell\\open\\command")
+    winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location + " \"%1\"")
+
+
 
 # we lock this file when we start so any circleguard instance knows if another
 # instance is running. If so, we pass it our ``argv`` (which came from a url
