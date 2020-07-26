@@ -639,7 +639,24 @@ class MainTab(SingleLinkableSetting, QFrame):
         if start_at != 0:
             self.visualizer.seek_to(start_at)
             self.visualizer.pause()
-
+    
+    def visualize_from_url(self, result):
+        """
+        called when our url scheme (circleguard://) was entered, giving
+        us a replay to visualize
+        """
+        map_id = result.replays[0].map_id
+        if self.visualizer and self.visualizer.replays and self.visualizer.replays[0].map_id == map_id:
+            # if we're visualizing the same replay that's in the url, just jump
+            # to the new timestamp
+            self.visualizer.seek_to(result.timestamp)
+            # pause even if we're currently playing
+            self.visualizer.force_pause()
+            return
+        # otherwise visualize as normal (which will close any existing
+        # visualizers)
+        self.visualize(result.replays, map_id, result, start_at=result.timestamp)
+        
 
 class TrackerLoader(Loader, QObject):
     """

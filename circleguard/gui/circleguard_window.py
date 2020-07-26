@@ -136,7 +136,6 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         # open visualizer for the given map and user, and jump to the timestamp
         result = URLAnalysisResult([r], timestamp)
         self.main_window.main_tab.url_analysis_q.put(result)
-        pass
 
     def start_timer(self):
         timer = QTimer(self)
@@ -274,7 +273,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.main_window.results_tab.results.layout.insertWidget(0,result_widget)
 
     def add_url_analysis_result(self, result):
-        self.main_window.main_tab.visualize(result.replays, result.replays[0].map_id, result, start_at=result.timestamp)
+        self.main_window.main_tab.visualize_from_url(result)
 
     def copy_to_clipboard(self, text):
         self.clipboard.setText(text)
