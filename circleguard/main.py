@@ -130,13 +130,22 @@ if not get_setting("ran"):
     welcome.show()
     set_setting("ran", True)
 
+def close_server_socket():
+    serversocket.close()
+
 app.aboutToQuit.connect(circleguard_gui.cancel_all_runs)
 app.aboutToQuit.connect(circleguard_gui.on_application_quit)
-# app.url_scheme_called.connect(circleguard_gui.url_scheme_called)
+# if we don't do this it hangs on cmd q
+app.aboutToQuit.connect(close_server_socket)
 
 def run_server_socket():
     while True:
-        connection, address = serversocket.accept()
+        try:
+            connection, _ = serversocket.accept()
+        except ConnectionAbortedError:
+            # happens when we close the serversocket when we quit, just silence
+            # the exception
+            return
         # arbitrary "large enough" byte receive size
         data = connection.recv(4096)
         circleguard_gui.url_scheme_called(data)
