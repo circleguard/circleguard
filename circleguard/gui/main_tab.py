@@ -35,6 +35,7 @@ class MainTab(SingleLinkableSetting, QFrame):
     update_label_signal = pyqtSignal(str)
     write_to_terminal_signal = pyqtSignal(str)
     add_result_signal = pyqtSignal(object) # Result
+    add_url_analysis_result_signal = pyqtSignal(object) # URLAnalysisResult
     add_run_to_queue_signal = pyqtSignal(object) # Run object (or a subclass)
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
@@ -75,6 +76,11 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.write_to_terminal_signal.connect(self.write)
 
         self.q = Queue()
+        # `AnalysisResult`s get put here when we get a url scheme event, we need
+        # to create the visualizer from the main thread so we use a queue to
+        # kick back the work to the main thread. This is checked at the same
+        # time `self.q` is
+        self.url_analysis_q = Queue()
         # reset at the beginning of every run, used to print something after
         # every run only if a cheat wasn't found
         self.show_no_cheat_found = True
@@ -608,10 +614,15 @@ class MainTab(SingleLinkableSetting, QFrame):
                         self.add_result_signal.emit(result)
 
         except Empty:
-            pass
+            try:
+                result = self.url_analysis_q.get_nowait()
+                self.add_url_analysis_result_signal.emit(result)
+            except Empty:
+                pass
+        pass
         self.print_results_event.set()
 
-    def visualize(self, replays, beatmap_id, result):
+    def visualize(self, replays, beatmap_id, result, start_at=0):
         # only run one instance at a time
         if self.visualizer is not None:
             self.visualizer.close()
@@ -625,6 +636,9 @@ class MainTab(SingleLinkableSetting, QFrame):
             beatmap_info = BeatmapInfo()
         self.visualizer = CGVisualizer(beatmap_info, replays, snaps, self.library)
         self.visualizer.show()
+        if start_at != 0:
+            self.visualizer.seek_to(start_at)
+            self.visualizer.pause()
 
 
 class TrackerLoader(Loader, QObject):

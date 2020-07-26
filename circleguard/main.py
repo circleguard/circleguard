@@ -5,13 +5,62 @@ in other files.
 import sys
 import threading
 import traceback
+import fcntl
+import tempfile
+from pathlib import Path
+import socket
 
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtGui import QDesktopServices
+from PyQt5.QtCore import QObject, QSettings, QEvent, pyqtSignal
 import logging
 
 from gui.circleguard_window import CircleguardWindow
 from settings import get_setting, set_setting
 from wizard import CircleguardWizard
+
+
+# semi randomly chosen
+SOCKET_PORT = 4183
+LOCK_FILE = Path(tempfile.gettempdir()) / "circleguard_lock.lck"
+
+## set up url handling for windows, which implements custom url schemes by
+# launching another instance of the application with the url as an arg. This is
+# insanity. We handle the macOS (sane) implementation with
+# ``URLHandlingApplication``.
+
+# we can only register url handling for windows at runtime, for macOS we register
+# in our plist file, which is set in ``gui_mac.spec``.
+if sys.platform == "win32":
+    # https://support.shotgunsoftware.com/hc/en-us/articles/219031308-Launching-applications-using-custom-browser-protocols
+    hkey_settings = QSettings("HKEY_CLASSES_ROOT\\circleguard", QSettings.NativeFormat)
+    hkey_settings.setValue(".", "URL:circleguard Protocol")
+    hkey_settings.setValue("URL Protocol", "")
+    hkey_open_settings = QSettings("HKEY_CLASSES_ROOT\\circleguard\\shell\\open\\command", QSettings.NativeFormat)
+    hkey_open_settings.setValue(".", __file__)
+
+# we lock this file when we start so any circleguard instance knows if another
+# instance is running. If so, we pass it our ``argv`` (which came from a url
+# scheme) through a socket and then exit.
+
+# ensure it exists
+if not LOCK_FILE.exists():
+    open(LOCK_FILE, "x").close()
+lock_file = open(LOCK_FILE, "r")
+
+try:
+    fcntl.flock(lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+except IOError:
+    # lock failed, a circleguard application is already running
+    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientsocket.connect(("localhost", SOCKET_PORT))
+    clientsocket.send(sys.argv[1].encode())
+    clientsocket.close()
+    sys.exit(0)
+
+serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+serversocket.bind(("localhost", SOCKET_PORT))
+serversocket.listen(1)
 
 # use one logger across all of circleguard. So named to avoid conflict with
 # circlecore's logger.
@@ -51,6 +100,21 @@ def init(self, *args, **kwargs):
 threading.Thread.__init__ = init
 
 
+# class URLHandlingApplication(QApplication):
+#     url_scheme_called = pyqtSignal(str) # url
+
+#     def __init__(self):
+#         super().__init__([])
+
+#     def event(self, event):
+#         with open("/Users/tybug/Desktop/a.txt", "w+") as f:
+#             f.write(str(event.type() == QEvent.FileOpen))
+#             f.write(str(event.type()) + "\n")
+#             f.write(str(QEvent.FileOpen))
+#             if event.type() == QEvent.FileOpen:
+#                 f.write(str(event.url))
+#                 self.url_scheme_called.emit(str(event.url))
+#         return super().event(event)
 
 app = QApplication([])
 app.setStyle("Fusion")
@@ -68,4 +132,16 @@ if not get_setting("ran"):
 
 app.aboutToQuit.connect(circleguard_gui.cancel_all_runs)
 app.aboutToQuit.connect(circleguard_gui.on_application_quit)
+# app.url_scheme_called.connect(circleguard_gui.url_scheme_called)
+
+def run_server_socket():
+    while True:
+        connection, address = serversocket.accept()
+        # arbitrary "large enough" byte receive size
+        data = connection.recv(4096)
+        circleguard_gui.url_scheme_called(data)
+
+thread = threading.Thread(target=run_server_socket)
+thread.start()
+
 app.exec_()

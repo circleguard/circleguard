@@ -4,6 +4,7 @@ import os
 from functools import partial
 import threading
 from datetime import datetime, timedelta
+import re
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -16,7 +17,7 @@ from requests import RequestException
 from settings import LinkableSetting, get_setting, set_setting, overwrite_config
 from widgets import WidgetCombiner, ResultW
 from .gui import MainWindow, DebugWindow
-from utils import resource_path, AnalysisResult
+from utils import resource_path, AnalysisResult, URLAnalysisResult
 from version import __version__
 
 
@@ -55,6 +56,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
         self.main_window.main_tab.update_label_signal.connect(self.update_label)
         self.main_window.main_tab.add_result_signal.connect(self.add_result)
+        self.main_window.main_tab.add_url_analysis_result_signal.connect(self.add_url_analysis_result)
         self.main_window.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
         self.main_window.main_tab.update_run_status_signal.connect(self.update_run_status)
         self.main_window.queue_tab.cancel_run_signal.connect(self.cancel_run)
@@ -115,6 +117,24 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         if focused is not None and not isinstance(focused, QTextEdit):
             focused.clearFocus()
         super().mousePressEvent(event)
+
+    def url_scheme_called(self, url):
+        # url is bytes, so decode back to str
+        url = url.decode()
+        print(url)
+        # all urls are of the form circleguard://m=221777&u=12092800&t=10241
+        map_id = re.compile(r"m=(.*?)(&|$)").search(url).group(1)
+        user_id = re.compile(r"u=(.*?)(&|$)").search(url).group(1)
+        timestamp = int(re.compile(r"t=(.*?)(&|$)").search(url).group(1))
+
+        r = ReplayMap(map_id, user_id)
+        cg = Circleguard(get_setting("api_key"))
+        cg.load(r)
+
+        # open visualizer for the given map and user, and jump to the timestamp
+        result = URLAnalysisResult([r], timestamp)
+        self.main_window.main_tab.url_analysis_q.put(result)
+        pass
 
     def start_timer(self):
         timer = QTimer(self)
@@ -250,6 +270,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         if not self.main_window.results_tab.results.info_label.isHidden():
             self.main_window.results_tab.results.info_label.hide()
         self.main_window.results_tab.results.layout.insertWidget(0,result_widget)
+
+    def add_url_analysis_result(self, result):
+        self.main_window.main_tab.visualize(result.replays, result.replays[0].map_id, result, start_at=result.timestamp)
 
     def copy_to_clipboard(self, text):
         self.clipboard.setText(text)

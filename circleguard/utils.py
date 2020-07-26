@@ -69,3 +69,8 @@ class DebugWidget(QFrame):
 class AnalysisResult():
     def __init__(self, replays):
         self.replays = replays
+
+class URLAnalysisResult():
+    def __init__(self, replays, timestamp):
+        self.replays = replays
+        self.timestamp = timestamp
