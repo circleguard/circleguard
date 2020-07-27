@@ -2,7 +2,7 @@ PyQt5==5.14.2
 circleguard==4.3.4
 packaging>=17.0
 slider==0.2.1
-circlevis==0.1.3
+circlevis==0.3.0
 # see https://github.com/pyinstaller/pyinstaller/blob/develop/tests/requirements-libraries.txt,
 # which pins matplotlib at 3.0.3 (claiming that updating causes the hooks to fail).
 # I have not checked myself if updating matplotlib cuases the build to fail.
