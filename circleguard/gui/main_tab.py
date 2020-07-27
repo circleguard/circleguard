@@ -647,11 +647,13 @@ class MainTab(SingleLinkableSetting, QFrame):
         """
         map_id = result.replays[0].map_id
         if self.visualizer and self.visualizer.replays and self.visualizer.replays[0].map_id == map_id:
+            # pause even if we're currently playing - it's important that this
+            # happens before seeking, or else the new frame won't correctly
+            # display
+            self.visualizer.force_pause()
             # if we're visualizing the same replay that's in the url, just jump
             # to the new timestamp
             self.visualizer.seek_to(result.timestamp)
-            # pause even if we're currently playing
-            self.visualizer.force_pause()
             return
         # otherwise visualize as normal (which will close any existing
         # visualizers)
