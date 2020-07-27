@@ -166,6 +166,8 @@ DEFAULTS = {
                                 "\n\n"
                                 "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}/download"
                                 "\n\n"
+                                "open in circleguard: {circleguard_url}"
+                                "\n\n"
                                 "{r.similarity:.2f} similarity according to https://circleguard.dev/ (higher is less similar)"),
         "template_relax":      ("[osu!std] {r.replay.username} | Relax"
                                 "\n\n"
@@ -175,6 +177,8 @@ DEFAULTS = {
                                 "\n\n"
                                 "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
                                 "\n\n"
+                                "open in circleguard: {circleguard_url}"
+                                "\n\n"
                                 "cvUR: {r.ur:.2f} according to https://circleguard.dev/"),
         "template_correction": ("[osu!std] {r.replay.username} | Aim Correction"
                                 "\n\n"
@@ -183,6 +187,8 @@ DEFAULTS = {
                                 "Map: https://osu.ppy.sh/b/{r.replay.map_id}"
                                 "\n\n"
                                 "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
+                                "\n\n"
+                                "open in circleguard: {circleguard_url}"
                                 "\n\n"
                                 "Snaps according to https://circleguard.dev/:"
                                 "\n\n"
@@ -194,6 +200,8 @@ DEFAULTS = {
                                 "Map: https://osu.ppy.sh/b/{r.replay.map_id}"
                                 "\n\n"
                                 "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
+                                "\n\n"
+                                "open in circleguard: {circleguard_url}"
                                 "\n\n"
                                 "{frametime:.1f} cv average frametime according to https://circleguard.dev/")
     },
@@ -384,7 +392,11 @@ FORCE_UPDATE = {
     "2.9.0": [
         "message_relax_found",
         "message_relax_found_display",
-        "string_result_relax"
+        "string_result_relax",
+        "template_steal",
+        "template_relax",
+        "template_correction",
+        "template_timewarp"
     ]
 }
 
