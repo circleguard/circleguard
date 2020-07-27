@@ -263,8 +263,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             snap_table = ("| Time (ms) | Angle (°) | Distance (px) |\n"
                             "| :-: | :-: | :-: |\n")
             for snap in result.snaps:
-                url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}&t={snap.time}"
-                snap_table += "| [{:.0f}]({}) | {:.2f} | {:.2f} |\n".format(snap.time, url, snap.angle, snap.distance)
+                snap_table += "| {:.0f} | {:.2f} | {:.2f} |\n".format(snap.time, snap.angle, snap.distance)
             template_text = get_setting("template_correction").format(ts=timestamp, r=result, replay=result.replay, snap_table=snap_table,
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name(),
                                         circleguard_url=circleguard_url)
