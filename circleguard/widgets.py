@@ -715,7 +715,7 @@ class FrametimeGraph(QFrame):
         super().__init__()
 
         frametimes = None
-        self.show_cv = get_setting("show_cv_frametimes_in_histogram")
+        self.show_cv = get_setting("frametime_graph_display") == "cv"
         self.conversion_factor = self._conversion_factor(replay)
         if isinstance(result, TimewarpResult):
             frametimes = result.frametimes
