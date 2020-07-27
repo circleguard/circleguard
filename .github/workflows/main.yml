@@ -1,4 +1,4 @@
-name: Add files to draft release
+name: Create draft release
 
 on: repository_dispatch
 
