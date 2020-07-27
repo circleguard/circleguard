@@ -7,3 +7,4 @@ circlevis==0.1.3
 # which pins matplotlib at 3.0.3 (claiming that updating causes the hooks to fail).
 # I have not checked myself if updating matplotlib cuases the build to fail.
 matplotlib==3.0.3
+portalocker==1.7.1

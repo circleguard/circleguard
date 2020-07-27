@@ -4,6 +4,7 @@ import os
 from functools import partial
 import threading
 from datetime import datetime, timedelta
+import re
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -16,7 +17,7 @@ from requests import RequestException
 from settings import LinkableSetting, get_setting, set_setting, overwrite_config
 from widgets import WidgetCombiner, ResultW
 from .gui import MainWindow, DebugWindow
-from utils import resource_path, AnalysisResult
+from utils import resource_path, AnalysisResult, URLAnalysisResult
 from version import __version__
 
 
@@ -55,6 +56,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
         self.main_window.main_tab.update_label_signal.connect(self.update_label)
         self.main_window.main_tab.add_result_signal.connect(self.add_result)
+        self.main_window.main_tab.add_url_analysis_result_signal.connect(self.add_url_analysis_result)
         self.main_window.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
         self.main_window.main_tab.update_run_status_signal.connect(self.update_run_status)
         self.main_window.queue_tab.cancel_run_signal.connect(self.cancel_run)
@@ -115,6 +117,41 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         if focused is not None and not isinstance(focused, QTextEdit):
             focused.clearFocus()
         super().mousePressEvent(event)
+
+    def url_scheme_called(self, url):
+        # url is bytes, so decode back to str
+        url = url.decode()
+        # windows appends an extra slash even if the original url didn't have 
+        # it, so remove it
+        url = url.strip("/")
+        # all urls take one of the following forms:
+        # * circleguard://m=221777&u=2757689&t=15000
+        # * circleguard://m=221777&u=2757689
+        # * circleguard://m=221777&u=2757689&u2=3219026
+        map_id = re.compile(r"m=(.*?)(&|$)").search(url).group(1)
+        user_id = re.compile(r"u=(.*?)(&|$)").search(url).group(1)
+        timestamp_match = re.compile(r"t=(.*?)(&|$)").search(url)
+        # start at the beginning if timestamp isn't specified
+        timestamp = int(timestamp_match.group(1)) if timestamp_match else 0
+        
+        user_id_2_match = re.compile(r"u2=(.*?)(&|$)").search(url)
+        user_id_2 = None
+        if user_id_2_match:
+            user_id_2 = user_id_2_match.group(1)
+
+        r = ReplayMap(map_id, user_id)
+        cg = Circleguard(get_setting("api_key"))
+        cg.load(r)
+        replays = [r]
+
+        if user_id_2:
+            r2 = ReplayMap(map_id, user_id_2)
+            cg.load(r2)
+            replays.append(r2)
+        # open visualizer for the given map and user, and jump to the timestamp
+        result = URLAnalysisResult(replays, timestamp)
+        self.main_window.main_tab.url_analysis_q.put(result)
+        print(self.main_window.main_tab.url_analysis_q.qsize())
 
     def start_timer(self):
         timer = QTimer(self)
@@ -199,38 +236,46 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         template_text = None
 
         if isinstance(result, StealResult):
+            circleguard_url = f"circleguard://m={result.replay1.map_id}&u={result.replay1.user_id}&u2={result.replay2.user_id}"
             label_text = get_setting("string_result_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
                                         earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
                                         later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name())
             template_text = get_setting("template_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
                                         earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
-                                        later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name())
+                                        later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name(),
+                                        circleguard_url=circleguard_url)
             replays = [result.replay1, result.replay2]
 
         elif isinstance(result, RelaxResult):
+            circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}"
             label_text = get_setting("string_result_relax").format(ts=timestamp, ur=result.ur, r=result,
                                         replay=result.replay, mods_short_name=result.replay.mods.short_name(),
                                         mods_long_name=result.replay.mods.long_name())
             template_text = get_setting("template_relax").format(ts=timestamp, ur=result.ur, r=result,
                                         replay=result.replay, mods_short_name=result.replay.mods.short_name(),
-                                        mods_long_name=result.replay.mods.long_name())
+                                        mods_long_name=result.replay.mods.long_name(), circleguard_url=circleguard_url)
             replays = [result.replay]
         elif isinstance(result, CorrectionResult):
+            circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}"
             label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, num_snaps=len(result.snaps), replay=result.replay,
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
             snap_table = ("| Time (ms) | Angle (°) | Distance (px) |\n"
                             "| :-: | :-: | :-: |\n")
             for snap in result.snaps:
-                snap_table += "| {:.0f} | {:.2f} | {:.2f} |\n".format(snap.time, snap.angle, snap.distance)
+                url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}&t={snap.time}"
+                snap_table += "| [{:.0f}]({}) | {:.2f} | {:.2f} |\n".format(snap.time, url, snap.angle, snap.distance)
             template_text = get_setting("template_correction").format(ts=timestamp, r=result, replay=result.replay, snap_table=snap_table,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name(),
+                                        circleguard_url=circleguard_url)
             replays = [result.replay]
         elif isinstance(result, TimewarpResult):
+            circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}"
             label_text = get_setting("string_result_timewarp").format(ts=timestamp, r=result, replay=result.replay, frametime=result.frametime,
                                         mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
             template_text = get_setting("template_timewarp").format(ts=timestamp, r=result, frametime=result.frametime,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name(),
+                                        circleguard_url=circleguard_url)
             replays = [result.replay]
         elif isinstance(result, AnalysisResult):
             replays = result.replays
@@ -249,7 +294,10 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         # remove info text if shown
         if not self.main_window.results_tab.results.info_label.isHidden():
             self.main_window.results_tab.results.info_label.hide()
-        self.main_window.results_tab.results.layout.insertWidget(0,result_widget)
+        self.main_window.results_tab.results.layout.insertWidget(0, result_widget)
+
+    def add_url_analysis_result(self, result):
+        self.main_window.main_tab.visualize_from_url(result)
 
     def copy_to_clipboard(self, text):
         self.clipboard.setText(text)
