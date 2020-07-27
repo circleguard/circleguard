@@ -9,7 +9,11 @@ import tempfile
 from pathlib import Path
 import socket
 import logging
-import winreg
+try:
+    import winreg
+except ImportError:
+    # not on windows, ignore
+    pass
 
 from PyQt5.QtWidgets import QApplication
 import portalocker
