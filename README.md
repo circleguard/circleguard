@@ -1,5 +1,5 @@
 
-<img src="readme_resources/logo.png" alt="Gif Demo" width="200" height="200"/>
+<img src="readme_resources/logo.png" alt="logo" width="200" height="200"/>
 
 [![Latest Version](https://img.shields.io/github/release/circleguard/circleguard?label=Latest%20version)](https://circleguard.dev/download)
 [![GitHub Releases Downloads](https://img.shields.io/github/downloads/circleguard/circleguard/total?label=Downloads)](https://circleguard.dev/download)
