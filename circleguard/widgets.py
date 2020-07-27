@@ -15,7 +15,7 @@ from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint
 # Not sure why pylint doesn't think FigureCanvas exists...
 from matplotlib.backends.backend_qt5agg import FigureCanvas, NavigationToolbar2QT # pylint: disable=no-name-in-module
 from matplotlib.figure import Figure
-from circleguard import Circleguard, TimewarpResult, Mod
+from circleguard import Circleguard, TimewarpResult, Mod, Key
 import numpy as np
 
 from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting, set_setting
@@ -824,7 +824,18 @@ class ReplayDataTable(QFrame):
             item = QTableWidgetItem(str(xy[1]))
             table.setItem(i, 2, item)
 
-            item = QTableWidgetItem(str(k))
+            ks = []
+            if Key.K1 & k:
+                ks.append("K1")
+            # M1 is always set if K1 is set, so only append if it's set without
+            # K1. Same with M2/K2
+            elif Key.M1 & k:
+                ks.append("M1")
+            if Key.K2 & k:
+                ks.append("K2")
+            elif Key.M2 & k:
+                ks.append("M2")
+            item = QTableWidgetItem(" + ".join(ks))
             table.setItem(i, 3, item)
 
         layout = QVBoxLayout()
