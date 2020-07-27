@@ -31,17 +31,17 @@ LOCK_FILE = Path(tempfile.gettempdir()) / "circleguard_lock.lck"
 # in our plist file, which is set in ``gui_mac.spec``.
 # this is a build-time-only feature I'm afraid, since we can't call an exe at dev
 # time because it hasn't been built yet
-if sys.platform == "win32" and hasattr(sys, "_MEIPASS"):   
+if sys.platform == "win32" and hasattr(sys, "_MEIPASS"):
     # we update the location of circleguard.exe every time we run, so if the user
     # ever moves it we'll still correctly redirect the url scheme event to us.
     # I have no idea how other (professional) applications handle this, nor
     # what the proper way to update your url scheme registry is (should it
     # ever be done?).
     exe_location = str(Path(sys._MEIPASS) / "circleguard.exe") # pylint: disable=no-member
-    # most sources I found said to modify HKEY_CLASSES_ROOT, but that requires 
-    # admin perms. Apparently that registry is just a merger of two other 
+    # most sources I found said to modify HKEY_CLASSES_ROOT, but that requires
+    # admin perms. Apparently that registry is just a merger of two other
     # registries, which *don't* require admin persm to write to, so we write
-    # there. See https://www.qtcentre.org/threads/7899-QSettings-HKEY_CLASSES_ROOT-access?s=3c32bd8f5e5300b83765040c2d100fe3&p=42379#post42379 
+    # there. See https://www.qtcentre.org/threads/7899-QSettings-HKEY_CLASSES_ROOT-access?s=3c32bd8f5e5300b83765040c2d100fe3&p=42379#post42379
     # and https://support.shotgunsoftware.com/hc/en-us/articles/219031308-Launching-applications-using-custom-browser-protocols
     key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard")
     # empty string to set (default) value
@@ -50,7 +50,7 @@ if sys.platform == "win32" and hasattr(sys, "_MEIPASS"):
 
     key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\DefaultIcon")
     winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location)
-    
+
     key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\shell\\open\\command")
     winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location + " \"%1\"")
 
@@ -162,5 +162,5 @@ if len(sys.argv) > 1:
     clientsocket.connect(("localhost", SOCKET_PORT))
     clientsocket.send(sys.argv[1].encode())
     clientsocket.close()
-    
+
 app.exec_()

@@ -121,7 +121,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
     def url_scheme_called(self, url):
         # url is bytes, so decode back to str
         url = url.decode()
-        # windows appends an extra slash even if the original url didn't have 
+        # windows appends an extra slash even if the original url didn't have
         # it, so remove it
         url = url.strip("/")
         # all urls take one of the following forms:
@@ -133,7 +133,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         timestamp_match = re.compile(r"t=(.*?)(&|$)").search(url)
         # start at the beginning if timestamp isn't specified
         timestamp = int(timestamp_match.group(1)) if timestamp_match else 0
-        
+
         user_id_2_match = re.compile(r"u2=(.*?)(&|$)").search(url)
         user_id_2 = None
         if user_id_2_match:
