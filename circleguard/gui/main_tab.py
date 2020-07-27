@@ -619,7 +619,6 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.add_url_analysis_result_signal.emit(result)
             except Empty:
                 pass
-        pass
         self.print_results_event.set()
 
     def visualize(self, replays, beatmap_id, result, start_at=0):
@@ -646,7 +645,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         us a replay to visualize
         """
         map_id = result.replays[0].map_id
-        if self.visualizer and self.visualizer.replays and self.visualizer.replays[0].map_id == map_id:
+        if self.visualizer and self.visualizer.isVisible() and self.visualizer.replays and self.visualizer.replays[0].map_id == map_id:
             # pause even if we're currently playing - it's important that this
             # happens before seeking, or else the new frame won't correctly
             # display

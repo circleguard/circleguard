@@ -124,18 +124,34 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         # windows appends an extra slash even if the original url didn't have 
         # it, so remove it
         url = url.strip("/")
-        # all urls are of the form circleguard://m=221777&u=2757689&t=150000
+        # all urls take one of the following forms:
+        # * circleguard://m=221777&u=2757689&t=15000
+        # * circleguard://m=221777&u=2757689
+        # * circleguard://m=221777&u=2757689&u2=3219026
         map_id = re.compile(r"m=(.*?)(&|$)").search(url).group(1)
         user_id = re.compile(r"u=(.*?)(&|$)").search(url).group(1)
-        timestamp = int(re.compile(r"t=(.*?)(&|$)").search(url).group(1))
+        timestamp_match = re.compile(r"t=(.*?)(&|$)").search(url)
+        # start at the beginning if timestamp isn't specified
+        timestamp = int(timestamp_match.group(1)) if timestamp_match else 0
+        
+        user_id_2_match = re.compile(r"u2=(.*?)(&|$)").search(url)
+        user_id_2 = None
+        if user_id_2_match:
+            user_id_2 = user_id_2_match.group(1)
 
         r = ReplayMap(map_id, user_id)
         cg = Circleguard(get_setting("api_key"))
         cg.load(r)
+        replays = [r]
 
+        if user_id_2:
+            r2 = ReplayMap(map_id, user_id_2)
+            cg.load(r2)
+            replays.append(r2)
         # open visualizer for the given map and user, and jump to the timestamp
-        result = URLAnalysisResult([r], timestamp)
+        result = URLAnalysisResult(replays, timestamp)
         self.main_window.main_tab.url_analysis_q.put(result)
+        print(self.main_window.main_tab.url_analysis_q.qsize())
 
     def start_timer(self):
         timer = QTimer(self)
