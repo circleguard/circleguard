@@ -154,4 +154,13 @@ def run_server_socket():
 thread = threading.Thread(target=run_server_socket)
 thread.start()
 
+# if we're opening for the first time from a url, the lock file won't be
+# locked, but we still want to visualize the replay in the url, so fake
+# a socket message identical to if the file had been locked
+if len(sys.argv) > 1:
+    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    clientsocket.connect(("localhost", SOCKET_PORT))
+    clientsocket.send(sys.argv[1].encode())
+    clientsocket.close()
+    
 app.exec_()
