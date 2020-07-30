@@ -207,7 +207,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
     def get_version_update_str(self):
         current_version = version.parse(__version__)
         if current_version < version.parse(get_setting("latest_version")):
-            return "<a href=\'https://circleguard.dev/download'>Update available!</a>"
+            return "<a href=\'https://github.com/circleguard/circleguard/releases/latest'>Update available!</a>"
         else:
             return "Idle"
 

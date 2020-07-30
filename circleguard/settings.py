@@ -168,7 +168,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "open in circleguard: {circleguard_url}"
                                 "\n\n"
-                                "{r.similarity:.2f} similarity according to https://circleguard.dev/ (higher is less similar)"),
+                                "{r.similarity:.2f} similarity according to https://github.com/circleguard/circleguard (higher is less similar)"),
         "template_relax":      ("[osu!std] {r.replay.username} | Relax"
                                 "\n\n"
                                 "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
@@ -179,7 +179,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "open in circleguard: {circleguard_url}"
                                 "\n\n"
-                                "cvUR: {r.ur:.2f} according to https://circleguard.dev/"),
+                                "cvUR: {r.ur:.2f} according to https://github.com/circleguard/circleguard"),
         "template_correction": ("[osu!std] {r.replay.username} | Aim Correction"
                                 "\n\n"
                                 "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
@@ -190,7 +190,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "open in circleguard: {circleguard_url}"
                                 "\n\n"
-                                "Snaps according to https://circleguard.dev/:"
+                                "Snaps according to https://github.com/circleguard/circleguard:"
                                 "\n\n"
                                 "{snap_table}"),
         "template_timewarp":   ("[osu!std] {r.replay.username} | Timewarp"
@@ -203,7 +203,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "open in circleguard: {circleguard_url}"
                                 "\n\n"
-                                "{frametime:.1f} cv average frametime according to https://circleguard.dev/")
+                                "{frametime:.1f} cv average frametime according to https://github.com/circleguard/circleguard")
     },
     "Strings": {
         "string_result_steal":         "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {r1.map_id}",
