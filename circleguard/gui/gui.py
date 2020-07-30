@@ -227,7 +227,7 @@ class ScrollableSettingsWidget(QFrame):
         self.wizard = CircleguardWizard()
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
-        self.darkmode = ComboboxSetting("Dark mode", "Come join the dark side", "theme")
+        self.theme = ComboboxSetting("Theme", "Come join the dark side", "theme")
         # TODO this should really be a dropdown (combobox), but those are a PITA to add right now. Could be implemented much
         # cleaner if we had two settings per dropdown, one for the current value and one for the list of options to choose
         # from. This would clean up `LoglevelWidget` as well (or rather, converted into a generic DropdownSetting).
@@ -258,7 +258,7 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(self.default_span_map)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Appearance"))
-        self.layout.addWidget(self.darkmode)
+        self.layout.addWidget(self.theme)
         self.layout.addWidget(self.visualizer_info)
         self.layout.addWidget(self.visualizer_beatmap)
         self.layout.addItem(vert_spacer)

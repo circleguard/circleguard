@@ -98,7 +98,7 @@ class SettingsSetupPage(WizardPage):
         super().__init__()
         self.setTitle("Settings")
         dark_label = WizardLabel("The theme of Circleguard.")
-        self.darkmode = ComboboxSetting("Theme", "", "theme")
+        self.theme = ComboboxSetting("Theme", "", "theme")
 
         cache_label = WizardLabel("<br><br>Caching reduces downloading time by storing replays when they are first downloaded. "
                 "We recommend you leave this enabled — replays take up little space. The osu! api ratelimit "
@@ -109,7 +109,7 @@ class SettingsSetupPage(WizardPage):
 
         layout = QVBoxLayout()
         layout.addWidget(dark_label)
-        layout.addWidget(self.darkmode)
+        layout.addWidget(self.theme)
         layout.addWidget(cache_label)
         layout.addWidget(self.caching)
         self.setLayout(layout)
