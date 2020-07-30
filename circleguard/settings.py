@@ -397,6 +397,12 @@ FORCE_UPDATE = {
         "template_relax",
         "template_correction",
         "template_timewarp"
+    ],
+    "2.9.1": [
+        "template_steal",
+        "template_relax",
+        "template_correction",
+        "template_timewarp"
     ]
 }
 
