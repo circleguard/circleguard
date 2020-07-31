@@ -21,7 +21,7 @@ from circlevis import BeatmapInfo
 
 from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
     ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
-    CorrectionCheckW, TimewarpCheckW, AnalyzeW)
+    CorrectionCheckW, TimewarpCheckW, AnalyzeW, CircleguardURLW)
 from settings import SingleLinkableSetting, get_setting, set_setting
 from utils import delete_widget, AnalysisResult
 from .visualizer import CGVisualizer
@@ -40,7 +40,7 @@ class MainTab(SingleLinkableSetting, QFrame):
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
-    LOADABLES_COMBOBOX_REGISTRY = ["Add a Loadable", "+ Map Replay", "+ Local Replay", "+ Map", "+ User", "+ All User Replays on Map"]
+    LOADABLES_COMBOBOX_REGISTRY = ["Add a Loadable", "+ Map Replay", "+ Local Replay", "+ Map", "+ User", "+ All User Replays on Map", "+ Circleguard URL"]
     CHECKS_COMBOBOX_REGISTRY = ["Add a Check", "+ Replay Stealing", "+ Relax", "+ Aim Correction", "+ Timewarp", "+ Manual Analysis"]
 
     def __init__(self):
@@ -162,6 +162,8 @@ class MainTab(SingleLinkableSetting, QFrame):
             w = UserW()
         if button_data == "+ All User Replays on Map":
             w = MapUserW()
+        if button_data == "+ Circleguard URL":
+            w = CircleguardURLW()
         w.remove_loadable_signal.connect(self.remove_loadable)
         self.loadables_scrollarea.widget().layout.addWidget(w)
         self.loadables.append(w)
@@ -375,6 +377,13 @@ class MainTab(SingleLinkableSetting, QFrame):
                         if span == "all":
                             span = "1-100"
                         loadable = MapUser(int(loadableW.map_id_input.value()), int(loadableW.user_id_input.value()), span=span)
+                    if isinstance(loadableW, CircleguardURLW):
+                        url = loadableW.url_input.value().rstrip()
+                        map_id = re.compile(r"m=(.*?)(&|$)").search(url).group(1)
+                        user_id = re.compile(r"u=(.*?)(&|$)").search(url).group(1)
+                        user2_id = re.compile(r"u2=(.*?)(&|$)").search(url).group(1)
+                        loadables = [ReplayMap(map_id, user_id), ReplayMap(map_id, user2_id)]
+                        loadable = Check(loadables, cache=None)
                     loadableW_id_to_loadable[loadableW.loadable_id] = loadable
                 except ValueError as e:
                     self.write_to_terminal_signal.emit(str(e))

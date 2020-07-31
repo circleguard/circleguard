@@ -614,6 +614,14 @@ class MapUserW(LoadableW):
         self.layout.addWidget(self.user_id_input, 2, 0, 1, 8)
         self.layout.addWidget(self.span_input, 3, 0, 1, 8)
 
+class CircleguardURLW(LoadableW):
+    def __init__(self):
+        self.url_input = InputWidget("Circleguard URL", "", "normal")
+
+        super().__init__("Circleguard URL", [self.url_input])
+
+        self.layout.addWidget(self.url_input, 1, 0, 1, 8)
+
 
 class ResultW(QFrame):
     """
