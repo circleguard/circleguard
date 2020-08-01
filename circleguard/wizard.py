@@ -67,7 +67,7 @@ class IntroPage(WizardPage):
                 "<li>samuelhklumpers </li>"
                 "</ul></p>"
                 "<p>Thanks to <a href=\"https://accalixgfx.com/index.php\">Accalix</a> for creating our logo.<p>"
-                "<p>If at any point you want to replay this wizard, go to the settings tab and click \"Run Wizard\" "
+                "<p>If at any point you want to replay this wizard, go to the settings tab and click \"Read Tutorial\" "
                 "under the Dev section.")
         layout = QVBoxLayout()
         layout.addWidget(label)

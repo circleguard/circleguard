@@ -241,7 +241,7 @@ class ScrollableSettingsWidget(QFrame):
         self.log_level = ComboboxSetting("Log Level", "", "log_level")
         self.log_output = ComboboxSetting("Log Output", "", "_log_output")
 
-        self.run_wizard = ButtonWidget("Run Wizard", "Run", "")
+        self.run_wizard = ButtonWidget("Read Tutorial", "Run", "")
         self.run_wizard.button.clicked.connect(self.show_wizard)
 
         vert_spacer = QSpacerItem(0, 10, QSizePolicy.Maximum, QSizePolicy.Minimum)
