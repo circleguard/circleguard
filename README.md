@@ -25,11 +25,10 @@ Circleguard is developed and maintained by:
 
 * [tybug](https://github.com/tybug)
 * [samuelhklumpers](https://github.com/samuelhklumpers)
-* [InvisibleSymbol](https://github.com/InvisibleSymbol)
 
 With contributions from:
 
-* Watch The Circles
+* [InvisibleSymbol](https://github.com/InvisibleSymbol)
 
 ## Download
 
