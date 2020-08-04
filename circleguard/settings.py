@@ -146,7 +146,7 @@ DEFAULTS = {
         "message_starting_relax":           "[{ts:%X}] Determining ur of the given replays",
         "message_relax_found":              "[{ts:%X}] {ur:.2f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}",
         "message_relax_found_display":      "[{ts:%X}] {ur:.2f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
-        "message_starting_correction":      "[{ts:%X}] Determining if any Snaps exist in the given replays",
+        "message_starting_correction":      "[{ts:%X}] Checking if the given replays contain any Snaps",
         "message_correction_found":         "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
         "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
         "message_starting_timewarp":        "[{ts:%X}] Determining frametime of the given replays",
