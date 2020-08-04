@@ -279,22 +279,21 @@ class TutorialPageLoadableUsersAll(WizardPage):
 class TutorialPageChecks(WizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Tutorial (Checks)")
+        self.setTitle("Tutorial (Investigations)")
         label = WizardLabel("<p>Now that you can represent Replays with Loadables, you can start investigating them for cheats. Circleguard "
-                            "supports four different kinds of Checks.</p>")
+                            "supports multiple kinds of investigations.</p>")
         image = QLabel()
         image.setPixmap(QPixmap(resource_path("wizard/checks_dropdown.png")).scaledToWidth(500, Qt.SmoothTransformation))
-        label2 = WizardLabel("<p>Each of these should be self explanatory. If you want to check a Loadable for a certain cheat, just drag and "
-                "drop it onto the appropriate Check, then hit run.</p>"
-                "<p>Replay Stealing and Visualize are both different from the others. Replay Stealing has two areas for you to drag Loadables "
+        label2 = WizardLabel("<p>If you want to check a Loadable for a certain cheat, just drag and "
+                "drop it onto the appropriate Investigation, then hit run.</p>"
+                "<p>Similarity is slightly different from the others. This investigation has two areas for you to drag Loadables "
                 "onto - if only one of them has any Loadables, each replay will be compared against each other replay. eg, if you "
-                "give a Map with span=\"1-50\" to one area of a Replay Stealing Check, and nothing to the other area, it will compare "
-                "each replay in the top 50 of that map against each other replay in the top 50. However, if you drag a Map Replay to "
+                "give a Map with span=\"1-50\" to one area of a Similarity Check, and nothing to the other area, it will compare "
+                "each replay in the top 50 of that map against each other replay in the top 50.</p>"
+                "<p>However, if you drag a Map Replay to "
                 "the other area of the Check, it will compare just the Replay Map against each of the replays in the top 50. This "
                 "can be useful if you want to check if a specific user stole from a map, without comparing replays that don't involve "
-                "the player you suspect.</p>"
-                "<p>A Visualize Check doesn't perform any sort of analysis on the replays, but instead plays back the replays in a new window, "
-                "simulating osu! gameplay, including the beatmap. This is useful for manual inspection and frame-by-frame visualization.<p>")
+                "the player you suspect.</p>")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
