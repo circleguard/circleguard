@@ -126,10 +126,10 @@ class TutorialPageId(WizardPage):
                 "For instance, cookiezi (<a href=\"https://osu.ppy.sh/users/124493\">https://osu.ppy.sh/users/124493</a>) "
                 "has a User id of 124493.</p>"
                 "<p>Map urls contain two ids. The first is the Beatmapset id, and "
-                "the second is the Beatmap id. You want to use the latter (the Beatmap id)"
+                "the second is the Beatmap id. You want to use the latter (the Beatmap id). "
                 "For instance, <a href=\"https://osu.ppy.sh/beatmapsets/39804#osu/129891\">"
                 "https://osu.ppy.sh/beatmapsets/39804#osu/129891</a> has a Beatmapset id of 39804 and a Beatmap id of "
-                "129891. Use the Beatmap id (129891) to represent this map.")
+                "129891. Use the Beatmap id (129891) to represent this map.</p>")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -147,7 +147,7 @@ class TutorialPageLoadables(WizardPage):
         image = QLabel()
         # SmoothTransformation necessary for half decent image quality
         image.setPixmap(QPixmap(resource_path("wizard/map_replay_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
-        label2 = WizardLabel("<p>If you wanted cookiezi's replay on Freedom Dive, for instance you would enter 129891 "
+        label2 = WizardLabel("<p>If you wanted cookiezi's replay on Freedom Dive, you would enter 129891 "
                 "as the Map id and 124493 as the User id.</p>"
                 "<p>By default (when Mods is left empty), the highest scoring replay by that user will be used in a Map Replay. "
                 "However, if you specify Mods, the replay with that mod combination will be used instead.</p>"
