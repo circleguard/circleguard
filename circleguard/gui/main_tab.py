@@ -41,7 +41,7 @@ class MainTab(SingleLinkableSetting, QFrame):
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
     LOADABLES_COMBOBOX_REGISTRY = ["Add a Loadable", "+ Map Replay", "+ Local Replay", "+ Map", "+ User", "+ All User Replays on Map"]
-    CHECKS_COMBOBOX_REGISTRY = ["Add a Check", "+ Replay Stealing", "+ Relax", "+ Aim Correction", "+ Timewarp", "+ Manual Analysis"]
+    CHECKS_COMBOBOX_REGISTRY = ["Add an Investigation", "+ Similarity", "+ Unstable Rate", "+ Snaps", "+ Frametime", "+ Manual Analysis"]
 
     def __init__(self):
         QFrame.__init__(self)
@@ -172,13 +172,13 @@ class MainTab(SingleLinkableSetting, QFrame):
             return
         button_data = self.checks_combobox.currentData()
         self.checks_combobox.setCurrentIndex(0)
-        if button_data == "+ Replay Stealing":
+        if button_data == "+ Similarity":
             w = StealCheckW()
-        if button_data == "+ Relax":
+        if button_data == "+ Unstable Rate":
             w = RelaxCheckW()
-        if button_data == "+ Aim Correction":
+        if button_data == "+ Snaps":
             w = CorrectionCheckW()
-        if button_data == "+ Timewarp":
+        if button_data == "+ Frametime":
             w = TimewarpCheckW()
         if button_data == "+ Manual Analysis":
             w = AnalyzeW()

@@ -411,21 +411,21 @@ class CheckW(QFrame):
 
 class StealCheckW(CheckW):
     def __init__(self):
-        super().__init__("Replay Stealing Check", double_drop_area=True)
+        super().__init__("Similarity", double_drop_area=True)
 
 
 class RelaxCheckW(CheckW):
     def __init__(self):
-        super().__init__("Relax Check")
+        super().__init__("Unstable Rate")
 
 
 class CorrectionCheckW(CheckW):
     def __init__(self):
-        super().__init__("Aim Correction Check")
+        super().__init__("Snaps")
 
 class TimewarpCheckW(CheckW):
     def __init__(self):
-        super().__init__("Timewarp Check")
+        super().__init__("Frametime")
 
 class AnalyzeW(CheckW):
     def __init__(self):
