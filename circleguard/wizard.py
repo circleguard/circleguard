@@ -24,11 +24,40 @@ class WizardPage(QWizardPage):
 class CircleguardWizard(QWizard):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Wizard")
+        self.setWindowTitle("Introduction")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
         self.addPage(IntroPage())
         self.addPage(ApiKeyPage())
         self.addPage(SettingsSetupPage())
+        self.addPage(TutorialPageId())
+        self.addPage(TutorialPageLoadables())
+        self.addPage(TutorialPageLoadableLocal())
+        self.addPage(TutorialPageLoadableMap())
+        self.addPage(TutorialPageLoadableUser())
+        self.addPage(TutorialPageLoadableUsersAll())
+        self.addPage(TutorialPageChecks())
+        self.addPage(SettingsPage())
+        self.addPage(ConclusionPage())
+
+        # disable help button
+        self.setWindowFlags(self.windowFlags() | Qt.CustomizeWindowHint)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
+        self.setButtonText(QWizard.CancelButton, "Skip")
+        self.setWizardStyle(QWizard.ModernStyle)
+
+        self.setFixedSize(750, 625) # 1.2 aspect ratio, same as gui
+
+    def mousePressEvent(self, event):
+        focused = self.focusWidget()
+        if focused is not None:
+            focused.clearFocus()
+
+# same as ``CircleguardWizard``, but with only the tutorial pages
+class TutorialWizard(QWizard):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Tutorial")
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
         self.addPage(TutorialPageId())
         self.addPage(TutorialPageLoadables())
         self.addPage(TutorialPageLoadableLocal())

@@ -33,7 +33,7 @@ from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting, SingleLinkableSetting
 from .visualizer import CGVisualizer
 from .main_tab import MainTab
-from wizard import CircleguardWizard
+from wizard import TutorialWizard
 from version import __version__
 
 
@@ -224,7 +224,6 @@ class ScrollableSettingsWidget(QFrame):
     def __init__(self):
         super().__init__()
         self.visualizer = None
-        self.wizard = CircleguardWizard()
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.theme = ComboboxSetting("Theme", "Come join the dark side", "theme")
@@ -241,7 +240,7 @@ class ScrollableSettingsWidget(QFrame):
         self.log_level = ComboboxSetting("Log Level", "", "log_level")
         self.log_output = ComboboxSetting("Log Output", "", "_log_output")
 
-        self.run_wizard = ButtonWidget("Read Tutorial", "Run", "")
+        self.run_wizard = ButtonWidget("Tutorial", "Read Tutorial", "")
         self.run_wizard.button.clicked.connect(self.show_wizard)
 
         vert_spacer = QSpacerItem(0, 10, QSizePolicy.Maximum, QSizePolicy.Minimum)
@@ -275,6 +274,8 @@ class ScrollableSettingsWidget(QFrame):
         self.setLayout(self.layout)
 
     def show_wizard(self):
+        # keep a reference or it immediately deallocates
+        self.wizard = TutorialWizard()
         self.wizard.show()
 
     def visualize(self):
