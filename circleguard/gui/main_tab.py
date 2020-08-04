@@ -485,10 +485,15 @@ class MainTab(SingleLinkableSetting, QFrame):
                 # stripes sliding horizontally) to indicate we're processing
                 # the data
                 self.set_progressbar_signal.emit(0)
-                setting = "message_starting_investigation_analysis" if isinstance(checkW, AnalyzeW) else "message_starting_investigation"
-                message_starting_investigation = get_setting(setting).format(ts=datetime.now(),
-                                num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
-                                check_type=check_type)
+                setting_end_dict = {
+                    StealCheckW: "steal",
+                    RelaxCheckW: "relax",
+                    CorrectionCheckW: "correction",
+                    TimewarpCheckW: "timewarp",
+                    AnalyzeW: "analysis"
+                }
+                setting = f"message_starting_" + setting_end_dict[type(checkW)]
+                message_starting_investigation = get_setting(setting).format(ts=datetime.now())
                 self.write_to_terminal_signal.emit(message_starting_investigation)
                 if isinstance(checkW, AnalyzeW):
                     map_ids = [r.map_id for r in all_replays]
@@ -501,7 +506,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                         sys.exit(0)
                     self.q.put(AnalysisResult(all_replays))
                 else:
-                    self.update_label_signal.emit("Investigating Replays")
+                    self.update_label_signal.emit("Investigating Replays...")
                     self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
                     for result in cg.run(replays1, d, replays2, max_angle, min_distance):
                         _check_event(event)
