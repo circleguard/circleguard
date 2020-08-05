@@ -16,21 +16,16 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 
-from circleguard import (Circleguard, set_options, Loader, NoInfoAvailableException,
-                        ReplayMap, ReplayPath, User, Map, Check, MapUser,
-                        StealResult, RelaxResult, CorrectionResult, Detect, Mod)
+from circleguard import Circleguard, ReplayPath
 from circleguard import __version__ as cg_version
-from circleguard.loadable import Loadable
 from circlevis import BeatmapInfo
-from slider import Library
 
-from utils import resource_path, delete_widget
+from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
-                    ButtonWidget, OptionWidget, SliderBoxMaxInfSetting,
-                     SliderBoxSetting, BeatmapTest, LineEditSetting, EntryWidget, RunWidget,
-                     ComboboxSetting)
+    ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
+    BeatmapTest, LineEditSetting, EntryWidget, RunWidget, ComboboxSetting)
 
-from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings, LinkableSetting, SingleLinkableSetting
+from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
 from .visualizer import CGVisualizer
 from .main_tab import MainTab
 from wizard import TutorialWizard
