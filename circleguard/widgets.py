@@ -10,11 +10,6 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit, QM
                              QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag
 from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint, QMimeData
-# XXX make sure to import matplotlib after pyqt, so it knows to use that and not
-# re-import it.
-# Not sure why pylint doesn't think FigureCanvas exists...
-from matplotlib.backends.backend_qt5agg import FigureCanvas, NavigationToolbar2QT # pylint: disable=no-name-in-module
-from matplotlib.figure import Figure
 from circleguard import Circleguard, TimewarpResult, Mod, Key
 import numpy as np
 
@@ -697,6 +692,12 @@ class ResultW(QFrame):
 class FrametimeWindow(QMainWindow):
     def __init__(self, result, replay):
         super().__init__()
+        # delay matplotlib import until necessary (aka here) as a load time
+        # optimization
+        # XXX make sure to import matplotlib after pyqt, so it knows to use that
+        # and not re-import it.
+        from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+
         self.setWindowTitle("Replay Frametime")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
 
@@ -713,6 +714,9 @@ class FrametimeGraph(QFrame):
 
     def __init__(self, result, replay):
         super().__init__()
+
+        from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
+        from matplotlib.figure import Figure
 
         frametimes = None
         self.show_cv = get_setting("frametime_graph_display") == "cv"
