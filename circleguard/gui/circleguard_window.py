@@ -6,10 +6,12 @@ import threading
 from datetime import datetime, timedelta
 import re
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from circleguard import *
+from PyQt5.QtWidgets import (QMainWindow, QShortcut, QApplication,
+    QProgressBar, QLabel, QTextEdit)
+from PyQt5.QtCore import Qt, QObject, pyqtSignal, QTimer
+from PyQt5.QtGui import QIcon, QPalette, QColor, QKeySequence
+from circleguard import (ReplayMap, StealResult, RelaxResult, CorrectionResult,
+    TimewarpResult, Circleguard)
 from packaging import version
 import requests
 from requests import RequestException

@@ -1,20 +1,14 @@
 import os
-import sys
-from pathlib import Path
 from queue import Queue, Empty
 from functools import partial
 import logging
-from logging.handlers import RotatingFileHandler
 import threading
-from datetime import datetime
-import math
-import time
 
-# TODO this might cause a performance hit (we only import * for convenience),
-# investigate
-from PyQt5.QtCore import *
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import *
+from PyQt5.QtCore import Qt, pyqtSignal, QUrl, QTimer
+from PyQt5.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
+    QLabel, QPushButton, QGridLayout, QSpacerItem, QSizePolicy, QMainWindow,
+    QTextEdit)
+from PyQt5.QtGui import QDesktopServices, QIcon
 
 from circleguard import Circleguard, ReplayPath
 from circleguard import __version__ as cg_version
