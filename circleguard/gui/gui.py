@@ -188,9 +188,7 @@ class SettingsTab(QFrame):
         self.info = QLabel(self)
         # multiple spaces get shrinked to one space in rich text mode
         # https://groups.google.com/forum/#!topic/qtcontribs/VDOQFUj-eIA
-        # TODO deal with circlecore version here
         self.info.setText(f"circleguard v{__version__}&nbsp;&nbsp;|&nbsp;&nbsp;"
-                          f"circlecore vUnknown&nbsp;&nbsp;|&nbsp;&nbsp;"
                           f"<a href=\"https://discord.gg/wj35ehD\">Discord</a>")
         self.info.setTextFormat(Qt.RichText)
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
