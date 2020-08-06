@@ -10,9 +10,9 @@ from PyQt5.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
     QTextEdit)
 from PyQt5.QtGui import QDesktopServices, QIcon
 
-from circleguard import Circleguard, ReplayPath
-from circleguard import __version__ as cg_version
-from circlevis import BeatmapInfo
+# from circleguard import Circleguard, ReplayPath
+# from circleguard import __version__ as cg_version
+# from circlevis import BeatmapInfo
 
 from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
@@ -20,7 +20,7 @@ from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
     BeatmapTest, LineEditSetting, EntryWidget, RunWidget, ComboboxSetting)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
-from .visualizer import CGVisualizer
+from .visualizer import get_visualizer
 from .main_tab import MainTab
 from wizard import TutorialWizard
 from version import __version__
@@ -75,8 +75,8 @@ class VisualizeTab(QFrame):
         self.map_id = None
         self.q = Queue()
         self.replays = []
-        cache_path = get_setting("cache_dir") + "circleguard.db"
-        self.cg = Circleguard(get_setting("api_key"), cache_path)
+        # lazy loaded, see self.#cg
+        self._cg = None
         self.info = QLabel(self)
         self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
         self.label_map_id = QLabel(self)
@@ -94,6 +94,14 @@ class VisualizeTab(QFrame):
         layout.addWidget(self.result_frame)
 
         self.setLayout(layout)
+
+    @property
+    def cg(self):
+        if not self._cg:
+            from circleguard import Circleguard
+            cache_path = get_setting("cache_dir") + "circleguard.db"
+            self._cg = Circleguard(get_setting("api_key"), cache_path)
+        return self._cg
 
     def start_timer(self):
         timer = QTimer(self)
@@ -127,6 +135,7 @@ class VisualizeTab(QFrame):
                 self._parse_replay(os.path.join(path, f))
 
     def _parse_replay(self, path):
+        from circleguard import ReplayPath
         replay = ReplayPath(path)
         self.cg.load(replay)
         if self.map_id is None or len(self.replays) == 0: # store map_id if nothing stored
@@ -179,8 +188,9 @@ class SettingsTab(QFrame):
         self.info = QLabel(self)
         # multiple spaces get shrinked to one space in rich text mode
         # https://groups.google.com/forum/#!topic/qtcontribs/VDOQFUj-eIA
+        # TODO deal with circlecore version here
         self.info.setText(f"circleguard v{__version__}&nbsp;&nbsp;|&nbsp;&nbsp;"
-                          f"circlecore v{cg_version}&nbsp;&nbsp;|&nbsp;&nbsp;"
+                          f"circlecore vUnknown&nbsp;&nbsp;|&nbsp;&nbsp;"
                           f"<a href=\"https://discord.gg/wj35ehD\">Discord</a>")
         self.info.setTextFormat(Qt.RichText)
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
@@ -270,9 +280,11 @@ class ScrollableSettingsWidget(QFrame):
     def visualize(self):
         if self.visualizer is not None:
             self.visualizer.close()
+        from circlevis import BeatmapInfo
         beatmap_info = BeatmapInfo(path=self.beatmaptest.file_chooser.path)
         # TODO pass the library we define in MainTab to CGVIsualizer,
         # probably will have to rework some things entirely
+        CGVisualizer = get_visualizer()
         self.visualizer = CGVisualizer(beatmap_info)
         self.visualizer.show()
 

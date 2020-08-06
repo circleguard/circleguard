@@ -4,16 +4,18 @@ from pathlib import Path
 from functools import partial
 import json
 
-from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit, QMessageBox,
-                             QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
-                             QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
-                             QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView)
+from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
+    QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
+QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
+    QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag
-from PyQt5.QtCore import QRegExp, Qt, QDir, QCoreApplication, pyqtSignal, QPoint, QMimeData
-from circleguard import Circleguard, TimewarpResult, Mod, Key
-import numpy as np
+from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
+    QPoint, QMimeData)
+# from circleguard import Circleguard, TimewarpResult, Mod, Key
+# import numpy as np
 
-from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting, set_setting
+from settings import (get_setting, reset_defaults, LinkableSetting,
+    SingleLinkableSetting, set_setting)
 from utils import resource_path, delete_widget, AnalysisResult
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
@@ -714,6 +716,7 @@ class FrametimeGraph(QFrame):
 
     def __init__(self, result, replay):
         super().__init__()
+        from circleguard import TimewarpResult
 
         from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
         from matplotlib.figure import Figure
@@ -744,6 +747,7 @@ class FrametimeGraph(QFrame):
 
 
     def plot_normal(self, frametimes):
+        import numpy as np
         frametimes = self.conversion_factor * frametimes
         ax = self.canvas.figure.subplots()
 
@@ -754,6 +758,7 @@ class FrametimeGraph(QFrame):
 
     # adapted from https://matplotlib.org/examples/pylab_examples/broken_axis.html
     def plot_with_break(self, frametimes):
+        import numpy as np
         # gridspec_kw to make outlier plot smaller than the main one. https://stackoverflow.com/a/35881382
         ax1, ax2 = self.canvas.figure.subplots(1, 2, sharey=True, gridspec_kw={"width_ratios": [3, 1]})
         ax1.spines["right"].set_visible(False)
@@ -782,6 +787,7 @@ class FrametimeGraph(QFrame):
     # but the messy solution will work for now.
 
     def _conversion_factor(self, replay):
+        from circleguard import Mod
         if not self.show_cv:
             return 1
         if Mod.DT in replay.mods:
@@ -792,6 +798,7 @@ class FrametimeGraph(QFrame):
 
     @classmethod
     def get_frametimes(self, replay):
+        from circleguard import Circleguard
         cg = Circleguard(get_setting("api_key"))
         result = list(cg.timewarp_check(replay))
         return result[0].frametimes
@@ -809,6 +816,7 @@ class ReplayDataWindow(QMainWindow):
 class ReplayDataTable(QFrame):
     def __init__(self, replay):
         super().__init__()
+        from circleguard import Key
 
         table = QTableWidget()
         table.setColumnCount(4)
@@ -918,8 +926,9 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         slider = QSlider(Qt.Horizontal)
         slider.setFocusPolicy(Qt.ClickFocus)
         slider.setRange(0, max_)
-        # avoid errors when the setting is 2147483647 aka inf
-        slider.setValue(np.clip(0, max_, self.setting_value))
+        # max value of max_, avoid errors when the setting is 2147483647 aka inf
+        val = min(self.setting_value, max_)
+        slider.setValue(val)
         self.slider = slider
 
         spinbox = self.spin_box()

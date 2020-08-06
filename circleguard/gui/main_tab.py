@@ -14,19 +14,19 @@ from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout, QComboBox,
     QTextEdit, QScrollArea, QPushButton, QApplication, QToolTip)
 from PyQt5.QtGui import QTextCursor
-from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
-    UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
-    MapUser, Detect, Check, TimewarpResult, RelaxResult, CorrectionResult,
-    StealResult, Loader)
-from slider import Library
-from circlevis import BeatmapInfo
+# from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
+    # UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
+    # MapUser, Detect, Check, TimewarpResult, RelaxResult, CorrectionResult,
+    # StealResult, Loader)
+# from slider import Library
+# from circlevis import BeatmapInfo
 
 from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
     ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
     CorrectionCheckW, TimewarpCheckW, AnalyzeW)
 from settings import SingleLinkableSetting, get_setting, set_setting
 from utils import delete_widget, AnalysisResult
-from .visualizer import CGVisualizer
+from .visualizer import get_visualizer
 
 
 log = logging.getLogger("circleguard_gui")
@@ -49,7 +49,8 @@ class MainTab(SingleLinkableSetting, QFrame):
         QFrame.__init__(self)
         SingleLinkableSetting.__init__(self, "api_key")
 
-        self.library = Library(get_setting("cache_dir"))
+        # lazy loaded, see self#library
+        self._library = None
 
         self.loadables_combobox = QComboBox(self)
         self.loadables_combobox.setInsertPolicy(QComboBox.NoInsert)
@@ -213,6 +214,13 @@ class MainTab(SingleLinkableSetting, QFrame):
         cursor.movePosition(QTextCursor.End)
         self.terminal.setTextCursor(cursor)
 
+    @property
+    def library(self):
+        if not self._library:
+            from slider import Library
+            self._library = Library(get_setting("cache_dir"))
+        return self._library
+
     def add_circleguard_run(self):
         # osu!api v2 uses a client secret which is still 40 chars long but
         # includes characters after f, unlike v1's key which is in hex.
@@ -304,6 +312,34 @@ class MainTab(SingleLinkableSetting, QFrame):
 
 
     def run_circleguard(self, run):
+        from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
+            UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
+            MapUser, Detect, Check, Loader)
+        class TrackerLoader(Loader, QObject):
+            """
+            A circleguard.Loader subclass that emits a signal when the loader is
+            ratelimited. It inherits from QObject to allow us to use qt signals.
+            """
+            ratelimit_signal = pyqtSignal(int) # length of the ratelimit in seconds
+            check_stopped_signal = pyqtSignal()
+            # how often to emit check_stopped_signal when ratelimited, in seconds
+            INTERVAL = 0.250
+
+            def __init__(self, key, cacher=None):
+                Loader.__init__(self, key, cacher)
+                QObject.__init__(self)
+
+            def _ratelimit(self, length):
+                self.ratelimit_signal.emit(length)
+                # how many times to wait for 1/4 second (rng standing for range)
+                # we do this loop in order to tell run_circleguard to check if the run
+                # was canceled, or the application quit, instead of hanging on a long
+                # time.sleep
+                rng = math.ceil(length / self.INTERVAL)
+                for _ in range(rng):
+                    time.sleep(self.INTERVAL)
+                    self.check_stopped_signal.emit()
+
         self.update_label_signal.emit("Loading Replays")
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
         # reset every run
@@ -564,6 +600,8 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.update_run_status_signal.emit(run.run_id, "Finished")
 
     def print_results(self):
+        from circleguard import (TimewarpResult, RelaxResult, CorrectionResult,
+            StealResult)
         try:
             while True:
                 result = self.q.get_nowait()
@@ -629,6 +667,8 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.print_results_event.set()
 
     def visualize(self, replays, beatmap_id, result, start_at=0):
+        from circleguard import CorrectionResult
+        from circlevis import BeatmapInfo
         # only run one instance at a time
         if self.visualizer is not None:
             self.visualizer.close()
@@ -640,6 +680,7 @@ class MainTab(SingleLinkableSetting, QFrame):
             # don't give the visualizer any beatmap info if the user doesn't
             # want it rendered
             beatmap_info = BeatmapInfo()
+        CGVisualizer = get_visualizer()
         self.visualizer = CGVisualizer(beatmap_info, replays, snaps, self.library)
         self.visualizer.show()
         if start_at != 0:
@@ -664,32 +705,6 @@ class MainTab(SingleLinkableSetting, QFrame):
         # otherwise visualize as normal (which will close any existing
         # visualizers)
         self.visualize(result.replays, map_id, result, start_at=result.timestamp)
-
-
-class TrackerLoader(Loader, QObject):
-    """
-    A circleguard.Loader subclass that emits a signal when the loader is ratelimited.
-    It inherits from QObject to allow us to use qt signals.
-    """
-    ratelimit_signal = pyqtSignal(int) # length of the ratelimit in seconds
-    check_stopped_signal = pyqtSignal()
-    # how often to emit check_stopped_signal when ratelimited, in seconds
-    INTERVAL = 0.250
-
-    def __init__(self, key, cacher=None):
-        Loader.__init__(self, key, cacher)
-        QObject.__init__(self)
-
-    def _ratelimit(self, length):
-        self.ratelimit_signal.emit(length)
-        # how many times to wait for 1/4 second (rng standing for range)
-        # we do this loop in order to tell run_circleguard to check if the run
-        # was canceled, or the application quit, instead of hanging on a long
-        # time.sleep
-        rng = math.ceil(length / self.INTERVAL)
-        for _ in range(rng):
-            time.sleep(self.INTERVAL)
-            self.check_stopped_signal.emit()
 
 
 class Run():
