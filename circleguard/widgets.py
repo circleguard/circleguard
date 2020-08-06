@@ -694,8 +694,6 @@ class ResultW(QFrame):
 class FrametimeWindow(QMainWindow):
     def __init__(self, result, replay):
         super().__init__()
-        # delay matplotlib import until necessary (aka here) as a load time
-        # optimization
         # XXX make sure to import matplotlib after pyqt, so it knows to use that
         # and not re-import it.
         from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
@@ -717,7 +715,6 @@ class FrametimeGraph(QFrame):
     def __init__(self, result, replay):
         super().__init__()
         from circleguard import TimewarpResult
-
         from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
         from matplotlib.figure import Figure
 
