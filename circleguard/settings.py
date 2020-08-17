@@ -560,7 +560,7 @@ def overwrite_outdated_settings():
 def overwrite_with_config_settings():
     config = ConfigParser(interpolation=None)
     try:
-        config.read(CFG_PATH)
+        config.read(CFG_PATH, encoding="utf-8")
     except (UnicodeDecodeError, MissingSectionHeaderError):
         # create a copy of the malformed config for backup purposes
         copyfile(CFG_PATH, CFG_PATH + ".bkp")
@@ -628,7 +628,7 @@ def overwrite_config():
 
         config[section][setting] = str(get_setting(setting))
 
-    with open(CFG_PATH, "w+") as f:
+    with open(CFG_PATH, "w+", encoding="utf-8") as f:
         # add file comments at top of file
         f.write("### " + COMMENTS["file"].replace("\n", "\n### ") + "\n\n")
         config.write(f)
