@@ -135,7 +135,7 @@ DEFAULTS = {
         "message_loading_info":            "[{ts:%X}] Loading replay info",
         "message_loading_replays":         "[{ts:%X}] Loading {num_unloaded} of {num_total} replays ({num_previously_loaded} replays previously loaded)",
         "message_ratelimited":             "[{ts:%X}] Ratelimited, waiting for {s} seconds",
-        "message_starting_analysis":       "[{ts:%X}] Prepring replays for analysis, you can visualize (and more) from the Results tab when finished",
+        "message_starting_analysis":       "[{ts:%X}] Preparing replays for analysis, you can visualize (and more) from the Results tab when finished",
         "message_finished_investigation":  "[{ts:%X}] Done",
         "message_no_cheat_found":          "[{ts:%X}] Found nothing below the set thresholds",
         "message_starting_steal":          "[{ts:%X}] Determining similarity of the given replays",
@@ -405,6 +405,9 @@ FORCE_UPDATE = {
         "template_relax",
         "template_correction",
         "template_timewarp"
+    ],
+    "2.11.0": [
+        "message_starting_analysis"
     ]
 }
 
