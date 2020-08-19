@@ -6,13 +6,15 @@ import threading
 from datetime import datetime, timedelta
 import re
 
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from circleguard import *
+from PyQt5.QtWidgets import (QMainWindow, QShortcut, QApplication,
+    QProgressBar, QLabel, QTextEdit)
+from PyQt5.QtCore import Qt, QObject, pyqtSignal, QTimer
+from PyQt5.QtGui import QIcon, QPalette, QColor, QKeySequence
+# from circleguard import (ReplayMap, StealResult, RelaxResult, CorrectionResult,
+    # TimewarpResult, Circleguard)
 from packaging import version
-import requests
-from requests import RequestException
+# import requests
+# from requests import RequestException
 
 from settings import LinkableSetting, get_setting, set_setting, overwrite_config
 from widgets import WidgetCombiner, ResultW
@@ -119,6 +121,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         super().mousePressEvent(event)
 
     def url_scheme_called(self, url):
+        from circleguard import ReplayMap, Circleguard
         # url is bytes, so decode back to str
         url = url.decode()
         # windows appends an extra slash even if the original url didn't have
@@ -151,7 +154,6 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         # open visualizer for the given map and user, and jump to the timestamp
         result = URLAnalysisResult(replays, timestamp)
         self.main_window.main_tab.url_analysis_q.put(result)
-        print(self.main_window.main_tab.url_analysis_q.qsize())
 
     def start_timer(self):
         timer = QTimer(self)
@@ -193,6 +195,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             self.update_label(self.get_version_update_str())
             return
         try:
+            import requests
+            from requests import RequestException
             # check for new version
             git_request = requests.get("https://api.github.com/repos/circleguard/circleguard/releases/latest").json()
             git_version = version.parse(git_request["name"])
@@ -226,6 +230,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.progressbar.setRange(0, max_value)
 
     def add_result(self, result):
+        from circleguard import (StealResult, RelaxResult, CorrectionResult,
+            TimewarpResult)
         # this function right here could very well lead to some memory issues.
         # I tried to avoid leaving a reference to result's replays in this
         # method, but it's quite possible things are still not very clean.

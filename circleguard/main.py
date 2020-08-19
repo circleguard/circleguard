@@ -2,6 +2,8 @@
 This file exists to provide a top-level entry point so local imports will work
 in other files.
 """
+from datetime import datetime
+t1 = datetime.now()
 import sys
 import threading
 import traceback
@@ -19,9 +21,12 @@ from PyQt5.QtWidgets import QApplication
 import portalocker
 from portalocker.exceptions import LockException
 
+print(datetime.now() - t1)
 from gui.circleguard_window import CircleguardWindow
+print(datetime.now() - t1)
 from settings import get_setting, set_setting
 from wizard import CircleguardWizard
+print("done importing, total time taken: ", datetime.now() - t1)
 
 
 # semi randomly chosen
@@ -120,7 +125,6 @@ def init(self, *args, **kwargs):
     self.run = run_with_except_hook
 threading.Thread.__init__ = init
 
-
 app = QApplication([])
 app.setStyle("Fusion")
 app.setApplicationName("Circleguard")
@@ -167,4 +171,5 @@ if len(sys.argv) > 1:
     clientsocket.send(sys.argv[1].encode())
     clientsocket.close()
 
+print("execing app, total time taken: ", datetime.now() - t1)
 app.exec_()
