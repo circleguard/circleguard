@@ -1,13 +1,11 @@
-import re
 import os
 from pathlib import Path
-from datetime import datetime, timedelta
 import abc
 import json
 import logging
 from functools import partial
 
-from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
+from PyQt5.QtCore import QSettings, QStandardPaths
 from packaging import version
 # it's tempting to use QSettings builtin ini file support instead of
 # configparser, but that doesn't let us write comments, which is rather
