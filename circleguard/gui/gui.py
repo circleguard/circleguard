@@ -49,7 +49,7 @@ class MainWidget(QFrame):
         self.stacked_widget = QStackedWidget()
 
         window_selector = WindowSelector()
-        window_selector.analysis_button_clicked.connect(lambda: self.set_index(1))
+        window_selector.visualize_button_clicked.connect(lambda: self.set_index(1))
         window_selector.bulk_investigation_button_clicked.connect(lambda: self.set_index(2))
 
         self.cg_classic = CircleguardClassic()
@@ -74,22 +74,22 @@ class MainWidget(QFrame):
 
 
 class WindowSelector(QFrame):
-    analysis_button_clicked = pyqtSignal()
+    visualize_button_clicked = pyqtSignal()
     bulk_investigation_button_clicked = pyqtSignal()
 
     def __init__(self):
         super().__init__()
 
-        analysis_button = QPushButton("Analysis")
-        analysis_button.clicked.connect(self.analysis_button_clicked)
+        visualize_button = QPushButton("Visualization")
+        visualize_button.clicked.connect(self.visualize_button_clicked)
         # to style it in our stylesheet
-        analysis_button.setObjectName("bigButton")
+        visualize_button.setObjectName("bigButton")
 
         bulk_investigation_button = QPushButton("Bulk\nInvestigation")
         bulk_investigation_button.clicked.connect(self.bulk_investigation_button_clicked)
         bulk_investigation_button.setObjectName("bigButton")
 
-        for button in [analysis_button, bulk_investigation_button]:
+        for button in [visualize_button, bulk_investigation_button]:
             font = button.font()
             font.setPointSize(30)
             button.setFont(font)
@@ -100,7 +100,7 @@ class WindowSelector(QFrame):
             button.setSizePolicy(expanding)
 
         layout = QHBoxLayout()
-        layout.addWidget(analysis_button)
+        layout.addWidget(visualize_button)
         layout.addWidget(bulk_investigation_button)
         layout.setContentsMargins(15, 15, 15, 10)
         self.setLayout(layout)
