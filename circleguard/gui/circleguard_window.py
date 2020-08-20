@@ -384,7 +384,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                     background-color: rgb(64, 64, 64);
                     padding: 4px;
                     border: 1px solid rgb(25, 25, 25);
-                    border-radius: 10%;
+                    border-radius: 15%;
                 }
                 QPushButton#bigButton:hover {
                     background-color: rgb(67, 67, 67);
