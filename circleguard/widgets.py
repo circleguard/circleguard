@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
 QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
     QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView)
-from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag
+from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag, QPainter, QPen
 from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
     QPoint, QMimeData)
 # from circleguard import Circleguard, TimewarpResult, Mod, Key
@@ -16,7 +16,7 @@ from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
 
 from settings import (get_setting, reset_defaults, LinkableSetting,
     SingleLinkableSetting, set_setting)
-from utils import resource_path, delete_widget, AnalysisResult
+from utils import resource_path, delete_widget, AnalysisResult, ACCENT_COLOR
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
@@ -275,6 +275,43 @@ class ScrollableChecksWidget(QFrame):
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
+
+
+# provided for our Analysis window. There's probably some shared code that
+# we could abstract out from this and `DropArea`, but it's not worth it atm
+class ReplayDropArea(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.setAcceptDrops(True)
+
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignTop)
+        self.setLayout(layout)
+
+    def dragEnterEvent(self, event):
+        event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        mimedata = event.mimeData()
+        print(mimedata)
+        # don't accept drops from anywhere else
+        # if not mimedata.hasFormat("application/x-circleguard-loadable"):
+            # return
+        event.acceptProposedAction()
+        # second #data necessary to convert QByteArray to python byte array
+        data = json.loads(mimedata.data("application/x-circleguard-loadable").data())
+
+    def paintEvent(self, event):
+        pen = QPen()
+        pen.setColor(ACCENT_COLOR)
+        pen.setWidth(3)
+        # 4 (pen width units of) accent color, followed by 4 (pen width units
+        # of) nothing, then repeat
+        pen.setDashPattern([4, 4])
+        painter = QPainter(self)
+        painter.setPen(pen)
+        painter.drawRoundedRect(0, 5, self.width() - 5, self.height() - 7, 3, 3)
+        super().paintEvent(event)
 
 
 class DropArea(QFrame):

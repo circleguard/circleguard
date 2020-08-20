@@ -2,7 +2,10 @@ from pathlib import Path
 import sys
 
 from PyQt5.QtWidgets import QLayout, QFrame
-from PyQt5.QtGui import QPainter
+from PyQt5.QtGui import QPainter, QColor
+
+# the blue accent color used throughout the application
+ACCENT_COLOR = QColor(71, 174, 247)
 
 # placed above local imports to avoid circular import errors
 ROOT_PATH = Path(__file__).parent.parent.absolute()

@@ -18,8 +18,8 @@ from packaging import version
 
 from settings import LinkableSetting, get_setting, set_setting, overwrite_config
 from widgets import WidgetCombiner, ResultW
-from .gui import MainWindow, DebugWindow
-from utils import resource_path, AnalysisResult, URLAnalysisResult
+from .gui import MainWidget, DebugWindow
+from utils import resource_path, AnalysisResult, URLAnalysisResult, ACCENT_COLOR
 from version import __version__
 
 
@@ -40,6 +40,10 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         LinkableSetting.__init__(self, ["log_save", "theme"])
         # our QApplication, so we can set the theme from our widgets
         self.app = app
+
+        # set the theme before initializing anything so it gets applied
+        self.on_setting_changed("theme", self.setting_values["theme"])
+
         self.clipboard = QApplication.clipboard()
         self.progressbar = QProgressBar()
         self.progressbar.setFixedWidth(250)
@@ -53,15 +57,20 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.statusBar().setSizeGripEnabled(False)
         self.statusBar().setContentsMargins(8, 2, 10, 2)
 
-        self.main_window = MainWindow(self)
-        self.main_window.main_tab.set_progressbar_signal.connect(self.set_progressbar)
-        self.main_window.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
-        self.main_window.main_tab.update_label_signal.connect(self.update_label)
-        self.main_window.main_tab.add_result_signal.connect(self.add_result)
-        self.main_window.main_tab.add_url_analysis_result_signal.connect(self.add_url_analysis_result)
-        self.main_window.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
-        self.main_window.main_tab.update_run_status_signal.connect(self.update_run_status)
-        self.main_window.queue_tab.cancel_run_signal.connect(self.cancel_run)
+        self.main_window = MainWidget()
+        # we reference this widget a lot, so shorten its reference as a
+        # convenience
+        self.cg_classic = self.main_window.cg_classic
+
+        self.cg_classic.main_tab.set_progressbar_signal.connect(self.set_progressbar)
+        self.cg_classic.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
+        self.cg_classic.main_tab.update_label_signal.connect(self.update_label)
+        self.cg_classic.main_tab.add_result_signal.connect(self.add_result)
+        self.cg_classic.main_tab.add_url_analysis_result_signal.connect(self.add_url_analysis_result)
+        self.cg_classic.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
+        self.cg_classic.main_tab.update_run_status_signal.connect(self.update_run_status)
+        self.cg_classic.queue_tab.cancel_run_signal.connect(self.cancel_run)
+
 
         self.setCentralWidget(self.main_window)
         QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Right), self, self.tab_right)
@@ -90,9 +99,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         logging.getLogger("ossapi").addHandler(self.file_handler)
         logging.getLogger("circleguard_gui").addHandler(handler)
         logging.getLogger("circleguard_gui").addHandler(self.file_handler)
-        # apply setting values on application start
+
         self.on_setting_changed("log_save", self.setting_values["log_save"])
-        self.on_setting_changed("theme", self.setting_values["theme"])
 
         self.thread = threading.Thread(target=self.run_update_check)
         self.thread.start()
@@ -107,11 +115,11 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             self.switch_theme(new_value)
 
     def tab_right(self):
-        tabs = self.main_window.tabs
+        tabs = self.cg_classic.tabs
         tabs.setCurrentIndex(tabs.currentIndex() + 1)
 
     def tab_left(self):
-        tabs = self.main_window.tabs
+        tabs = self.cg_classic.tabs
         tabs.setCurrentIndex(tabs.currentIndex() - 1)
 
     def mousePressEvent(self, event):
@@ -153,7 +161,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             replays.append(r2)
         # open visualizer for the given map and user, and jump to the timestamp
         result = URLAnalysisResult(replays, timestamp)
-        self.main_window.main_tab.url_analysis_q.put(result)
+        self.cg_classic.main_tab.url_analysis_q.put(result)
 
     def start_timer(self):
         timer = QTimer(self)
@@ -165,8 +173,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         check for stderr messages (because logging prints to stderr not stdout, and
         it's nice to have stdout reserved) and then print cg results
         """
-        self.main_window.main_tab.print_results()
-        self.main_window.main_tab.check_circleguard_queue()
+        self.cg_classic.main_tab.print_results()
+        self.cg_classic.main_tab.check_circleguard_queue()
 
     def log(self, message):
         """
@@ -175,7 +183,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
 
         log_output = get_setting("_log_output")
         if log_output in ["terminal", "both"]:
-            self.main_window.main_tab.write(message)
+            self.cg_classic.main_tab.write(message)
 
         if log_output in ["new_window", "both"]:
             if self.debug_window and self.debug_window.isVisible():
@@ -294,32 +302,32 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
 
         result_widget = ResultW(label_text, result, replays)
         # set button signal connections (visualize and copy template to clipboard)
-        result_widget.visualize_button_pressed_signal.connect(partial(self.main_window.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id, result_widget.result))
+        result_widget.visualize_button_pressed_signal.connect(partial(self.cg_classic.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id, result_widget.result))
         result_widget.template_button_pressed_signal.connect(partial(self.copy_to_clipboard, template_text))
         # remove info text if shown
-        if not self.main_window.results_tab.results.info_label.isHidden():
-            self.main_window.results_tab.results.info_label.hide()
-        self.main_window.results_tab.results.layout.insertWidget(0, result_widget)
+        if not self.cg_classic.results_tab.results.info_label.isHidden():
+            self.cg_classic.results_tab.results.info_label.hide()
+        self.cg_classic.results_tab.results.layout.insertWidget(0, result_widget)
 
     def add_url_analysis_result(self, result):
-        self.main_window.main_tab.visualize_from_url(result)
+        self.cg_classic.main_tab.visualize_from_url(result)
 
     def copy_to_clipboard(self, text):
         self.clipboard.setText(text)
 
     def add_run_to_queue(self, run):
-        self.main_window.queue_tab.add_run(run)
+        self.cg_classic.queue_tab.add_run(run)
 
     def update_run_status(self, run_id, status):
-        self.main_window.queue_tab.update_status(run_id, status)
+        self.cg_classic.queue_tab.update_status(run_id, status)
 
     def cancel_run(self, run_id):
-        self.main_window.main_tab.runs[run_id].event.set()
+        self.cg_classic.main_tab.runs[run_id].event.set()
 
     def cancel_all_runs(self):
         """called when lastWindowClosed signal emits. Cancel all our runs so
         we don't hang the application on loading/comparing while trying to quit"""
-        for run in self.main_window.main_tab.runs:
+        for run in self.cg_classic.main_tab.runs:
             run.event.set()
 
     def on_application_quit(self):
@@ -328,67 +336,91 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         """
         if self.debug_window is not None:
             self.debug_window.close()
-        if self.main_window.main_tab.visualizer is not None:
-            self.main_window.main_tab.visualizer.close()
+        if self.cg_classic.main_tab.visualizer is not None:
+            self.cg_classic.main_tab.visualizer.close()
         overwrite_config()
 
     def switch_theme(self, theme):
-        accent = QColor(71, 174, 247)
         if theme == "dark":
+            DARK_GREY = QColor(53, 53, 53)
+
             dark_p = QPalette()
 
-            dark_p.setColor(QPalette.Window, QColor(53, 53, 53))
+            dark_p.setColor(QPalette.Window, DARK_GREY)
             dark_p.setColor(QPalette.WindowText, Qt.white)
             dark_p.setColor(QPalette.Base, QColor(25, 25, 25))
-            dark_p.setColor(QPalette.AlternateBase, QColor(53, 53, 53))
-            dark_p.setColor(QPalette.ToolTipBase, QColor(53, 53, 53))
+            dark_p.setColor(QPalette.AlternateBase, DARK_GREY)
+            dark_p.setColor(QPalette.ToolTipBase, DARK_GREY)
             dark_p.setColor(QPalette.ToolTipText, Qt.white)
             dark_p.setColor(QPalette.Text, Qt.white)
-            dark_p.setColor(QPalette.Button, QColor(53, 53, 53))
+            dark_p.setColor(QPalette.Button, DARK_GREY)
             dark_p.setColor(QPalette.ButtonText, Qt.white)
             dark_p.setColor(QPalette.BrightText, Qt.red)
-            dark_p.setColor(QPalette.Highlight, accent)
+            dark_p.setColor(QPalette.Highlight, ACCENT_COLOR)
             dark_p.setColor(QPalette.Inactive, QPalette.Highlight, Qt.lightGray)
             dark_p.setColor(QPalette.HighlightedText, Qt.black)
             dark_p.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
             dark_p.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
             dark_p.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
-            dark_p.setColor(QPalette.Disabled, QPalette.Base, QColor(53, 53, 53))
-            dark_p.setColor(QPalette.Link, accent)
-            dark_p.setColor(QPalette.LinkVisited, accent)
+            dark_p.setColor(QPalette.Disabled, QPalette.Base, DARK_GREY)
+            dark_p.setColor(QPalette.Link, ACCENT_COLOR)
+            dark_p.setColor(QPalette.LinkVisited, ACCENT_COLOR)
+
+            # the `bigButton` class is necessary because qt (or the fusion
+            # style, not sure which) is putting a *gradient* on the buttons by
+            # by default. Kind of crazy if you ask me, but it does make the
+            # small buttons look good, so I only want to change it to a flat
+            # color for larger buttons (and also round their corners because
+            # large buttons don't look so good when they're blocky)
 
             self.app.setPalette(dark_p)
             self.app.setStyleSheet("""
-                    QToolTip {
-                        color: #ffffff;
-                        background-color: #2a2a2a;
-                        border: 1px solid white;
-                    }
-                    QLabel {
-                            font-weight: Normal;
-                    }
-                    QTextEdit {
-                            background-color: #212121;
-                    }
-                    LoadableW {
-                            border: 1.5px solid #272727;
-                    }
-                    CheckW {
-                            border: 1.5px solid #272727;
-                    }
-                    DragWidget {
-                            border: 1.5px solid #272727;
-                    }""")
+                QToolTip {
+                    color: #ffffff;
+                    background-color: #2a2a2a;
+                    border: 1px solid white;
+                }
+                QPushButton#bigButton {
+                    background-color: rgb(64, 64, 64);
+                    padding: 4px;
+                    border: 1px solid rgb(25, 25, 25);
+                    border-radius: 10%;
+                }
+                QPushButton#bigButton:hover {
+                    background-color: rgb(67, 67, 67);
+                }
+                QPushButton#bigButton:pressed {
+                    background-color: rgb(61, 61, 61);
+                }
+                QPushButton#backButton {
+                    margin-top: 5px;
+                    margin-left: 10px;
+                }
+                QLabel {
+                        font-weight: Normal;
+                }
+                QTextEdit {
+                        background-color: #212121;
+                }
+                LoadableW {
+                        border: 1.5px solid #272727;
+                }
+                CheckW {
+                        border: 1.5px solid #272727;
+                }
+                DragWidget {
+                        border: 1.5px solid #272727;
+                }""")
         else:
             self.app.setPalette(self.app.style().standardPalette())
             updated_palette = QPalette()
             # fixes inactive items not being greyed out
             updated_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
-            updated_palette.setColor(QPalette.Highlight, accent)
+            updated_palette.setColor(QPalette.Highlight, ACCENT_COLOR)
             updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
             updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, Qt.darkGray)
-            updated_palette.setColor(QPalette.Link, accent)
-            updated_palette.setColor(QPalette.LinkVisited, accent)
+            updated_palette.setColor(QPalette.Link, ACCENT_COLOR)
+            updated_palette.setColor(QPalette.LinkVisited, ACCENT_COLOR)
             self.app.setPalette(updated_palette)
             self.app.setStyleSheet("""
                     QToolTip {

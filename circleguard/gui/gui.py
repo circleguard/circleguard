@@ -7,7 +7,7 @@ import threading
 from PyQt5.QtCore import Qt, pyqtSignal, QUrl, QTimer
 from PyQt5.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
     QLabel, QPushButton, QGridLayout, QSpacerItem, QSizePolicy, QMainWindow,
-    QTextEdit)
+    QTextEdit, QStackedWidget, QHBoxLayout)
 from PyQt5.QtGui import QDesktopServices, QIcon
 
 # from circleguard import Circleguard, ReplayPath
@@ -17,7 +17,8 @@ from PyQt5.QtGui import QDesktopServices, QIcon
 from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
     ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
-    BeatmapTest, LineEditSetting, EntryWidget, RunWidget, ComboboxSetting)
+    BeatmapTest, LineEditSetting, EntryWidget, RunWidget, ComboboxSetting,
+    ReplayDropArea)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
 from .visualizer import get_visualizer
@@ -29,24 +30,112 @@ from version import __version__
 log = logging.getLogger("circleguard_gui")
 
 
-class DebugWindow(QMainWindow):
+class MainWidget(QFrame):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Debug Output")
-        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
-        terminal = QTextEdit(self)
-        terminal.setReadOnly(True)
-        terminal.ensureCursorVisible()
-        self.terminal = terminal
-        self.setCentralWidget(self.terminal)
-        self.resize(800, 350)
+        self.back_button = QPushButton()
+        self.back_button.setFixedWidth(55)
+        self.back_button.setFixedHeight(30)
+        self.back_button.setIcon(QIcon(resource_path("back_arrow.png")))
+        # so we can reference just this button in css
+        self.back_button.setObjectName("backButton")
+        self.back_button.clicked.connect(lambda: self.set_index(0))
+        # offset by a bit so we're not right against the window border
+        margins = self.back_button.contentsMargins()
+        margins.setLeft(10)
+        margins.setTop(10)
+        self.back_button.setContentsMargins(margins)
 
-    def write(self, message):
-        self.terminal.append(message)
+        self.stacked_widget = QStackedWidget()
 
-class MainWindow(QFrame):
-    def __init__(self, parent):
-        super().__init__(parent)
+        window_selector = WindowSelector()
+        window_selector.analysis_button_clicked.connect(lambda: self.set_index(1))
+        window_selector.bulk_investigation_button_clicked.connect(lambda: self.set_index(2))
+
+        self.cg_classic = CircleguardClassic()
+
+        self.stacked_widget.addWidget(window_selector)
+        self.stacked_widget.addWidget(AnalysisSelection())
+        self.stacked_widget.addWidget(self.cg_classic)
+
+        self.set_index(0)
+
+        layout = QVBoxLayout()
+        layout.addWidget(self.back_button)
+        layout.addWidget(self.stacked_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        self.setLayout(layout)
+
+    def set_index(self, index):
+        self.back_button.hide() if index == 0 else self.back_button.show()
+        self.stacked_widget.setCurrentIndex(index)
+
+
+
+class WindowSelector(QFrame):
+    analysis_button_clicked = pyqtSignal()
+    bulk_investigation_button_clicked = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+
+        analysis_button = QPushButton("Analysis")
+        analysis_button.clicked.connect(self.analysis_button_clicked)
+        # to style it in our stylesheet
+        analysis_button.setObjectName("bigButton")
+
+        bulk_investigation_button = QPushButton("Bulk\nInvestigation")
+        bulk_investigation_button.clicked.connect(self.bulk_investigation_button_clicked)
+        bulk_investigation_button.setObjectName("bigButton")
+
+        for button in [analysis_button, bulk_investigation_button]:
+            font = button.font()
+            font.setPointSize(30)
+            button.setFont(font)
+
+            expanding = QSizePolicy()
+            expanding.setHorizontalPolicy(QSizePolicy.Expanding)
+            expanding.setVerticalPolicy(QSizePolicy.Expanding)
+            button.setSizePolicy(expanding)
+
+        layout = QHBoxLayout()
+        layout.addWidget(analysis_button)
+        layout.addWidget(bulk_investigation_button)
+        layout.setContentsMargins(15, 15, 15, 10)
+        self.setLayout(layout)
+
+
+
+class AnalysisSelection(QFrame):
+    def __init__(self):
+        super().__init__()
+
+        drop_area = ReplayDropArea()
+        expanding = QSizePolicy()
+        expanding.setHorizontalPolicy(QSizePolicy.Expanding)
+        expanding.setVerticalPolicy(QSizePolicy.Expanding)
+        drop_area.setSizePolicy(expanding)
+
+        visualize_button = QPushButton("Visualize")
+        visualize_button.setObjectName("bigButton")
+        font = visualize_button.font()
+        font.setPointSize(30)
+        visualize_button.setFont(font)
+        expanding = QSizePolicy()
+        expanding.setHorizontalPolicy(QSizePolicy.Expanding)
+        expanding.setVerticalPolicy(QSizePolicy.Expanding)
+        visualize_button.setSizePolicy(expanding)
+
+        layout = QGridLayout()
+        layout.addWidget(drop_area, 0, 0, 6, 1)
+        layout.addWidget(visualize_button, 6, 0, 2, 2)
+        self.setLayout(layout)
+
+
+class CircleguardClassic(QFrame):
+    def __init__(self):
+        super().__init__()
 
         self.tabs = QTabWidget()
         self.main_tab = MainTab()
@@ -64,6 +153,22 @@ class MainWindow(QFrame):
         self.layout.addWidget(self.tabs)
         self.layout.setContentsMargins(10, 10, 10, 0)
         self.setLayout(self.layout)
+
+
+class DebugWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Debug Output")
+        self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
+        terminal = QTextEdit(self)
+        terminal.setReadOnly(True)
+        terminal.ensureCursorVisible()
+        self.terminal = terminal
+        self.setCentralWidget(self.terminal)
+        self.resize(800, 350)
+
+    def write(self, message):
+        self.terminal.append(message)
 
 
 # TODO needs to be updated to work with ReplayChooser instead of FolderChooser
