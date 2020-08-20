@@ -6,8 +6,9 @@ import json
 
 from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
-QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
-    QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView)
+    QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
+    QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView,
+    QGraphicsOpacityEffect)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag, QPainter, QPen
 from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
     QPoint, QMimeData)
@@ -284,8 +285,20 @@ class ReplayDropArea(QFrame):
         super().__init__()
         self.setAcceptDrops(True)
 
-        layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignTop)
+        layout = QGridLayout()
+        self.label = QLabel("drag and drop .osr files here")
+        font = self.label.font()
+        font.setPointSize(20)
+        self.label.setFont(font)
+        self.label.setAlignment(Qt.AlignCenter)
+
+        # https://stackoverflow.com/a/59022793/12164878
+        effect = QGraphicsOpacityEffect(self)
+        effect.setOpacity(0.5)
+        self.label.setGraphicsEffect(effect)
+        self.label.setAutoFillBackground(True)
+
+        layout.addWidget(self.label)
         self.setLayout(layout)
 
     def dragEnterEvent(self, event):
@@ -293,13 +306,10 @@ class ReplayDropArea(QFrame):
 
     def dropEvent(self, event):
         mimedata = event.mimeData()
-        print(mimedata)
-        # don't accept drops from anywhere else
-        # if not mimedata.hasFormat("application/x-circleguard-loadable"):
-            # return
+        file_path = str(mimedata.data("text/uri-list").data().rstrip())
+        if not file_path.endswith(".osr"):
+            return
         event.acceptProposedAction()
-        # second #data necessary to convert QByteArray to python byte array
-        data = json.loads(mimedata.data("application/x-circleguard-loadable").data())
 
     def paintEvent(self, event):
         pen = QPen()
