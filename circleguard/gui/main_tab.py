@@ -104,7 +104,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.run_button.setFixedHeight(30)
         self.run_button.setText("Run")
         font = self.run_button.font()
-        font.setPointSize(16)
+        font.setPointSize(15)
         self.run_button.setFont(font)
         self.run_button.clicked.connect(self.add_circleguard_run)
         # disable button if no api_key is stored
