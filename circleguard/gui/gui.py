@@ -481,9 +481,9 @@ class ResultsFrame(QFrame):
         # we want widgets to fill from top down,
         # being vertically centered looks weird
         self.layout.setAlignment(Qt.AlignTop)
-        self.info_label = QLabel("After running checks, this tab will fill up "
-                                 "with replays that can be played back. Newest "
-                                 "results appear at the top.")
+        self.info_label = QLabel("After running Investigations, this tab will "
+            "fill up with replays that can be played back. Newest results "
+            "appear at the top.")
         self.layout.addWidget(self.info_label)
         self.setLayout(self.layout)
 
