@@ -289,6 +289,12 @@ DEFAULTS = {
         "frametime_graph_display_options": {
             "ucv": "ucv",
             "cv": "cv"
+        },
+        "default_page": "selection",
+        "default_page_options": {
+            "Selection (default)": "selection",
+            "Visualization": "visualization",
+            "Investigation": "investigation"
         }
     },
     "Experimental": {

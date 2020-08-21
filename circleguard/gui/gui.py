@@ -52,6 +52,7 @@ class MainWidget(QFrame):
         window_selector.visualize_button_clicked.connect(lambda: self.set_index(1))
         window_selector.bulk_investigation_button_clicked.connect(lambda: self.set_index(2))
 
+
         self.analysis_selection = AnalysisSelection()
         self.cg_classic = CircleguardClassic()
 
@@ -59,7 +60,13 @@ class MainWidget(QFrame):
         self.stacked_widget.addWidget(self.analysis_selection)
         self.stacked_widget.addWidget(self.cg_classic)
 
-        self.set_index(0)
+        index_map = {
+            "selection": 0,
+            "visualization": 1,
+            "investigation": 2
+        }
+        index = index_map[get_setting("default_page")]
+        self.set_index(index)
 
         layout = QVBoxLayout()
         layout.addWidget(self.back_button)
@@ -69,6 +76,7 @@ class MainWidget(QFrame):
         self.setLayout(layout)
 
     def set_index(self, index):
+        # don't show the back button on the selection page itself
         self.back_button.hide() if index == 0 else self.back_button.show()
         self.stacked_widget.setCurrentIndex(index)
 
@@ -410,10 +418,8 @@ class ScrollableSettingsWidget(QFrame):
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.theme = ComboboxSetting("Theme", "Come join the dark side", "theme")
-        # TODO this should really be a dropdown (combobox), but those are a PITA to add right now. Could be implemented much
-        # cleaner if we had two settings per dropdown, one for the current value and one for the list of options to choose
-        # from. This would clean up `LoglevelWidget` as well (or rather, converted into a generic DropdownSetting).
         self.show_cv_frametimes = ComboboxSetting("Frametime graph display type", "", "frametime_graph_display")
+        self.default_page = ComboboxSetting("Show this page when circleguard starts", "", "default_page")
         self.visualizer_info = OptionWidget("Draw Replay Info", "", "visualizer_info")
         self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
@@ -435,6 +441,7 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(self.cache)
         self.layout.addWidget(self.theme)
         self.layout.addWidget(self.show_cv_frametimes)
+        self.layout.addWidget(self.default_page)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Visualizer"))
         self.layout.addWidget(self.visualizer_info)
