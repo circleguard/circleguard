@@ -55,8 +55,6 @@ COMMENTS = {
     },
     "Visualizer": {
         "section": "Settings regarding the replay visualizer.",
-        "visualizer_info": "If True, displays some info about the replays while the visualizer is playing",
-        "visualizer_black_bg": "If True, uses a pure black background for the visualizer. Otherwise uses the background of the current theme",
         "visualizer_frametime": "If True, displays a frametime graph at the bottom right",
         "default_speed": "The speed the visualizer defaults to when visualizing a new replay",
         "speed_options": "The speed options available to change to in the visualizer. The value of Visualizer/default_speed must appear in this list"
@@ -214,10 +212,7 @@ DEFAULTS = {
         "string_result_visualization_single": "[{ts:%x %H:%M}] {replay.username} +{mods_short_name} on map {replay.map_id}"
     },
     "Visualizer": {
-        "visualizer_info": True,
-        "visualizer_black_bg": False,
         "visualizer_frametime": False,
-        "render_beatmap": True,
         # so type() returns float, since we want to allow float values, not just int
         "default_speed": float(1),
         "speed_options": [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 3.0, 5.0, 10.0]

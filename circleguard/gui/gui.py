@@ -17,8 +17,8 @@ from PyQt5.QtGui import QDesktopServices, QIcon
 from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
     ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
-    BeatmapTest, LineEditSetting, EntryWidget, RunWidget, ComboboxSetting,
-    ReplayDropArea, ReplayMapCreation)
+    LineEditSetting, EntryWidget, RunWidget, ComboboxSetting, ReplayDropArea,
+    ReplayMapCreation)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
 from .visualizer import get_visualizer
@@ -420,8 +420,6 @@ class ScrollableSettingsWidget(QFrame):
         self.theme = ComboboxSetting("Theme", "Come join the dark side", "theme")
         self.show_cv_frametimes = ComboboxSetting("Frametime graph display type", "", "frametime_graph_display")
         self.default_page = ComboboxSetting("Show this window when circleguard starts", "", "default_page")
-        self.visualizer_info = OptionWidget("Draw Replay Info", "", "visualizer_info")
-        self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
         self.default_span_map = LineEditSetting("Map span defaults to", "", "normal", "default_span_map")
         self.default_span_user = LineEditSetting("User span defaults to", "", "normal", "default_span_user")
@@ -443,9 +441,6 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(self.show_cv_frametimes)
         self.layout.addWidget(self.default_page)
         self.layout.addItem(vert_spacer)
-        self.layout.addWidget(Separator("Visualizer"))
-        self.layout.addWidget(self.visualizer_info)
-        self.layout.addWidget(self.visualizer_beatmap)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Loadables"))
         self.layout.addWidget(self.default_span_user)
@@ -458,26 +453,12 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Dev"))
         self.layout.addWidget(self.run_wizard)
-        self.beatmaptest = BeatmapTest()
-        self.beatmaptest.visualize_button.clicked.connect(self.visualize)
-        self.layout.addWidget(self.beatmaptest)
         self.setLayout(self.layout)
 
     def show_wizard(self):
         # keep a reference or it immediately deallocates
         self.wizard = TutorialWizard()
         self.wizard.show()
-
-    def visualize(self):
-        if self.visualizer is not None:
-            self.visualizer.close()
-        from circlevis import BeatmapInfo
-        beatmap_info = BeatmapInfo(path=self.beatmaptest.file_chooser.path)
-        # TODO pass the library we define in MainTab to CGVIsualizer,
-        # probably will have to rework some things entirely
-        CGVisualizer = get_visualizer()
-        self.visualizer = CGVisualizer(beatmap_info)
-        self.visualizer.show()
 
 
 class ResultsTab(QFrame):

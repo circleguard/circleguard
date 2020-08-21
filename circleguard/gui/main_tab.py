@@ -680,10 +680,6 @@ class MainTab(SingleLinkableSetting, QFrame):
         if isinstance(result, CorrectionResult):
             snaps = [snap.time for snap in result.snaps]
         beatmap_info = BeatmapInfo(map_id=beatmap_id)
-        if not get_setting("render_beatmap"):
-            # don't give the visualizer any beatmap info if the user doesn't
-            # want it rendered
-            beatmap_info = BeatmapInfo()
         CGVisualizer = get_visualizer()
         self.visualizer = CGVisualizer(beatmap_info, replays, snaps, self.library)
         self.visualizer.show()

@@ -1484,31 +1484,6 @@ class ResetSettings(QFrame):
             QCoreApplication.quit()
 
 
-class BeatmapTest(QFrame):
-    def __init__(self):
-        super(BeatmapTest, self).__init__()
-        self.visualizer_window = None
-
-        self.file_chooser = BeatmapChooser("Choose beatmap")
-        self.file_chooser.setFixedWidth(120)
-        file_chooser_label = QLabel("Beatmap file:", self)
-
-        visualize_label = QLabel("Visualize beatmap:", self)
-        self.visualize_button = QPushButton("Visualize", self)
-        self.visualize_button.setFixedWidth(120)
-
-        layout = QGridLayout()
-
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(file_chooser_label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
-        layout.addWidget(self.file_chooser, 0, 2, 1, 1)
-
-        layout.addWidget(visualize_label, 1, 0, 1, 1)
-        layout.addItem(SPACER, 1, 1, 1, 1)
-        layout.addWidget(self.visualize_button, 1, 2, 1, 1)
-        self.setLayout(layout)
-
 
 class EntryWidget(QFrame):
     """
