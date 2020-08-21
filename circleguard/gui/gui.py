@@ -419,7 +419,7 @@ class ScrollableSettingsWidget(QFrame):
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.theme = ComboboxSetting("Theme", "Come join the dark side", "theme")
         self.show_cv_frametimes = ComboboxSetting("Frametime graph display type", "", "frametime_graph_display")
-        self.default_page = ComboboxSetting("Show this page when circleguard starts", "", "default_page")
+        self.default_page = ComboboxSetting("Show this window when circleguard starts", "", "default_page")
         self.visualizer_info = OptionWidget("Draw Replay Info", "", "visualizer_info")
         self.visualizer_beatmap = OptionWidget("Render Hitobjects", "Reopen Visualizer for it to apply", "render_beatmap")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
