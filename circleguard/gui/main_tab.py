@@ -408,7 +408,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                         loadable = Map(int(loadableW.map_id_input.value()), span=span, mods=mods)
                     if isinstance(loadableW, UserW):
                         mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
-                        span=loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
+                        span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
                         if span == "all":
                             span = Loader.MAX_USER_SPAN
                         loadable = User(int(loadableW.user_id_input.value()), span=span, mods=mods)
