@@ -7,7 +7,7 @@ import threading
 from PyQt5.QtCore import Qt, pyqtSignal, QUrl, QTimer
 from PyQt5.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
     QLabel, QPushButton, QGridLayout, QSpacerItem, QSizePolicy, QMainWindow,
-    QTextEdit, QStackedWidget, QHBoxLayout)
+    QTextEdit, QStackedWidget, QHBoxLayout, QMessageBox)
 from PyQt5.QtGui import QDesktopServices, QIcon
 
 # from circleguard import Circleguard, ReplayPath
@@ -18,7 +18,7 @@ from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
     ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
     BeatmapTest, LineEditSetting, EntryWidget, RunWidget, ComboboxSetting,
-    ReplayDropArea)
+    ReplayDropArea, ReplayMapCreation)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
 from .visualizer import get_visualizer
@@ -52,10 +52,11 @@ class MainWidget(QFrame):
         window_selector.visualize_button_clicked.connect(lambda: self.set_index(1))
         window_selector.bulk_investigation_button_clicked.connect(lambda: self.set_index(2))
 
+        self.analysis_selection = AnalysisSelection()
         self.cg_classic = CircleguardClassic()
 
         self.stacked_widget.addWidget(window_selector)
-        self.stacked_widget.addWidget(AnalysisSelection())
+        self.stacked_widget.addWidget(self.analysis_selection)
         self.stacked_widget.addWidget(self.cg_classic)
 
         self.set_index(0)
@@ -85,7 +86,7 @@ class WindowSelector(QFrame):
         # to style it in our stylesheet
         visualize_button.setObjectName("bigButton")
 
-        bulk_investigation_button = QPushButton("Bulk\nInvestigation")
+        bulk_investigation_button = QPushButton("Investigation / Settings")
         bulk_investigation_button.clicked.connect(self.bulk_investigation_button_clicked)
         bulk_investigation_button.setObjectName("bigButton")
 
@@ -108,17 +109,39 @@ class WindowSelector(QFrame):
 
 
 class AnalysisSelection(QFrame):
+    set_progressbar_signal = pyqtSignal(int)
+    increment_progressbar_signal = pyqtSignal(int)
+    update_label_signal = pyqtSignal(str)
+    # used for cross-thread communication between loading the loadables (work
+    # thread) and showing the visualizer (main thread)
+    show_visualizer_window = pyqtSignal()
+
     def __init__(self):
         super().__init__()
+        self._cg = None
+        self.show_visualizer_window.connect(self.show_visualizer)
 
-        drop_area = ReplayDropArea()
         expanding = QSizePolicy()
         expanding.setHorizontalPolicy(QSizePolicy.Expanding)
         expanding.setVerticalPolicy(QSizePolicy.Expanding)
-        drop_area.setSizePolicy(expanding)
+
+        self.drop_area = ReplayDropArea()
+        self.drop_area.setSizePolicy(expanding)
+        da_scroll_area = QScrollArea(self)
+        da_scroll_area.setWidget(self.drop_area)
+        da_scroll_area.setWidgetResizable(True)
+        da_scroll_area.setFrameShape(QFrame.NoFrame)
+
+        self.replay_map_creation = ReplayMapCreation()
+        self.replay_map_creation.setSizePolicy(expanding)
+        rmc_scroll_area = QScrollArea(self)
+        rmc_scroll_area.setWidget(self.replay_map_creation)
+        rmc_scroll_area.setWidgetResizable(True)
+        rmc_scroll_area.setFrameShape(QFrame.NoFrame)
 
         visualize_button = QPushButton("Visualize")
         visualize_button.setObjectName("bigButton")
+        visualize_button.clicked.connect(self.visualize)
         font = visualize_button.font()
         font.setPointSize(30)
         visualize_button.setFont(font)
@@ -128,9 +151,67 @@ class AnalysisSelection(QFrame):
         visualize_button.setSizePolicy(expanding)
 
         layout = QGridLayout()
-        layout.addWidget(drop_area, 0, 0, 6, 1)
+        layout.addWidget(da_scroll_area, 0, 0, 6, 1)
+        layout.addWidget(rmc_scroll_area, 0, 1, 6, 1)
         layout.addWidget(visualize_button, 6, 0, 2, 2)
         self.setLayout(layout)
+
+    @property
+    def cg(self):
+        if not self._cg:
+            from circleguard import Circleguard
+            cache_path = get_setting("cache_dir") + "circleguard.db"
+            self._cg = Circleguard(get_setting("api_key"), cache_path)
+        return self._cg
+
+    def all_loadables(self):
+        return self.replay_map_creation.all_loadables() + self.drop_area.all_loadables()
+
+    def visualize(self):
+        # `#loadLoadables` will emit a signal to `show_visualizer_window` which
+        # will call `show_visualizer`, so this call does eventually show the
+        # visualizer, despite appearences otherwise
+        thread = threading.Thread(target=self.load_loadables)
+        thread.start()
+
+    def show_visualizer(self):
+        from circlevis import BeatmapInfo
+        loadables = self.all_loadables()
+        map_ids = [loadable.map_id for loadable in loadables]
+
+        # if there are any duplicate maps, warn the user and don't proceed
+        if len(set(map_ids)) > 1:
+            message_box = QMessageBox()
+            message_box.setText(f"You can only visualize replays from the same "
+                f"map. The map ids present are {', '.join(str(map_id) for map_id in map_ids)}.")
+            message_box.exec()
+            return
+
+        beatmap_info = BeatmapInfo(map_id=loadables[0].map_id)
+        CGVisualizer = get_visualizer()
+
+        # TODO reuse global library here
+        self.visualizer = CGVisualizer(beatmap_info, loadables)
+        self.visualizer.show()
+
+    def load_loadables(self):
+        loadables = self.all_loadables()
+        # no loadables, user has clicked "visualize" without filling anything
+        # out
+        if not loadables:
+            return
+
+        self.update_label_signal.emit("Loading Replays")
+        # len is fine here because they're all single loadables, not containers
+        self.set_progressbar_signal.emit(len(loadables))
+        for loadable in loadables:
+            self.increment_progressbar_signal.emit(1)
+            self.cg.load(loadable)
+
+
+        self.set_progressbar_signal.emit(-1)
+        self.update_label_signal.emit("Idle")
+        self.show_visualizer_window.emit()
 
 
 class CircleguardClassic(QFrame):

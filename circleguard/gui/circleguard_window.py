@@ -58,6 +58,10 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.statusBar().setContentsMargins(8, 2, 10, 2)
 
         self.main_window = MainWidget()
+        self.main_window.analysis_selection.set_progressbar_signal.connect(self.set_progressbar)
+        self.main_window.analysis_selection.increment_progressbar_signal.connect(self.increment_progressbar)
+        self.main_window.analysis_selection.update_label_signal.connect(self.update_label)
+
         # we reference this widget a lot, so shorten its reference as a
         # convenience
         self.cg_classic = self.main_window.cg_classic
@@ -397,20 +401,18 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                     margin-left: 10px;
                 }
                 QLabel {
-                        font-weight: Normal;
+                    font-weight: Normal;
                 }
                 QTextEdit {
-                        background-color: #212121;
+                    background-color: #212121;
                 }
-                LoadableW {
-                        border: 1.5px solid #272727;
+                LoadableW, CheckW, DragWidget, ReplayMapVis {
+                    border: 1.5px solid #272727;
                 }
-                CheckW {
-                        border: 1.5px solid #272727;
+                ReplayMapCreation {
+                    border: 1.5px solid #1f1f1f;
                 }
-                DragWidget {
-                        border: 1.5px solid #272727;
-                }""")
+                """)
         else:
             self.app.setPalette(self.app.style().standardPalette())
             updated_palette = QPalette()
@@ -423,20 +425,19 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             updated_palette.setColor(QPalette.LinkVisited, ACCENT_COLOR)
             self.app.setPalette(updated_palette)
             self.app.setStyleSheet("""
-                    QToolTip {
-                        color: #000000;
-                        background-color: #D5D5D5;
-                        border: 1px solid white;
-                    }
-                    QLabel {
-                        font-weight: Normal;
-                    }
-                    LoadableW {
-                        border: 1.5px solid #bfbfbf;
-                    }
-                    CheckW {
-                        border: 1.5px solid #bfbfbf;
-                    }
-                    DragWidget {
-                        border: 1.5px solid #bfbfbf;
-                    }""")
+                QToolTip {
+                    color: #000000;
+                    background-color: #D5D5D5;
+                    border: 1px solid white;
+                }
+                QPushButton#backButton {
+                    margin-top: 5px;
+                    margin-left: 10px;
+                }
+                QLabel {
+                    font-weight: Normal;
+                }
+                LoadableW, CheckW, DragWidget {
+                    border: 1.5px solid #bfbfbf;
+                }
+                """)

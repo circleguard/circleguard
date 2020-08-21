@@ -283,22 +283,25 @@ class ScrollableChecksWidget(QFrame):
 class ReplayDropArea(QFrame):
     def __init__(self):
         super().__init__()
+        self.path_widgets = []
+
         self.setAcceptDrops(True)
 
-        layout = QGridLayout()
-        self.label = QLabel("drag and drop .osr files here")
-        font = self.label.font()
+        self.info_label = QLabel("drag and drop .osr files here")
+        font = self.info_label.font()
         font.setPointSize(20)
-        self.label.setFont(font)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.info_label.setFont(font)
+        self.info_label.setAlignment(Qt.AlignCenter)
 
         # https://stackoverflow.com/a/59022793/12164878
         effect = QGraphicsOpacityEffect(self)
         effect.setOpacity(0.5)
-        self.label.setGraphicsEffect(effect)
-        self.label.setAutoFillBackground(True)
+        self.info_label.setGraphicsEffect(effect)
+        self.info_label.setAutoFillBackground(True)
 
-        layout.addWidget(self.label)
+        layout = QGridLayout()
+        layout.setContentsMargins(25, 25, 10, 10)
+        layout.addWidget(self.info_label)
         self.setLayout(layout)
 
     def dragEnterEvent(self, event):
@@ -306,12 +309,54 @@ class ReplayDropArea(QFrame):
 
     def dropEvent(self, event):
         mimedata = event.mimeData()
-        file_path = str(mimedata.data("text/uri-list").data().rstrip())
-        if not file_path.endswith(".osr"):
+        # users can drop multiple files, in which case we need to consider each
+        # separately
+        paths_unprocessed = mimedata.data("text/uri-list").data().decode("utf-8").rstrip().replace("file://", "").replace("\r", "")
+        path_widgets = []
+
+        for path in paths_unprocessed.split("\n"):
+            path = Path(path)
+            if not path.suffix == ".osr":
+                continue
+            path_widget = PathWidget(path)
+            # don't let users drop the same file twice
+            if path_widget in self.path_widgets:
+                continue
+            path_widgets.append(path_widget)
+
+        # if none of the files were replays, don't accept the drop event
+        if not path_widgets:
             return
+
         event.acceptProposedAction()
+        # hide the info label and fill top down now that we have things to show
+        self.info_label.hide()
+        self.layout().setAlignment(Qt.AlignLeft | Qt.AlignTop)
+
+        for path_widget in path_widgets:
+            # `lambda` is late binding so we can't use it here or else all the
+            # delete buttons will delete the last widget of the list.
+            # workaround: use `partial` instead of `lambda`.
+            # https://docs.python-guide.org/writing/gotchas/#late-binding-closures
+            path_widget.delete_button.clicked.connect(partial(self.delete_path_widget, path_widget))
+            self.layout().addWidget(path_widget)
+
+        self.path_widgets.extend(path_widgets)
+
+    def delete_path_widget(self, path_widget):
+        path_widget.hide()
+        self.path_widgets.remove(path_widget)
+
+        # re-show the info label if the user deletes all their replays
+        if len(self.path_widgets) == 0:
+            self.layout().setAlignment(Qt.Alignment())
+            self.info_label.show()
+
+    def all_loadables(self):
+        return [path_widget.cg_loadable for path_widget in self.path_widgets]
 
     def paintEvent(self, event):
+        super().paintEvent(event)
         pen = QPen()
         pen.setColor(ACCENT_COLOR)
         pen.setWidth(3)
@@ -321,7 +366,157 @@ class ReplayDropArea(QFrame):
         painter = QPainter(self)
         painter.setPen(pen)
         painter.drawRoundedRect(0, 5, self.width() - 5, self.height() - 7, 3, 3)
-        super().paintEvent(event)
+
+
+class PathWidget(QFrame):
+    def __init__(self, path):
+        super().__init__()
+        self.path = path
+        self._cg_loadable = None
+        label = QLabel(path.name)
+
+        self.delete_button = QPushButton(self)
+        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
+        self.delete_button.setMaximumWidth(25)
+        self.delete_button.setMaximumHeight(25)
+
+        layout = QHBoxLayout()
+        layout.addWidget(label)
+        layout.addWidget(self.delete_button)
+        layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(layout)
+
+    def __eq__(self, other):
+        if not isinstance(other, PathWidget):
+            return
+        return self.path == other.path
+
+    @property
+    def cg_loadable(self):
+        # save the loadable we represent so if we load it externally and access
+        # it again, it will still be loaded
+        if not self._cg_loadable:
+            from circleguard import ReplayPath
+            self._cg_loadable = ReplayPath(self.path)
+        return self._cg_loadable
+
+
+class ReplayMapCreation(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.loadables = []
+
+        label = QLabel("Select online replays here")
+        font = label.font()
+        font.setPointSize(17)
+        label.setFont(font)
+        effect = QGraphicsOpacityEffect(self)
+        effect.setOpacity(0.8)
+        label.setGraphicsEffect(effect)
+        label.setAutoFillBackground(True)
+
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignTop)
+        layout.addWidget(label)
+        self.setLayout(layout)
+
+        # prepopulate with a single loadable
+        self.new_loadable()
+
+    def loadable_input_changed(self, loadable):
+        # only allow the bottommost loadable to create new ones
+        if loadable != self.most_recent_loadable:
+            return
+        self.new_loadable()
+
+    def new_loadable(self):
+        loadable = ReplayMapVis()
+        loadable.delete_button.clicked.connect(lambda: self.remove_loadable(loadable))
+        loadable.input_changed.connect(lambda: self.loadable_input_changed(loadable))
+        # don't allow the bottommost loadable (which this new one will soon
+        # become) to be deleted, users could accidentally remove all loadables
+        loadable.hide_delete()
+
+        self.most_recent_loadable = loadable
+        self.loadables.append(loadable)
+        # show the delete button on the second to last handler, if it exists,
+        # since it can now be deleted as it isn't the final loadable
+        if len(self.loadables) > 1:
+            self.loadables[-2].show_delete()
+
+        self.layout().addWidget(loadable)
+
+    def remove_loadable(self, loadable):
+        loadable.hide()
+        self.loadables.remove(loadable)
+        if loadable == self.most_recent_loadable:
+            self.most_recent_loadable = self.loadables[-1]
+
+    def all_loadables(self):
+        """
+        Returns the loadables in this widget as unloaded circleguard loadables.
+        """
+        loadables = []
+        for loadable in self.loadables:
+            cg_loadable = loadable.cg_loadable
+            if not cg_loadable:
+                continue
+            loadables.append(cg_loadable)
+        return loadables
+
+
+
+
+class ReplayMapVis(QFrame):
+    input_changed = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self.input_has_changed = False
+        self._cg_loadable = None
+
+        self.map_id_input = InputWidget("Map id", "", "id")
+        self.user_id_input = InputWidget("User id", "", "id")
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+        for input_widget in [self.map_id_input, self.user_id_input, self.mods_input]:
+            input_widget.field.textChanged.connect(self.input_changed)
+
+        title = QLabel("Online Replay")
+
+        self.delete_button = QPushButton(self)
+        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
+        self.delete_button.setMaximumWidth(30)
+
+        layout = QGridLayout()
+        layout.addWidget(title, 0, 0, 1, 7)
+        layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+        layout.addWidget(self.user_id_input, 2, 0, 1, 8)
+        layout.addWidget(self.mods_input, 3, 0, 1, 8)
+        self.setLayout(layout)
+
+    def validate(self):
+        return self.map_id_input.value() and self.user_id_input.value()
+
+    def show_delete(self):
+        self.delete_button.show()
+
+    def hide_delete(self):
+        self.delete_button.hide()
+
+    @property
+    def cg_loadable(self):
+        # save the loadable we represent so if we load it externally and access
+        # it again, it will still be loaded
+        if not self._cg_loadable:
+            from circleguard import ReplayMap, Mod
+            if not self.validate():
+                return None
+            mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+            self._cg_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+        return self._cg_loadable
+
 
 
 class DropArea(QFrame):
