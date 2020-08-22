@@ -6,15 +6,13 @@ import abc
 import json
 import logging
 from functools import partial
-from shutil import copyfile
-import traceback
 
 from PyQt5.QtCore import QSettings, QStandardPaths, pyqtSignal, QObject
 from packaging import version
 # it's tempting to use QSettings builtin ini file support instead of
 # configparser, but that doesn't let us write comments, which is rather
 # important for users.
-from configparser import ConfigParser, MissingSectionHeaderError
+from configparser import ConfigParser
 
 from version import __version__
 
@@ -559,15 +557,7 @@ def overwrite_outdated_settings():
 
 def overwrite_with_config_settings():
     config = ConfigParser(interpolation=None)
-    try:
-        config.read(CFG_PATH, encoding="utf-8")
-    except (UnicodeDecodeError, MissingSectionHeaderError):
-        # create a copy of the malformed config for backup purposes
-        copyfile(CFG_PATH, CFG_PATH + ".bkp")
-        # rewrite the config as default (this is done on program close, but this assures a clean reset)
-        overwrite_config()
-        # still probably want the stacktrace to be printed for debug purposes
-        traceback.print_exc()
+    config.read(CFG_PATH, encoding="utf-8")
     for section in config.sections():
         for k in config[section]:
             try:
