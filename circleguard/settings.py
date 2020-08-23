@@ -287,7 +287,7 @@ DEFAULTS = {
         },
         "default_page": "selection",
         "default_page_options": {
-            "Selection (default)": "selection",
+            "Selection Menu": "selection",
             "Visualization": "visualization",
             "Investigation": "investigation"
         }
