@@ -316,13 +316,23 @@ class ReplayDropArea(QFrame):
 
         for path in paths_unprocessed.split("\n"):
             path = Path(path)
-            if not path.suffix == ".osr":
+            if not (path.suffix == ".osr" or path.is_dir()):
                 continue
-            path_widget = PathWidget(path)
-            # don't let users drop the same file twice
-            if path_widget in self.path_widgets:
-                continue
-            path_widgets.append(path_widget)
+
+            to_add = []
+            if path.is_dir():
+                for replay_path in path.glob("*.osr"):
+                    path_widget = PathWidget(replay_path)
+                    to_add.append(path_widget)
+            else:
+                path_widget = PathWidget(path)
+                to_add.append(path_widget)
+
+            for path_widget in to_add:
+                # don't let users drop the same file twice
+                if path_widget in self.path_widgets:
+                    continue
+                path_widgets.append(path_widget)
 
         # if none of the files were replays, don't accept the drop event
         if not path_widgets:
