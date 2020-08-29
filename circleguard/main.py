@@ -171,5 +171,29 @@ if len(sys.argv) > 1:
     clientsocket.send(sys.argv[1].encode())
     clientsocket.close()
 
+def import_expensive_modules():
+    # probably not necessary to import every single class - we just want to
+    # trigger import-time code by hitting every circleguard file and imports
+    # to numpy/scipy therein - but better safe than sorry.
+    from circleguard import (Circleguard, KeylessCircleguard, Check, Map, User,
+        MapUser, Replay, ReplayMap, ReplayPath, Mod, Loader, Result,
+        InvestigationResult, ComparisonResult, StealResult, StealResultCorr,
+        StealResultSim, RelaxResult, CorrectionResult, TimewarpResult, Snap,
+        Hit, Span)
+    from circlevis import BeatmapInfo, Visualizer, VisualizerApp
+    from slider import Library, Beatmap
+    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+    from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
+    from matplotlib.figure import Figure
+    import numpy as np
+
+# everything would work fine if we didn't force import these modules now, but
+# the user would experience a potentially multi-second wait time whenever they
+# trigger a new import, which would make them think circleguard is broken or
+# unresponsive. There's also no downside to force importing them now in a new
+# thread (imports are thread safe https://stackoverflow.com/a/12391178/).
+thread = threading.Thread(target=import_expensive_modules)
+thread.start()
+
 print("execing app, total time taken: ", datetime.now() - t1)
 app.exec_()
