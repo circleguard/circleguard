@@ -604,11 +604,15 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.update_run_status_signal.emit(run.run_id, "Finished")
 
     def print_results(self):
-        from circleguard import (TimewarpResult, RelaxResult, CorrectionResult,
-            StealResult)
         try:
             while True:
                 result = self.q.get_nowait()
+                # have to import here because `print_results` is called on a
+                # loop on application start. We're safe here because the
+                # `get_nowait` call throws and our catch block returns, so we
+                # never get to this line unless we have results to print
+                from circleguard import (TimewarpResult, RelaxResult,
+                    CorrectionResult, StealResult)
                 ts = datetime.now() # ts = timestamp
                 message = None
                 ischeat = False
