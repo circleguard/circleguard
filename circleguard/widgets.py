@@ -3,6 +3,7 @@ import ntpath
 from pathlib import Path
 from functools import partial
 import json
+import urllib
 
 from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
@@ -315,6 +316,10 @@ class ReplayDropArea(QFrame):
         path_widgets = []
 
         for path in paths_unprocessed.split("\n"):
+            # if the file path has a space (or I believe any character which
+            # requires an encoding), qt will give it to us in its encoded form.
+            # Pathlib doesn't like this, so we need to unencode (unquote) it.
+            path = urllib.parse.unquote(path)
             path = Path(path)
             if not (path.suffix == ".osr" or path.is_dir()):
                 continue
