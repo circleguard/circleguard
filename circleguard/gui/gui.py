@@ -3,6 +3,7 @@ from queue import Queue, Empty
 from functools import partial
 import logging
 import threading
+import time
 
 from PyQt5.QtCore import Qt, pyqtSignal, QUrl, QTimer
 from PyQt5.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
@@ -127,6 +128,14 @@ class AnalysisSelection(QFrame):
     def __init__(self):
         super().__init__()
         self._cg = None
+        self.loadables_q = Queue()
+        # this thread continually checks for new loadables to load
+        self.cg_load_thread = threading.Thread(target=self._load_loadables)
+        # we never kill this thread, so allow the application to quit while it's
+        # still alive
+        self.cg_load_thread.daemon = True
+        self.cg_load_thread.start()
+        self.loadable_loaded = threading.Event()
         self.show_visualizer_window.connect(self.show_visualizer)
 
         expanding = QSizePolicy()
@@ -172,6 +181,21 @@ class AnalysisSelection(QFrame):
             self._cg = Circleguard(get_setting("api_key"), cache_path)
         return self._cg
 
+    def _load_loadables(self):
+        # initialize circleguard in this thread and this thread only; we will
+        # reuse this thread when loading loadables so we don't run into sqlite
+        # "sqlite object created in a thread can only be used in that same
+        # thread" errors.
+        _ = self.cg
+        while True:
+            try:
+                loadable = self.loadables_q.get_nowait()
+                self.cg.load(loadable)
+                self.loadable_loaded.set()
+            except Empty:
+                # just so we aren't running this thread crazy fast
+                time.sleep(0.1)
+
     def all_loadables(self):
         return self.replay_map_creation.all_loadables() + self.drop_area.all_loadables()
 
@@ -214,8 +238,10 @@ class AnalysisSelection(QFrame):
         self.set_progressbar_signal.emit(len(loadables))
         for loadable in loadables:
             self.increment_progressbar_signal.emit(1)
-            self.cg.load(loadable)
-
+            self.loadable_loaded.clear()
+            self.loadables_q.put(loadable)
+            # make sure we wait until the loadable is loaded before moving on
+            self.loadable_loaded.wait()
 
         self.set_progressbar_signal.emit(-1)
         self.update_label_signal.emit("Idle")
