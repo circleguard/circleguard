@@ -396,6 +396,8 @@ class PathWidget(QFrame):
     def __init__(self, path):
         super().__init__()
         self.path = path
+        # save the loadable we represent so if we load it externally and access
+        # it again, it will still be loaded
         self._cg_loadable = None
         label = QLabel(path.name)
 
@@ -417,8 +419,6 @@ class PathWidget(QFrame):
 
     @property
     def cg_loadable(self):
-        # save the loadable we represent so if we load it externally and access
-        # it again, it will still be loaded
         if not self._cg_loadable:
             from circleguard import ReplayPath
             self._cg_loadable = ReplayPath(self.path)
@@ -482,7 +482,7 @@ class ReplayMapCreation(QFrame):
         """
         loadables = []
         for loadable in self.loadables:
-            cg_loadable = loadable.cg_loadable
+            cg_loadable = loadable.cg_loadable()
             if not cg_loadable:
                 continue
             loadables.append(cg_loadable)
@@ -496,7 +496,10 @@ class ReplayMapVis(QFrame):
 
     def __init__(self):
         super().__init__()
+        self.previous_mods = None
         self.input_has_changed = False
+        # save the loadable we represent so if we load it externally and access
+        # it again, it will still be loaded
         self._cg_loadable = None
 
         self.map_id_input = InputWidget("Map id", "", "id")
@@ -529,16 +532,32 @@ class ReplayMapVis(QFrame):
     def hide_delete(self):
         self.delete_button.hide()
 
-    @property
     def cg_loadable(self):
-        # save the loadable we represent so if we load it externally and access
-        # it again, it will still be loaded
+        from circleguard import ReplayMap, Mod
+        if not self.validate():
+            return None
         if not self._cg_loadable:
-            from circleguard import ReplayMap, Mod
-            if not self.validate():
-                return None
             mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
             self._cg_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+        # if something is accessing the loadable we represent, but the value of
+        # our input fields have changed (ie the replay we represent has changed)
+        # then we want to return that new loadable instead of always using the
+        # old one.
+        # To explain the comparison against the previous mods used - if the mods
+        # specified by the user have changed in any way, we want to update the
+        # loadable. This is because it's ambiguous whether an (unloaded) replay
+        # with`mods=None` is equal to a (loaded) replay with the same map and
+        # user id, but with `mods=HDHR`. Untilt the first replay is loaded, we
+        # don't know what its mods will end up being, so it could be equal or
+        # could not be. To be certain, we recreate the loadable if the mods
+        # change at all.
+        mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+        new_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+        if (new_loadable.map_id != self._cg_loadable.map_id or \
+            new_loadable.user_id != self._cg_loadable.user_id or \
+            self.mods_input.value() != self.previous_mods):
+            self._cg_loadable = new_loadable
+        self.previous_mods = self.mods_input.value()
         return self._cg_loadable
 
 
