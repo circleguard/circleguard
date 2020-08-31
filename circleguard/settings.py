@@ -166,7 +166,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "open in circleguard: {circleguard_url}"
                                 "\n\n"
-                                "{r.similarity:.2f} similarity according to https://github.com/circleguard/circleguard (higher is less similar)"),
+                                "{r.similarity:.2f} similarity according to https://github.com/circleguard/circleguard (lower is more similar)"),
         "template_relax":      ("[osu!std] {r.replay.username} | Relax"
                                 "\n\n"
                                 "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
@@ -406,7 +406,8 @@ FORCE_UPDATE = {
         "template_timewarp"
     ],
     "2.11.0": [
-        "message_starting_analysis"
+        "message_starting_analysis",
+        "template_steal"
     ]
 }
 
