@@ -1,7 +1,7 @@
 
 <img src="readme_resources/logo.png" alt="logo" width="200" height="200"/>
 
-[![Latest Version](https://img.shields.io/github/release/circleguard/circleguard?label=Latest%20version)](https://github.com/circleguard/circlecore/releases/latest)
+[![Latest Version](https://img.shields.io/github/release/circleguard/circleguard?label=Latest%20version)](https://github.com/circleguard/circleguard/releases/latest)
 [![GitHub Releases Downloads](https://img.shields.io/github/downloads/circleguard/circleguard/total?label=Downloads)](https://github.com/circleguard/circleguard/releases/latest)
 [![CodeFactor](https://www.codefactor.io/repository/github/circleguard/circleguard/badge)](https://www.codefactor.io/repository/github/circleguard/circleguard)
 [![Discord Server](https://img.shields.io/discord/532476765860265984?label=Discord&logo=discord&logoColor=%23FFFFFF)](https://discord.gg/e84qxkQ)
