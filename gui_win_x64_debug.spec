@@ -20,7 +20,7 @@ def zipdir(path, ziph):
             ziph.write(os.path.join(root, file), os.path.join(folder, file))
 
 # pyinstaller build
-PyInstaller.config.CONF['distpath'] = "./dist/Circleguard_win_x64_debug"
+PyInstaller.config.CONF['distpath'] = "./dist/Circleguard_win_x64"
 a = Analysis(['circleguard/main.py'],
              pathex=['.', 'C:/Program Files (x86)/Windows Kits/10/Redist/ucrt/DLLs/x64', os.path.dirname(sys.executable)],
              datas=[('resources/','resources/')],
@@ -40,7 +40,7 @@ exe = EXE(pyz,
           strip=False,
           upx=True,
           runtime_tmpdir=None,
-          console=False , icon='./resources/logo/logo.ico')
+          console=True, icon='./resources/logo/logo.ico')
 coll = COLLECT(
           exe,
           a.binaries,
@@ -54,13 +54,13 @@ coll = COLLECT(
 # post-build script
 shell = Dispatch("WScript.Shell")
 # Path().resolve() first to deal with relative paths, also converts / to \ because windows
-shortcut = shell.CreateShortCut(str(Path("./dist/Circleguard_win_x64_debug/Circleguard.lnk").resolve()))
-shortcut.Targetpath = str(Path("./dist/Circleguard_win_x64_debug/Circleguard/Circleguard.exe").resolve())
+shortcut = shell.CreateShortCut(str(Path("./dist/Circleguard_win_x64/Circleguard.lnk").resolve()))
+shortcut.Targetpath = str(Path("./dist/Circleguard_win_x64/Circleguard/Circleguard.exe").resolve())
 shortcut.save()
 
 print("Creating zip")
 os.chdir("./dist/")
-zipf = zipfile.ZipFile('./Circleguard_win_x64_debug.zip', 'w', zipfile.ZIP_DEFLATED)
-zipdir('./Circleguard_win_x64_debug/', zipf)
+zipf = zipfile.ZipFile('./Circleguard_win_x64.zip', 'w', zipfile.ZIP_DEFLATED)
+zipdir('./Circleguard_win_x64/', zipf)
 zipf.close()
 print("Finished zip")

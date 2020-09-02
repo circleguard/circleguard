@@ -14,6 +14,8 @@ pip install -r requirements_build_win.txt
 
 Write-Output "building x64"
 pyinstaller gui_win_x64.spec --noconfirm
+Write-Output "building x64 debug"
+pyinstaller gui_win_x64_debug.spec --noconfirm
 Write-Output "building x86"
 pyinstaller gui_win_x86.spec --noconfirm
 

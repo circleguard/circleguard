@@ -151,7 +151,7 @@ DEFAULTS = {
         # have to use a separate message here because we can't loop in ``.format`` strings, can only loop in f strings which only work in a
         # local context and aren't usable for us. Passed as ``snaps=snaps`` in message_correction_found, once formatted. Each snap formats
         # this setting and does a ``"\n".join(snap_message)`` to create ``snaps``.
-        "message_correction_snaps":         "Time (ms): {time:.0f}\tAngle (°): {angle:.2f}\tDistance (px): {distance:.2f}"
+        "message_correction_snaps":         "Time (ms): {time:.0f}\tAngle (deg): {angle:.2f}\tDistance (px): {distance:.2f}"
     },
     "Templates": {
         "template_steal":      ("[osu!std] {r.later_replay.username} | Replay Stealing"
@@ -408,6 +408,9 @@ FORCE_UPDATE = {
     "2.11.0": [
         "message_starting_analysis",
         "template_steal"
+    ],
+    "2.11.1": [
+        "message_correction_snaps"
     ]
 }
 
@@ -560,7 +563,7 @@ def overwrite_outdated_settings():
 
 def overwrite_with_config_settings():
     config = ConfigParser(interpolation=None)
-    config.read(CFG_PATH, encoding="utf-8")
+    config.read(CFG_PATH)
     for section in config.sections():
         for k in config[section]:
             try:
@@ -621,7 +624,7 @@ def overwrite_config():
 
         config[section][setting] = str(get_setting(setting))
 
-    with open(CFG_PATH, "w+", encoding="utf-8") as f:
+    with open(CFG_PATH, "w+") as f:
         # add file comments at top of file
         f.write("### " + COMMENTS["file"].replace("\n", "\n### ") + "\n\n")
         config.write(f)
