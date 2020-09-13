@@ -70,9 +70,11 @@ class DebugWidget(QFrame):
 
 class StealResult():
     def __init__(self, similarity, replay1, replay2):
+        from circleguard import order
         self.similarity = similarity
         self.replay1 = replay1
         self.replay2 = replay2
+        (self.earlier_replay, self.later_replay) = order(replay1, replay2)
 
 class RelaxResult():
     def __init__(self, ur, replay):

@@ -568,10 +568,10 @@ class MainTab(SingleLinkableSetting, QFrame):
                         else:
                             iterator = itertools.product(replays1, replays2)
                         for (replay1, replay2) in iterator:
-                            for sim in cg.similarity(replay1, replay2):
-                                _check_event(event)
-                                result = StealResult(sim, replay1, replay2)
-                                self.q.put(result)
+                            _check_event(event)
+                            sim = cg.similarity(replay1, replay2)
+                            result = StealResult(sim, replay1, replay2)
+                            self.q.put(result)
                     if isinstance(checkW, RelaxCheckW):
                         for replay in all_replays:
                             _check_event(event)
