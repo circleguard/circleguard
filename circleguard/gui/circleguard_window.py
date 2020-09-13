@@ -116,9 +116,11 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
     def on_setting_changed(self, setting, new_value):
         if setting == "log_save":
             if not new_value:
-                self.file_handler.setLevel(51) # same as disabling the handler (CRITICAL=50)
+                # same as disabling the handler (CRITICAL=50)
+                self.file_handler.setLevel(51)
             else:
-                self.file_handler.setLevel(logging.NOTSET) # same as default (passes all records to the attached logger)
+                # same as default (passes all records to the attached logger)
+                self.file_handler.setLevel(logging.NOTSET)
         elif setting == "theme":
             self.switch_theme(new_value)
 
@@ -178,8 +180,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
 
     def run_timer(self):
         """
-        check for stderr messages (because logging prints to stderr not stdout, and
-        it's nice to have stdout reserved) and then print cg results
+        check for stderr messages (because logging prints to stderr not stdout,
+        and it's nice to have stdout reserved) and then print cg results.
         """
         self.cg_classic.main_tab.print_results()
         self.cg_classic.main_tab.check_circleguard_queue()
@@ -258,43 +260,43 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         if isinstance(result, StealResult):
             circleguard_url = f"circleguard://m={result.replay1.map_id}&u={result.replay1.user_id}&u2={result.replay2.user_id}"
             label_text = get_setting("string_result_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
-                                        earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
-                                        later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name())
+                earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
+                 later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name())
             template_text = get_setting("template_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
-                                        earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
-                                        later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name(),
-                                        circleguard_url=circleguard_url)
+                earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
+                later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name(),
+                circleguard_url=circleguard_url)
             replays = [result.replay1, result.replay2]
 
         elif isinstance(result, RelaxResult):
             circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}"
             label_text = get_setting("string_result_relax").format(ts=timestamp, ur=result.ur, r=result,
-                                        replay=result.replay, mods_short_name=result.replay.mods.short_name(),
-                                        mods_long_name=result.replay.mods.long_name())
+                replay=result.replay, mods_short_name=result.replay.mods.short_name(),
+                mods_long_name=result.replay.mods.long_name())
             template_text = get_setting("template_relax").format(ts=timestamp, ur=result.ur, r=result,
-                                        replay=result.replay, mods_short_name=result.replay.mods.short_name(),
-                                        mods_long_name=result.replay.mods.long_name(), circleguard_url=circleguard_url)
+                replay=result.replay, mods_short_name=result.replay.mods.short_name(),
+                mods_long_name=result.replay.mods.long_name(), circleguard_url=circleguard_url)
             replays = [result.replay]
         elif isinstance(result, CorrectionResult):
             circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}"
             label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, num_snaps=len(result.snaps), replay=result.replay,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
             snap_table = ("| Time (ms) | Angle (°) | Distance (px) |\n"
                             "| :-: | :-: | :-: |\n")
             for snap in result.snaps:
                 snap_table += "| {:.0f} | {:.2f} | {:.2f} |\n".format(snap.time, snap.angle, snap.distance)
             template_text = get_setting("template_correction").format(ts=timestamp, r=result, replay=result.replay, snap_table=snap_table,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name(),
-                                        circleguard_url=circleguard_url)
+                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name(),
+                circleguard_url=circleguard_url)
             replays = [result.replay]
         elif isinstance(result, TimewarpResult):
             circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}"
             label_text = get_setting("string_result_timewarp").format(ts=timestamp, r=result, replay=result.replay, frametime=result.frametime,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
             template_text = get_setting("template_timewarp").format(ts=timestamp, r=result, frametime=result.frametime,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name(),
-                                        circleguard_url=circleguard_url)
+                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name(),
+                circleguard_url=circleguard_url)
             replays = [result.replay]
         elif isinstance(result, AnalysisResult):
             replays = result.replays
@@ -302,7 +304,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             if len(replays) == 1:
                 r = replays[0]
                 label_text = get_setting("string_result_visualization_single").format(ts=timestamp, replay=r, mods_short_name=r.mods.short_name(),
-                                        mods_long_name=r.mods.long_name())
+                    mods_long_name=r.mods.long_name())
             else:
                 label_text = get_setting("string_result_visualization").format(ts=timestamp, replay_amount=len(result.replays), map_id=result.replays[0].map_id)
 
