@@ -32,6 +32,10 @@ class Handler(QObject, logging.Handler):
 
     def emit(self, record):
         message = self.format(record)
+        # replace api keys with asterisks if they get into the logs from eg a
+        # stacktrace
+        api_key = get_setting("api_key")
+        message = message.replace(api_key, "*"*len(api_key))
         self.new_message.emit(message)
 
 class CircleguardWindow(LinkableSetting, QMainWindow):
