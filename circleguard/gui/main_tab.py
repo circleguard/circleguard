@@ -579,20 +579,20 @@ class MainTab(SingleLinkableSetting, QFrame):
                             result = RelaxResult(ur, replay)
                             self.q.put(result)
                     if isinstance(checkW, CorrectionCheckW):
-                        for replay in all_replays():
+                        for replay in all_replays:
                             _check_event(event)
                             snaps = cg.snaps(replay, max_angle, min_distance)
                             result = CorrectionResult(snaps, replay)
                             self.q.put(result)
                     if isinstance(checkW, TimewarpCheckW):
-                        for replay in all_replays():
+                        for replay in all_replays:
                             _check_event(event)
                             frametime = cg.frametime(replay)
                             frametimes = cg.frametimes(replay)
                             result = TimewarpResult(frametime, frametimes, replay)
                             self.q.put(result)
                     if isinstance(checkW, AnalyzeW):
-                        for replay in all_replays():
+                        for replay in all_replays:
                             _check_event(event)
                             snaps = cg.snaps(replay)
                             result = CorrectionResult(snaps, replay)
