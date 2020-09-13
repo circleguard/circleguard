@@ -18,7 +18,8 @@ from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
 
 from settings import (get_setting, reset_defaults, LinkableSetting,
     SingleLinkableSetting, set_setting)
-from utils import resource_path, delete_widget, AnalysisResult, ACCENT_COLOR
+from utils import (resource_path, delete_widget, AnalysisResult, ACCENT_COLOR,
+    TimewarpResult)
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
@@ -999,7 +1000,6 @@ class FrametimeGraph(QFrame):
 
     def __init__(self, result, replay):
         super().__init__()
-        from circleguard import TimewarpResult
         from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
         from matplotlib.figure import Figure
 
@@ -1082,8 +1082,7 @@ class FrametimeGraph(QFrame):
     def get_frametimes(self, replay):
         from circleguard import Circleguard
         cg = Circleguard(get_setting("api_key"))
-        result = list(cg.timewarp_check(replay))
-        return result[0].frametimes
+        return cg.frametimes(replay)
 
 class ReplayDataWindow(QMainWindow):
     def __init__(self, replay):

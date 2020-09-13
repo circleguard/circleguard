@@ -10,8 +10,7 @@ from PyQt5.QtWidgets import (QMainWindow, QShortcut, QApplication,
     QProgressBar, QLabel, QTextEdit)
 from PyQt5.QtCore import Qt, QObject, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon, QPalette, QColor, QKeySequence
-# from circleguard import (ReplayMap, StealResult, RelaxResult, CorrectionResult,
-    # TimewarpResult, Circleguard)
+# from circleguard import (ReplayMap, Circleguard)
 from packaging import version
 # import requests
 # from requests import RequestException
@@ -19,7 +18,8 @@ from packaging import version
 from settings import LinkableSetting, get_setting, set_setting, overwrite_config
 from widgets import WidgetCombiner, ResultW
 from .gui import MainWidget, DebugWindow
-from utils import resource_path, AnalysisResult, URLAnalysisResult, ACCENT_COLOR
+from utils import (resource_path, AnalysisResult, URLAnalysisResult,
+    ACCENT_COLOR, StealResult, RelaxResult, CorrectionResult, TimewarpResult)
 from version import __version__
 
 
@@ -242,8 +242,6 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.progressbar.setRange(0, max_value)
 
     def add_result(self, result):
-        from circleguard import (StealResult, RelaxResult, CorrectionResult,
-            TimewarpResult)
         # this function right here could very well lead to some memory issues.
         # I tried to avoid leaving a reference to result's replays in this
         # method, but it's quite possible things are still not very clean.
