@@ -46,7 +46,7 @@ If you are building for windows or mac, you can find premade specfiles for easy 
 
 ## Contributing
 
-Join [our discord](https://discord.gg/VNnkTjm) and ask how you can help, or look around for open issues which interest you and tackle those. PR requests are welcome!
+Join [our discord](https://discord.gg/VNnkTjm) and ask how you can help, or look around for open issues which interest you and tackle those. Pull requests are welcome!
 
 ## Links
 
