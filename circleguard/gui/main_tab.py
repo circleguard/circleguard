@@ -18,7 +18,7 @@ from PyQt5.QtGui import QTextCursor
 # from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
     # UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
     # MapUser, Detect, Check, TimewarpResult, RelaxResult, CorrectionResult,
-    # StealResult, Loader)
+    # StealResult, Loader, replay_pairs)
 # from slider import Library
 # from circlevis import BeatmapInfo
 
@@ -320,7 +320,7 @@ class MainTab(SingleLinkableSetting, QFrame):
     def run_circleguard(self, run):
         from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
             UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
-            MapUser, Loader, LoadableContainer)
+            MapUser, Loader, LoadableContainer, replay_pairs)
         class TrackerLoader(Loader, QObject):
             """
             A circleguard.Loader subclass that emits a signal when the loader is
@@ -563,11 +563,8 @@ class MainTab(SingleLinkableSetting, QFrame):
                     self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
 
                     if isinstance(checkW, StealCheckW):
-                        if replays2 == []:
-                            iterator = itertools.combinations(replays1, 2)
-                        else:
-                            iterator = itertools.product(replays1, replays2)
-                        for (replay1, replay2) in iterator:
+                        pairs = replay_pairs(replays1, replays2)
+                        for (replay1, replay2) in pairs:
                             _check_event(event)
                             sim = cg.similarity(replay1, replay2)
                             result = StealResult(sim, replay1, replay2)

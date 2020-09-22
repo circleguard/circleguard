@@ -172,7 +172,7 @@ def import_expensive_modules():
     # to numpy/scipy therein - but better safe than sorry.
     from circleguard import (Circleguard, KeylessCircleguard, LoadableContainer,
         Map, User, MapUser, Replay, ReplayMap, ReplayPath, Mod, Loader,
-        Snap, Hit, Span)
+        Snap, Hit, Span, replay_pairs)
     from circlevis import BeatmapInfo, Visualizer, VisualizerApp
     from slider import Library, Beatmap
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
