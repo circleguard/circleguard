@@ -1221,7 +1221,8 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         self.spinbox = spinbox
         self.combined = WidgetCombiner(slider, spinbox, self)
 
-        self.slider.valueChanged.connect(self.on_setting_changed_from_gui)
+        self.slider.valueChanged.connect(lambda val:
+            self.on_setting_changed_from_gui(val, set_spinbox=True))
         self.spinbox.valueChanged.connect(self.on_setting_changed_from_gui)
 
         self.layout = QGridLayout()
@@ -1235,6 +1236,25 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
     def on_setting_changed(self, setting, new_value):
         self.slider.setValue(new_value)
         self.spinbox.setValue(new_value)
+
+    def on_setting_changed_from_gui(self, new_value, set_spinbox=False):
+        # if the slider's valueChanged signal is the one that called this
+        # function, the spinbox hasn't had its value sycned to the slider yet,
+        # so set its value here before performing any operations on it below.
+        # This does cause this function to be called twice for each value set
+        # from the slider (because when we set the spinbox value it causes
+        # another callback to this function) which is a bit wasteful but it's
+        # not bad.
+        if set_spinbox:
+            self.spinbox.setValue(new_value)
+        # for some reason the valueChanged signal doesn't call valueFromText
+        # and pass that value, but passes the raw underlying value of the
+        # spinbox. I'm probably missing something that would make this work
+        # automatically but I don't know what. So we force its hand by calling
+        # this function manually and overriding what we pass to
+        # on_setting_changed_from_gui.
+        new_value = self.spinbox.valueFromText(self.spinbox.text())
+        super().on_setting_changed_from_gui(new_value)
 
     def spin_box(self):
         """
