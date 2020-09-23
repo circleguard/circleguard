@@ -5,6 +5,7 @@ import sys
 import math
 import time
 from functools import partial
+import itertools
 import logging
 import re
 from lzma import LZMAError
@@ -17,7 +18,7 @@ from PyQt5.QtGui import QTextCursor
 # from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
     # UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
     # MapUser, Detect, Check, TimewarpResult, RelaxResult, CorrectionResult,
-    # StealResult, Loader)
+    # StealResult, Loader, replay_pairs)
 # from slider import Library
 # from circlevis import BeatmapInfo
 
@@ -25,7 +26,8 @@ from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
     ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
     CorrectionCheckW, TimewarpCheckW, AnalyzeW)
 from settings import SingleLinkableSetting, get_setting, set_setting
-from utils import delete_widget, AnalysisResult
+from utils import (delete_widget, AnalysisResult, StealResult, RelaxResult,
+    CorrectionResult, TimewarpResult)
 from .visualizer import get_visualizer
 
 
@@ -318,7 +320,7 @@ class MainTab(SingleLinkableSetting, QFrame):
     def run_circleguard(self, run):
         from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
             UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
-            MapUser, Detect, Check, Loader)
+            MapUser, Loader, LoadableContainer, replay_pairs)
         class TrackerLoader(Loader, QObject):
             """
             A circleguard.Loader subclass that emits a signal when the loader is
@@ -426,39 +428,47 @@ class MainTab(SingleLinkableSetting, QFrame):
                     sys.exit(0)
 
             for checkW in run.checks:
-                d = None
                 check_type = None
                 max_angle = None
                 min_distance = None
+
                 if isinstance(checkW, StealCheckW):
                     check_type = "Steal"
-                    d = Detect.STEAL
                 if isinstance(checkW, RelaxCheckW):
                     check_type = "Relax"
-                    d = Detect.RELAX
                 if isinstance(checkW, CorrectionCheckW):
                     max_angle = get_setting("correction_max_angle")
                     min_distance = get_setting("correction_min_distance")
                     check_type = "Aim Correction"
-                    d = Detect.CORRECTION
                 if isinstance(checkW, TimewarpCheckW):
                     check_type = "Timewarp"
-                    d = Detect.TIMEWARP
                 if isinstance(checkW, AnalyzeW):
-                    d = Detect(0)  # don't run any detection
                     check_type = "Visualization"
+
                 # retrieve loadable objects from loadableW ids
                 if isinstance(checkW, StealCheckW):
                     loadables1 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables1]
                     loadables2 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables2]
-                    c = Check(loadables1, cache=None, loadables2=loadables2)
+                    lc1 = LoadableContainer(loadables1)
+                    lc2 = LoadableContainer(loadables2)
                 else:
                     loadables = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables]
-                    c = Check(loadables, cache=None)
+                    lc = LoadableContainer(loadables)
                 message_loading_info = get_setting("message_loading_info").format(ts=datetime.now(), check_type=check_type)
                 self.write_to_terminal_signal.emit(message_loading_info)
-                cg.load_info(c)
-                all_replays = c.all_replays()
+
+                if isinstance(checkW, StealCheckW):
+                    cg.load_info(lc1)
+                    cg.load_info(lc2)
+                    replays1 = lc1.all_replays()
+                    replays2 = lc2.all_replays()
+                    all_replays = replays1 + replays2
+                else:
+                    cg.load_info(lc)
+                    all_replays = lc.all_replays()
+                    replays1 = all_replays
+                    replays2 = []
+
                 # don't show "loading 2 replays" if they were already loaded
                 # by a previous check, would be misleading
                 num_unloaded = 0
@@ -475,11 +485,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                                 num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
                                 check_type=check_type)
                 self.write_to_terminal_signal.emit(message_loading_replays)
-                # copy the replays out of the check, we need to be able to remove
-                # on a per replay basis and we can't do that while only accessing
-                # the `Check`s loadables (which could be `ReplayContainer`s).
-                replays1 = c.all_replays1()
-                replays2 = c.all_replays2()
+
                 # `[:]` implicitly copies the list, so we don't run into trouble
                 #  when removing elements from it while iterating
                 for replay in all_replays[:]:
@@ -522,7 +528,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                             replays2.remove(replay)
                     finally:
                         self.increment_progressbar_signal.emit(1)
-                c.loaded = True
+                if isinstance(checkW, StealCheckW):
+                    lc1.loaded = True
+                    lc2.loaded = True
+                else:
+                    lc.loaded = True
                 # change progressbar into an undetermined state (animation with
                 # stripes sliding horizontally) to indicate we're processing
                 # the data
@@ -540,8 +550,9 @@ class MainTab(SingleLinkableSetting, QFrame):
                 if isinstance(checkW, AnalyzeW):
                     map_ids = [r.map_id for r in all_replays]
                     if len(set(map_ids)) > 1:
-                        self.write_to_terminal_signal.emit(f"Manual analysis expected replays from a single map, but got replays from maps {set(map_ids)}. "
-                                                            "Please use a different Manual Analysis Check for each map.")
+                        self.write_to_terminal_signal.emit("Manual analysis expected replays from a single map, "
+                            f"but got replays from maps {set(map_ids)}. Please use a different Manual Analysis "
+                            "Check for each map.")
                         self.update_label_signal.emit("Analysis Error (Multiple maps)")
                         self.update_run_status_signal.emit(run.run_id, "Analysis Error (Multiple maps)")
                         self.set_progressbar_signal.emit(-1)
@@ -550,9 +561,40 @@ class MainTab(SingleLinkableSetting, QFrame):
                 else:
                     self.update_label_signal.emit("Investigating Replays...")
                     self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
-                    for result in cg.run(replays1, d, replays2, max_angle, min_distance):
-                        _check_event(event)
-                        self.q.put(result)
+
+                    if isinstance(checkW, StealCheckW):
+                        pairs = replay_pairs(replays1, replays2)
+                        for (replay1, replay2) in pairs:
+                            _check_event(event)
+                            sim = cg.similarity(replay1, replay2)
+                            result = StealResult(sim, replay1, replay2)
+                            self.q.put(result)
+                    if isinstance(checkW, RelaxCheckW):
+                        for replay in all_replays:
+                            _check_event(event)
+                            ur = cg.ur(replay)
+                            result = RelaxResult(ur, replay)
+                            self.q.put(result)
+                    if isinstance(checkW, CorrectionCheckW):
+                        for replay in all_replays:
+                            _check_event(event)
+                            snaps = cg.snaps(replay, max_angle, min_distance)
+                            result = CorrectionResult(snaps, replay)
+                            self.q.put(result)
+                    if isinstance(checkW, TimewarpCheckW):
+                        for replay in all_replays:
+                            _check_event(event)
+                            frametime = cg.frametime(replay)
+                            frametimes = cg.frametimes(replay)
+                            result = TimewarpResult(frametime, frametimes, replay)
+                            self.q.put(result)
+                    if isinstance(checkW, AnalyzeW):
+                        for replay in all_replays:
+                            _check_event(event)
+                            snaps = cg.snaps(replay)
+                            result = CorrectionResult(snaps, replay)
+                            self.q.put(result)
+
                 self.print_results_signal.emit() # flush self.q
 
             self.set_progressbar_signal.emit(-1) # empty progressbar
@@ -607,12 +649,6 @@ class MainTab(SingleLinkableSetting, QFrame):
         try:
             while True:
                 result = self.q.get_nowait()
-                # have to import here because `print_results` is called on a
-                # loop on application start. We're safe here because the
-                # `get_nowait` call throws and our catch block returns, so we
-                # never get to this line unless we have results to print
-                from circleguard import (TimewarpResult, RelaxResult,
-                    CorrectionResult, StealResult)
                 ts = datetime.now() # ts = timestamp
                 message = None
                 ischeat = False
@@ -675,7 +711,6 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.print_results_event.set()
 
     def visualize(self, replays, beatmap_id, result, start_at=0):
-        from circleguard import CorrectionResult
         from circlevis import BeatmapInfo
         # only run one instance at a time
         if self.visualizer is not None:

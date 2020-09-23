@@ -68,6 +68,29 @@ class DebugWidget(QFrame):
                 self.paintLayout(painter, layout.itemAt(i))
         painter.drawRect(item.geometry())
 
+class StealResult():
+    def __init__(self, similarity, replay1, replay2):
+        from circleguard import order
+        self.similarity = similarity
+        self.replay1 = replay1
+        self.replay2 = replay2
+        (self.earlier_replay, self.later_replay) = order(replay1, replay2)
+
+class RelaxResult():
+    def __init__(self, ur, replay):
+        self.ur = ur
+        self.replay = replay
+
+class CorrectionResult():
+    def __init__(self, snaps, replay):
+        self.snaps = snaps
+        self.replay = replay
+
+class TimewarpResult():
+    def __init__(self, frametime, frametimes, replay):
+        self.frametime = frametime
+        self.frametimes = frametimes
+        self.replay = replay
 
 class AnalysisResult():
     def __init__(self, replays):
