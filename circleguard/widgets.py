@@ -1060,7 +1060,7 @@ class FrametimeGraph(QFrame):
         bins = np.arange(0, (self.conversion_factor * self.MAX_FRAMETIME) + 1, self.conversion_factor)
         ax1.hist(low_frametimes, bins)
         # -1 in case high_frametimes has only one frame
-        bins = [(self.conversion_factor * min(high_frametimes)) - 1, self.conversion_factor * self.max_frametime]
+        bins = [min(high_frametimes) - 1, self.conversion_factor * self.max_frametime]
         ax2.hist(high_frametimes, bins)
 
     # the way we deal with cv / ucv is a mess currently because some things need
