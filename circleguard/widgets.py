@@ -1081,8 +1081,14 @@ class FrametimeGraph(QFrame):
     @classmethod
     def get_frametimes(self, replay):
         from circleguard import Circleguard
+        import numpy as np
         cg = Circleguard(get_setting("api_key"))
-        return cg.frametimes(replay)
+        # we convert manually ourselves above, mostly because this is an
+        # implementation from before when cg supported conversion, but also
+        # because we do some tricky stuff by converting some things and not
+        # converting others and it would be a hassle to work cg's conversion
+        # into that now.
+        return np.array(cg.frametimes(replay, cv=False))
 
 class ReplayDataWindow(QMainWindow):
     def __init__(self, replay):
