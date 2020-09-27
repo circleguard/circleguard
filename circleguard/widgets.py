@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
     QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView,
     QGraphicsOpacityEffect)
-from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag, QPainter, QPen
+from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag, QPainter, QPen, QCursor
 from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
     QPoint, QMimeData)
 # from circleguard import Circleguard, TimewarpResult, Mod, Key
@@ -913,6 +913,9 @@ class ResultW(QFrame):
 
         self.label = QLabel(self)
         self.label.setText(text)
+        self.label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.label.setCursor(QCursor(Qt.IBeamCursor))
+
         self.visualize_button = QPushButton(self)
         self.visualize_button.setText("Visualize")
         self.visualize_button.clicked.connect(lambda: self.visualize_button_pressed_signal.emit())
