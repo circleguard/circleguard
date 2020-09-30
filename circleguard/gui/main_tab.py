@@ -588,12 +588,6 @@ class MainTab(SingleLinkableSetting, QFrame):
                             frametimes = cg.frametimes(replay)
                             result = TimewarpResult(frametime, frametimes, replay)
                             self.q.put(result)
-                    if isinstance(checkW, AnalyzeW):
-                        for replay in all_replays:
-                            _check_event(event)
-                            snaps = cg.snaps(replay)
-                            result = CorrectionResult(snaps, replay)
-                            self.q.put(result)
 
                 self.print_results_signal.emit() # flush self.q
 
@@ -630,10 +624,6 @@ class MainTab(SingleLinkableSetting, QFrame):
             # The object was created in thread id 123145483210752 and this is thread id 4479481280.
             # ```
             cg.library.close()
-
-        except NoInfoAvailableException:
-            self.write_to_terminal_signal.emit("No information found for those arguments. Please check your inputs and make sure the given user/map exists")
-            self.set_progressbar_signal.emit(-1)
 
         except Exception:
             # if the error happens before we set the progressbar it stays at
