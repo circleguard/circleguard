@@ -486,6 +486,20 @@ class MainTab(SingleLinkableSetting, QFrame):
                                 check_type=check_type)
                 self.write_to_terminal_signal.emit(message_loading_replays)
 
+
+                def _skip_replay_with_message(replay, message):
+                    self.write_to_terminal_signal.emit(message)
+                    # the replay very likely (perhaps certainly) didn't get
+                    # loaded if the above exception fired. just skip it.
+                    all_replays.remove(replay)
+                    # check has already been initialized with the replay,
+                    # remove it here too or cg will try and load it again
+                    # when the check is ran
+                    if replay in replays1:
+                        replays1.remove(replay)
+                    if replay in replays2:
+                        replays2.remove(replay)
+
                 # `[:]` implicitly copies the list, so we don't run into trouble
                 #  when removing elements from it while iterating
                 for replay in all_replays[:]:
@@ -493,39 +507,20 @@ class MainTab(SingleLinkableSetting, QFrame):
                     try:
                         cg.load(replay)
                     except UnknownAPIException as e:
-                        self.write_to_terminal_signal.emit("osu! api provided an invalid response: " + str(e) +
-                                ". The replay " + str(replay) + " has been skipped because of this.")
-                        # the replay very likely (perhaps certainly) didn't get loaded if the above exception fired. just skip it.
-                        all_replays.remove(replay)
-                        # check has already been initialized with the replay, remove it here too or cg will try and
-                        # load it again when the check is ran
-                        if replay in replays1:
-                            replays1.remove(replay)
-                        if replay in replays2:
-                            replays2.remove(replay)
-                        continue
+                        _skip_replay_with_message(replay, "The osu! api provided an invalid response: " + str(e) +
+                            ". The replay " + str(replay) + " has been skipped because of this.")
                     except LZMAError as e:
-                        self.write_to_terminal_signal.emit("lzma error while parsing a replay: " + str(e) +
-                                ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
-                                " has been skipped because of this.")
-                        all_replays.remove(replay)
-                        if replay in replays1:
-                            replays1.remove(replay)
-                        if replay in replays2:
-                            replays2.remove(replay)
-                        continue
+                        _skip_replay_with_message(replay, "lzma error while parsing a replay: " + str(e) +
+                            ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
+                            " has been skipped because of this.")
                     except Exception as e:
-                        # print full traceback here for more debugging info. Don't do it for the previous
-                        # exceptions because the cause of those is well understood, but that's not necessarily
-                        # the case for generic exceptions here.
-                        self.write_to_terminal_signal.emit("error while loading a replay: " + str(e) + "\n" +
+                        # print full traceback here for more debugging info.
+                        # Don't do it for the previous exceptions because the
+                        # cause of those is well understood, but that's not
+                        # necessarily the case for generic exceptions here.
+                        _skip_replay_with_message(replay, "error while loading a replay: " + str(e) + "\n" +
                                 traceback.format_exc() +
                                 "The replay " + str(replay) + " has been skipped because of this.")
-                        all_replays.remove(replay)
-                        if replay in replays1:
-                            replays1.remove(replay)
-                        if replay in replays2:
-                            replays2.remove(replay)
                     finally:
                         self.increment_progressbar_signal.emit(1)
                 if isinstance(checkW, StealCheckW):
