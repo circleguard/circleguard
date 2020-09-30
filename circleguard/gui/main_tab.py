@@ -507,10 +507,10 @@ class MainTab(SingleLinkableSetting, QFrame):
                     try:
                         cg.load(replay)
                     except UnknownAPIException as e:
-                        _skip_replay_with_message(replay, "The osu! api provided an invalid response: " + str(e) +
-                            ". The replay " + str(replay) + " has been skipped because of this.")
+                        _skip_replay_with_message(replay, "<div style='color:red'>The osu! api provided an invalid "
+                            "response:</div> " + str(e) + ". The replay " + str(replay) + " has been skipped because of this.")
                     except LZMAError as e:
-                        _skip_replay_with_message(replay, "lzma error while parsing a replay: " + str(e) +
+                        _skip_replay_with_message(replay, "<div style='color:red'>lzma error while parsing a replay:</div> " + str(e) +
                             ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
                             " has been skipped because of this.")
                     except Exception as e:
@@ -518,6 +518,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                         # Don't do it for the previous exceptions because the
                         # cause of those is well understood, but that's not
                         # necessarily the case for generic exceptions here.
+
+                        # attempting to use divs/spans here to color the beginning
+                        # of this string made the traceback collapse down into
+                        # one line with none of the usual linebreaks, I'm not
+                        # sure why. So you win qt, no red color for this error.
                         _skip_replay_with_message(replay, "error while loading a replay: " + str(e) + "\n" +
                                 traceback.format_exc() +
                                 "The replay " + str(replay) + " has been skipped because of this.")
