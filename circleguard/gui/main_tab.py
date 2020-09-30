@@ -552,7 +552,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                         self.update_run_status_signal.emit(run.run_id, "Analysis Error (Multiple maps)")
                         self.set_progressbar_signal.emit(-1)
                         sys.exit(0)
-                    self.q.put(AnalysisResult(all_replays))
+                    # if a replay was removed from all_replays (eg if that replay was not available for download),
+                    # and that leaves all_replays with no replays, we don't want to add a result because
+                    # the rest of guard expects >=1 replay, leading to confusing errors.
+                    if len(all_replays) != 0:
+                        self.q.put(AnalysisResult(all_replays))
                 else:
                     self.update_label_signal.emit("Investigating Replays...")
                     self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
