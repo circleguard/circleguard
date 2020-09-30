@@ -507,9 +507,8 @@ class MainTab(SingleLinkableSetting, QFrame):
                     try:
                         cg.load(replay)
                     except NoInfoAvailableException as e:
-                        _skip_replay_with_message(replay, "<div style='color:red'>The replay " + str(replay) + " is "
-                            "not available for download</div>.\nThis is likely either because you mistyped the map or "
-                            "user id, or because the replay is not in the top 1k scores of the beatmap. This replay has "
+                        _skip_replay_with_message(replay, "<div style='color:red'>The replay " + str(replay) + " does "
+                            "not exist.</div>\nDouble check your map and/or user id. This replay has "
                             "been skipped because of this.")
                     except UnknownAPIException as e:
                         _skip_replay_with_message(replay, "<div style='color:red'>The osu! api provided an invalid "
