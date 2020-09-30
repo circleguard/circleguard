@@ -506,6 +506,10 @@ class MainTab(SingleLinkableSetting, QFrame):
                     _check_event(event)
                     try:
                         cg.load(replay)
+                        if not replay.has_data():
+                            _skip_replay_with_message(replay, "<div style='color:red'>The replay " + str(replay) + " is " +
+                                "not available for download.</div>This is likely because it is not in the top 1k scores of "
+                                "the beatmap. This replay has been skipped because of this.")
                     except NoInfoAvailableException as e:
                         _skip_replay_with_message(replay, "<div style='color:red'>The replay " + str(replay) + " does "
                             "not exist.</div>\nDouble check your map and/or user id. This replay has "
@@ -532,6 +536,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                                 "The replay " + str(replay) + " has been skipped because of this.")
                     finally:
                         self.increment_progressbar_signal.emit(1)
+
                 if isinstance(checkW, StealCheckW):
                     lc1.loaded = True
                     lc2.loaded = True
