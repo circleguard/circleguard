@@ -59,6 +59,25 @@ if sys.platform == "win32" and hasattr(sys, "_MEIPASS"):
     winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location + " \"%1\"")
 
 
+# if we're launching this with arguments, it's almost certainly because it
+# got called from a circleguard:// url. But if we're not, the user is almost
+# certainly launching it manually, after already having one instance open.
+# in the latter case we want to launch normally instead of accessing argv,
+# which would error.
+# Addittionally, we don't want to mess with sockets AT ALL if cg is being
+# launched for a second time manually. This ensures that we won't double up
+# on sockets by eg creating a duplicate server socket on the same port.
+# Unfortunately since we don't lock the file (how could we? it's already
+# locked), future instances will have no clue this one exists, and if they are
+# called with arguments they will launch themselves instead of redirecting to
+# this instance. This is OK for now - if users want to reset to a known state,
+# they should close all cg instances and everything will work as expected.
+if len(sys.argv) > 1:
+    connect_with_socket = True
+else:
+    connect_with_socket = False
+
+
 
 # we lock this file when we start so any circleguard instance knows if another
 # instance is running. If so, we pass it our ``argv`` (which came from a url
@@ -72,16 +91,18 @@ lock_file = open(LOCK_FILE, "r")
 try:
     portalocker.lock(lock_file, portalocker.LOCK_EX | portalocker.LOCK_NB)
 except LockException:
-    # lock failed, a circleguard application is already running
-    clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    clientsocket.connect(("localhost", SOCKET_PORT))
-    clientsocket.send(sys.argv[1].encode())
-    clientsocket.close()
-    sys.exit(0)
+    if connect_with_socket:
+        # lock failed, a circleguard application is already running
+        clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        clientsocket.connect(("localhost", SOCKET_PORT))
+        clientsocket.send(sys.argv[1].encode())
+        clientsocket.close()
+        sys.exit(0)
 
-serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-serversocket.bind(("localhost", SOCKET_PORT))
-serversocket.listen(1)
+if connect_with_socket:
+    serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    serversocket.bind(("localhost", SOCKET_PORT))
+    serversocket.listen(1)
 
 # use one logger across all of circleguard. So named to avoid conflict with
 # circlecore's logger.
@@ -154,8 +175,9 @@ def run_server_socket():
         data = connection.recv(4096)
         circleguard_gui.url_scheme_called(data)
 
-thread = threading.Thread(target=run_server_socket)
-thread.start()
+if connect_with_socket:
+    thread = threading.Thread(target=run_server_socket)
+    thread.start()
 
 # if we're opening for the first time from a url, the lock file won't be
 # locked, but we still want to visualize the replay in the url, so fake
