@@ -997,101 +997,24 @@ class FrametimeWindow(QMainWindow):
 
 
 class FrametimeGraph(QFrame):
-    # for any frametimes larger than this, chuck them into a single bin.
-    # matplotlib can't really handle that many bins otherwise
-    MAX_FRAMETIME = 50
 
     def __init__(self, result, replay):
         super().__init__()
+        from circleguard import KeylessCircleguard
         from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
         from matplotlib.figure import Figure
 
-        frametimes = None
-        self.show_cv = get_setting("frametime_graph_display") == "cv"
-        self.conversion_factor = self._conversion_factor(replay)
-        if isinstance(result, TimewarpResult):
-            frametimes = result.frametimes
-        else:
-            # just recalulate from circleguard, replay is already loaded so
-            # this should be fast
-            frametimes = self.get_frametimes(replay)
+        figure = Figure(figsize=(5,5))
+        cg = KeylessCircleguard()
+        show_cv = get_setting("frametime_graph_display") == "cv"
+        figure = cg.frametime_graph(replay, cv=show_cv, figure=figure)
 
-        # figsize is in inches for whatever reason lol
-        self.canvas = FigureCanvas(Figure(figsize=(5, 5)))
-        self.canvas.figure.suptitle(f"({'cv' if self.show_cv else 'ucv'}) Frametime Histogram")
-
-        self.max_frametime = max(frametimes)
-        if self.max_frametime > self.MAX_FRAMETIME:
-            self.plot_with_break(frametimes)
-        else:
-            self.plot_normal(frametimes)
+        self.canvas = FigureCanvas(figure)
 
         layout = QVBoxLayout()
         layout.addWidget(self.canvas)
         self.setLayout(layout)
 
-
-    def plot_normal(self, frametimes):
-        import numpy as np
-        frametimes = self.conversion_factor * frametimes
-        ax = self.canvas.figure.subplots()
-
-        bins = np.arange(0, (self.conversion_factor * self.max_frametime) + 1, self.conversion_factor)
-        ax.hist(frametimes, bins)
-        ax.set_xlabel("Frametime")
-        ax.set_ylabel("Count")
-
-    # adapted from https://matplotlib.org/examples/pylab_examples/broken_axis.html
-    def plot_with_break(self, frametimes):
-        import numpy as np
-        # gridspec_kw to make outlier plot smaller than the main one. https://stackoverflow.com/a/35881382
-        ax1, ax2 = self.canvas.figure.subplots(1, 2, sharey=True, gridspec_kw={"width_ratios": [3, 1]})
-        ax1.spines["right"].set_visible(False)
-        ax2.spines["left"].set_visible(False)
-        ax1.set_xlabel("Frametime")
-        ax1.set_ylabel("Count")
-
-        ax2.tick_params(left=False)
-
-        low_frametime_truth_arr = frametimes <= self.MAX_FRAMETIME
-        low_frametimes = frametimes[low_frametime_truth_arr]
-        high_frametimes = frametimes[~low_frametime_truth_arr]
-
-        low_frametimes = self.conversion_factor * low_frametimes
-        high_frametimes = self.conversion_factor * high_frametimes
-
-        bins = np.arange(0, (self.conversion_factor * self.MAX_FRAMETIME) + 1, self.conversion_factor)
-        ax1.hist(low_frametimes, bins)
-        # -1 in case high_frametimes has only one frame
-        bins = [min(high_frametimes) - 1, self.conversion_factor * self.max_frametime]
-        ax2.hist(high_frametimes, bins)
-
-    # the way we deal with cv / ucv is a mess currently because some things need
-    # to be converted sometimes and not others and I just didn't want to deal
-    # with the headache of abstraction. I'm sure a clean way to do this exists,
-    # but the messy solution will work for now.
-
-    def _conversion_factor(self, replay):
-        from circleguard import Mod
-        if not self.show_cv:
-            return 1
-        if Mod.DT in replay.mods:
-            return 1 / 1.5
-        if Mod.HT in replay.mods:
-            return 1 / 0.75
-        return 1
-
-    @classmethod
-    def get_frametimes(self, replay):
-        from circleguard import Circleguard
-        import numpy as np
-        cg = Circleguard(get_setting("api_key"))
-        # we convert manually ourselves above, mostly because this is an
-        # implementation from before when cg supported conversion, but also
-        # because we do some tricky stuff by converting some things and not
-        # converting others and it would be a hassle to work cg's conversion
-        # into that now.
-        return np.array(cg.frametimes(replay, cv=False))
 
 class ReplayDataWindow(QMainWindow):
     def __init__(self, replay):
