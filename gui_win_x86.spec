@@ -55,7 +55,7 @@ coll = COLLECT(
 shell = Dispatch("WScript.Shell")
 # Path().resolve() first to deal with relative paths, also converts / to \ because windows
 shortcut = shell.CreateShortCut(str(Path("./dist/Circleguard_win_x86/Circleguard.lnk").resolve()))
-shortcut.Targetpath = str(Path("./dist/Circleguard_win_x86/Circleguard/Circleguard.exe").resolve())
+shortcut.Targetpath = "%COMSPEC% /C start .\Circleguard\Circleguard.exe"
 shortcut.save()
 
 print("Creating zip")
