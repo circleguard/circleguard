@@ -507,18 +507,18 @@ class MainTab(SingleLinkableSetting, QFrame):
                     try:
                         cg.load(replay)
                         if not replay.has_data():
-                            _skip_replay_with_message(replay, "<div style='color:red'>The replay " + str(replay) + " is " +
+                            _skip_replay_with_message(replay, "<div style='color:crimson'>The replay " + str(replay) + " is " +
                                 "not available for download.</div>This is likely because it is not in the top 1k scores of "
                                 "the beatmap. This replay has been skipped because of this.")
                     except NoInfoAvailableException as e:
-                        _skip_replay_with_message(replay, "<div style='color:red'>The replay " + str(replay) + " does "
+                        _skip_replay_with_message(replay, "<div style='color:crimson'>The replay " + str(replay) + " does "
                             "not exist.</div>\nDouble check your map and/or user id. This replay has "
                             "been skipped because of this.")
                     except UnknownAPIException as e:
-                        _skip_replay_with_message(replay, "<div style='color:red'>The osu! api provided an invalid "
+                        _skip_replay_with_message(replay, "<div style='color:crimson'>The osu! api provided an invalid "
                             "response:</div> " + str(e) + ". The replay " + str(replay) + " has been skipped because of this.")
                     except LZMAError as e:
-                        _skip_replay_with_message(replay, "<div style='color:red'>lzma error while parsing a replay:</div> " + str(e) +
+                        _skip_replay_with_message(replay, "<div style='color:crimson'>lzma error while parsing a replay:</div> " + str(e) +
                             ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
                             " has been skipped because of this.")
                     except Exception as e:
