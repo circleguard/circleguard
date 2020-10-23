@@ -585,9 +585,15 @@ class MainTab(SingleLinkableSetting, QFrame):
                     if isinstance(checkW, RelaxCheckW):
                         for replay in all_replays:
                             _check_event(event)
-                            ur = cg.ur(replay)
-                            result = RelaxResult(ur, replay)
-                            self.q.put(result)
+                            # skip replays which have no map info
+                            if replay.map_info.available():
+                                ur = cg.ur(replay)
+                                result = RelaxResult(ur, replay)
+                                self.q.put(result)
+                            else:
+                                self.write_to_terminal_signal.emit("<div style='color:crimson'>The "
+                                    "replay " + str(replay) + " has no map id</div>, so its ur cannot "
+                                    "be calculated. This replay has been skipped because of this.")
                     if isinstance(checkW, CorrectionCheckW):
                         for replay in all_replays:
                             _check_event(event)
