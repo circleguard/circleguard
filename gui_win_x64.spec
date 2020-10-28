@@ -52,11 +52,12 @@ coll = COLLECT(
 )
 
 # post-build script
-shell = Dispatch("WScript.Shell")
-# Path().resolve() first to deal with relative paths, also converts / to \ because windows
-shortcut = shell.CreateShortCut(str(Path("./dist/Circleguard_win_x64/Circleguard.lnk").resolve()))
-shortcut.Targetpath = "%COMSPEC% /C start .\Circleguard\Circleguard.exe"
-shortcut.save()
+with open("./dist/Circleguard_win_x64/Circleguard.vbs", "w+") as f:
+    f.write("""
+            Set WshShell = CreateObject("WScript.Shell") 
+            WshShell.Run chr(34) & ".\Circleguard\Circleguard.exe" & Chr(34), 0 
+            Set WshShell = Nothing
+            """)
 
 print("Creating zip")
 os.chdir("./dist/")
