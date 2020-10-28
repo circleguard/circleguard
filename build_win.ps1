@@ -10,7 +10,7 @@ Write-Output "activating venv"
 echo "installing pip requirements"
 pip install -r requirements.txt
 echo "installing build requirements"
-pip install -r requirements_build_win.txt
+pip install -r requirements_build.txt
 
 Write-Output "building x64"
 pyinstaller gui_win_x64.spec --noconfirm

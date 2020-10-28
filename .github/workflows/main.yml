@@ -18,7 +18,7 @@ jobs:
 
     - name: Install build dependencies
       run: |
-        pip install -r requirements_build_win.txt
+        pip install -r requirements_build.txt
 
     - name: Build x64
       run: |
@@ -48,7 +48,7 @@ jobs:
 
     - name: Install build dependencies
       run: |
-        pip install -r requirements_build_win.txt
+        pip install -r requirements_build.txt
 
     - name: Build x86
       run: |
@@ -79,7 +79,7 @@ jobs:
 
     - name: Install build dependencies
       run: |
-        pip install -r requirements_build_mac.txt
+        pip install -r requirements_build.txt
 
     - name: Build
       run: |

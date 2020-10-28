@@ -1,2 +1,0 @@
-pyinstaller==3.6
-pywin32

@@ -11,7 +11,7 @@ source build-env/bin/activate
 echo "installing pip requirements"
 pip install -r requirements.txt
 echo "installing build requirements"
-pip install -r requirements_build_mac.txt
+pip install -r requirements_build.txt
 
 echo "building"
 pyinstaller gui_mac.spec --noconfirm
