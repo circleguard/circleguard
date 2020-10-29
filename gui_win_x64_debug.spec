@@ -4,7 +4,6 @@ block_cipher = None
 from pathlib import Path
 import sys
 import os
-from win32com.client import Dispatch
 import zipfile
 import PyInstaller.config
 os.path.expanduser
@@ -54,8 +53,8 @@ coll = COLLECT(
 # post-build script
 with open("./dist/Circleguard_win_x64_debug/Circleguard.vbs", "w+") as f:
     f.write("""
-            Set WshShell = CreateObject("WScript.Shell") 
-            WshShell.Run chr(34) & ".\Circleguard\Circleguard.exe" & Chr(34), 0 
+            Set WshShell = CreateObject("WScript.Shell")
+            WshShell.Run chr(34) & ".\Circleguard\Circleguard.exe" & Chr(34), 0
             Set WshShell = Nothing
             """)
 
