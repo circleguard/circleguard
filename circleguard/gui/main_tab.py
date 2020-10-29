@@ -507,18 +507,18 @@ class MainTab(SingleLinkableSetting, QFrame):
                     try:
                         cg.load(replay)
                         if not replay.has_data():
-                            _skip_replay_with_message(replay, "<div style='color:orangered'>The replay " + str(replay) + " is " +
+                            _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " is " +
                                 "not available for download.</div>This is likely because it is not in the top 1k scores of "
                                 "the beatmap. This replay has been skipped because of this.")
                     except NoInfoAvailableException as e:
-                        _skip_replay_with_message(replay, "<div style='color:orangered'>The replay " + str(replay) + " does "
+                        _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " does "
                             "not exist.</div>\nDouble check your map and/or user id. This replay has "
                             "been skipped because of this.")
                     except UnknownAPIException as e:
-                        _skip_replay_with_message(replay, "<div style='color:orangered'>The osu! api provided an invalid "
+                        _skip_replay_with_message(replay, "<div style='color:#ff5252'>The osu! api provided an invalid "
                             "response:</div> " + str(e) + ". The replay " + str(replay) + " has been skipped because of this.")
                     except LZMAError as e:
-                        _skip_replay_with_message(replay, "<div style='color:orangered'>lzma error while parsing a replay:</div> " + str(e) +
+                        _skip_replay_with_message(replay, "<div style='color:#ff5252'>lzma error while parsing a replay:</div> " + str(e) +
                             ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
                             " has been skipped because of this.")
                     except Exception as e:
@@ -591,7 +591,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                                 result = RelaxResult(ur, replay)
                                 self.q.put(result)
                             else:
-                                self.write_to_terminal_signal.emit("<div style='color:orangered'>The "
+                                self.write_to_terminal_signal.emit("<div style='color:#ff5252'>The "
                                     "replay " + str(replay) + " has no map id</div>, so its ur cannot "
                                     "be calculated. This replay has been skipped because of this.")
                     if isinstance(checkW, CorrectionCheckW):
