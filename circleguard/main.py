@@ -72,11 +72,11 @@ if sys.platform == "win32" and hasattr(sys, "_MEIPASS"):
 # called with arguments they will launch themselves instead of redirecting to
 # this instance. This is OK for now - if users want to reset to a known state,
 # they should close all cg instances and everything will work as expected.
+launched_from_url = False
 if len(sys.argv) > 1:
-    connect_with_socket = True
-else:
-    connect_with_socket = False
+    launched_from_url = True
 
+start_server_socket = True
 
 
 # we lock this file when we start so any circleguard instance knows if another
@@ -91,15 +91,22 @@ lock_file = open(LOCK_FILE, "r")
 try:
     portalocker.lock(lock_file, portalocker.LOCK_EX | portalocker.LOCK_NB)
 except LockException:
-    if connect_with_socket:
+    if launched_from_url:
         # lock failed, a circleguard application is already running
         clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         clientsocket.connect(("localhost", SOCKET_PORT))
         clientsocket.send(sys.argv[1].encode())
         clientsocket.close()
         sys.exit(0)
+    else:
+        # if there's already a cg instance running (we know this because our 
+        # lock to the lock file failed) and we were not launched from a url,
+        # this is the second or more instance of cg running. We do not want to
+        # start a server socket in this case because then there would be two
+        # sockets listening on the same port and it would error.
+        start_server_socket = False
 
-if connect_with_socket:
+if start_server_socket:
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serversocket.bind(("localhost", SOCKET_PORT))
     serversocket.listen(1)
@@ -175,7 +182,7 @@ def run_server_socket():
         data = connection.recv(4096)
         circleguard_gui.url_scheme_called(data)
 
-if connect_with_socket:
+if start_server_socket:
     thread = threading.Thread(target=run_server_socket)
     thread.start()
 
