@@ -15,6 +15,7 @@ from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout, QComboBox,
     QTextEdit, QScrollArea, QPushButton, QApplication, QToolTip)
 from PyQt5.QtGui import QTextCursor
+import requests
 # from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
     # UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
     # MapUser, Detect, Check, TimewarpResult, RelaxResult, CorrectionResult,
@@ -587,7 +588,27 @@ class MainTab(SingleLinkableSetting, QFrame):
                             _check_event(event)
                             # skip replays which have no map info
                             if replay.map_info.available():
-                                ur = cg.ur(replay)
+                                try:
+                                    ur = cg.ur(replay)
+                                # Sometimes, a beatmap will have a bugged download where it returns an empty response
+                                # when we try to download it (https://github.com/ppy/osu-api/issues/171). Since peppy
+                                # doesn't plan on fixing this for unranked beatmaps, we just ignore / skip the error
+                                # in all cases.
+                                # StopIteration is a bit of a weird exception to catch here, but because of how slider
+                                # interacts with beatmaps it will attempt to call `next` on an empty generator if the
+                                # beatmap is empty, which of course raises StopIteration.
+                                except StopIteration:
+                                    if requests.get(f"https://osu.ppy.sh/osu/{replay.map_id}").content == b"":
+                                        self.write_to_terminal_signal.emit("<div style='color:#ff5252'>The "
+                                            "map " + str(replay.map_id) + "'s download is bugged</div>, so its ur cannot "
+                                            "be calculated. The replay " + str(replay) + " has been skipped because of this, "
+                                            "but please report this to the developers through discord or github so it can be "
+                                            "tracked.")
+                                        break
+                                    # If we happen to catch an unrelated error with this `except`, we still want to
+                                    # raise that so it can be tracked and fixed.
+                                    else:
+                                        raise
                                 result = RelaxResult(ur, replay)
                                 self.q.put(result)
                             else:
