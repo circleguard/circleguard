@@ -516,6 +516,20 @@ def get_setting(name):
     v = type_(val)
     return v
 
+# These raw methods bypass our usual casting when setting or retrieving setting
+# values.
+# We are using qt's settings for two different things: storing settings which we
+# also expose through a circleguard.cfg file, and storing settings which we do
+# not (and want to save / retrieve "as is", without converting to a string and
+# back again, as would be necessary when writing to a config file). These
+# methods are for the latter use case.
+def set_setting_raw(name, value):
+    SETTINGS.setValue(name, value)
+
+def get_setting_raw(name):
+    return SETTINGS.value(name)
+
+
 def set_setting(name, value):
     """
     Sets the setting with the given name to have the given value.

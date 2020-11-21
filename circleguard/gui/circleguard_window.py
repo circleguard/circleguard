@@ -15,7 +15,8 @@ from packaging import version
 # import requests
 # from requests import RequestException
 
-from settings import LinkableSetting, get_setting, set_setting, overwrite_config
+from settings import (LinkableSetting, get_setting, set_setting,
+    overwrite_config, get_setting_raw, set_setting_raw)
 from widgets import WidgetCombiner, ResultW
 from .gui import MainWidget, DebugWindow
 from utils import (resource_path, AnalysisResult, URLAnalysisResult,
@@ -113,6 +114,13 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.thread = threading.Thread(target=self.run_update_check)
         self.thread.start()
 
+        geometry = get_setting_raw("CircleguardWindow/geometry")
+        if geometry:
+            self.restoreGeometry(geometry)
+        else:
+            # if we don't know what size we were before, use 900x750
+            self.resize(900, 750)
+
     def on_setting_changed(self, setting, new_value):
         if setting == "log_save":
             if not new_value:
@@ -137,6 +145,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         if focused is not None and not isinstance(focused, QTextEdit):
             focused.clearFocus()
         super().mousePressEvent(event)
+
+    def closeEvent(self, event):
+        set_setting_raw("CircleguardWindow/geometry", self.saveGeometry())
 
     def url_scheme_called(self, url):
         from circleguard import ReplayMap, Circleguard
