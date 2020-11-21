@@ -99,7 +99,7 @@ except LockException:
         clientsocket.close()
         sys.exit(0)
     else:
-        # if there's already a cg instance running (we know this because our 
+        # if there's already a cg instance running (we know this because our
         # lock to the lock file failed) and we were not launched from a url,
         # this is the second or more instance of cg running. We do not want to
         # start a server socket in this case because then there would be two
