@@ -13,7 +13,8 @@ import traceback
 
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout, QComboBox,
-    QTextEdit, QScrollArea, QPushButton, QApplication, QToolTip)
+    QTextEdit, QScrollArea, QApplication, QToolTip, QLabel,
+    QSizePolicy)
 from PyQt5.QtGui import QTextCursor
 import requests
 # from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
@@ -25,7 +26,8 @@ import requests
 
 from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
     ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
-    CorrectionCheckW, TimewarpCheckW, AnalyzeW, PushButton)
+    CorrectionCheckW, TimewarpCheckW, AnalyzeW, InvestigationCheckboxes,
+    WidgetCombiner, PushButton, LoadableCreation)
 from settings import SingleLinkableSetting, get_setting, set_setting
 from utils import (delete_widget, AnalysisResult, StealResult, RelaxResult,
     CorrectionResult, TimewarpResult)
@@ -45,38 +47,12 @@ class MainTab(SingleLinkableSetting, QFrame):
     update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
     print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
 
-    LOADABLES_COMBOBOX_REGISTRY = ["Add a Loadable", "+ Map Replay", "+ Local Replay", "+ Map", "+ User", "+ All User Replays on Map"]
-    CHECKS_COMBOBOX_REGISTRY = ["Add an Investigation", "+ Similarity", "+ Unstable Rate", "+ Snaps", "+ Frametime", "+ Manual Analysis"]
-
     def __init__(self):
         QFrame.__init__(self)
         SingleLinkableSetting.__init__(self, "api_key")
 
         # lazy loaded, see self#library
         self._library = None
-
-        self.loadables_combobox = QComboBox(self)
-        self.loadables_combobox.setInsertPolicy(QComboBox.NoInsert)
-        for loadable in MainTab.LOADABLES_COMBOBOX_REGISTRY:
-            self.loadables_combobox.addItem(loadable, loadable)
-        self.loadables_combobox.activated.connect(self.add_loadable)
-
-        self.checks_combobox = QComboBox(self)
-        self.checks_combobox.setInsertPolicy(QComboBox.NoInsert)
-        for check in MainTab.CHECKS_COMBOBOX_REGISTRY:
-            self.checks_combobox.addItem(check, check)
-        self.checks_combobox.activated.connect(self.add_check)
-
-        self.loadables_scrollarea = QScrollArea(self)
-        self.loadables_scrollarea.setWidget(ScrollableLoadablesWidget())
-        self.loadables_scrollarea.setWidgetResizable(True)
-
-        self.checks_scrollarea = QScrollArea(self)
-        self.checks_scrollarea.setWidget(ScrollableChecksWidget())
-        self.checks_scrollarea.setWidgetResizable(True)
-
-        self.loadables = [] # for deleting later
-        self.checks = [] # for deleting later
 
         self.print_results_signal.connect(self.print_results)
         self.write_to_terminal_signal.connect(self.write)
@@ -113,11 +89,29 @@ class MainTab(SingleLinkableSetting, QFrame):
         # disable button if no api_key is stored
         self.on_setting_changed("api_key", get_setting("api_key"))
 
+        investigate_label = QLabel("Investigate For:")
+        investigate_label.setFixedWidth(130)
+        investigate_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+
+        investigation_checkboxes = InvestigationCheckboxes()
+        investigations = WidgetCombiner(investigate_label, investigation_checkboxes, self)
+        investigations.setFixedHeight(25)
+
+
+        # expanding = QSizePolicy()
+        # expanding.setHorizontalPolicy(QSizePolicy.Expanding)
+        # expanding.setVerticalPolicy(QSizePolicy.Expanding)
+
+        self.loadable_creation = LoadableCreation()
+        # self.loadable_creation.setSizePolicy(expanding)
+
+        scrollarea = QScrollArea(self)
+        scrollarea.setWidget(self.loadable_creation)
+        scrollarea.setWidgetResizable(True)
+
         layout = QGridLayout()
-        layout.addWidget(self.loadables_combobox, 0, 0, 1, 4)
-        layout.addWidget(self.checks_combobox, 0, 8, 1, 4)
-        layout.addWidget(self.loadables_scrollarea, 1, 0, 4, 8)
-        layout.addWidget(self.checks_scrollarea, 1, 8, 4, 8)
+        layout.addWidget(investigations, 0, 0, 1, 16)
+        layout.addWidget(scrollarea, 1, 0, 4, 16)
         layout.addWidget(self.terminal, 5, 0, 2, 16)
         layout.addWidget(self.run_button, 7, 0, 1, 16)
 
@@ -135,25 +129,17 @@ class MainTab(SingleLinkableSetting, QFrame):
     def remove_loadable(self, loadable_id):
         # should only ever be one occurence, a comp + index works well enough
         loadables = [l for l in self.loadables if l.loadable_id == loadable_id]
-        if not loadables: # sometimes an empty list, I don't know how if you need a loadable to click the delete button...
+        # sometimes an empty list, I don't know how if you need a loadable to
+        # click the delete button...
+        if not loadables:
             return
         loadable = loadables[0]
-        self.loadables_scrollarea.widget().layout.removeWidget(loadable)
+        self.scrollarea.widget().layout.removeWidget(loadable)
         delete_widget(loadable)
         self.loadables.remove(loadable)
         # remove deleted loadables from Checks as well
         for check in self.checks:
             check.remove_loadable(loadable_id)
-
-    def remove_check(self, check_id):
-        # see above method for comments
-        checks = [c for c in self.checks if c.check_id == check_id]
-        if not checks:
-            return
-        check = checks[0]
-        self.checks_scrollarea.widget().layout.removeWidget(check)
-        delete_widget(check)
-        self.checks.remove(check)
 
     def add_loadable(self):
         # don't do anything if they selected the default text
@@ -173,44 +159,8 @@ class MainTab(SingleLinkableSetting, QFrame):
         if button_data == "+ All User Replays on Map":
             w = MapUserW()
         w.remove_loadable_signal.connect(self.remove_loadable)
-        self.loadables_scrollarea.widget().layout.addWidget(w)
+        self.scrollarea.widget().layout.addWidget(w)
         self.loadables.append(w)
-        self.check_drag_loadables_tutorial()
-
-    def add_check(self):
-        if self.checks_combobox.currentIndex() == 0:
-            return
-        button_data = self.checks_combobox.currentData()
-        self.checks_combobox.setCurrentIndex(0)
-        if button_data == "+ Similarity":
-            w = StealCheckW()
-        if button_data == "+ Unstable Rate":
-            w = RelaxCheckW()
-        if button_data == "+ Snaps":
-            w = CorrectionCheckW()
-        if button_data == "+ Frametime":
-            w = TimewarpCheckW()
-        if button_data == "+ Manual Analysis":
-            w = AnalyzeW()
-        w.remove_check_signal.connect(self.remove_check)
-        self.checks_scrollarea.widget().layout.addWidget(w)
-        self.checks.append(w)
-        self.check_drag_loadables_tutorial()
-
-    def check_drag_loadables_tutorial(self):
-        # don't play the message if they don't have both a loadable and a check
-        if len(self.loadables) < 1 or len(self.checks) < 1:
-            return
-        # don't play the message more than once
-        if get_setting("tutorial_drag_loadables_seen"):
-            return
-
-        message_box = QMessageBox()
-        message_box.setText("In order to investigate a Loadable, drag it from "
-            "the left <------- and drop it onto a Check on the right ------>, then hit run.")
-        message_box.exec()
-
-        set_setting("tutorial_drag_loadables_seen", True)
 
     def write(self, message):
         self.terminal.append(str(message).strip())

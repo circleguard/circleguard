@@ -421,7 +421,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                 QTextEdit {
                     background-color: #212121;
                 }
-                LoadableW, CheckW, DragWidget, ReplayMapVis {
+                SelectableLoadable, LoadableW, CheckW, DragWidget, ReplayMapVis {
                     border: 1.5px solid #272727;
                 }
                 ReplayMapCreation {

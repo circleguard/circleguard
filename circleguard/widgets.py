@@ -9,10 +9,10 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
     QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
     QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView,
-    QGraphicsOpacityEffect, QStyle)
+    QGraphicsOpacityEffect, QStyle, QListWidget, QListWidgetItem)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag, QPainter, QPen, QCursor
 from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
-    QPoint, QMimeData, QEvent, QObject)
+    QPoint, QMimeData, QEvent, QObject, QSize)
 # from circleguard import Circleguard, TimewarpResult, Mod, Key
 # import numpy as np
 
@@ -309,6 +309,201 @@ class ScrollableChecksWidget(QFrame):
         self.layout.setAlignment(Qt.AlignTop)
         self.setLayout(self.layout)
 
+class LabeledCheckbox(QFrame):
+    def __init__(self, label):
+        super().__init__()
+        label = QLabel(label)
+        self.checkbox = CheckBox(self)
+
+        layout = QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.checkbox)
+        layout.addWidget(label)
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setLayout(layout)
+
+    def checked(self):
+        return self.checkbox.isChecked()
+
+    # toggle checkbox if we're clicked anywhere, so the label can be clicked to
+    # toggle as well
+    def mousePressEvent(self, event):
+        self.checkbox.toggle()
+
+class InvestigationCheckboxes(QFrame):
+    def __init__(self):
+        super().__init__()
+
+        similarity_cb = LabeledCheckbox("Similarity")
+        ur_cb = LabeledCheckbox("Unstable Rate")
+        frametime_cb = LabeledCheckbox("Frametime")
+        snaps_cb = LabeledCheckbox("Snaps")
+        manual_analysis_cb = LabeledCheckbox("Manual Analysis")
+
+        layout = QHBoxLayout()
+        layout.setSpacing(25)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setAlignment(Qt.AlignLeft)
+        layout.addWidget(similarity_cb)
+        layout.addWidget(ur_cb)
+        layout.addWidget(frametime_cb)
+        layout.addWidget(snaps_cb)
+        layout.addWidget(manual_analysis_cb)
+        self.setLayout(layout)
+
+
+
+class SelectableLoadable(QFrame):
+    input_changed = pyqtSignal()
+
+    def __init__(self):
+        super().__init__()
+        self.previous_mods = None
+        self.input_has_changed = False
+        # save the loadable we represent so if we load it externally and access
+        # it again, it will still be loaded
+        self._cg_loadable = None
+
+        self.type = None
+
+        self.delete_button = PushButton(self)
+        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
+        self.delete_button.setMaximumWidth(30)
+
+        self.make_and_set_layout()
+
+
+    def make_and_set_layout(self):
+        if self.type == None:
+            # loadable type hasn't been selected yet, display dropdown
+            self.combobox = ComboBox()
+            self.combobox.setInsertPolicy(QComboBox.NoInsert)
+            for entry in ["Select a Loadable", "Map Replay", "Local Replay", "Map", "User", "All User Replays on Map"]:
+                self.combobox.addItem(entry, entry)
+
+            layout = QGridLayout()
+            layout.addWidget(self.combobox, 0, 0, 1, 7)
+            layout.addWidget(self.delete_button, 0, 7, 1, 1)
+            self.setLayout(layout)
+
+            self.inputs = []
+
+        # I would like to use the actual class ReplayMap from circleguard here,
+        # but that would require importing it from circleguard and while I think
+        # I could do it safely here without importing it right as the app
+        # launches, it's not worth messing around with
+        elif self.type == "ReplayMap":
+            self.map_id_input = InputWidget("Map id", "", "id")
+            self.user_id_input = InputWidget("User id", "", "id")
+            self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+            title = QLabel("Replay Map")
+
+            layout = QGridLayout()
+            layout.addWidget(title, 0, 0, 1, 7)
+            layout.addWidget(self.delete_button, 0, 7, 1, 1)
+            layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+            layout.addWidget(self.user_id_input, 2, 0, 1, 8)
+            layout.addWidget(self.mods_input, 3, 0, 1, 8)
+            self.setLayout(layout)
+
+            self.inputs = [self.map_id_input, self.user_id_input, self.mods_input]
+
+        # reconnect any new widgets we just added to our input_changed signal
+        for input_widget in self.inputs:
+            input_widget.field.textChanged.connect(self.input_changed)
+
+    def validate(self):
+        return self.map_id_input.value() and self.user_id_input.value()
+
+    def show_delete(self):
+        self.delete_button.show()
+
+    def hide_delete(self):
+        self.delete_button.hide()
+
+    def cg_loadable(self):
+        from circleguard import ReplayMap, Mod
+        if not self.validate():
+            return None
+        if not self._cg_loadable:
+            mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+            self._cg_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+        # if something is accessing the loadable we represent, but the value of
+        # our input fields have changed (ie the replay we represent has changed)
+        # then we want to return that new loadable instead of always using the
+        # old one.
+        # To explain the comparison against the previous mods used - if the mods
+        # specified by the user have changed in any way, we want to update the
+        # loadable. This is because it's ambiguous whether an (unloaded) replay
+        # with`mods=None` is equal to a (loaded) replay with the same map and
+        # user id, but with `mods=HDHR`. Until the first replay is loaded, we
+        # don't know what its mods will end up being, so it could be equal or
+        # could not be. To be certain, we recreate the loadable if the mods
+        # change at all.
+        mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+        new_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+        if (new_loadable.map_id != self._cg_loadable.map_id or \
+            new_loadable.user_id != self._cg_loadable.user_id or \
+            self.mods_input.value() != self.previous_mods):
+            self._cg_loadable = new_loadable
+        self.previous_mods = self.mods_input.value()
+        return self._cg_loadable
+
+
+
+class LoadableCreation(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.loadables = []
+
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignTop)
+        self.setLayout(layout)
+
+        # prepopulate with a single loadable
+        self.new_loadable()
+
+    def loadable_input_changed(self, loadable):
+        # only allow the bottommost loadable to create new ones
+        if loadable != self.most_recent_loadable:
+            return
+        self.new_loadable()
+
+    def new_loadable(self):
+        loadable = SelectableLoadable()
+        loadable.delete_button.clicked.connect(lambda: self.remove_loadable(loadable))
+        loadable.input_changed.connect(lambda: self.loadable_input_changed(loadable))
+        # don't allow the bottommost loadable (which this new one will soon
+        # become) to be deleted, users could accidentally remove all loadables
+        loadable.hide_delete()
+
+        self.most_recent_loadable = loadable
+        self.loadables.append(loadable)
+        # show the delete button on the second to last handler, if it exists,
+        # since it can now be deleted as it isn't the final loadable
+        if len(self.loadables) > 1:
+            self.loadables[-2].show_delete()
+
+        self.layout().addWidget(loadable)
+
+    def remove_loadable(self, loadable):
+        loadable.hide()
+        self.loadables.remove(loadable)
+        if loadable == self.most_recent_loadable:
+            self.most_recent_loadable = self.loadables[-1]
+
+    def all_loadables(self):
+        """
+        Returns the loadables in this widget as unloaded circleguard loadables.
+        """
+        loadables = []
+        for loadable in self.loadables:
+            cg_loadable = loadable.cg_loadable()
+            if not cg_loadable:
+                continue
+            loadables.append(cg_loadable)
+        return loadables
 
 # provided for our Analysis window. There's probably some shared code that
 # we could abstract out from this and `DropArea`, but it's not worth it atm
