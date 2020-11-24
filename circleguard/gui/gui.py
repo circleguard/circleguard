@@ -7,9 +7,9 @@ import time
 
 from PyQt5.QtCore import Qt, pyqtSignal, QUrl, QTimer
 from PyQt5.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
-    QLabel, QPushButton, QGridLayout, QSpacerItem, QSizePolicy, QMainWindow,
-    QTextEdit, QStackedWidget, QHBoxLayout, QMessageBox)
-from PyQt5.QtGui import QDesktopServices, QIcon
+    QLabel, QGridLayout, QSpacerItem, QSizePolicy, QMainWindow,
+    QTextEdit, QStackedWidget, QHBoxLayout, QMessageBox,)
+from PyQt5.QtGui import QDesktopServices, QIcon, QCursor
 
 # from circleguard import Circleguard, ReplayPath
 # from circleguard import __version__ as cg_version
@@ -19,7 +19,7 @@ from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
     ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
     LineEditSetting, EntryWidget, RunWidget, ComboboxSetting, ReplayDropArea,
-    ReplayMapCreation)
+    ReplayMapCreation, PushButton)
 
 from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
 from .visualizer import get_visualizer
@@ -34,7 +34,7 @@ log = logging.getLogger("circleguard_gui")
 class MainWidget(QFrame):
     def __init__(self):
         super().__init__()
-        self.back_button = QPushButton()
+        self.back_button = PushButton()
         self.back_button.setFixedWidth(55)
         self.back_button.setFixedHeight(30)
         self.back_button.setIcon(QIcon(resource_path("back_arrow.png")))
@@ -90,12 +90,12 @@ class WindowSelector(QFrame):
     def __init__(self):
         super().__init__()
 
-        visualize_button = QPushButton("Visualization")
+        visualize_button = PushButton("Visualization")
         visualize_button.clicked.connect(self.visualize_button_clicked)
         # to style it in our stylesheet
         visualize_button.setObjectName("bigButton")
 
-        bulk_investigation_button = QPushButton("Investigation / Settings")
+        bulk_investigation_button = PushButton("Investigation / Settings")
         bulk_investigation_button.clicked.connect(self.bulk_investigation_button_clicked)
         bulk_investigation_button.setObjectName("bigButton")
 
@@ -156,7 +156,7 @@ class AnalysisSelection(QFrame):
         rmc_scroll_area.setWidgetResizable(True)
         rmc_scroll_area.setFrameShape(QFrame.NoFrame)
 
-        visualize_button = QPushButton("Visualize")
+        visualize_button = PushButton("Visualize")
         visualize_button.setObjectName("bigButton")
         visualize_button.clicked.connect(self.visualize)
         font = visualize_button.font()
@@ -263,6 +263,7 @@ class CircleguardClassic(QFrame):
         self.tabs.addTab(self.queue_tab, "Queue")
         self.tabs.addTab(self.thresholds_tab, "Thresholds")
         self.tabs.addTab(self.settings_tab, "Settings")
+        self.tabs.tabBar().setCursor(QCursor(Qt.PointingHandCursor))
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.tabs)
@@ -399,9 +400,9 @@ class SettingsTab(QFrame):
         self.qscrollarea.setAlignment(Qt.AlignCenter)
         self.qscrollarea.setWidgetResizable(True)
 
-        self.open_settings = QPushButton("Open Advanced Settings")
+        self.open_settings = PushButton("Open Advanced Settings")
         self.open_settings.clicked.connect(self._open_settings)
-        self.sync_settings = QPushButton("Sync Settings")
+        self.sync_settings = PushButton("Sync Settings")
         self.sync_settings.clicked.connect(self._sync_settings)
 
 

@@ -9,10 +9,10 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
     QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
     QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView,
-    QGraphicsOpacityEffect)
+    QGraphicsOpacityEffect, QStyle)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag, QPainter, QPen, QCursor
 from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
-    QPoint, QMimeData)
+    QPoint, QMimeData, QEvent, QObject)
 # from circleguard import Circleguard, TimewarpResult, Mod, Key
 # import numpy as np
 
@@ -23,6 +23,36 @@ from utils import (resource_path, delete_widget, AnalysisResult, ACCENT_COLOR,
 
 SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
 
+
+# we want most of our clickable widgets to have a pointing hand cursor on hover
+
+class PushButton(QPushButton):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+
+# TODO set pointer cursor on combobox popup list as well, I tried
+# https://stackoverflow.com/a/44525625/12164878 but couldn't get it to work
+class ComboBox(QComboBox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+
+class CheckBox(QCheckBox):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+
+# A slider which moves directly to the clicked position when clicked
+# Implementation from https://stackoverflow.com/a/29639127/12164878
+class Slider(QSlider):
+    def mousePressEvent(self, event):
+        self.setValue(QStyle.sliderValueFromPosition(self.minimum(),
+            self.maximum(), event.x(), self.width()))
+
+    def mouseMoveEvent(self, event):
+        self.setValue(QStyle.sliderValueFromPosition(self.minimum(),
+            self.maximum(), event.x(), self.width()))
 
 # TODO cmd + z doesn't undo operations here, figure out why
 class LineEdit(QLineEdit):
@@ -173,7 +203,7 @@ class OptionWidget(SingleLinkableSetting, QFrame):
         label = QLabel(self)
         label.setText(title + end)
         label.setToolTip(tooltip)
-        self.box = QCheckBox(self)
+        self.box = CheckBox(self)
         self.box.setChecked(self.setting_value)
         self.box.stateChanged.connect(self.on_setting_changed_from_gui)
         item = CenteredWidget(self.box)
@@ -215,7 +245,7 @@ class ButtonWidget(QFrame):
         label = QLabel(self)
         label.setText(label_title + end)
         label.setToolTip(tooltip)
-        self.button = QPushButton(button_title)
+        self.button = PushButton(button_title)
         self.button.setFixedWidth(120)
 
         self.layout = QGridLayout()
@@ -237,7 +267,7 @@ class ComboboxSetting(LinkableSetting, QFrame):
         label.setText(label_text + ":")
         label.setToolTip(tooltip)
 
-        combobox = QComboBox(self)
+        combobox = ComboBox(self)
         combobox.setInsertPolicy(QComboBox.NoInsert)
         combobox.setMinimumWidth(120)
         setting_options_dict = self.setting_values[setting_options]
@@ -402,7 +432,7 @@ class PathWidget(QFrame):
         self._cg_loadable = None
         label = QLabel(path.name)
 
-        self.delete_button = QPushButton(self)
+        self.delete_button = PushButton(self)
         self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(25)
         self.delete_button.setMaximumHeight(25)
@@ -512,7 +542,7 @@ class ReplayMapVis(QFrame):
 
         title = QLabel("Online Replay")
 
-        self.delete_button = QPushButton(self)
+        self.delete_button = PushButton(self)
         self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
 
@@ -548,7 +578,7 @@ class ReplayMapVis(QFrame):
         # specified by the user have changed in any way, we want to update the
         # loadable. This is because it's ambiguous whether an (unloaded) replay
         # with`mods=None` is equal to a (loaded) replay with the same map and
-        # user id, but with `mods=HDHR`. Untilt the first replay is loaded, we
+        # user id, but with `mods=HDHR`. Until the first replay is loaded, we
         # don't know what its mods will end up being, so it could be equal or
         # could not be. To be certain, we recreate the loadable if the mods
         # change at all.
@@ -652,7 +682,7 @@ class CheckW(QFrame):
         else:
             self.loadables = []
 
-        self.delete_button = QPushButton(self)
+        self.delete_button = PushButton(self)
         self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda check_id: self.remove_check_signal.emit(check_id), self.check_id))
@@ -742,7 +772,7 @@ class LoadableInCheck(QFrame):
         self.loadable_in_check_id = LoadableInCheck.ID
         self.loadable_id = loadable_id
 
-        self.delete_button = QPushButton(self)
+        self.delete_button = PushButton(self)
         self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda id_: self.remove_loadableincheck_signal.emit(id_), self.loadable_in_check_id))
@@ -778,7 +808,7 @@ class LoadableW(QFrame):
         # double tabs on short names to align with longer ones
         title.setText(f"{name}{t+t if len(name) < 5 else t}(id: {self.loadable_id})")
 
-        self.delete_button = QPushButton(self)
+        self.delete_button = PushButton(self)
         self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
         self.delete_button.clicked.connect(partial(lambda loadable_id: self.remove_loadable_signal.emit(loadable_id), self.loadable_id))
@@ -916,7 +946,7 @@ class ResultW(QFrame):
         self.label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.label.setCursor(QCursor(Qt.IBeamCursor))
 
-        self.visualize_button = QPushButton(self)
+        self.visualize_button = PushButton(self)
         self.visualize_button.setText("Visualize")
         self.visualize_button.clicked.connect(lambda: self.visualize_button_pressed_signal.emit())
 
@@ -928,7 +958,7 @@ class ResultW(QFrame):
             self.set_layout_multiple()
 
     def set_layout_single(self):
-        self.actions_combobox = QComboBox()
+        self.actions_combobox = ComboBox()
         self.actions_combobox.addItem("More")
         self.actions_combobox.addItem("View Frametimes", "View Frametimes")
         self.actions_combobox.addItem("View Replay Data", "View Replay Data")
@@ -975,7 +1005,7 @@ class ResultW(QFrame):
         self.actions_combobox.setCurrentIndex(0)
 
     def new_template_button(self):
-        template_button = QPushButton(self)
+        template_button = PushButton(self)
         template_button.setText("Copy Template")
         template_button.clicked.connect(lambda: self.template_button_pressed_signal.emit())
         return template_button
@@ -1086,7 +1116,7 @@ class RunWidget(QFrame):
         self.status_label = QLabel(self)
         self.status_label.setText("<b>Status: " + self.status + "</b>")
         self.status_label.setTextFormat(Qt.RichText) # so we can bold it
-        self.button = QPushButton(self)
+        self.button = PushButton(self)
         self.button.setText("Cancel")
         self.button.setFixedWidth(50)
         self.label.setFixedHeight(self.button.size().height()*0.75)
@@ -1136,7 +1166,8 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         label.setToolTip(tooltip)
         self.label = label
 
-        slider = QSlider(Qt.Horizontal)
+        slider = Slider(Qt.Horizontal)
+        slider.setCursor(QCursor(Qt.PointingHandCursor))
         slider.setFocusPolicy(Qt.ClickFocus)
         slider.setRange(0, max_)
         # max value of max_, avoid errors when the setting is 2147483647 aka inf
@@ -1376,7 +1407,7 @@ class FolderChooser(QFrame):
         self.label = QLabel(self)
         self.label.setText(title + ":")
 
-        self.file_chooser_button = QPushButton(self)
+        self.file_chooser_button = PushButton(self)
         type_ = "Folder" if self.folder_mode else "Files" if self.multiple_files else "File"
         self.file_chooser_button.setText("Choose " + type_)
         # if we didn't have this line only clicking on the label would unhighlight,
@@ -1454,7 +1485,7 @@ class ResetSettings(QFrame):
         self.label = QLabel(self)
         self.label.setText("Reset settings:")
 
-        self.button = QPushButton(self)
+        self.button = PushButton(self)
         self.button.setText("Reset")
         self.button.clicked.connect(self.reset_settings)
         self.button.setFixedWidth(120)
@@ -1490,7 +1521,7 @@ class EntryWidget(QFrame):
     def __init__(self, title, action_name, data):
         super().__init__()
         self.data = data
-        self.button = QPushButton(action_name)
+        self.button = PushButton(action_name)
         self.button.setFixedWidth(100)
         self.button.clicked.connect(self.button_pressed)
         self.layout = QGridLayout()

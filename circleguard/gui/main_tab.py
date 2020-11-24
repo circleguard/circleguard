@@ -25,7 +25,7 @@ import requests
 
 from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
     ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
-    CorrectionCheckW, TimewarpCheckW, AnalyzeW)
+    CorrectionCheckW, TimewarpCheckW, AnalyzeW, PushButton)
 from settings import SingleLinkableSetting, get_setting, set_setting
 from utils import (delete_widget, AnalysisResult, StealResult, RelaxResult,
     CorrectionResult, TimewarpResult)
@@ -786,8 +786,7 @@ class Run():
         self.run_id = run_id
         self.event = event
 
-class RunButton(QPushButton):
-
+class RunButton(PushButton):
     def __init__(self):
         super().__init__()
 
