@@ -9,7 +9,8 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
     QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
     QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView,
-    QGraphicsOpacityEffect, QStyle, QListWidget, QListWidgetItem)
+    QGraphicsOpacityEffect, QStyle, QListWidget, QListWidgetItem,
+    QStackedLayout)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag, QPainter, QPen, QCursor
 from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
     QPoint, QMimeData, QEvent, QObject, QSize)
@@ -352,9 +353,124 @@ class InvestigationCheckboxes(QFrame):
         self.setLayout(layout)
 
 
+class LoadableBase(QFrame):
+    def __init__(self):
+        super().__init__()
+        self.delete_button = PushButton(self)
+        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
+        self.delete_button.setMaximumWidth(30)
+
+        self.combobox = ComboBox()
+        self.combobox.setInsertPolicy(QComboBox.NoInsert)
+        for entry in ["Select a Loadable", "Map Replay", "Local Replay", "Map",
+            "User", "All User Replays on Map"]:
+            self.combobox.addItem(entry, entry)
+
+class UnselectedLoadable(LoadableBase):
+    def __init__(self):
+        super().__init__()
+
+        self.combobox.setCurrentIndex(0)
+
+        layout = QGridLayout()
+        # AlignTop matches the height of the other loadables, as they have more
+        # things to display below
+        layout.setAlignment(Qt.AlignTop)
+        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        self.setLayout(layout)
+
+
+class ReplayMapLoadable(LoadableBase):
+    def __init__(self):
+        super().__init__()
+        self.combobox.setCurrentIndex(1)
+
+        self.map_id_input = InputWidget("Map id", "", "id")
+        self.user_id_input = InputWidget("User id", "", "id")
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+        layout = QGridLayout()
+        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+        layout.addWidget(self.user_id_input, 2, 0, 1, 8)
+        layout.addWidget(self.mods_input, 3, 0, 1, 8)
+        self.setLayout(layout)
+
+class ReplayPathLoadable(LoadableBase):
+    def __init__(self):
+        super().__init__()
+        self.combobox.setCurrentIndex(2)
+
+        self.path_input = ReplayChooser()
+
+        layout = QGridLayout()
+        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        layout.addWidget(self.path_input, 1, 0, 1, 8)
+        self.setLayout(layout)
+
+class MapLoadable(LoadableBase):
+    def __init__(self):
+        super().__init__()
+        self.combobox.setCurrentIndex(3)
+
+        self.map_id_input = InputWidget("Map id", "", "id")
+        self.span_input = InputWidget("Span", "", "normal")
+        self.span_input.field.setPlaceholderText(get_setting("default_span_map"))
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+
+        layout = QGridLayout()
+        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+        layout.addWidget(self.span_input, 2, 0, 1, 8)
+        layout.addWidget(self.mods_input, 3, 0, 1, 8)
+        self.setLayout(layout)
+
+
+class UserLoadable(LoadableBase):
+    def __init__(self):
+        super().__init__()
+        self.combobox.setCurrentIndex(4)
+
+        self.user_id_input = InputWidget("User id", "", "id")
+        self.span_input = InputWidget("Span", "", "normal")
+        self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+        self.span_input.field.setPlaceholderText(get_setting("default_span_user"))
+
+        layout = QGridLayout()
+        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        layout.addWidget(self.user_id_input, 1, 0, 1, 8)
+        layout.addWidget(self.span_input, 2, 0, 1, 8)
+        layout.addWidget(self.mods_input, 3, 0, 1, 8)
+        self.setLayout(layout)
+
+
+class MapUserLoadable(LoadableBase):
+    def __init__(self):
+        super().__init__()
+        self.combobox.setCurrentIndex(5)
+
+        self.map_id_input = InputWidget("Map id", "", "id")
+        self.user_id_input = InputWidget("User id", "", "id")
+        self.span_input = InputWidget("Span", "", "normal")
+        self.span_input.field.setPlaceholderText("all")
+
+        layout = QGridLayout()
+        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.delete_button, 0, 7, 1, 1)
+        layout.addWidget(self.map_id_input, 1, 0, 1, 8)
+        layout.addWidget(self.user_id_input, 2, 0, 1, 8)
+        layout.addWidget(self.span_input, 3, 0, 1, 8)
+        self.setLayout(layout)
+
 
 class SelectableLoadable(QFrame):
     input_changed = pyqtSignal()
+    deleted_pressed = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -366,61 +482,79 @@ class SelectableLoadable(QFrame):
 
         self.type = None
 
-        self.delete_button = PushButton(self)
-        self.delete_button.setIcon(QIcon(resource_path("delete.png")))
-        self.delete_button.setMaximumWidth(30)
+        self.stacked_layout = QStackedLayout()
 
-        self.make_and_set_layout()
+        unselected = UnselectedLoadable()
+        unselected.combobox.activated.connect(self.select_loadable)
+        unselected.delete_button.clicked.connect(self.deleted_pressed)
+        self.stacked_layout.addWidget(unselected)
+
+        replay_map = ReplayMapLoadable()
+        replay_map.combobox.activated.connect(self.select_loadable)
+        replay_map.delete_button.clicked.connect(self.deleted_pressed)
+        self.stacked_layout.addWidget(replay_map)
+
+        replay_path = ReplayPathLoadable()
+        replay_path.combobox.activated.connect(self.select_loadable)
+        replay_path.delete_button.clicked.connect(self.deleted_pressed)
+        self.stacked_layout.addWidget(replay_path)
+
+        map_ = MapLoadable()
+        map_.combobox.activated.connect(self.select_loadable)
+        map_.delete_button.clicked.connect(self.deleted_pressed)
+        self.stacked_layout.addWidget(map_)
+
+        user = UserLoadable()
+        user.combobox.activated.connect(self.select_loadable)
+        user.delete_button.clicked.connect(self.deleted_pressed)
+        self.stacked_layout.addWidget(user)
+
+        map_user = MapUserLoadable()
+        map_user.combobox.activated.connect(self.select_loadable)
+        map_user.delete_button.clicked.connect(self.deleted_pressed)
+        self.stacked_layout.addWidget(map_user)
+
+        layout = QVBoxLayout()
+        layout.addLayout(self.stacked_layout)
+        self.setLayout(layout)
 
 
-    def make_and_set_layout(self):
-        if self.type == None:
-            # loadable type hasn't been selected yet, display dropdown
-            self.combobox = ComboBox()
-            self.combobox.setInsertPolicy(QComboBox.NoInsert)
-            for entry in ["Select a Loadable", "Map Replay", "Local Replay", "Map", "User", "All User Replays on Map"]:
-                self.combobox.addItem(entry, entry)
+    # def make_and_set_layout(self):
+    #     # I would like to use the actual class ReplayMap from circleguard here,
+    #     # but that would require importing it from circleguard and while I think
+    #     # I could do it safely here without importing it right as the app
+    #     # launches, it's not worth messing around with
+    #     if self.type == "Map Replay":
+    #         self.inputs = [self.map_id_input, self.user_id_input, self.mods_input]
 
-            layout = QGridLayout()
-            layout.addWidget(self.combobox, 0, 0, 1, 7)
-            layout.addWidget(self.delete_button, 0, 7, 1, 1)
-            self.setLayout(layout)
+    #     # reconnect any new widgets we just added to our input_changed signal
+    #     for input_widget in self.inputs:
+    #         input_widget.field.textChanged.connect(self.input_changed)
 
-            self.inputs = []
+    def select_loadable(self):
+        if self.stacked_layout.currentWidget().combobox.currentIndex() == 0:
+            return
 
-        # I would like to use the actual class ReplayMap from circleguard here,
-        # but that would require importing it from circleguard and while I think
-        # I could do it safely here without importing it right as the app
-        # launches, it's not worth messing around with
-        elif self.type == "ReplayMap":
-            self.map_id_input = InputWidget("Map id", "", "id")
-            self.user_id_input = InputWidget("User id", "", "id")
-            self.mods_input = InputWidget("Mods (opt.)", "", "normal")
-
-            title = QLabel("Replay Map")
-
-            layout = QGridLayout()
-            layout.addWidget(title, 0, 0, 1, 7)
-            layout.addWidget(self.delete_button, 0, 7, 1, 1)
-            layout.addWidget(self.map_id_input, 1, 0, 1, 8)
-            layout.addWidget(self.user_id_input, 2, 0, 1, 8)
-            layout.addWidget(self.mods_input, 3, 0, 1, 8)
-            self.setLayout(layout)
-
-            self.inputs = [self.map_id_input, self.user_id_input, self.mods_input]
-
-        # reconnect any new widgets we just added to our input_changed signal
-        for input_widget in self.inputs:
-            input_widget.field.textChanged.connect(self.input_changed)
+        type_ = self.stacked_layout.currentWidget().combobox.currentData()
+        if type_ == "Map Replay":
+            self.stacked_layout.setCurrentIndex(1)
+        elif type_ == "Local Replay":
+            self.stacked_layout.setCurrentIndex(2)
+        elif type_ == "Map":
+            self.stacked_layout.setCurrentIndex(3)
+        elif type_ == "User":
+            self.stacked_layout.setCurrentIndex(4)
+        elif type_ == "All User Replays on Map":
+            self.stacked_layout.setCurrentIndex(5)
 
     def validate(self):
         return self.map_id_input.value() and self.user_id_input.value()
 
     def show_delete(self):
-        self.delete_button.show()
+        self.stacked_layout.currentWidget().delete_button.show()
 
     def hide_delete(self):
-        self.delete_button.hide()
+        self.stacked_layout.currentWidget().delete_button.hide()
 
     def cg_loadable(self):
         from circleguard import ReplayMap, Mod
@@ -429,24 +563,15 @@ class SelectableLoadable(QFrame):
         if not self._cg_loadable:
             mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
             self._cg_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
-        # if something is accessing the loadable we represent, but the value of
-        # our input fields have changed (ie the replay we represent has changed)
-        # then we want to return that new loadable instead of always using the
-        # old one.
-        # To explain the comparison against the previous mods used - if the mods
-        # specified by the user have changed in any way, we want to update the
-        # loadable. This is because it's ambiguous whether an (unloaded) replay
-        # with`mods=None` is equal to a (loaded) replay with the same map and
-        # user id, but with `mods=HDHR`. Until the first replay is loaded, we
-        # don't know what its mods will end up being, so it could be equal or
-        # could not be. To be certain, we recreate the loadable if the mods
-        # change at all.
+
         mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
         new_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+
         if (new_loadable.map_id != self._cg_loadable.map_id or \
             new_loadable.user_id != self._cg_loadable.user_id or \
             self.mods_input.value() != self.previous_mods):
             self._cg_loadable = new_loadable
+
         self.previous_mods = self.mods_input.value()
         return self._cg_loadable
 
@@ -457,11 +582,23 @@ class LoadableCreation(QFrame):
         super().__init__()
         self.loadables = []
 
+        self.list_widget = QListWidget()
+        self.list_widget.setResizeMode(QListWidget.Adjust)
+        self.list_widget.setViewMode(QListWidget.IconMode)
+        self.list_widget.setGridSize(QSize(300, 150))
+
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignTop)
+        layout.addWidget(self.list_widget)
         self.setLayout(layout)
 
         # prepopulate with a single loadable
+        self.new_loadable()
+        self.new_loadable()
+        self.new_loadable()
+        self.new_loadable()
+        self.new_loadable()
+        self.new_loadable()
         self.new_loadable()
 
     def loadable_input_changed(self, loadable):
@@ -472,7 +609,7 @@ class LoadableCreation(QFrame):
 
     def new_loadable(self):
         loadable = SelectableLoadable()
-        loadable.delete_button.clicked.connect(lambda: self.remove_loadable(loadable))
+        loadable.deleted_pressed.connect(lambda: self.remove_loadable(loadable))
         loadable.input_changed.connect(lambda: self.loadable_input_changed(loadable))
         # don't allow the bottommost loadable (which this new one will soon
         # become) to be deleted, users could accidentally remove all loadables
@@ -485,10 +622,22 @@ class LoadableCreation(QFrame):
         if len(self.loadables) > 1:
             self.loadables[-2].show_delete()
 
-        self.layout().addWidget(loadable)
+        # god bless this SO answer https://stackoverflow.com/a/49272941/12164878
+        # I would never have thought to set the size hint manually otherwise
+        # (and doing so is very much necessary).
+        item = QListWidgetItem(self.list_widget)
+        self.list_widget.addItem(item)
+        # item.setSizeHint(loadable.minimumSizeHint())
+        item.setSizeHint(QSize(500, 500))
+        self.list_widget.setItemWidget(item, loadable)
 
     def remove_loadable(self, loadable):
-        loadable.hide()
+        # since we're dealing with a QListWidget, we can't just hide the
+        # loadable widget - we need to remove it from the list widget entirely.
+        # In typical qt fashion, the only way to do so is with an index into the
+        # list widget.
+        index = self.loadables.index(loadable)
+        self.list_widget.takeItem(index)
         self.loadables.remove(loadable)
         if loadable == self.most_recent_loadable:
             self.most_recent_loadable = self.loadables[-1]
