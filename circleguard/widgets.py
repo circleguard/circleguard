@@ -1478,7 +1478,7 @@ class WidgetCombiner(QFrame):
         self.setLayout(self.layout)
 
 
-class FileChooserButton(QPushButton):
+class FileChooserButton(PushButton):
     path_chosen_signal = pyqtSignal(Path) # emits the selected path
 
     def __init__(self, text, file_mode=QFileDialog.AnyFile, name_filters=None):
