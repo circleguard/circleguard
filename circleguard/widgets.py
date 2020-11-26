@@ -576,6 +576,8 @@ class LoadableCreation(QFrame):
         self.list_widget.setResizeMode(QListWidget.Adjust)
         self.list_widget.setViewMode(QListWidget.IconMode)
         self.list_widget.setGridSize(self.LOADABLE_SIZE)
+        # apparently list widgets allow you to move widgets around? We don't
+        # want to allow that though.
         self.list_widget.setMovement(QListWidget.Static)
 
         layout = QVBoxLayout()
@@ -629,8 +631,10 @@ class LoadableCreation(QFrame):
         # (and doing so is very much necessary).
         item = QListWidgetItem(self.list_widget)
         self.list_widget.addItem(item)
-        # item.setSizeHint(loadable.minimumSizeHint())
         item.setSizeHint(self.LOADABLE_SIZE)
+        # list items get an annoying highlight in the middle of the widget if
+        # we don't disable interaction.
+        item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
         self.list_widget.setItemWidget(item, loadable)
         # without this call, list items will be added in the wrong spot
         # and will only correct themselves once the window is resized or another
