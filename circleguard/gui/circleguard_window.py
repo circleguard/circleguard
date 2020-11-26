@@ -376,7 +376,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             dark_p.setColor(QPalette.ButtonText, Qt.white)
             dark_p.setColor(QPalette.BrightText, Qt.red)
             dark_p.setColor(QPalette.Highlight, ACCENT_COLOR)
-            dark_p.setColor(QPalette.Inactive, QPalette.Highlight, Qt.lightGray)
+            # this coloring was found to be harmful as the "inactive" state was
+            # getting set and showing the wrong colors at the wrong times.
+            # dark_p.setColor(QPalette.Inactive, QPalette.Highlight, Qt.lightGray)
             dark_p.setColor(QPalette.HighlightedText, Qt.black)
             dark_p.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
             dark_p.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
