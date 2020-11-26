@@ -479,13 +479,13 @@ class SelectableLoadable(QFrame):
         # save the loadable we represent so if we load it externally and access
         # it again, it will still be loaded
         self._cg_loadable = None
-
         self.type = None
 
         self.stacked_layout = QStackedLayout()
 
         unselected = UnselectedLoadable()
         unselected.combobox.activated.connect(self.select_loadable)
+        unselected.combobox.activated.connect(self.input_changed)
         unselected.delete_button.clicked.connect(self.deleted_pressed)
         self.stacked_layout.addWidget(unselected)
 
@@ -518,18 +518,6 @@ class SelectableLoadable(QFrame):
         layout.addLayout(self.stacked_layout)
         self.setLayout(layout)
 
-
-    # def make_and_set_layout(self):
-    #     # I would like to use the actual class ReplayMap from circleguard here,
-    #     # but that would require importing it from circleguard and while I think
-    #     # I could do it safely here without importing it right as the app
-    #     # launches, it's not worth messing around with
-    #     if self.type == "Map Replay":
-    #         self.inputs = [self.map_id_input, self.user_id_input, self.mods_input]
-
-    #     # reconnect any new widgets we just added to our input_changed signal
-    #     for input_widget in self.inputs:
-    #         input_widget.field.textChanged.connect(self.input_changed)
 
     def select_loadable(self):
         if self.stacked_layout.currentWidget().combobox.currentIndex() == 0:
@@ -578,6 +566,8 @@ class SelectableLoadable(QFrame):
 
 
 class LoadableCreation(QFrame):
+    LOADABLE_SIZE = QSize(450, 150)
+
     def __init__(self):
         super().__init__()
         self.loadables = []
@@ -585,7 +575,8 @@ class LoadableCreation(QFrame):
         self.list_widget = QListWidget()
         self.list_widget.setResizeMode(QListWidget.Adjust)
         self.list_widget.setViewMode(QListWidget.IconMode)
-        self.list_widget.setGridSize(QSize(300, 150))
+        self.list_widget.setGridSize(self.LOADABLE_SIZE)
+        self.list_widget.setMovement(QListWidget.Static)
 
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignTop)
@@ -594,12 +585,6 @@ class LoadableCreation(QFrame):
 
         # prepopulate with a single loadable
         self.new_loadable()
-        self.new_loadable()
-        self.new_loadable()
-        self.new_loadable()
-        self.new_loadable()
-        self.new_loadable()
-        self.new_loadable()
 
     def loadable_input_changed(self, loadable):
         # only allow the bottommost loadable to create new ones
@@ -607,8 +592,25 @@ class LoadableCreation(QFrame):
             return
         self.new_loadable()
 
+    def resizeEvent(self, event):
+        ret = super().resizeEvent(event)
+        # I don't totally understand how, but the positions of the loadables in
+        # the list widget can get into a bad state when the window is resized.
+        # A recalculation of the layout seems to fix this, so force recalc on
+        # every resize event.
+        self.list_widget.scheduleDelayedItemsLayout()
+        return ret
+
     def new_loadable(self):
         loadable = SelectableLoadable()
+        # some loadables have input widgets which can become arbitrarily long,
+        # for instance ReplayPathLoadable's ReplayChooser which displays the
+        # chosen file's location. This would cause the loadable to increase in
+        # size in the list widget, which looks terrible as the list widget
+        # expects uniform size.
+        # Long story short enforce constant size on loadables no matter what.
+        loadable.setFixedSize(self.LOADABLE_SIZE)
+
         loadable.deleted_pressed.connect(lambda: self.remove_loadable(loadable))
         loadable.input_changed.connect(lambda: self.loadable_input_changed(loadable))
         # don't allow the bottommost loadable (which this new one will soon
@@ -628,8 +630,15 @@ class LoadableCreation(QFrame):
         item = QListWidgetItem(self.list_widget)
         self.list_widget.addItem(item)
         # item.setSizeHint(loadable.minimumSizeHint())
-        item.setSizeHint(QSize(500, 500))
+        item.setSizeHint(self.LOADABLE_SIZE)
         self.list_widget.setItemWidget(item, loadable)
+        # without this call, list items will be added in the wrong spot
+        # and will only correct themselves once the window is resized or another
+        # loadable is added. I'm probably doing something wrong that's the
+        # root cause of this behavior, but I can't figure out what and this call
+        # fixes it.
+        # https://stackoverflow.com/a/48773670/12164878
+        self.list_widget.scheduleDelayedItemsLayout()
 
     def remove_loadable(self, loadable):
         # since we're dealing with a QListWidget, we can't just hide the
