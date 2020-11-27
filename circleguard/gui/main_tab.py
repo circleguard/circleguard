@@ -93,8 +93,8 @@ class MainTab(SingleLinkableSetting, QFrame):
         investigate_label.setFixedWidth(130)
         investigate_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
-        investigation_checkboxes = InvestigationCheckboxes()
-        investigations = WidgetCombiner(investigate_label, investigation_checkboxes, self)
+        self.investigation_checkboxes = InvestigationCheckboxes()
+        investigations = WidgetCombiner(investigate_label, self.investigation_checkboxes, self)
         investigations.setFixedHeight(25)
 
 
@@ -122,45 +122,6 @@ class MainTab(SingleLinkableSetting, QFrame):
         # `LinkableSetting`
         self.setting_value = text
         self.run_button.setEnabled(text != "")
-
-    # am well aware that there's much duplicated code between remove_loadable,
-    # remove_check, add_loadable, and add_check. Don't feel like writing
-    # more generic functions for them right now.
-    def remove_loadable(self, loadable_id):
-        # should only ever be one occurence, a comp + index works well enough
-        loadables = [l for l in self.loadables if l.loadable_id == loadable_id]
-        # sometimes an empty list, I don't know how if you need a loadable to
-        # click the delete button...
-        if not loadables:
-            return
-        loadable = loadables[0]
-        self.scrollarea.widget().layout.removeWidget(loadable)
-        delete_widget(loadable)
-        self.loadables.remove(loadable)
-        # remove deleted loadables from Checks as well
-        for check in self.checks:
-            check.remove_loadable(loadable_id)
-
-    def add_loadable(self):
-        # don't do anything if they selected the default text
-        if self.loadables_combobox.currentIndex() == 0:
-            return
-        button_data = self.loadables_combobox.currentData()
-        # go back to default text
-        self.loadables_combobox.setCurrentIndex(0)
-        if button_data == "+ Map Replay":
-            w = ReplayMapW()
-        if button_data == "+ Local Replay":
-            w = ReplayPathW()
-        if button_data == "+ Map":
-            w = MapW()
-        if button_data == "+ User":
-            w = UserW()
-        if button_data == "+ All User Replays on Map":
-            w = MapUserW()
-        w.remove_loadable_signal.connect(self.remove_loadable)
-        self.scrollarea.widget().layout.addWidget(w)
-        self.loadables.append(w)
 
     def write(self, message):
         self.terminal.append(str(message).strip())
@@ -190,52 +151,41 @@ class MainTab(SingleLinkableSetting, QFrame):
                     "<a href=\"https://osu.ppy.sh/p/api\">https://osu.ppy.sh/p/api</a>.")
             message_box.exec()
             return
-        checks = self.checks
-        if not checks:
-            return
-        for check in checks:
-            # all loadable objects in this check
-            # (the check only stores the loadable ids, not the objects themselves)
-            # TODO
-            # this is a ridiculous way to do it, but the alternative would involve serializing
-            # the class into a QByteArray and passing it through the QMimeData of the QDrag,
-            # then converting it back to a class on the other side, so we'll stick with this for now.
 
-            # aka ``isinstance(check, StealCheckW)``
-            if check.double_drop_area:
-                loadables1 = [l for l in self.loadables if l.loadable_id in check.drop_area1.loadable_ids]
-                loadables2 = [l for l in self.loadables if l.loadable_id in check.drop_area2.loadable_ids]
-                check.loadables1 = loadables1
-                check.loadables2 = loadables2
-            else:
-                loadables = [l for l in self.loadables if l.loadable_id in check.all_loadable_ids()]
-                check.loadables = loadables
-
-        # would use any() but it short circuts and doesn't call on all loadables
-        all_filled = True
-        for check in checks:
-            for loadable in check.all_loadables():
-                # don't assign to all_filled if all_filled is already False
-                all_filled = loadable.check_required_fields() if all_filled else all_filled
-
-        if not all_filled:
-            # no more feedback necessary like printing to console (probably)
-            # because the check_required_fields method already highlights
-            # empty QLineEdits in red
-            return
-        checks = [check for check in checks if check.all_loadables()]
-        if not checks:
-            # loadables haven't been dragged to any of the checks, just return
-            # so we don't have prints to the console for no reason
+        if not self.loadable_creation.check_and_mark_required_fields():
             return
 
-        run = Run(checks, self.run_id, threading.Event())
+        # loadables can have their required fields filled, but with invalid
+        # input, like having "1a" as a span. In this case we print the error
+        # and early return.
+        try:
+            loadables = self.loadable_creation.cg_loadables()
+        except ValueError as e:
+            self.write_to_terminal_signal.emit(f"<div style='color:#ff5252'>Invalid arguments:</div> {str(e)}")
+            return
+
+        enabled_investigations = self.investigation_checkboxes.enabled_investigations()
+        # if no loadables have been filled out, don't proceed
+        if not loadables:
+            return
+        # similarly for investigations, but give a heads up since this mistake
+        # is slightly subtler
+        if not enabled_investigations:
+            # nbsp is necessary because apparently ending with a closing tag
+            # makes qt not recognize it and causes all text afterwards to be
+            # affected by the div's color
+            self.write_to_terminal_signal.emit("<div style='color:#ff5252'>You must select "
+                "at least one investigation before running</div>&nbsp")
+            return
+
+        run = Run(loadables, enabled_investigations, self.run_id, threading.Event())
         self.runs.append(run)
         self.add_run_to_queue_signal.emit(run)
         self.cg_q.put(run)
         self.run_id += 1
 
-        # called every 1/4 seconds by timer, but force a recheck to not wait for that delay
+        # called every 1/4 seconds by timer, but force a recheck so we don't
+        # wait for that delay
         self.check_circleguard_queue()
 
 
@@ -244,8 +194,9 @@ class MainTab(SingleLinkableSetting, QFrame):
             try:
                 while True:
                     run = self.cg_q.get_nowait()
-                    # occurs if run is canceled before being started, it will still stop
-                    # before actually loading anything but we don't want the labels to flicker
+                    # occurs if run is canceled before being started, it will
+                    # still stop before actually loading anything but we don't
+                    # want the labels to flicker
                     if run.event.wait(0):
                         continue
                     thread = threading.Thread(target=self.run_circleguard, args=[run])
@@ -289,9 +240,9 @@ class MainTab(SingleLinkableSetting, QFrame):
             def _ratelimit(self, length):
                 self.ratelimit_signal.emit(length)
                 # how many times to wait for 1/4 second (rng standing for range)
-                # we do this loop in order to tell run_circleguard to check if the run
-                # was canceled, or the application quit, instead of hanging on a long
-                # time.sleep
+                # we do this loop in order to tell run_circleguard to check if
+                # the run was canceled, or the application quit, instead of
+                # hanging on a long time.sleep
                 rng = math.ceil(length / self.INTERVAL)
                 for _ in range(rng):
                     time.sleep(self.INTERVAL)
@@ -329,185 +280,103 @@ class MainTab(SingleLinkableSetting, QFrame):
             cg.loader.ratelimit_signal.connect(_ratelimited)
             cg.loader.check_stopped_signal.connect(partial(_check_event, event))
 
-            # aggreagte loadables from all of the checks so we don't create
-            # separate instances per check and double load the (otherwise)
-            # identical loadable
+            if "Similarity" in run.enabled_investigations:
+                lc1 = LoadableContainer(loadables1)
+                lc2 = LoadableContainer(loadables2)
+            else:
+                lc = LoadableContainer(run.loadables)
+            message_loading_info = get_setting("message_loading_info").format(ts=datetime.now())
+            self.write_to_terminal_signal.emit(message_loading_info)
 
-            # discard duplicate loadableWs
-            loadableWs = {loadableW for checkW in run.checks for loadableW in checkW.all_loadables()}
-            # mapping of loadableW id to loadable object so each check can
-            # replace its loadableWs with the same loadable object and avoid
-            # double loading
-            loadableW_id_to_loadable = {}
+            if "Similarity" in run.enabled_investigations:
+                cg.load_info(lc1)
+                cg.load_info(lc2)
+                replays1 = lc1.all_replays()
+                replays2 = lc2.all_replays()
+                all_replays = replays1 + replays2
+            else:
+                cg.load_info(lc)
+                all_replays = lc.all_replays()
+                replays1 = all_replays
+                replays2 = []
 
-            for loadableW in loadableWs:
-                loadable = None
+            num_replays = len(all_replays)
+            self.set_progressbar_signal.emit(num_replays)
+            message_loading_replays = get_setting("message_loading_replays").format(ts=datetime.now(),
+                            num_replays=num_replays)
+            self.write_to_terminal_signal.emit(message_loading_replays)
+
+            def _skip_replay_with_message(replay, message):
+                self.write_to_terminal_signal.emit(message)
+                # the replay very likely (perhaps certainly) didn't get
+                # loaded if the above exception fired. just skip it.
+                all_replays.remove(replay)
+                # check has already been initialized with the replay,
+                # remove it here too or cg will try and load it again
+                # when the check is ran
+                if replay in replays1:
+                    replays1.remove(replay)
+                if replay in replays2:
+                    replays2.remove(replay)
+
+            # `[:]` implicitly copies the list, so we don't run into trouble
+            #  when removing elements from it while iterating
+            for replay in all_replays[:]:
+                _check_event(event)
                 try:
-                    if isinstance(loadableW, ReplayPathW):
-                        if loadableW.path_input.path.is_dir():
-                            loadable = ReplayDir(loadableW.path_input.path)
-                        else:
-                            loadable = ReplayPath(loadableW.path_input.path)
-                    if isinstance(loadableW, ReplayMapW):
-                        # Mod init errors on empty string, so just assign None
-                        mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
-                        loadable = ReplayMap(int(loadableW.map_id_input.value()), int(loadableW.user_id_input.value()), mods=mods)
-                    if isinstance(loadableW, MapW):
-                        mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
-                        # use placeholder text (eg 1-50) if the user inputted span is empty
-                        span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
-                        if span == "all":
-                            span = Loader.MAX_MAP_SPAN
-                        loadable = Map(int(loadableW.map_id_input.value()), span=span, mods=mods)
-                    if isinstance(loadableW, UserW):
-                        mods = Mod(loadableW.mods_input.value()) if loadableW.mods_input.value() else None
-                        span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
-                        if span == "all":
-                            span = Loader.MAX_USER_SPAN
-                        loadable = User(int(loadableW.user_id_input.value()), span=span, mods=mods)
-                    if isinstance(loadableW, MapUserW):
-                        span = loadableW.span_input.value() or loadableW.span_input.field.placeholderText()
-                        if span == "all":
-                            span = "1-100"
-                        loadable = MapUser(int(loadableW.map_id_input.value()), int(loadableW.user_id_input.value()), span=span)
-                    loadableW_id_to_loadable[loadableW.loadable_id] = loadable
-                except ValueError as e:
-                    self.write_to_terminal_signal.emit(str(e))
-                    self.update_label_signal.emit("Invalid arguments")
-                    self.update_run_status_signal.emit(run.run_id, "Invalid arguments")
-                    self.set_progressbar_signal.emit(-1)
-                    sys.exit(0)
+                    cg.load(replay)
+                    if not replay.has_data():
+                        _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " is " +
+                            "not available for download.</div>This is likely because it is not in the top 1k scores of "
+                            "the beatmap. This replay has been skipped because of this.")
+                except NoInfoAvailableException as e:
+                    _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " does "
+                        "not exist.</div>\nDouble check your map and/or user id. This replay has "
+                        "been skipped because of this.")
+                except UnknownAPIException as e:
+                    _skip_replay_with_message(replay, "<div style='color:#ff5252'>The osu! api provided an invalid "
+                        "response:</div> " + str(e) + ". The replay " + str(replay) + " has been skipped because of this.")
+                except LZMAError as e:
+                    _skip_replay_with_message(replay, "<div style='color:#ff5252'>lzma error while parsing a replay:</div> " + str(e) +
+                        ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
+                        " has been skipped because of this.")
+                except Exception as e:
+                    # print full traceback here for more debugging info.
+                    # Don't do it for the previous exceptions because the
+                    # cause of those is well understood, but that's not
+                    # necessarily the case for generic exceptions here.
 
-            for checkW in run.checks:
-                check_type = None
-                max_angle = None
-                min_distance = None
+                    # attempting to use divs/spans here to color the beginning
+                    # of this string made the traceback collapse down into
+                    # one line with none of the usual linebreaks, I'm not
+                    # sure why. So you win qt, no red color for this error.
+                    _skip_replay_with_message(replay, "error while loading a replay: " + str(e) + "\n" +
+                            traceback.format_exc() +
+                            "The replay " + str(replay) + " has been skipped because of this.")
+                finally:
+                    self.increment_progressbar_signal.emit(1)
 
-                if isinstance(checkW, StealCheckW):
-                    check_type = "Steal"
-                if isinstance(checkW, RelaxCheckW):
-                    check_type = "Relax"
-                if isinstance(checkW, CorrectionCheckW):
-                    max_angle = get_setting("correction_max_angle")
-                    min_distance = get_setting("correction_min_distance")
-                    check_type = "Aim Correction"
-                if isinstance(checkW, TimewarpCheckW):
-                    check_type = "Timewarp"
-                if isinstance(checkW, AnalyzeW):
-                    check_type = "Visualization"
-
-                # retrieve loadable objects from loadableW ids
-                if isinstance(checkW, StealCheckW):
-                    loadables1 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables1]
-                    loadables2 = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables2]
-                    lc1 = LoadableContainer(loadables1)
-                    lc2 = LoadableContainer(loadables2)
-                else:
-                    loadables = [loadableW_id_to_loadable[loadableW.loadable_id] for loadableW in checkW.loadables]
-                    lc = LoadableContainer(loadables)
-                message_loading_info = get_setting("message_loading_info").format(ts=datetime.now(), check_type=check_type)
-                self.write_to_terminal_signal.emit(message_loading_info)
-
-                if isinstance(checkW, StealCheckW):
-                    cg.load_info(lc1)
-                    cg.load_info(lc2)
-                    replays1 = lc1.all_replays()
-                    replays2 = lc2.all_replays()
-                    all_replays = replays1 + replays2
-                else:
-                    cg.load_info(lc)
-                    all_replays = lc.all_replays()
-                    replays1 = all_replays
-                    replays2 = []
-
-                # don't show "loading 2 replays" if they were already loaded
-                # by a previous check, would be misleading
-                num_unloaded = 0
-                num_total = len(all_replays)
-                for r in all_replays:
-                    if not r.loaded:
-                        num_unloaded += 1
-                if num_unloaded != 0:
-                    self.set_progressbar_signal.emit(num_unloaded)
-                else:
-                    self.set_progressbar_signal.emit(1)
-                num_loaded = num_total - num_unloaded
-                message_loading_replays = get_setting("message_loading_replays").format(ts=datetime.now(),
-                                num_total=num_total, num_previously_loaded=num_loaded, num_unloaded=num_unloaded,
-                                check_type=check_type)
-                self.write_to_terminal_signal.emit(message_loading_replays)
-
-
-                def _skip_replay_with_message(replay, message):
-                    self.write_to_terminal_signal.emit(message)
-                    # the replay very likely (perhaps certainly) didn't get
-                    # loaded if the above exception fired. just skip it.
-                    all_replays.remove(replay)
-                    # check has already been initialized with the replay,
-                    # remove it here too or cg will try and load it again
-                    # when the check is ran
-                    if replay in replays1:
-                        replays1.remove(replay)
-                    if replay in replays2:
-                        replays2.remove(replay)
-
-                # `[:]` implicitly copies the list, so we don't run into trouble
-                #  when removing elements from it while iterating
-                for replay in all_replays[:]:
-                    _check_event(event)
-                    try:
-                        cg.load(replay)
-                        if not replay.has_data():
-                            _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " is " +
-                                "not available for download.</div>This is likely because it is not in the top 1k scores of "
-                                "the beatmap. This replay has been skipped because of this.")
-                    except NoInfoAvailableException as e:
-                        _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " does "
-                            "not exist.</div>\nDouble check your map and/or user id. This replay has "
-                            "been skipped because of this.")
-                    except UnknownAPIException as e:
-                        _skip_replay_with_message(replay, "<div style='color:#ff5252'>The osu! api provided an invalid "
-                            "response:</div> " + str(e) + ". The replay " + str(replay) + " has been skipped because of this.")
-                    except LZMAError as e:
-                        _skip_replay_with_message(replay, "<div style='color:#ff5252'>lzma error while parsing a replay:</div> " + str(e) +
-                            ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
-                            " has been skipped because of this.")
-                    except Exception as e:
-                        # print full traceback here for more debugging info.
-                        # Don't do it for the previous exceptions because the
-                        # cause of those is well understood, but that's not
-                        # necessarily the case for generic exceptions here.
-
-                        # attempting to use divs/spans here to color the beginning
-                        # of this string made the traceback collapse down into
-                        # one line with none of the usual linebreaks, I'm not
-                        # sure why. So you win qt, no red color for this error.
-                        _skip_replay_with_message(replay, "error while loading a replay: " + str(e) + "\n" +
-                                traceback.format_exc() +
-                                "The replay " + str(replay) + " has been skipped because of this.")
-                    finally:
-                        self.increment_progressbar_signal.emit(1)
-
-                if isinstance(checkW, StealCheckW):
-                    lc1.loaded = True
-                    lc2.loaded = True
-                else:
-                    lc.loaded = True
-                # change progressbar into an undetermined state (animation with
-                # stripes sliding horizontally) to indicate we're processing
-                # the data
-                self.set_progressbar_signal.emit(0)
-                setting_end_dict = {
-                    StealCheckW: "steal",
-                    RelaxCheckW: "relax",
-                    CorrectionCheckW: "correction",
-                    TimewarpCheckW: "timewarp",
-                    AnalyzeW: "analysis"
-                }
-                setting = f"message_starting_" + setting_end_dict[type(checkW)]
+            if "Similarity" in run.enabled_investigations:
+                lc1.loaded = True
+                lc2.loaded = True
+            else:
+                lc.loaded = True
+            # change progressbar into an undetermined state (animation with
+            # stripes sliding horizontally) to indicate we're processing
+            # the data
+            self.set_progressbar_signal.emit(0)
+            setting_end_dict = {
+                "Similarity": "steal",
+                "Unstable Rate": "relax",
+                "Snaps": "correction",
+                "Frametime": "timewarp",
+                "Manual Analysis": "analysis"
+            }
+            for investigation in run.enabled_investigations:
+                setting = f"message_starting_" + setting_end_dict[investigation]
                 message_starting_investigation = get_setting(setting).format(ts=datetime.now())
                 self.write_to_terminal_signal.emit(message_starting_investigation)
-                if isinstance(checkW, AnalyzeW):
+                if investigation == "Manual Analysis":
                     map_ids = [r.map_id for r in all_replays]
                     if len(set(map_ids)) > 1:
                         self.write_to_terminal_signal.emit("Manual analysis expected replays from a single map, "
@@ -522,62 +391,65 @@ class MainTab(SingleLinkableSetting, QFrame):
                     # the rest of guard expects >=1 replay, leading to confusing errors.
                     if len(all_replays) != 0:
                         self.q.put(AnalysisResult(all_replays))
-                else:
-                    self.update_label_signal.emit("Investigating Replays...")
-                    self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
+                    continue
+                self.update_label_signal.emit("Investigating Replays...")
+                self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
 
-                    if isinstance(checkW, StealCheckW):
-                        pairs = replay_pairs(replays1, replays2)
-                        for (replay1, replay2) in pairs:
-                            _check_event(event)
-                            sim = cg.similarity(replay1, replay2)
-                            result = StealResult(sim, replay1, replay2)
+                if investigation == "Similarity":
+                    pairs = replay_pairs(replays1, replays2)
+                    for (replay1, replay2) in pairs:
+                        _check_event(event)
+                        sim = cg.similarity(replay1, replay2)
+                        result = StealResult(sim, replay1, replay2)
+                        self.q.put(result)
+                if investigation == "Unstable Rate":
+                    for replay in all_replays:
+                        _check_event(event)
+                        # skip replays which have no map info
+                        if replay.map_info.available():
+                            try:
+                                ur = cg.ur(replay)
+                            # Sometimes, a beatmap will have a bugged download where it returns an empty response
+                            # when we try to download it (https://github.com/ppy/osu-api/issues/171). Since peppy
+                            # doesn't plan on fixing this for unranked beatmaps, we just ignore / skip the error
+                            # in all cases.
+                            # StopIteration is a bit of a weird exception to catch here, but because of how slider
+                            # interacts with beatmaps it will attempt to call `next` on an empty generator if the
+                            # beatmap is empty, which of course raises StopIteration.
+                            except StopIteration:
+                                if requests.get(f"https://osu.ppy.sh/osu/{replay.map_id}").content == b"":
+                                    self.write_to_terminal_signal.emit("<div style='color:#ff5252'>The "
+                                        "map " + str(replay.map_id) + "'s download is bugged</div>, so its ur cannot "
+                                        "be calculated. The replay " + str(replay) + " has been skipped because of this, "
+                                        "but please report this to the developers through discord or github so it can be "
+                                        "tracked.")
+                                    break
+                                # If we happen to catch an unrelated error with this `except`, we still want to
+                                # raise that so it can be tracked and fixed.
+                                else:
+                                    raise
+                            result = RelaxResult(ur, replay)
                             self.q.put(result)
-                    if isinstance(checkW, RelaxCheckW):
-                        for replay in all_replays:
-                            _check_event(event)
-                            # skip replays which have no map info
-                            if replay.map_info.available():
-                                try:
-                                    ur = cg.ur(replay)
-                                # Sometimes, a beatmap will have a bugged download where it returns an empty response
-                                # when we try to download it (https://github.com/ppy/osu-api/issues/171). Since peppy
-                                # doesn't plan on fixing this for unranked beatmaps, we just ignore / skip the error
-                                # in all cases.
-                                # StopIteration is a bit of a weird exception to catch here, but because of how slider
-                                # interacts with beatmaps it will attempt to call `next` on an empty generator if the
-                                # beatmap is empty, which of course raises StopIteration.
-                                except StopIteration:
-                                    if requests.get(f"https://osu.ppy.sh/osu/{replay.map_id}").content == b"":
-                                        self.write_to_terminal_signal.emit("<div style='color:#ff5252'>The "
-                                            "map " + str(replay.map_id) + "'s download is bugged</div>, so its ur cannot "
-                                            "be calculated. The replay " + str(replay) + " has been skipped because of this, "
-                                            "but please report this to the developers through discord or github so it can be "
-                                            "tracked.")
-                                        break
-                                    # If we happen to catch an unrelated error with this `except`, we still want to
-                                    # raise that so it can be tracked and fixed.
-                                    else:
-                                        raise
-                                result = RelaxResult(ur, replay)
-                                self.q.put(result)
-                            else:
-                                self.write_to_terminal_signal.emit("<div style='color:#ff5252'>The "
-                                    "replay " + str(replay) + " has no map id</div>, so its ur cannot "
-                                    "be calculated. This replay has been skipped because of this.")
-                    if isinstance(checkW, CorrectionCheckW):
-                        for replay in all_replays:
-                            _check_event(event)
-                            snaps = cg.snaps(replay, max_angle, min_distance)
-                            result = CorrectionResult(snaps, replay)
-                            self.q.put(result)
-                    if isinstance(checkW, TimewarpCheckW):
-                        for replay in all_replays:
-                            _check_event(event)
-                            frametime = cg.frametime(replay)
-                            frametimes = cg.frametimes(replay)
-                            result = TimewarpResult(frametime, frametimes, replay)
-                            self.q.put(result)
+                        else:
+                            self.write_to_terminal_signal.emit("<div style='color:#ff5252'>The "
+                                "replay " + str(replay) + " has no map id</div>, so its ur cannot "
+                                "be calculated. This replay has been skipped because of this.")
+                if investigation == "Snaps":
+                    max_angle = get_setting("correction_max_angle")
+                    min_distance = get_setting("correction_min_distance")
+
+                    for replay in all_replays:
+                        _check_event(event)
+                        snaps = cg.snaps(replay, max_angle, min_distance)
+                        result = CorrectionResult(snaps, replay)
+                        self.q.put(result)
+                if investigation == "Frametime":
+                    for replay in all_replays:
+                        _check_event(event)
+                        frametime = cg.frametime(replay)
+                        frametimes = cg.frametimes(replay)
+                        result = TimewarpResult(frametime, frametimes, replay)
+                        self.q.put(result)
 
                 self.print_results_signal.emit() # flush self.q
 
@@ -728,11 +600,12 @@ class MainTab(SingleLinkableSetting, QFrame):
 
 class Run():
     """
-    Represents a click of the Run button on the Main tab, which can contain
-    multiple Checks, each of which contains a set of Loadables.
+    Represents a click of the Run button on the Main tab, which contains a set
+    of loadables and a list of investigations enabled for those loadables.
     """
-    def __init__(self, checks, run_id, event):
-        self.checks = checks
+    def __init__(self, loadables, enabled_investigations, run_id, event):
+        self.loadables = loadables
+        self.enabled_investigations = enabled_investigations
         self.run_id = run_id
         self.event = event
 

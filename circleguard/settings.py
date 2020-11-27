@@ -129,7 +129,7 @@ COMMENTS = {
 DEFAULTS = {
     "Messages": {
         "message_loading_info":            "[{ts:%X}] Loading replay info",
-        "message_loading_replays":         "[{ts:%X}] Loading {num_unloaded} of {num_total} replays ({num_previously_loaded} replays previously loaded)",
+        "message_loading_replays":         "[{ts:%X}] Loading {num_replays} replays",
         "message_ratelimited":             "[{ts:%X}] Ratelimited, waiting for {s} seconds",
         "message_starting_analysis":       "[{ts:%X}] Preparing replays for analysis, you can visualize (and more) from the Results tab when finished",
         "message_finished_investigation":  "[{ts:%X}] Done",
@@ -411,6 +411,9 @@ FORCE_UPDATE = {
     ],
     "2.11.1": [
         "message_correction_snaps"
+    ],
+    "2.12.0": [
+        "message_loading_replays"
     ]
 }
 

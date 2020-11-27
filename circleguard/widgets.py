@@ -335,27 +335,44 @@ class InvestigationCheckboxes(QFrame):
     def __init__(self):
         super().__init__()
 
-        similarity_cb = LabeledCheckbox("Similarity")
-        ur_cb = LabeledCheckbox("Unstable Rate")
-        frametime_cb = LabeledCheckbox("Frametime")
-        snaps_cb = LabeledCheckbox("Snaps")
-        manual_analysis_cb = LabeledCheckbox("Manual Analysis")
+        self.similarity_cb = LabeledCheckbox("Similarity")
+        self.ur_cb = LabeledCheckbox("Unstable Rate")
+        self.frametime_cb = LabeledCheckbox("Frametime")
+        self.snaps_cb = LabeledCheckbox("Snaps")
+        self.manual_analysis_cb = LabeledCheckbox("Manual Analysis")
 
         layout = QHBoxLayout()
         layout.setSpacing(25)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setAlignment(Qt.AlignLeft)
-        layout.addWidget(similarity_cb)
-        layout.addWidget(ur_cb)
-        layout.addWidget(frametime_cb)
-        layout.addWidget(snaps_cb)
-        layout.addWidget(manual_analysis_cb)
+        layout.addWidget(self.similarity_cb)
+        layout.addWidget(self.ur_cb)
+        layout.addWidget(self.frametime_cb)
+        layout.addWidget(self.snaps_cb)
+        layout.addWidget(self.manual_analysis_cb)
         self.setLayout(layout)
+
+    def enabled_investigations(self):
+        enabled_investigations = []
+        if self.similarity_cb.checkbox.isChecked():
+            enabled_investigations.append("Similarity")
+        if self.ur_cb.checkbox.isChecked():
+            enabled_investigations.append("Unstable Rate")
+        if self.frametime_cb.checkbox.isChecked():
+            enabled_investigations.append("Frametime")
+        if self.snaps_cb.checkbox.isChecked():
+            enabled_investigations.append("Snaps")
+        if self.manual_analysis_cb.checkbox.isChecked():
+            enabled_investigations.append("Manual Analysis")
+        return enabled_investigations
 
 
 class LoadableBase(QFrame):
-    def __init__(self):
+    def __init__(self, required_input_widgets):
         super().__init__()
+        self.required_input_widgets = required_input_widgets
+        self._cg_loadable = None
+
         self.delete_button = PushButton(self)
         self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
@@ -366,9 +383,20 @@ class LoadableBase(QFrame):
             "User", "All User Replays on Map"]:
             self.combobox.addItem(entry, entry)
 
+    def check_and_mark_required_fields(self):
+        all_filled = True
+        for input_widget in self.required_input_widgets:
+            # don't count inputs with defaults as empty
+            filled = input_widget.value() != "" or input_widget.field.placeholderText() != ""
+            if not filled:
+                input_widget.show_required()
+                all_filled = False
+        return all_filled
+
+
 class UnselectedLoadable(LoadableBase):
     def __init__(self):
-        super().__init__()
+        super().__init__([])
 
         self.combobox.setCurrentIndex(0)
 
@@ -380,15 +408,23 @@ class UnselectedLoadable(LoadableBase):
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         self.setLayout(layout)
 
+    def check_and_mark_required_fields(self):
+        return True
+
+    def cg_loadable(self):
+        return None
+
 
 class ReplayMapLoadable(LoadableBase):
     def __init__(self):
-        super().__init__()
-        self.combobox.setCurrentIndex(1)
+        self.previous_mods = None
 
         self.map_id_input = InputWidget("Map id", "", "id")
         self.user_id_input = InputWidget("User id", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+        super().__init__([self.map_id_input, self.user_id_input])
+
+        self.combobox.setCurrentIndex(1)
 
         layout = QGridLayout()
         layout.addWidget(self.combobox, 0, 0, 1, 7)
@@ -398,12 +434,31 @@ class ReplayMapLoadable(LoadableBase):
         layout.addWidget(self.mods_input, 3, 0, 1, 8)
         self.setLayout(layout)
 
+    def cg_loadable(self):
+        from circleguard import ReplayMap, Mod
+
+        if not self._cg_loadable:
+            mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+            self._cg_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+
+        mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+        new_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+
+        if (new_loadable.map_id != self._cg_loadable.map_id or \
+            new_loadable.user_id != self._cg_loadable.user_id or \
+            self.mods_input.value() != self.previous_mods):
+            self._cg_loadable = new_loadable
+
+        self.previous_mods = self.mods_input.value()
+        return self._cg_loadable
+
+
 class ReplayPathLoadable(LoadableBase):
     def __init__(self):
-        super().__init__()
-        self.combobox.setCurrentIndex(2)
-
         self.path_input = ReplayChooser()
+        super().__init__([self.path_input])
+
+        self.combobox.setCurrentIndex(2)
 
         layout = QGridLayout()
         layout.addWidget(self.combobox, 0, 0, 1, 7)
@@ -411,15 +466,36 @@ class ReplayPathLoadable(LoadableBase):
         layout.addWidget(self.path_input, 1, 0, 1, 8)
         self.setLayout(layout)
 
+    def cg_loadable(self):
+        from circleguard import ReplayPath, ReplayDir
+
+        if not self._cg_loadable:
+            if self.path_input.path.is_dir():
+                self._cg_loadable = ReplayDir(self.path_input.path)
+            else:
+                self._cg_loadable = ReplayPath(self.path_input.path)
+
+        return self._cg_loadable
+
+    def check_and_mark_required_fields(self):
+        all_filled = True
+        for input_widget in self.required_input_widgets:
+            filled = input_widget.selection_made
+            if not filled:
+                input_widget.show_required()
+                all_filled = False
+        return all_filled
+
+
 class MapLoadable(LoadableBase):
     def __init__(self):
-        super().__init__()
-        self.combobox.setCurrentIndex(3)
-
         self.map_id_input = InputWidget("Map id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
         self.span_input.field.setPlaceholderText(get_setting("default_span_map"))
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
+        super().__init__([self.map_id_input, self.span_input])
+
+        self.combobox.setCurrentIndex(3)
 
         layout = QGridLayout()
         layout.addWidget(self.combobox, 0, 0, 1, 7)
@@ -429,16 +505,38 @@ class MapLoadable(LoadableBase):
         layout.addWidget(self.mods_input, 3, 0, 1, 8)
         self.setLayout(layout)
 
+    def cg_loadable(self):
+        from circleguard import Map, Mod, Loader
+
+        # use placeholder text (eg 1-50) if the user inputted span is empty
+        span = self.span_input.value() or self.span_input.field.placeholderText()
+        if span == "all":
+            span = Loader.MAX_MAP_SPAN
+
+
+        if not self._cg_loadable:
+            mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+            self._cg_loadable = Map(int(self.map_id_input.value()), span, mods=mods)
+
+        mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+        new_loadable = Map(int(self.map_id_input.value()), span, mods=mods)
+
+        if (new_loadable.map_id != self._cg_loadable.map_id or \
+            new_loadable.span != self._cg_loadable.span or \
+            new_loadable.mods != self._cg_loadable.mods):
+            self._cg_loadable = new_loadable
+        return self._cg_loadable
+
 
 class UserLoadable(LoadableBase):
     def __init__(self):
-        super().__init__()
-        self.combobox.setCurrentIndex(4)
-
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
         self.span_input.field.setPlaceholderText(get_setting("default_span_user"))
+        super().__init__([self.user_id_input, self.span_input])
+
+        self.combobox.setCurrentIndex(4)
 
         layout = QGridLayout()
         layout.addWidget(self.combobox, 0, 0, 1, 7)
@@ -448,16 +546,38 @@ class UserLoadable(LoadableBase):
         layout.addWidget(self.mods_input, 3, 0, 1, 8)
         self.setLayout(layout)
 
+    def cg_loadable(self):
+        from circleguard import User, Mod, Loader
+
+        # use placeholder text (eg 1-50) if the user inputted span is empty
+        span = self.span_input.value() or self.span_input.field.placeholderText()
+        if span == "all":
+            span = Loader.MAX_USER_SPAN
+
+        if not self._cg_loadable:
+            mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+            self._cg_loadable = User(int(self.user_id_input.value()), span, mods=mods)
+
+        mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+        new_loadable = User(int(self.user_id_input.value()), span, mods=mods)
+
+        if (new_loadable.user_id != self._cg_loadable.user_id or \
+            new_loadable.span != self._cg_loadable.span or \
+            new_loadable.mods != self._cg_loadable.mods):
+            self._cg_loadable = new_loadable
+
+        return self._cg_loadable
+
 
 class MapUserLoadable(LoadableBase):
     def __init__(self):
-        super().__init__()
-        self.combobox.setCurrentIndex(5)
-
         self.map_id_input = InputWidget("Map id", "", "id")
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
         self.span_input.field.setPlaceholderText("all")
+        super().__init__([self.map_id_input, self.user_id_input, self.span_input])
+
+        self.combobox.setCurrentIndex(5)
 
         layout = QGridLayout()
         layout.addWidget(self.combobox, 0, 0, 1, 7)
@@ -466,6 +586,26 @@ class MapUserLoadable(LoadableBase):
         layout.addWidget(self.user_id_input, 2, 0, 1, 8)
         layout.addWidget(self.span_input, 3, 0, 1, 8)
         self.setLayout(layout)
+
+    def cg_loadable(self):
+        from circleguard import MapUser, Mod, Loader
+
+        # use placeholder text (eg 1-50) if the user inputted span is empty
+        span = self.span_input.value() or self.span_input.field.placeholderText()
+        if span == "all":
+            span = "1-100"
+
+        if not self._cg_loadable:
+            self._cg_loadable = MapUser(int(self.map_id_input.value()), int(self.user_id_input.value()), span)
+
+        new_loadable = MapUser(int(self.map_id_input.value()), int(self.user_id_input.value()), span)
+
+        if (new_loadable.map_id != self._cg_loadable.map_id or \
+            new_loadable.user_id != self._cg_loadable.user_id or \
+            new_loadable.span != self._cg_loadable.span):
+            self._cg_loadable = new_loadable
+
+        return self._cg_loadable
 
 
 class SelectableLoadable(QFrame):
@@ -535,9 +675,6 @@ class SelectableLoadable(QFrame):
         elif type_ == "All User Replays on Map":
             self.stacked_layout.setCurrentIndex(5)
 
-    def validate(self):
-        return self.map_id_input.value() and self.user_id_input.value()
-
     def show_delete(self):
         self.stacked_layout.currentWidget().delete_button.show()
 
@@ -545,24 +682,10 @@ class SelectableLoadable(QFrame):
         self.stacked_layout.currentWidget().delete_button.hide()
 
     def cg_loadable(self):
-        from circleguard import ReplayMap, Mod
-        if not self.validate():
-            return None
-        if not self._cg_loadable:
-            mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
-            self._cg_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+        return self.stacked_layout.currentWidget().cg_loadable()
 
-        mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
-        new_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
-
-        if (new_loadable.map_id != self._cg_loadable.map_id or \
-            new_loadable.user_id != self._cg_loadable.user_id or \
-            self.mods_input.value() != self.previous_mods):
-            self._cg_loadable = new_loadable
-
-        self.previous_mods = self.mods_input.value()
-        return self._cg_loadable
-
+    def check_and_mark_required_fields(self):
+        return self.stacked_layout.currentWidget().check_and_mark_required_fields()
 
 
 class LoadableCreation(QFrame):
@@ -683,17 +806,40 @@ class LoadableCreation(QFrame):
         if loadable == self.most_recent_loadable:
             self.most_recent_loadable = self.loadables[-1]
 
-    def all_loadables(self):
+    def visible_loadables(self):
+        """
+        All loadables which have not been hidden. We hide loadables to delete
+        them, but keep them in our loadables list to not mess with indices when
+        we do so, but often we want only those non-deleted loadables.
+        """
+        loadables = []
+        for loadable in self.loadables:
+            if loadable.isHidden():
+                continue
+            loadables.append(loadable)
+        return loadables
+
+    def cg_loadables(self):
         """
         Returns the loadables in this widget as unloaded circleguard loadables.
         """
         loadables = []
-        for loadable in self.loadables:
+        for loadable in self.visible_loadables():
             cg_loadable = loadable.cg_loadable()
-            if not cg_loadable:
+            # can't do ``not cg_loadable`` because for ReplayContainers they
+            # may not be loaded yet and so have length 0 and are thus falsey,
+            # but we still want to return them
+            if cg_loadable is None:
                 continue
             loadables.append(cg_loadable)
         return loadables
+
+    def check_and_mark_required_fields(self):
+        all_valid = True
+        for loadable in self.visible_loadables():
+            if not loadable.check_and_mark_required_fields():
+                all_valid = False
+        return all_valid
 
 # provided for our Analysis window. There's probably some shared code that
 # we could abstract out from this and `DropArea`, but it's not worth it atm
@@ -922,7 +1068,7 @@ class ReplayMapVis(QFrame):
         self.user_id_input = InputWidget("User id", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
 
-        for input_widget in [self.map_id_input, self.user_id_input, self.mods_input]:
+        for input_widget in [self.map_id_input, self.user_id_input]:
             input_widget.field.textChanged.connect(self.input_changed)
 
         title = QLabel("Online Replay")
@@ -1495,7 +1641,7 @@ class RunWidget(QFrame):
 
         self.status = "Queued"
         self.label = QLabel(self)
-        self.text = f"Run with {len(run.checks)} Checks"
+        self.text = f"Run with {len(run.loadables)} Loadables"
         self.label.setText(self.text)
 
         self.status_label = QLabel(self)
