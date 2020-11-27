@@ -10,10 +10,10 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
     QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView,
     QGraphicsOpacityEffect, QStyle, QListWidget, QListWidgetItem,
-    QStackedLayout)
+    QStackedLayout, QApplication)
 from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag, QPainter, QPen, QCursor
 from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
-    QPoint, QMimeData, QEvent, QObject, QSize)
+    QPoint, QMimeData, QEvent, QObject, QSize, QTimer)
 # from circleguard import Circleguard, TimewarpResult, Mod, Key
 # import numpy as np
 
@@ -588,6 +588,13 @@ class LoadableCreation(QFrame):
         # prepopulate with a single loadable
         self.new_loadable()
 
+    def reset_active_window(self):
+        # See the caller of this method for reasoning as to why this method
+        # exists.
+        # imported locally here to avoid circular imports
+        from gui.circleguard_window import CircleguardWindow
+        QApplication.setActiveWindow(CircleguardWindow.INSTANCE)
+
     def loadable_input_changed(self, loadable):
         # only allow the bottommost loadable to create new ones
         if loadable != self.most_recent_loadable:
@@ -644,14 +651,35 @@ class LoadableCreation(QFrame):
         # https://stackoverflow.com/a/48773670/12164878
         self.list_widget.scheduleDelayedItemsLayout()
 
+        # This is a weird one. Adding our ``SelectableLoadable`` to the list
+        # widget causes our main window (``CircleguardWindow``) to not be the
+        # active window anymore, which means any mouse clicks onto widgets that
+        # want to receive focus (like LineEdits) will not recieve focus until
+        # the window becomes the main window again. So we have to force the
+        # CircleguardWindow to be the main window.
+        # However, if we do so directly here, the cg window will still not be
+        # the main window afterwards. I believe this is because the list widget
+        # is scheduling some events to be fired shortly afterwards that is
+        # causing the active window removal, so we need to wait for those to
+        # occurr before we can do anything. Even 10ms seemed to work, but I'm
+        # going for 100 to be safe.
+        timer = QTimer(self)
+        timer.setSingleShot(True)
+        timer.timeout.connect(self.reset_active_window)
+        timer.start(100)
+
     def remove_loadable(self, loadable):
         # since we're dealing with a QListWidget, we can't just hide the
         # loadable widget - we need to remove it from the list widget entirely.
         # In typical qt fashion, the only way to do so is with an index into the
         # list widget.
+        # I would love to be able to use ``self.list_widget.takeItem(index)``
+        # here, but it literally segfaults when I do that, despite the index
+        # being valid. I'm doing something wrong but don't know what (TODO fix
+        # this properly?), so instead we just hide the widget. Dirty?
+        # Absolutely.
         index = self.loadables.index(loadable)
-        self.list_widget.takeItem(index)
-        self.loadables.remove(loadable)
+        self.list_widget.item(index).setHidden(True)
         if loadable == self.most_recent_loadable:
             self.most_recent_loadable = self.loadables[-1]
 
