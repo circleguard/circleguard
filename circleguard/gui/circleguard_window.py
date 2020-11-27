@@ -40,9 +40,18 @@ class Handler(QObject, logging.Handler):
         self.new_message.emit(message)
 
 class CircleguardWindow(LinkableSetting, QMainWindow):
+    INSTANCE = None
     def __init__(self, app):
+        if CircleguardWindow.INSTANCE is not None:
+            raise Exception("CirclegaurdWindow may only be instantiated once!")
+
         QMainWindow.__init__(self)
         LinkableSetting.__init__(self, ["log_save", "theme"])
+
+        # the circleguard window is our main window and it is sometimes useful
+        # for other widgets to be able to interact with the main window
+        # instance. Save ourself as a static var so other classes can access us.
+        CircleguardWindow.INSTANCE = self
         # our QApplication, so we can set the theme from our widgets
         self.app = app
 
@@ -141,6 +150,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         tabs.setCurrentIndex(tabs.currentIndex() - 1)
 
     def mousePressEvent(self, event):
+        print("mouse press event")
         focused = self.focusWidget()
         if focused is not None and not isinstance(focused, QTextEdit):
             focused.clearFocus()
