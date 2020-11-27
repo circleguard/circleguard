@@ -704,6 +704,7 @@ class LoadableCreation(QFrame):
         self.list_widget.setMovement(QListWidget.Static)
 
         layout = QVBoxLayout()
+        layout.setContentsMargins(1, 1, 1, 1)
         layout.setAlignment(Qt.AlignTop)
         layout.addWidget(self.list_widget)
         self.setLayout(layout)

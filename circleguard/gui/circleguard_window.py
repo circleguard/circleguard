@@ -403,6 +403,10 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             # color for larger buttons (and also round their corners because
             # large buttons don't look so good when they're blocky)
 
+            # the QListWidget border removal is because it clashes with the
+            # border we're drawing around our SelectableLoadables and the ui
+            # looks too busy with that many borders
+
             self.app.setPalette(dark_p)
             self.app.setStyleSheet("""
                 QToolTip {
@@ -432,11 +436,15 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                 QTextEdit {
                     background-color: #212121;
                 }
-                SelectableLoadable, LoadableW, CheckW, DragWidget, ReplayMapVis {
-                    border: 1.5px solid #272727;
+                SelectableLoadable, DragWidget, ReplayMapVis {
+                    border: 1.5px solid rgb(32, 32, 32);
                 }
                 ReplayMapCreation {
                     border: 1.5px solid #1f1f1f;
+                }
+                QListWidget {
+                    background-color: rgb(53, 53, 53);
+                    QListWidget
                 }
                 """)
         else:
