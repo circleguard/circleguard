@@ -98,20 +98,11 @@ class MainTab(SingleLinkableSetting, QFrame):
         investigations.setFixedHeight(25)
 
 
-        # expanding = QSizePolicy()
-        # expanding.setHorizontalPolicy(QSizePolicy.Expanding)
-        # expanding.setVerticalPolicy(QSizePolicy.Expanding)
-
         self.loadable_creation = LoadableCreation()
-        # self.loadable_creation.setSizePolicy(expanding)
-
-        scrollarea = QScrollArea(self)
-        scrollarea.setWidget(self.loadable_creation)
-        scrollarea.setWidgetResizable(True)
 
         layout = QGridLayout()
         layout.addWidget(investigations, 0, 0, 1, 16)
-        layout.addWidget(scrollarea, 1, 0, 4, 16)
+        layout.addWidget(self.loadable_creation, 1, 0, 4, 16)
         layout.addWidget(self.terminal, 5, 0, 2, 16)
         layout.addWidget(self.run_button, 7, 0, 1, 16)
 
