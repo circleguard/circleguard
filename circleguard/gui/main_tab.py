@@ -451,7 +451,12 @@ class MainTab(SingleLinkableSetting, QFrame):
                         result = TimewarpResult(frametime, frametimes, replay)
                         self.q.put(result)
 
-                self.print_results_signal.emit() # flush self.q
+                # flush self.q. Since the next investigation will be processed
+                # so quickly afterwards, we actually need to forcibly wait
+                # until the results have been printed before proceeding.
+                self.print_results_event.clear()
+                self.print_results_signal.emit()
+                self.print_results_event.wait()
 
             self.set_progressbar_signal.emit(-1) # empty progressbar
             # this event is necessary because `print_results` will set
@@ -461,12 +466,6 @@ class MainTab(SingleLinkableSetting, QFrame):
             self.print_results_event.clear()
             # 'flush' self.q so there's no more results left and message_finished_investigation
             # won't print before results from that investigation which looks strange.
-            # Signal instead of call to be threadsafe and avoid
-            # ```
-            # QObject::connect: Cannot queue arguments of type 'QTextCursor'
-            # (Make sure 'QTextCursor' is registered using qRegisterMetaType().)
-            # ```
-            # warning
             self.print_results_signal.emit()
             self.print_results_event.wait()
             if self.show_no_cheat_found:
