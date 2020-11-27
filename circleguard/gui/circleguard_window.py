@@ -150,7 +150,6 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         tabs.setCurrentIndex(tabs.currentIndex() - 1)
 
     def mousePressEvent(self, event):
-        print("mouse press event")
         focused = self.focusWidget()
         if focused is not None and not isinstance(focused, QTextEdit):
             focused.clearFocus()
