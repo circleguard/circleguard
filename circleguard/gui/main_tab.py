@@ -69,7 +69,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.print_results_event = threading.Event()
         self.cg_q = Queue()
         self.helper_thread_running = False
-        self.runs = [] # Run objects for canceling runs
+        self.runs = [] # Run objects for cancelling runs
         self.run_id = 0
         self.visualizer = None
 
