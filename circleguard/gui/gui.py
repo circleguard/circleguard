@@ -591,16 +591,16 @@ class ScrollableThresholdsWidget(QFrame):
 
 
         layout = QVBoxLayout()
-        layout.addWidget(Separator("Replay Stealing"))
+        layout.addWidget(Separator("Similarity"))
         layout.addWidget(steal_max_sim)
         layout.addWidget(steal_max_sim_display)
-        layout.addWidget(Separator("Relax"))
+        layout.addWidget(Separator("Unstable Rate"))
         layout.addWidget(relax_max_ur)
         layout.addWidget(relax_max_ur_display)
-        layout.addWidget(Separator("Aim Correction"))
+        layout.addWidget(Separator("Snaps"))
         layout.addWidget(correction_max_angle)
         layout.addWidget(correction_min_distance)
-        layout.addWidget(Separator("Timewarp"))
+        layout.addWidget(Separator("Frametime"))
         layout.addWidget(timewarp_max_frametime)
         layout.addWidget(timewarp_max_frametime_display)
 
