@@ -372,6 +372,7 @@ class LoadableBase(QFrame):
         super().__init__()
         self.required_input_widgets = required_input_widgets
         self._cg_loadable = None
+        self.sim_group = 1
 
         self.delete_button = PushButton(self)
         self.delete_button.setIcon(QIcon(resource_path("delete.png")))
@@ -383,6 +384,11 @@ class LoadableBase(QFrame):
             "User", "All User Replays on Map"]:
             self.combobox.addItem(entry, entry)
 
+        self.sim_combobox = ComboBox()
+        self.sim_combobox.addItem("Sim Group 1", "Sim Group 1")
+        self.sim_combobox.addItem("Sim Group 2", "Sim Group 2")
+        self.sim_combobox.activated.connect(self.sim_combobox_activated)
+
     def check_and_mark_required_fields(self):
         all_filled = True
         for input_widget in self.required_input_widgets:
@@ -392,6 +398,22 @@ class LoadableBase(QFrame):
                 input_widget.show_required()
                 all_filled = False
         return all_filled
+
+    def hide_sim_combobox(self):
+        self.sim_combobox.hide()
+        self.layout().removeWidget(self.combobox)
+        self.layout().addWidget(self.combobox, 0, 0, 1, 7)
+
+    def show_sim_combobox(self):
+        self.sim_combobox.show()
+        self.layout().removeWidget(self.combobox)
+        self.layout().addWidget(self.combobox, 0, 0, 1, 5)
+
+    def sim_combobox_activated(self):
+        if self.sim_combobox.currentData() == "Sim Group 1":
+            self.sim_group = 1
+        else:
+            self.sim_group = 2
 
 
 class UnselectedLoadable(LoadableBase):
@@ -414,6 +436,11 @@ class UnselectedLoadable(LoadableBase):
     def cg_loadable(self):
         return None
 
+    def hide_sim_combobox(self):
+        pass
+
+    def show_sim_combobox(self):
+        pass
 
 class ReplayMapLoadable(LoadableBase):
     def __init__(self):
@@ -427,7 +454,8 @@ class ReplayMapLoadable(LoadableBase):
         self.combobox.setCurrentIndex(1)
 
         layout = QGridLayout()
-        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.combobox, 0, 0, 1, 5)
+        layout.addWidget(self.sim_combobox, 0, 5, 1, 2)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         layout.addWidget(self.user_id_input, 2, 0, 1, 8)
@@ -450,6 +478,7 @@ class ReplayMapLoadable(LoadableBase):
             self._cg_loadable = new_loadable
 
         self.previous_mods = self.mods_input.value()
+        self._cg_loadable.sim_group = self.sim_group
         return self._cg_loadable
 
 
@@ -461,7 +490,8 @@ class ReplayPathLoadable(LoadableBase):
         self.combobox.setCurrentIndex(2)
 
         layout = QGridLayout()
-        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.combobox, 0, 0, 1, 5)
+        layout.addWidget(self.sim_combobox, 0, 5, 1, 2)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         layout.addWidget(self.path_input, 1, 0, 1, 8)
         self.setLayout(layout)
@@ -475,6 +505,7 @@ class ReplayPathLoadable(LoadableBase):
             else:
                 self._cg_loadable = ReplayPath(self.path_input.path)
 
+        self._cg_loadable.sim_group = self.sim_group
         return self._cg_loadable
 
     def check_and_mark_required_fields(self):
@@ -498,7 +529,8 @@ class MapLoadable(LoadableBase):
         self.combobox.setCurrentIndex(3)
 
         layout = QGridLayout()
-        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.combobox, 0, 0, 1, 5)
+        layout.addWidget(self.sim_combobox, 0, 5, 1, 2)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         layout.addWidget(self.span_input, 2, 0, 1, 8)
@@ -525,6 +557,8 @@ class MapLoadable(LoadableBase):
             new_loadable.span != self._cg_loadable.span or \
             new_loadable.mods != self._cg_loadable.mods):
             self._cg_loadable = new_loadable
+
+        self._cg_loadable.sim_group = self.sim_group
         return self._cg_loadable
 
 
@@ -539,7 +573,8 @@ class UserLoadable(LoadableBase):
         self.combobox.setCurrentIndex(4)
 
         layout = QGridLayout()
-        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.combobox, 0, 0, 1, 5)
+        layout.addWidget(self.sim_combobox, 0, 5, 1, 2)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         layout.addWidget(self.user_id_input, 1, 0, 1, 8)
         layout.addWidget(self.span_input, 2, 0, 1, 8)
@@ -566,6 +601,7 @@ class UserLoadable(LoadableBase):
             new_loadable.mods != self._cg_loadable.mods):
             self._cg_loadable = new_loadable
 
+        self._cg_loadable.sim_group = self.sim_group
         return self._cg_loadable
 
 
@@ -580,7 +616,8 @@ class MapUserLoadable(LoadableBase):
         self.combobox.setCurrentIndex(5)
 
         layout = QGridLayout()
-        layout.addWidget(self.combobox, 0, 0, 1, 7)
+        layout.addWidget(self.combobox, 0, 0, 1, 5)
+        layout.addWidget(self.sim_combobox, 0, 5, 1, 2)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         layout.addWidget(self.user_id_input, 2, 0, 1, 8)
@@ -605,6 +642,7 @@ class MapUserLoadable(LoadableBase):
             new_loadable.span != self._cg_loadable.span):
             self._cg_loadable = new_loadable
 
+        self._cg_loadable.sim_group = self.sim_group
         return self._cg_loadable
 
 
@@ -616,6 +654,8 @@ class SelectableLoadable(QFrame):
         super().__init__()
         self.previous_mods = None
         self.input_has_changed = False
+        # set by LoadableCreation
+        self.should_show_sim_combobox = False
         # save the loadable we represent so if we load it externally and access
         # it again, it will still be loaded
         self._cg_loadable = None
@@ -675,6 +715,9 @@ class SelectableLoadable(QFrame):
         elif type_ == "All User Replays on Map":
             self.stacked_layout.setCurrentIndex(5)
 
+        if not self.should_show_sim_combobox:
+            self.stacked_layout.currentWidget().hide_sim_combobox()
+
     def show_delete(self):
         self.stacked_layout.currentWidget().delete_button.show()
 
@@ -687,6 +730,12 @@ class SelectableLoadable(QFrame):
     def check_and_mark_required_fields(self):
         return self.stacked_layout.currentWidget().check_and_mark_required_fields()
 
+    def hide_sim_combobox(self):
+        self.stacked_layout.currentWidget().hide_sim_combobox()
+
+    def show_sim_combobox(self):
+        self.stacked_layout.currentWidget().show_sim_combobox()
+
 
 class LoadableCreation(QFrame):
     LOADABLE_SIZE = QSize(450, 150)
@@ -694,6 +743,7 @@ class LoadableCreation(QFrame):
     def __init__(self):
         super().__init__()
         self.loadables = []
+        self.previous_combobox_state = None
 
         self.list_widget = QListWidget()
         self.list_widget.setResizeMode(QListWidget.Adjust)
@@ -736,6 +786,7 @@ class LoadableCreation(QFrame):
 
     def new_loadable(self):
         loadable = SelectableLoadable()
+        loadable.should_show_sim_combobox = self.previous_combobox_state == Qt.Checked
         # some loadables have input widgets which can become arbitrarily long,
         # for instance ReplayPathLoadable's ReplayChooser which displays the
         # chosen file's location. This would cause the loadable to increase in
@@ -841,6 +892,15 @@ class LoadableCreation(QFrame):
             if not loadable.check_and_mark_required_fields():
                 all_valid = False
         return all_valid
+
+    def similarity_cb_state_changed(self, state):
+        self.previous_combobox_state = state
+        for loadable in self.visible_loadables():
+            if state == Qt.Unchecked:
+                loadable.hide_sim_combobox()
+            else:
+                loadable.show_sim_combobox()
+            loadable.should_show_sim_combobox = state == Qt.Checked
 
 # provided for our Analysis window. There's probably some shared code that
 # we could abstract out from this and `DropArea`, but it's not worth it atm

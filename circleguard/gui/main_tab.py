@@ -97,8 +97,9 @@ class MainTab(SingleLinkableSetting, QFrame):
         investigations = WidgetCombiner(investigate_label, self.investigation_checkboxes, self)
         investigations.setFixedHeight(25)
 
-
         self.loadable_creation = LoadableCreation()
+
+        self.investigation_checkboxes.similarity_cb.checkbox.stateChanged.connect(self.loadable_creation.similarity_cb_state_changed)
 
         layout = QGridLayout()
         layout.addWidget(investigations, 0, 0, 1, 16)
@@ -272,6 +273,13 @@ class MainTab(SingleLinkableSetting, QFrame):
             cg.loader.check_stopped_signal.connect(partial(_check_event, event))
 
             if "Similarity" in run.enabled_investigations:
+                loadables1 = []
+                loadables2 = []
+                for loadable in run.loadables:
+                    if loadable.sim_group == 1:
+                        loadables1.append(loadable)
+                    else:
+                        loadables2.append(loadable)
                 lc1 = LoadableContainer(loadables1)
                 lc2 = LoadableContainer(loadables2)
             else:
