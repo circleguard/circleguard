@@ -16,7 +16,7 @@ from PyQt5.QtGui import QDesktopServices, QIcon, QCursor
 # from circlevis import BeatmapInfo
 
 from utils import resource_path
-from widgets import (ResetSettings, WidgetCombiner, FolderChooser, Separator,
+from widgets import (ResetSettings, WidgetCombiner, Separator,
     ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
     LineEditSetting, EntryWidget, RunWidget, ComboboxSetting, ReplayDropArea,
     ReplayMapCreation, PushButton)
@@ -285,111 +285,6 @@ class DebugWindow(QMainWindow):
 
     def write(self, message):
         self.terminal.append(message)
-
-
-# TODO needs to be updated to work with ReplayChooser instead of FolderChooser
-class VisualizeTab(QFrame):
-    def __init__(self):
-        super().__init__()
-        self.result_frame = ResultsTab()
-        self.result_frame.results.info_label.hide()
-        self.map_id = None
-        self.q = Queue()
-        self.replays = []
-        # lazy loaded, see self.#cg
-        self._cg = None
-        self.info = QLabel(self)
-        self.info.setText("Visualizes Replays. Has theoretically support for an arbitrary amount of replays.")
-        self.label_map_id = QLabel(self)
-        self.update_map_id_label()
-        self.file_chooser = FolderChooser("Add Replays", folder_mode=False, multiple_files=True,
-                                            file_ending="osu! Replayfile (*osr)", display_path=False)
-        self.file_chooser.path_signal.connect(self.add_files)
-        self.folder_chooser = FolderChooser("Add Folder", display_path=False)
-        self.folder_chooser.path_signal.connect(self.add_folder)
-        layout = QGridLayout()
-        layout.addWidget(self.info)
-        layout.addWidget(self.file_chooser)
-        layout.addWidget(self.folder_chooser)
-        layout.addWidget(self.label_map_id)
-        layout.addWidget(self.result_frame)
-
-        self.setLayout(layout)
-
-    @property
-    def cg(self):
-        if not self._cg:
-            from circleguard import Circleguard
-            cache_path = get_setting("cache_dir") + "circleguard.db"
-            self._cg = Circleguard(get_setting("api_key"), cache_path)
-        return self._cg
-
-    def start_timer(self):
-        timer = QTimer(self)
-        timer.timeout.connect(self.run_timer)
-        timer.start(250)
-
-    def run_timer(self):
-        self.add_widget()
-
-    def update_map_id_label(self):
-        self.label_map_id.setText(f"Current beatmap_id: {self.map_id}")
-
-    def add_files(self, paths):
-        thread = threading.Thread(target=self._parse_replays, args=[paths])
-        thread.start()
-        self.start_timer()
-
-    def add_folder(self, path):
-        thread = threading.Thread(target=self._parse_folder, args=[path])
-        thread.start()
-        self.start_timer()
-
-    def _parse_replays(self, paths):
-        for path in paths:
-            # guaranteed to end in .osr by our filter
-            self._parse_replay(path)
-
-    def _parse_folder(self, path):
-        for f in os.listdir(path): # os.walk seems unnecessary
-            if f.endswith(".osr"):
-                self._parse_replay(os.path.join(path, f))
-
-    def _parse_replay(self, path):
-        from circleguard import ReplayPath
-        replay = ReplayPath(path)
-        self.cg.load(replay)
-        if self.map_id is None or len(self.replays) == 0: # store map_id if nothing stored
-            log.info(f"Changing map_id from {self.map_id} to {replay.map_id}")
-            self.map_id = replay.map_id
-            self.update_map_id_label()
-        elif replay.map_id != self.map_id: # ignore replay with diffrent map_ids
-            log.error(f"replay {replay} doesn't match with current map_id ({replay.map_id} != {self.map_id})")
-            return
-        if not any(replay.replay_id == r.data.replay_id for r in self.replays): # check if already stored
-            log.info(f"adding new replay {replay} with replay id {replay.replay_id} on map {replay.map_id}")
-            self.q.put(replay)
-        else:
-            log.info(f"skipping replay {replay} with replay id {replay.replay_id} on map {replay.map_id} since it's already saved")
-
-    def add_widget(self):
-        try:
-            while True:
-                replay = self.q.get(block=False)
-                widget = EntryWidget(f"{replay.username}'s play with the id {replay.replay_id}", "Delete", replay)
-                widget.clicked_signal.connect(self.remove_replay)
-                self.replays.append(widget)
-                self.result_frame.results.layout.insertWidget(0,widget)
-        except Empty:
-            pass
-
-    def remove_replay(self, data):
-        replay_ids = [replay.data.replay_id for replay in self.replays]
-        index = replay_ids.index(data.replay_id)
-        self.result_frame.results.layout.removeWidget(self.replays[index])
-        self.replays[index].deleteLater()
-        self.replays[index] = None
-        self.replays.pop(index)
 
 
 class SettingsTab(QFrame):
