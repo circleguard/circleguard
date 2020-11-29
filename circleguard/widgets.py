@@ -39,6 +39,13 @@ class ComboBox(QComboBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setCursor(QCursor(Qt.PointingHandCursor))
+        # remove WheelFocus from the combobox's focus policy
+        # https://stackoverflow.com/a/19382766/12164878
+        self.setFocusPolicy(Qt.StrongFocus)
+
+    def wheelEvent(self, event):
+        # we never want wheel events to scroll the combobox
+        event.ignore()
 
 class CheckBox(QCheckBox):
     def __init__(self, *args, **kwargs):
