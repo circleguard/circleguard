@@ -1,4 +1,5 @@
 PyQt5==5.14.2
+numpy==1.19.3
 circleguard==5.0.2
 packaging>=17.0
 slider==0.3.1
