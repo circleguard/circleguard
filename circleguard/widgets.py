@@ -1599,29 +1599,29 @@ class ReplayChooser(QFrame):
     """
     def __init__(self):
         super().__init__()
-        self.path_label = QLabel()
         self.selection_made = False
         self.old_stylesheet = self.styleSheet()
         self.path = None
-        # give all space to the label
-        expanding = QSizePolicy()
-        expanding.setHorizontalPolicy(QSizePolicy.Expanding)
-        self.path_label.setSizePolicy(expanding)
+
+        self.path_label = QLabel()
+        self.path_label.setWordWrap(True)
         self.file_chooser = FileChooserButton("Choose replay", QFileDialog.ExistingFile, ["osu! Replay File (*.osr)"])
         self.folder_chooser = FileChooserButton("Choose folder", QFileDialog.Directory)
 
         # the buttons will steal the mousePressEvent so connect them manually
         self.file_chooser.clicked.connect(self.reset_required)
         self.folder_chooser.clicked.connect(self.reset_required)
-
         self.file_chooser.path_chosen_signal.connect(self.handle_new_path)
         self.folder_chooser.path_chosen_signal.connect(self.handle_new_path)
 
-        layout = QHBoxLayout()
+        self.file_chooser.setFixedWidth(185)
+        self.folder_chooser.setFixedWidth(185)
+
+        layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(self.path_label)
-        layout.addWidget(self.file_chooser)
-        layout.addWidget(self.folder_chooser)
+        layout.addWidget(self.file_chooser, 0, 0, 1, 1)
+        layout.addWidget(self.folder_chooser, 0, 1, 1, 1)
+        layout.addWidget(self.path_label, 1, 0, 1, 2)
         self.setLayout(layout)
 
     def handle_new_path(self, path):
