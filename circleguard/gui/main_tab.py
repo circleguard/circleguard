@@ -393,6 +393,13 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.update_run_status_signal.emit(run.run_id, "Investigating Replays")
 
                 if investigation == "Similarity":
+                    # core relies on the second replays list being the one empty
+                    # if only one of the lists are empty, but we want to allow
+                    # users to select whichever group they want if they're only
+                    # using a single group, so switch the two if this is the
+                    # case.
+                    if replays2 and not replays1:
+                        replays1, replays2 = replays2, replays1
                     pairs = replay_pairs(replays1, replays2)
                     for (replay1, replay2) in pairs:
                         _check_event(event)
