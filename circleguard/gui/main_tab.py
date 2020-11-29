@@ -24,10 +24,8 @@ import requests
 # from slider import Library
 # from circlevis import BeatmapInfo
 
-from widgets import (ReplayMapW, ReplayPathW, MapW, UserW, MapUserW,
-    ScrollableLoadablesWidget, ScrollableChecksWidget, StealCheckW, RelaxCheckW,
-    CorrectionCheckW, TimewarpCheckW, AnalyzeW, InvestigationCheckboxes,
-    WidgetCombiner, PushButton, LoadableCreation)
+from widgets import (ScrollableLoadablesWidget, ScrollableChecksWidget,
+    InvestigationCheckboxes, WidgetCombiner, PushButton, LoadableCreation)
 from settings import SingleLinkableSetting, get_setting, set_setting
 from utils import (delete_widget, AnalysisResult, StealResult, RelaxResult,
     CorrectionResult, TimewarpResult)
