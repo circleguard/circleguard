@@ -1264,6 +1264,7 @@ class ResultW(QFrame):
     def new_template_button(self):
         template_button = PushButton(self)
         template_button.setText("Copy Template")
+        template_button.setFixedWidth(120)
         template_button.clicked.connect(lambda: self.template_button_pressed_signal.emit())
         return template_button
 
