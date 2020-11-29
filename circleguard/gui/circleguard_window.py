@@ -159,34 +159,54 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         set_setting_raw("CircleguardWindow/geometry", self.saveGeometry())
 
     def url_scheme_called(self, url):
-        from circleguard import ReplayMap, Circleguard
+        from circleguard import ReplayMap, Circleguard, Mod
         # url is bytes, so decode back to str
         url = url.decode()
         # windows appends an extra slash even if the original url didn't have
         # it, so remove it
         url = url.strip("/")
-        # all urls take one of the following forms:
-        # * circleguard://m=221777&u=2757689&t=15000
-        # * circleguard://m=221777&u=2757689
-        # * circleguard://m=221777&u=2757689&u2=3219026
+        # all urls can have any of the following parameters:
+        # * m - the map id
+        # * u - the first user's id
+        # * u2 - the second user's id
+        # * t - the timestamp to start at
+        # * m1 - the mods the first replay was played with
+        # * m2 - the mods the second replay was played with
+        # For example, a url might look like
+        # circleguard://m=221777&u=2757689&m1=HDHRu2=3219026&m2=HDHR
         map_id = re.compile(r"m=(.*?)(&|$)").search(url).group(1)
         user_id = re.compile(r"u=(.*?)(&|$)").search(url).group(1)
         timestamp_match = re.compile(r"t=(.*?)(&|$)").search(url)
         # start at the beginning if timestamp isn't specified
         timestamp = int(timestamp_match.group(1)) if timestamp_match else 0
 
+        # mods is optional, will take the user's highest play on the map if not
+        # specified
+        mods1_match = re.compile(r"m1=(.*?)(&|$)").search(url)
+        mods1 = None
+        if mods1_match:
+            mods1 = mods1_match.group(1)
+
         user_id_2_match = re.compile(r"u2=(.*?)(&|$)").search(url)
         user_id_2 = None
         if user_id_2_match:
             user_id_2 = user_id_2_match.group(1)
 
-        r = ReplayMap(map_id, user_id)
+        mods2_match = re.compile(r"m2=(.*?)(&|$)").search(url)
+        mods2 = None
+        if mods2_match:
+            mods2 = mods2_match.group(1)
+
+        # convert the string into an actual mods object if we received it
+        mods1 = Mod(mods1) if mods1 else None
+        r = ReplayMap(map_id, user_id, mods1)
         cg = Circleguard(get_setting("api_key"))
         cg.load(r)
         replays = [r]
 
         if user_id_2:
-            r2 = ReplayMap(map_id, user_id_2)
+            mods2 = Mod(mods2) if mods2 else None
+            r2 = ReplayMap(map_id, user_id_2, mods2)
             cg.load(r2)
             replays.append(r2)
         # open visualizer for the given map and user, and jump to the timestamp
@@ -278,18 +298,20 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         template_text = None
 
         if isinstance(result, StealResult):
-            circleguard_url = f"circleguard://m={result.replay1.map_id}&u={result.replay1.user_id}&u2={result.replay2.user_id}"
-            label_text = get_setting("string_result_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
+            r1 = result.replay1
+            r2 = result.replay2
+            circleguard_url = f"circleguard://m={r1.map_id}&u={r1.user_id}&m1={r1.mods.short_name()}&u2={r2.user_id}&m2={r2.mods.short_name()}"
+            label_text = get_setting("string_result_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=r1, r2=r2,
                 earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
                  later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name())
-            template_text = get_setting("template_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=result.replay1, r2=result.replay2,
+            template_text = get_setting("template_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=r1, r2=r2,
                 earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
                 later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name(),
                 circleguard_url=circleguard_url)
-            replays = [result.replay1, result.replay2]
+            replays = [r1, r2]
 
         elif isinstance(result, RelaxResult):
-            circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}"
+            circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}&m1={result.replay.mods.short_name()}"
             label_text = get_setting("string_result_relax").format(ts=timestamp, ur=result.ur, r=result,
                 replay=result.replay, mods_short_name=result.replay.mods.short_name(),
                 mods_long_name=result.replay.mods.long_name())
@@ -298,7 +320,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                 mods_long_name=result.replay.mods.long_name(), circleguard_url=circleguard_url)
             replays = [result.replay]
         elif isinstance(result, CorrectionResult):
-            circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}"
+            circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}&m1={result.replay.mods.short_name()}"
             label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, num_snaps=len(result.snaps), replay=result.replay,
                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
@@ -311,7 +333,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                 circleguard_url=circleguard_url)
             replays = [result.replay]
         elif isinstance(result, TimewarpResult):
-            circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}"
+            circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}&m1={result.replay.mods.short_name()}"
             label_text = get_setting("string_result_timewarp").format(ts=timestamp, r=result, replay=result.replay, frametime=result.frametime,
                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
             template_text = get_setting("template_timewarp").format(ts=timestamp, r=result, frametime=result.frametime,
