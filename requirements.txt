@@ -1,4 +1,6 @@
 PyQt5==5.14.2
+# TODO this is a temporary workaround for https://github.com/numpy/numpy/issues/16744,
+# remove this line when the issue is resolved
 numpy==1.19.3
 circleguard==5.0.2
 packaging>=17.0
