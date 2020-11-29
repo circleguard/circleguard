@@ -1328,7 +1328,13 @@ class ReplayDataTable(QFrame):
 
         for i, data in enumerate(zip(replay.t, replay.xy, replay.k)):
             t, xy, k = data
-            item = QTableWidgetItem(str(t))
+            if i == 0:
+                text = str(t)
+            else:
+                t_prev = replay.t[i - 1]
+                text = f"{t} ({t - t_prev})"
+
+            item = QTableWidgetItem(text)
             table.setItem(i, 0, item)
 
             item = QTableWidgetItem(str(xy[0]))
