@@ -228,6 +228,12 @@ class MainTab(SingleLinkableSetting, QFrame):
                 QObject.__init__(self)
 
             def _ratelimit(self, length):
+                # sometimes the ratelimit length can get very close to zero or
+                # even negative due to network request time and rounding. As
+                # displaying a zero or negative wait time is confusing, don't
+                # wait for any less than 2 seconds.
+
+                length = max(length, 2)
                 self.ratelimit_signal.emit(length)
                 # how many times to wait for 1/4 second (rng standing for range)
                 # we do this loop in order to tell run_circleguard to check if
