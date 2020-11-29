@@ -10,8 +10,9 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
     QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView,
     QGraphicsOpacityEffect, QStyle, QListWidget, QListWidgetItem,
-    QStackedLayout, QApplication)
-from PyQt5.QtGui import QRegExpValidator, QIcon, QDrag, QPainter, QPen, QCursor
+    QStackedLayout, QApplication, QShortcut)
+from PyQt5.QtGui import (QRegExpValidator, QIcon, QDrag, QPainter, QPen,
+    QCursor, QKeySequence)
 from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
     QPoint, QMimeData, QEvent, QObject, QSize, QTimer)
 # from circleguard import Circleguard, TimewarpResult, Mod, Key
@@ -699,21 +700,26 @@ class SelectableLoadable(QFrame):
         self.setLayout(layout)
 
 
-    def select_loadable(self):
-        if self.stacked_layout.currentWidget().combobox.currentIndex() == 0:
+    def select_loadable(self, override_type=None):
+        if not override_type and self.stacked_layout.currentWidget().combobox.currentIndex() == 0:
             return
 
-        type_ = self.stacked_layout.currentWidget().combobox.currentData()
+        type_ = override_type or self.stacked_layout.currentWidget().combobox.currentData()
         if type_ == "Map Replay":
             self.stacked_layout.setCurrentIndex(1)
+            self.stacked_layout.currentWidget().combobox.setCurrentIndex(1)
         elif type_ == "Local Replay":
             self.stacked_layout.setCurrentIndex(2)
+            self.stacked_layout.currentWidget().combobox.setCurrentIndex(2)
         elif type_ == "Map":
             self.stacked_layout.setCurrentIndex(3)
+            self.stacked_layout.currentWidget().combobox.setCurrentIndex(3)
         elif type_ == "User":
             self.stacked_layout.setCurrentIndex(4)
+            self.stacked_layout.currentWidget().combobox.setCurrentIndex(4)
         elif type_ == "All User Replays on Map":
             self.stacked_layout.setCurrentIndex(5)
+            self.stacked_layout.currentWidget().combobox.setCurrentIndex(5)
 
         if not self.should_show_sim_combobox:
             self.stacked_layout.currentWidget().hide_sim_combobox()
@@ -753,6 +759,13 @@ class LoadableCreation(QFrame):
         # want to allow that though.
         self.list_widget.setMovement(QListWidget.Static)
 
+        QShortcut(QKeySequence(Qt.Key_R), self, lambda: self.select_loadable("Map Replay"))
+        QShortcut(QKeySequence(Qt.Key_L), self, lambda: self.select_loadable("Local Replay"))
+        QShortcut(QKeySequence(Qt.Key_M), self, lambda: self.select_loadable("Map"))
+        QShortcut(QKeySequence(Qt.Key_U), self, lambda: self.select_loadable("User"))
+        QShortcut(QKeySequence(Qt.Key_A), self, lambda: self.select_loadable("All User Replays on Map"))
+
+
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setAlignment(Qt.AlignTop)
@@ -784,7 +797,11 @@ class LoadableCreation(QFrame):
         self.list_widget.scheduleDelayedItemsLayout()
         return ret
 
-    def new_loadable(self):
+    def select_loadable(self, type_):
+        self.most_recent_loadable.select_loadable(type_)
+        self.new_loadable()
+
+    def new_loadable(self, type_=None):
         loadable = SelectableLoadable()
         loadable.should_show_sim_combobox = self.previous_combobox_state == Qt.Checked
         # some loadables have input widgets which can become arbitrarily long,
