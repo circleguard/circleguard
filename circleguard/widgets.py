@@ -870,13 +870,8 @@ class LoadableCreation(QFrame):
         # loadable widget - we need to remove it from the list widget entirely.
         # In typical qt fashion, the only way to do so is with an index into the
         # list widget.
-        # I would love to be able to use ``self.list_widget.takeItem(index)``
-        # here, but it literally segfaults when I do that, despite the index
-        # being valid. I'm doing something wrong but don't know what (TODO fix
-        # this properly?), so instead we just hide the widget. Dirty?
-        # Absolutely.
         index = self.loadables.index(loadable)
-        self.list_widget.item(index).setHidden(True)
+        self.list_widget.takeItem(index)
         if loadable == self.most_recent_loadable:
             self.most_recent_loadable = self.loadables[-1]
 
