@@ -871,29 +871,17 @@ class LoadableCreation(QFrame):
         # In typical qt fashion, the only way to do so is with an index into the
         # list widget.
         index = self.loadables.index(loadable)
+        self.loadables.remove(loadable)
         self.list_widget.takeItem(index)
         if loadable == self.most_recent_loadable:
             self.most_recent_loadable = self.loadables[-1]
-
-    def visible_loadables(self):
-        """
-        All loadables which have not been hidden. We hide loadables to delete
-        them, but keep them in our loadables list to not mess with indices when
-        we do so, but often we want only those non-deleted loadables.
-        """
-        loadables = []
-        for loadable in self.loadables:
-            if loadable.isHidden():
-                continue
-            loadables.append(loadable)
-        return loadables
 
     def cg_loadables(self):
         """
         Returns the loadables in this widget as unloaded circleguard loadables.
         """
         loadables = []
-        for loadable in self.visible_loadables():
+        for loadable in self.loadables:
             cg_loadable = loadable.cg_loadable()
             # can't do ``not cg_loadable`` because for ReplayContainers they
             # may not be loaded yet and so have length 0 and are thus falsey,
@@ -905,14 +893,14 @@ class LoadableCreation(QFrame):
 
     def check_and_mark_required_fields(self):
         all_valid = True
-        for loadable in self.visible_loadables():
+        for loadable in self.loadables:
             if not loadable.check_and_mark_required_fields():
                 all_valid = False
         return all_valid
 
     def similarity_cb_state_changed(self, state):
         self.previous_combobox_state = state
-        for loadable in self.visible_loadables():
+        for loadable in self.loadables:
             if state == Qt.Unchecked:
                 loadable.hide_sim_combobox()
             else:
