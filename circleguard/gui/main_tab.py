@@ -505,6 +505,11 @@ class MainTab(SingleLinkableSetting, QFrame):
 
         self.update_label_signal.emit("Idle")
         self.update_run_status_signal.emit(run.run_id, "Finished")
+        import gc
+        print("\n\n\n\n\n\na\n\n")
+        print(gc.get_referrers(run.loadables))
+        run.loadables = None
+
 
     def print_results(self):
         try:

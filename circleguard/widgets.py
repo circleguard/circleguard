@@ -439,7 +439,7 @@ class UnselectedLoadable(LoadableBase):
     def check_and_mark_required_fields(self):
         return True
 
-    def cg_loadable(self):
+    def cg_loadable(self, previous):
         return None
 
     def hide_sim_combobox(self):
@@ -468,24 +468,25 @@ class ReplayMapLoadable(LoadableBase):
         layout.addWidget(self.mods_input, 3, 0, 1, 8)
         self.setLayout(layout)
 
-    def cg_loadable(self):
+    def cg_loadable(self, previous):
         from circleguard import ReplayMap, Mod
 
-        if not self._cg_loadable:
+        if not previous:
             mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
-            self._cg_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+            previous = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
 
         mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
         new_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
 
-        if (new_loadable.map_id != self._cg_loadable.map_id or \
-            new_loadable.user_id != self._cg_loadable.user_id or \
+        ret = previous
+        if (new_loadable.map_id != previous.map_id or \
+            new_loadable.user_id != previous.user_id or \
             self.mods_input.value() != self.previous_mods):
-            self._cg_loadable = new_loadable
+            ret = new_loadable
 
         self.previous_mods = self.mods_input.value()
-        self._cg_loadable.sim_group = self.sim_group
-        return self._cg_loadable
+        ret.sim_group = self.sim_group
+        return ret
 
 
 class ReplayPathLoadable(LoadableBase):
@@ -502,17 +503,28 @@ class ReplayPathLoadable(LoadableBase):
         layout.addWidget(self.path_input, 1, 0, 1, 8)
         self.setLayout(layout)
 
-    def cg_loadable(self):
+    def cg_loadable(self, previous):
         from circleguard import ReplayPath, ReplayDir
 
-        if not self._cg_loadable:
+        path = self.path_input.path
+        if not previous:
             if self.path_input.path.is_dir():
-                self._cg_loadable = ReplayDir(self.path_input.path)
+                previous = ReplayDir(path)
             else:
-                self._cg_loadable = ReplayPath(self.path_input.path)
+                previous = ReplayPath(path)
 
-        self._cg_loadable.sim_group = self.sim_group
-        return self._cg_loadable
+        if self.path_input.path.is_dir():
+            new_loadable = ReplayDir(path)
+        else:
+            new_loadable = ReplayPath(path)
+
+        previous_path = previous.dir_path if isinstance(previous, ReplayDir) else previous.path
+        ret = previous
+        if previous_path != path:
+            ret = new_loadable
+
+        ret.sim_group = self.sim_group
+        return ret
 
     def check_and_mark_required_fields(self):
         all_filled = True
@@ -543,7 +555,7 @@ class MapLoadable(LoadableBase):
         layout.addWidget(self.mods_input, 3, 0, 1, 8)
         self.setLayout(layout)
 
-    def cg_loadable(self):
+    def cg_loadable(self, previous):
         from circleguard import Map, Mod, Loader
 
         # use placeholder text (eg 1-50) if the user inputted span is empty
@@ -551,21 +563,21 @@ class MapLoadable(LoadableBase):
         if span == "all":
             span = Loader.MAX_MAP_SPAN
 
-
-        if not self._cg_loadable:
+        if not previous:
             mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
-            self._cg_loadable = Map(int(self.map_id_input.value()), span, mods=mods)
+            previous = Map(int(self.map_id_input.value()), span, mods=mods)
 
         mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
         new_loadable = Map(int(self.map_id_input.value()), span, mods=mods)
 
-        if (new_loadable.map_id != self._cg_loadable.map_id or \
-            new_loadable.span != self._cg_loadable.span or \
-            new_loadable.mods != self._cg_loadable.mods):
-            self._cg_loadable = new_loadable
+        ret = previous
+        if (new_loadable.map_id != previous.map_id or \
+            new_loadable.span != previous.span or \
+            new_loadable.mods != previous.mods):
+            ret = new_loadable
 
-        self._cg_loadable.sim_group = self.sim_group
-        return self._cg_loadable
+        ret.sim_group = self.sim_group
+        return ret
 
 
 class UserLoadable(LoadableBase):
@@ -587,7 +599,7 @@ class UserLoadable(LoadableBase):
         layout.addWidget(self.mods_input, 3, 0, 1, 8)
         self.setLayout(layout)
 
-    def cg_loadable(self):
+    def cg_loadable(self, previous):
         from circleguard import User, Mod, Loader
 
         # use placeholder text (eg 1-50) if the user inputted span is empty
@@ -595,20 +607,21 @@ class UserLoadable(LoadableBase):
         if span == "all":
             span = Loader.MAX_USER_SPAN
 
-        if not self._cg_loadable:
+        if not previous:
             mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
-            self._cg_loadable = User(int(self.user_id_input.value()), span, mods=mods)
+            previous = User(int(self.user_id_input.value()), span, mods=mods)
 
         mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
         new_loadable = User(int(self.user_id_input.value()), span, mods=mods)
 
-        if (new_loadable.user_id != self._cg_loadable.user_id or \
-            new_loadable.span != self._cg_loadable.span or \
-            new_loadable.mods != self._cg_loadable.mods):
-            self._cg_loadable = new_loadable
+        ret = previous
+        if (new_loadable.user_id != previous.user_id or \
+            new_loadable.span != previous.span or \
+            new_loadable.mods != previous.mods):
+            ret = new_loadable
 
-        self._cg_loadable.sim_group = self.sim_group
-        return self._cg_loadable
+        ret.sim_group = self.sim_group
+        return ret
 
 
 class MapUserLoadable(LoadableBase):
@@ -630,7 +643,7 @@ class MapUserLoadable(LoadableBase):
         layout.addWidget(self.span_input, 3, 0, 1, 8)
         self.setLayout(layout)
 
-    def cg_loadable(self):
+    def cg_loadable(self, previous):
         from circleguard import MapUser, Mod, Loader
 
         # use placeholder text (eg 1-50) if the user inputted span is empty
@@ -638,18 +651,19 @@ class MapUserLoadable(LoadableBase):
         if span == "all":
             span = "1-100"
 
-        if not self._cg_loadable:
-            self._cg_loadable = MapUser(int(self.map_id_input.value()), int(self.user_id_input.value()), span)
+        if not previous:
+            previous = MapUser(int(self.map_id_input.value()), int(self.user_id_input.value()), span)
 
         new_loadable = MapUser(int(self.map_id_input.value()), int(self.user_id_input.value()), span)
 
-        if (new_loadable.map_id != self._cg_loadable.map_id or \
-            new_loadable.user_id != self._cg_loadable.user_id or \
-            new_loadable.span != self._cg_loadable.span):
-            self._cg_loadable = new_loadable
+        ret = previous
+        if (new_loadable.map_id != previous.map_id or \
+            new_loadable.user_id != previous.user_id or \
+            new_loadable.span != previous.span):
+            ret = new_loadable
 
-        self._cg_loadable.sim_group = self.sim_group
-        return self._cg_loadable
+        ret.sim_group = self.sim_group
+        return ret
 
 
 class SelectableLoadable(QFrame):
@@ -735,8 +749,8 @@ class SelectableLoadable(QFrame):
     def hide_delete(self):
         self.stacked_layout.currentWidget().delete_button.hide()
 
-    def cg_loadable(self):
-        return self.stacked_layout.currentWidget().cg_loadable()
+    def cg_loadable(self, previous):
+        return self.stacked_layout.currentWidget().cg_loadable(previous)
 
     def check_and_mark_required_fields(self):
         return self.stacked_layout.currentWidget().check_and_mark_required_fields()
@@ -770,6 +784,7 @@ class LoadableCreation(QFrame):
         QShortcut(QKeySequence(Qt.Key_U), self, lambda: self.select_loadable("User"))
         QShortcut(QKeySequence(Qt.Key_A), self, lambda: self.select_loadable("All User Replays on Map"))
 
+        self.cg_loadables_to_selectable_loadables = {}
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -808,6 +823,7 @@ class LoadableCreation(QFrame):
 
     def new_loadable(self, type_=None):
         loadable = SelectableLoadable()
+        self.cg_loadables_to_selectable_loadables[loadable] = None
         loadable.should_show_sim_combobox = self.previous_combobox_state == Qt.Checked
         # some loadables have input widgets which can become arbitrarily long,
         # for instance ReplayPathLoadable's ReplayChooser which displays the
@@ -876,13 +892,22 @@ class LoadableCreation(QFrame):
         if loadable == self.most_recent_loadable:
             self.most_recent_loadable = self.loadables[-1]
 
+        import gc
+        print(gc.get_referrers(self.cg_loadables_to_selectable_loadables[loadable]))
+
+        del self.cg_loadables_to_selectable_loadables[loadable]
+        import sys
+
     def cg_loadables(self):
         """
-        Returns the loadables in this widget as unloaded circleguard loadables.
+        Returns the loadables in this widget as (potentially) unloaded
+        circleguard loadables.
         """
         loadables = []
         for loadable in self.loadables:
-            cg_loadable = loadable.cg_loadable()
+            previous = self.cg_loadables_to_selectable_loadables[loadable]
+            cg_loadable = loadable.cg_loadable(previous)
+            self.cg_loadables_to_selectable_loadables[loadable] = cg_loadable
             # can't do ``not cg_loadable`` because for ReplayContainers they
             # may not be loaded yet and so have length 0 and are thus falsey,
             # but we still want to return them
