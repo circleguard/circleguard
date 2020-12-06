@@ -1,7 +1,7 @@
 from pathlib import Path
 import sys
 
-from PyQt5.QtWidgets import QLayout, QFrame
+from PyQt5.QtWidgets import QLayout, QFrame, QSpacerItem, QSizePolicy
 from PyQt5.QtGui import QPainter, QColor
 
 # the blue accent color used throughout the application
@@ -100,3 +100,10 @@ class URLAnalysisResult():
     def __init__(self, replays, timestamp):
         self.replays = replays
         self.timestamp = timestamp
+
+# reusing qt widgets is a BIG mistake (leads to, for example, segfaults when
+# deleting an item because it's trying to remove something that's being used
+# elsewhere). We use identical spacer items across the gui but don't want to
+# reuse the actual object, so this generates a new one for us.
+def spacer():
+    return QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)

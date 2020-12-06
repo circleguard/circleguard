@@ -21,9 +21,7 @@ from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
 from settings import (get_setting, reset_defaults, LinkableSetting,
     SingleLinkableSetting, set_setting)
 from utils import (resource_path, delete_widget, AnalysisResult, ACCENT_COLOR,
-    TimewarpResult)
-
-SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
+    TimewarpResult, spacer)
 
 
 # we want most of our clickable widgets to have a pointing hand cursor on hover
@@ -178,7 +176,7 @@ class InputWidget(QFrame):
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(label, 0, 0, 1, 1)
-        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addItem(spacer(), 0, 1, 1, 1)
         self.layout.addWidget(self.field, 0, 2, 1, 3)
         self.setLayout(self.layout)
 
@@ -260,7 +258,7 @@ class ButtonWidget(QFrame):
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(label, 0, 0, 1, 1)
-        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addItem(spacer(), 0, 1, 1, 1)
         self.layout.addWidget(self.button, 0, 2, 1, 1)
         self.setLayout(self.layout)
 
@@ -295,7 +293,7 @@ class ComboboxSetting(LinkableSetting, QFrame):
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addItem(spacer(), 0, 1, 1, 1)
         layout.addWidget(combobox, 0, 2, 1, 3, Qt.AlignRight)
         self.setLayout(layout)
 
@@ -1249,7 +1247,7 @@ class ResultW(QFrame):
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.label, 0, 0, 1, 4)
-        layout.addItem(SPACER, 0, 4, 1, 1)
+        layout.addItem(spacer(), 0, 4, 1, 1)
         if isinstance(self.result, AnalysisResult):
             layout.addWidget(self.visualize_button, 0, 5, 1, 3)
             layout.addWidget(self.actions_combobox, 0, 8, 1, 1)
@@ -1266,7 +1264,7 @@ class ResultW(QFrame):
         layout = QGridLayout()
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.label, 0, 0, 1, 1)
-        layout.addItem(SPACER, 0, 1, 1, 1)
+        layout.addItem(spacer(), 0, 1, 1, 1)
         if isinstance(self.result, AnalysisResult):
             layout.addWidget(self.visualize_button, 0, 2, 1, 2)
         else:
@@ -1479,7 +1477,7 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(label, 0, 0, 1, 1)
-        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addItem(spacer(), 0, 1, 1, 1)
         self.layout.addWidget(self.combined, 0, 2, 1, 3)
 
         self.setLayout(self.layout)
@@ -1685,7 +1683,7 @@ class ResetSettings(QFrame):
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(self.label, 0, 0, 1, 1)
-        self.layout.addItem(SPACER, 0, 1, 1, 1)
+        self.layout.addItem(spacer(), 0, 1, 1, 1)
         self.layout.addWidget(self.button, 0, 2, 1, 1)
         self.setLayout(self.layout)
 
