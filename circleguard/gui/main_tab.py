@@ -269,6 +269,13 @@ class MainTab(SingleLinkableSetting, QFrame):
                 if event.wait(0):
                     self.update_label_signal.emit("Canceled")
                     self.set_progressbar_signal.emit(-1)
+
+                    # the loadables of a run may be extremely large. We keep
+                    # this run object around in a list so people can cancel it;
+                    # if we want to prevent a memory leak we need to remove a
+                    # run's loadables (we don't need it anymore after this run
+                    # finishes).
+                    run.loadables = None
                     # may seem dirty, but actually relatively clean since it only affects this thread.
                     # Any cleanup we may want to do later can occur here as well
                     sys.exit(0)
@@ -382,16 +389,14 @@ class MainTab(SingleLinkableSetting, QFrame):
                 if investigation == "Manual Analysis":
                     map_ids = [r.map_id for r in all_replays]
                     if len(set(map_ids)) > 1:
-                        import gc
-                        print("\n\nb\n")
-                        print(gc.get_referrers(run.loadables))
-                        run.loadables = None
                         self.write_to_terminal_signal.emit("Manual analysis expected replays from a single map, "
                             f"but got replays from maps {set(map_ids)}. Please use a different Manual Analysis "
                             "Check for each map.")
                         self.update_label_signal.emit("Analysis Error (Multiple maps)")
                         self.update_run_status_signal.emit(run.run_id, "Analysis Error (Multiple maps)")
                         self.set_progressbar_signal.emit(-1)
+
+                        run.loadables = None
                         sys.exit(0)
                     # if a replay was removed from all_replays (eg if that replay was not available for download),
                     # and that leaves all_replays with no replays, we don't want to add a result because
@@ -509,12 +514,9 @@ class MainTab(SingleLinkableSetting, QFrame):
 
         self.update_label_signal.emit("Idle")
         self.update_run_status_signal.emit(run.run_id, "Finished")
-        import gc
-        print("\n\na\n")
-        print(gc.get_referrers(run.loadables))
-        print()
-        lc.loadables = None
-        print(gc.get_referrers(run.loadables))
+
+        # necessary to prevent memory leaks, as we keep the run object around
+        # after the run finishes, but don't need its loadables anymore.
         run.loadables = None
 
 
