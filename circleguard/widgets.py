@@ -761,12 +761,6 @@ class SelectableLoadable(QFrame):
     def show_sim_combobox(self):
         self.stacked_layout.currentWidget().show_sim_combobox()
 
-class DataHolder():
-    def __init__(self):
-        self.cg_loadables_to_selectable_loadables = {}
-
-data_holder = DataHolder()
-
 class LoadableCreation(QFrame):
     LOADABLE_SIZE = QSize(450, 150)
 
@@ -782,6 +776,8 @@ class LoadableCreation(QFrame):
         # apparently list widgets allow you to move widgets around? We don't
         # want to allow that though.
         self.list_widget.setMovement(QListWidget.Static)
+
+        self.cg_loadables_to_selectable_loadables = {}
 
         QShortcut(QKeySequence(Qt.Key_R), self, lambda: self.select_loadable("Map Replay"))
         QShortcut(QKeySequence(Qt.Key_L), self, lambda: self.select_loadable("Local Replay"))
@@ -826,7 +822,7 @@ class LoadableCreation(QFrame):
 
     def new_loadable(self, type_=None):
         loadable = SelectableLoadable()
-        data_holder.cg_loadables_to_selectable_loadables[loadable] = None
+        self.cg_loadables_to_selectable_loadables[loadable] = None
         loadable.should_show_sim_combobox = self.previous_combobox_state == Qt.Checked
         # some loadables have input widgets which can become arbitrarily long,
         # for instance ReplayPathLoadable's ReplayChooser which displays the
@@ -895,10 +891,7 @@ class LoadableCreation(QFrame):
         if loadable == self.most_recent_loadable:
             self.most_recent_loadable = self.loadables[-1]
 
-        import gc
-        print(gc.get_referrers(data_holder.cg_loadables_to_selectable_loadables[loadable]))
-
-        data_holder.cg_loadables_to_selectable_loadables[loadable] = None
+        self.cg_loadables_to_selectable_loadables[loadable] = None
 
     def cg_loadables(self):
         """
@@ -907,9 +900,9 @@ class LoadableCreation(QFrame):
         """
         loadables = []
         for loadable in self.loadables:
-            previous = data_holder.cg_loadables_to_selectable_loadables[loadable]
+            previous = self.cg_loadables_to_selectable_loadables[loadable]
             cg_loadable = loadable.cg_loadable(previous)
-            data_holder.cg_loadables_to_selectable_loadables[loadable] = cg_loadable
+            self.cg_loadables_to_selectable_loadables[loadable] = cg_loadable
             # can't do ``not cg_loadable`` because for ReplayContainers they
             # may not be loaded yet and so have length 0 and are thus falsey,
             # but we still want to return them
