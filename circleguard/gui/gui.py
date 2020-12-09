@@ -429,7 +429,8 @@ class QueueTab(QFrame):
         run_w = RunWidget(run)
         run_w.button.clicked.connect(partial(self.cancel_run, run.run_id))
         self.run_widgets.append(run_w)
-        self.queue.layout.addWidget(run_w)
+        # most recent at the top
+        self.queue.layout.insertWidget(0, run_w)
 
     def update_status(self, run_id, status):
         self.run_widgets[run_id].update_status(status)
