@@ -382,6 +382,10 @@ class MainTab(SingleLinkableSetting, QFrame):
                 if investigation == "Manual Analysis":
                     map_ids = [r.map_id for r in all_replays]
                     if len(set(map_ids)) > 1:
+                        import gc
+                        print("\n\nb\n")
+                        print(gc.get_referrers(run.loadables))
+                        run.loadables = None
                         self.write_to_terminal_signal.emit("Manual analysis expected replays from a single map, "
                             f"but got replays from maps {set(map_ids)}. Please use a different Manual Analysis "
                             "Check for each map.")
@@ -506,7 +510,10 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.update_label_signal.emit("Idle")
         self.update_run_status_signal.emit(run.run_id, "Finished")
         import gc
-        print("\n\n\n\n\n\na\n\n")
+        print("\n\na\n")
+        print(gc.get_referrers(run.loadables))
+        print()
+        lc.loadables = None
         print(gc.get_referrers(run.loadables))
         run.loadables = None
 
