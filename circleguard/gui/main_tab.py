@@ -337,7 +337,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                     cg.load(replay)
                     if not replay.has_data():
                         _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " is " +
-                            "not available for download.</div>This is likely because it is not in the top 1k scores of "
+                            "not available for download.</div> This is likely because it is not in the top 1k scores of "
                             "the beatmap. This replay has been skipped because of this.")
                 except NoInfoAvailableException as e:
                     _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " does "
