@@ -891,6 +891,8 @@ class LoadableCreation(QFrame):
         if loadable == self.most_recent_loadable:
             self.most_recent_loadable = self.loadables[-1]
 
+        # necessary to reclaim this memory when we delete the associated
+        # loadable
         self.cg_loadables_to_selectable_loadables[loadable] = None
 
     def cg_loadables(self):
