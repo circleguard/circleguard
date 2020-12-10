@@ -305,7 +305,8 @@ class SettingsTab(QFrame):
         # multiple spaces get shrinked to one space in rich text mode
         # https://groups.google.com/forum/#!topic/qtcontribs/VDOQFUj-eIA
         self.info.setText(f"circleguard v{__version__}&nbsp;&nbsp;|&nbsp;&nbsp;"
-                          f"<a href=\"https://discord.gg/wj35ehD\">Discord</a>")
+                          "<a href=\"https://discord.gg/wj35ehD\">Discord</a>"
+                          "&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"https://github.com/circleguard/circleguard/\">Github</a>")
         self.info.setTextFormat(Qt.RichText)
         self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
