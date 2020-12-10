@@ -28,15 +28,15 @@ class CircleguardWizard(QWizard):
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
         self.addPage(IntroPage())
         self.addPage(ApiKeyPage())
-        self.addPage(SettingsSetupPage())
-        self.addPage(TutorialPageId())
+        self.addPage(TutorialPageIds())
+        self.addPage(TutorialPageScreens())
         self.addPage(TutorialPageLoadables())
         self.addPage(TutorialPageLoadableLocal())
         self.addPage(TutorialPageLoadableMap())
         self.addPage(TutorialPageLoadableUser())
         self.addPage(TutorialPageLoadableUsersAll())
         self.addPage(TutorialPageChecks())
-        self.addPage(SettingsPage())
+        self.addPage(TipsPage())
         self.addPage(ConclusionPage())
 
         # disable help button
@@ -58,14 +58,15 @@ class TutorialWizard(QWizard):
         super().__init__()
         self.setWindowTitle("Tutorial")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
-        self.addPage(TutorialPageId())
+        self.addPage(TutorialPageIds())
+        self.addPage(TutorialPageScreens())
         self.addPage(TutorialPageLoadables())
         self.addPage(TutorialPageLoadableLocal())
         self.addPage(TutorialPageLoadableMap())
         self.addPage(TutorialPageLoadableUser())
         self.addPage(TutorialPageLoadableUsersAll())
         self.addPage(TutorialPageChecks())
-        self.addPage(SettingsPage())
+        self.addPage(TipsPage())
         self.addPage(ConclusionPage())
 
         # disable help button
@@ -86,17 +87,19 @@ class IntroPage(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("Introduction")
-        label = WizardLabel("<p>Circleguard is an all-in-one tool for catching cheaters. It is actively maintained at "
-                "<a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a>.</p>"
-                "<p>We support detecting Replay Stealing, Relax, and Aim Correction.</p>"
+        label = WizardLabel("<p>Circleguard is an open-source tool to help you catch cheaters.</p>"
                 "<p>Circleguard is developed by:"
                 "<ul>"
-                "<li>tybug </li>"
-                "<li>InvisibleSymbol </li>"
-                "<li>samuelhklumpers </li>"
+                "<li><a href=\"https://github.com/tybug\">tybug</a></li>"
                 "</ul></p>"
-                "<p>Thanks to <a href=\"https://accalix.art\">Accalix</a> for creating our logo.<p>"
-                "<p>If at any point you want to replay this tutorial, go to the settings tab and click \"Read Tutorial\" "
+                "<p>With contributions from:"
+                "<ul>"
+                "<li>samuelhklumpers </li>"
+                "<li>InvisibleSymbol </li>"
+                "<li>sometimes</li>"
+                "</ul></p>"
+                "<p><b>In the next few pages you will set up circleguard and learn how to use it. Skip at your own risk!</b></p>"
+                "<p>If at any point you want to replay this introduction, go to the settings tab and click \"Read Tutorial\" "
                 "under the Dev section.")
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -108,7 +111,7 @@ class ApiKeyPage(WizardPage):
         super().__init__()
         self.setTitle("API Key")
         label = WizardLabel("<p>Circleguard needs your api key to make requests and download replays. "
-                "<p>If you already have your api key, paste it in the box below. If you don't, go to "
+                "<p>If you already have your api key, paste it into the box below. If you don't, go to "
                 "<a href=\"https://old.ppy.sh/p/api\">https://old.ppy.sh/p/api</a>, enter <b>Circleguard</b> "
                 "as your application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
                 "as your application url. Paste the api key you receive into the box below.</p>"
@@ -122,35 +125,28 @@ class ApiKeyPage(WizardPage):
         layout.addWidget(apikey_widget, 1, 0, 1, 1)
         self.setLayout(layout)
 
-class SettingsSetupPage(WizardPage):
+
+class TutorialPageScreens(WizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Settings")
-        dark_label = WizardLabel("The theme of Circleguard.")
-        self.theme = ComboboxSetting("Theme", "", "theme")
-
-        cache_label = WizardLabel("<br><br>Caching reduces downloading time by storing replays when they are first downloaded. "
-                "We recommend you leave this enabled — replays take up little space. The osu! api ratelimit "
-                "is also quite strict, only allowing 10 downloads per minute. This means that to download the top 100 replays "
-                "of a map, you would have to wait 10 minutes. Caching won't reduce this initial download time, but will prevent "
-                "you from ever having to download it again in the future.")
-        self.caching = OptionWidget("Caching", "", "caching")
+        self.setTitle("Screens")
+        label = WizardLabel("<p>When you launch Circleguard, you will have the option to choose from the "
+                "\"Visualization\" screen, and the \"Investigation\" screen.</p>"
+                "<p>If you only want to visualize a few replays, you should choose the former screen. If you want to "
+                "do a borader and more thorough investigation of a particular map, user, or set of replays, you should "
+                "choose the latter screen.</p>"
+                "<p>The next pages will cover how to use the \"Investigation\" screen.</p>")
 
         layout = QVBoxLayout()
-        layout.addWidget(dark_label)
-        layout.addWidget(self.theme)
-        layout.addWidget(cache_label)
-        layout.addWidget(self.caching)
+        layout.addWidget(label)
         self.setLayout(layout)
 
 
-class TutorialPageId(WizardPage):
+class TutorialPageIds(WizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Tutorial (ids)")
-        label = WizardLabel("<p>What follows is a short tutorial in using Circleguard. Feel free to try out the examples "
-                "yourself in the gui as you work your way through the tutorial. Skip at your own risk!</p>"
-                "<p>When using Circleguard, you will be asked to enter Beatmap ids and User ids. "
+        self.setTitle("Ids")
+        label = WizardLabel("<p>When using Circleguard, you will often need to enter Beatmap ids and User ids. "
                 "To find a User id, go to their profile page and copy the numbers that appear in the url. "
                 "For instance, cookiezi (<a href=\"https://osu.ppy.sh/users/124493\">https://osu.ppy.sh/users/124493</a>) "
                 "has a User id of 124493.</p>"
@@ -168,10 +164,9 @@ class TutorialPageId(WizardPage):
 class TutorialPageLoadables(WizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Tutorial (Loadables)")
+        self.setTitle("Loadables")
         label = WizardLabel("<p>Circleguard uses five different objects (called Loadables) to represent replays. "
-                "They can be created on the left half of the Main tab. "
-                "They are Map Replay, Local Replay, Map, User, and All Map Replays by User.</p>"
+                "They are Map Replay, Local Replay, Map, User, and All User Replays on Map.</p>"
                 "<p>A Map Replay represents a replay by a single User on a Map.</p>")
         image = QLabel()
         # SmoothTransformation necessary for half decent image quality
@@ -193,11 +188,11 @@ class TutorialPageLoadables(WizardPage):
 class TutorialPageLoadableLocal(WizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Tutorial (Loadables - Local Replay)")
+        self.setTitle("Local Replay")
         label = WizardLabel("<p>A Local Replay represents a replay stored in a .osr file on your computer.</p>")
         image = QLabel()
         image.setPixmap(QPixmap(resource_path("wizard/local_replay_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
-        label2 = WizardLabel("<p>Not much more to say here, just select the location of the .osr file you want to represent.</p>")
+        label2 = WizardLabel("<p>You can either select a single .osr, or a directory of .osr files.</p>")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -216,15 +211,15 @@ class TutorialPageLoadableMap(WizardPage):
         label2 = WizardLabel("<p>If you wanted the top 50 replays on <a href=\"https://osu.ppy.sh/beatmapsets/79498#osu/221777\">"
                 "https://osu.ppy.sh/beatmapsets/79498#osu/221777</a>, you would enter 221777 as the Map id and 1-50 "
                 "as the Span (which happens to be the default).</p>"
-                "<p>The 'Span' argument lets you specify what replays of the map's leaderboard to represent. For instance, if "
+                "<p>The \"Span\" field lets you specify which replays on the map's leaderboard to represent. For instance, if "
                 "you wanted the first, tenth, 12th, and 14th through 20th replays on the leaderboard (for whatever reason), your span would "
-                "be 1,10,12,14-20.</p>"
-                "<p>Another example — if you've already checked 25 replays of a map for cheating, you may only want to represent the "
-                "latter half to avoid loading the first 25 replays again. In this case, your span would be 25-50.</p>"
+                "be \"1,10,12,14-20\".</p>"
+                "<p>As another example, if you've already checked 25 replays of a map, you may only want to represent the "
+                "26-50th replays to avoid loading the first 25 replays again. In this case, your span would be 26-50.</p>"
                 "<p>Note that although the default span for a Map is 1-50, the osu! api supports loading the top 100 replays of "
                 "any map, so you can input a span of 1-100 if you want to check the top 100 replays of a map.</p>"
-                "Mods work similarly to a Map Replay — by default (if left empty), a Map will represent the top replays based on score. "
-                "If passed, a Map will represent the top replays of the mod — a Span of 1-25 and a Mods of HDDT represents the top 25 "
+                "Mods work similarly to a Map Replay. By default (if left empty), a Map will represent the top replays based on score. "
+                "If passed, the Map will represent the top replays of the mod. A Span of 1-25 and a Mods of HDDT represents the top 25 "
                 "HDDT scores on the map.")
 
         layout = QVBoxLayout()
@@ -237,16 +232,13 @@ class TutorialPageLoadableMap(WizardPage):
 class TutorialPageLoadableUser(WizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Tutorial (Loadables - User)")
+        self.setTitle("User")
         label = WizardLabel("<p>A User represents one or more of a User's top plays.</p>")
         image = QLabel()
         image.setPixmap(QPixmap(resource_path("wizard/user_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
-        label2 = WizardLabel("<p>All fields work similarly to the other Loadables we've explained. "
+        label2 = WizardLabel("<p>All fields work the same as the previous Loadables. "
                 "If you wanted Cookiezi's top 50 replays, you would enter 124493 as the User id and 1-50 as the Span. "
-                "If you wanted his top 20 DT replays, you would enter DT in Mods and 1-20 in Span.</p>"
-                "<p>Note that if a User has fewer replays available for download than you specify in Span, Circleguard "
-                "will supply as many replays as possible, but you may see a number of replays which is lower than you expect. "
-                "You haven't done anything wrong if you experience this; just be aware of why it occurs.</p>")
+                "If you wanted his top 20 DT replays, you would enter DT in Mods and 1-20 in Span.</p>")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -258,16 +250,17 @@ class TutorialPageLoadableUser(WizardPage):
 class TutorialPageLoadableUsersAll(WizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Tutorial (Loadables - All Map Replays by User)")
-        label = WizardLabel("<p>This Loadable represents all the replays by a User on a Map, not just their top score.</p>")
+        self.setTitle("All Map Replays by User")
+        label = WizardLabel("<p>This Loadable represents all the replays by a User on a Map, not just their top score on the map.</p>")
         image = QLabel()
         image.setPixmap(QPixmap(resource_path("wizard/mapuser_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
-        label2 = WizardLabel("<p>Again, all fields work similarly to other Loadables. \"all\" in Span is a shorthand way to say you want "
+        label2 = WizardLabel("<p>All fields work the same as the previous loadables. \"all\" in Span is a shorthand way to say you want "
                 "all possible replays available from the api by this user on this map. It can also be used in the Span of a Map and User, "
                 "and is equivalent to a span of 1-100 in both of those Loadables.</p>"
-                "<p>What is this Loadable good for? Mostly remodding checks. If you want to check if someone's remodding their replays, "
-                "you can create this Loadable, add their User id and the Map id you suspect them of remodding on, and check it for Replay Stealing. "
-                "You might also want to check multiple of a User's replays, not just his top one, on a Map for Relax or Aim Correction.</p>")
+                "<p>This loadable is useful for checking if someone is remodding their replays. To check for remodding, create this Loadable "
+                "with the user and map you suspect them of remodding on, and investigate for Similarity.</p>"
+                "<p>It is also useful for checking multiple of a user's replays, not just their top one, on a map (if more than one is "
+                "available).</p>")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -279,21 +272,14 @@ class TutorialPageLoadableUsersAll(WizardPage):
 class TutorialPageChecks(WizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Tutorial (Investigations)")
-        label = WizardLabel("<p>Now that you can represent Replays with Loadables, you can start investigating them for cheats. Circleguard "
-                            "supports multiple kinds of investigations.</p>")
+        self.setTitle("Investigation")
+        label = WizardLabel("<p>Now that you can represent Replays with Loadables, you can start investigating them. "
+            "Once you have added the Loadables you want to investigate, check the checkboxes at the top that "
+            "you want to investigate them for.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(resource_path("wizard/checks_dropdown.png")).scaledToWidth(500, Qt.SmoothTransformation))
-        label2 = WizardLabel("<p>If you want to check a Loadable for a certain cheat, just drag and "
-                "drop it onto the appropriate Investigation, then hit run.</p>"
-                "<p>Similarity is slightly different from the others. This investigation has two areas for you to drag Loadables "
-                "onto - if only one of them has any Loadables, each replay will be compared against each other replay. eg, if you "
-                "give a Map with span=\"1-50\" to one area of a Similarity Check, and nothing to the other area, it will compare "
-                "each replay in the top 50 of that map against each other replay in the top 50.</p>"
-                "<p>However, if you drag a Map Replay to "
-                "the other area of the Check, it will compare just the Replay Map against each of the replays in the top 50. This "
-                "can be useful if you want to check if a specific user stole from a map, without comparing replays that don't involve "
-                "the player you suspect.</p>")
+        image.setPixmap(QPixmap(resource_path("wizard/investigation_checkboxes.png")).scaledToWidth(650, Qt.SmoothTransformation))
+        label2 = WizardLabel("<p>For instance, if you think someone is timewarping, you might add a User loadable for them and "
+                "check the Frametime checkbox (as seen above), and then hit Run.</p>")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -302,15 +288,24 @@ class TutorialPageChecks(WizardPage):
         self.setLayout(layout)
 
 
-class SettingsPage(WizardPage):
+class TipsPage(WizardPage):
     def __init__(self):
         super().__init__()
-        self.setTitle("Configuring Settings")
-        label = WizardLabel("<p>Thresholds for the different Checks can be changed in the Thresholds tab, and other common settings in "
-                "the Settings tab.</p>"
-                "<p>The full range of settings (of which there are quite a few — you can customize Circleguard heavily!) "
-                "can be accessed by pressing \"Open Settings\" at the top of the Settings tab. Be sure to read the comments in that file "
-                "for instructions on editing the settings.</p>")
+        self.setTitle("Misc. Tips")
+        label = WizardLabel("<p>You can selectively disable certain loadables to exclude them "
+            "from the current run but still keep them around for later. This can be done by clicking "
+            "the blue check to disable a loadable, and the red X to re-enable it.</p>"
+            "<p>You can shift+click the blue check to disable all <em>other</em> loadables, but not the one you clicked. "
+            "You can shift+click the red X of any disabled loadable to re-enable <em>all</em> loadables, including the one you clicked.</p>"
+            "<p>Each loadable has a shortcut associated with it that will create a new loadable of that type when pressed.</p>"
+            "<ul>"
+            "<li>Map Replay: <b>R</b></li>"
+            "<li>Local Replay: <b>L</b></li>"
+            "<li>Map: <b>M</b></li>"
+            "<li>User: <b>U</b></li>"
+            "<li>All User Replays on Map: <b>A</b></li>"
+            "</ul>"
+            "<p>You can press Ctrl+left or Ctrl+right to navigate to adjacent tabs.</p>")
 
         layout = QVBoxLayout()
         layout.addWidget(label)
@@ -321,11 +316,11 @@ class ConclusionPage(WizardPage):
     def __init__(self):
         super().__init__()
         self.setTitle("<3")
-        label = WizardLabel("<p>If you run into any problems with the gui, have suggestions, or want to contribute, join "
-                " our discord or file an issue on the GitHub! We don't bite, we promise :)</p>"
+        label = WizardLabel("<p>If you run into any problems with circleguard, have suggestions, or want to contribute, join "
+                " our discord or file an issue on our github repo! We don't bite, we promise :)</p>"
                 "<ul>"
                 "<li><a href=\"https://discord.gg/e84qxkQ\">Discord</a></li>"
-                "<li><a href=\"https://github.com/circleguard/circleguard\">GitHub</a></li>"
+                "<li><a href=\"https://github.com/circleguard/circleguard\">circleguard repo</a></li>"
                 "<li><a href=\"http://reddit.com/r/osureport\">report cheaters at r/osureport</a></li>"
                 "</ul>"
                 "<p>Thanks for helping to clean up osu!</p>")
