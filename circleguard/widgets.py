@@ -1696,16 +1696,12 @@ class FileChooserButton(PushButton):
         process whatever the user has chosen (either a folder, file, or
         multiple files).
         """
-        files = self.dialog.selectedFiles()
-        # will only be 1 file at most, but could be 0 (if the user canceled)
-        if not files:
-            self.selection_made = False
+        # do nothing if the user pressed cancel
+        if not self.dialog.result():
             return
+        self.selection_made = True
+        files = self.dialog.selectedFiles()
         path = files[0]
-        self.selection_made = path != self.start_dir
-
-        # TODO truncate path, ideally with qt size policies but might not be
-        # possible with those alone
         path = Path(path)
         self.path = path
         self.path_chosen_signal.emit(path)
