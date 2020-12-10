@@ -174,8 +174,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         # * m2 - the mods the second replay was played with
         # For example, a url might look like
         # circleguard://m=221777&u=2757689&m1=HDHRu2=3219026&m2=HDHR
-        map_id = re.compile(r"m=(.*?)(&|$)").search(url).group(1)
-        user_id = re.compile(r"u=(.*?)(&|$)").search(url).group(1)
+        map_id = int(re.compile(r"m=(.*?)(&|$)").search(url).group(1))
+        user_id = int(re.compile(r"u=(.*?)(&|$)").search(url).group(1))
         timestamp_match = re.compile(r"t=(.*?)(&|$)").search(url)
         # start at the beginning if timestamp isn't specified
         timestamp = int(timestamp_match.group(1)) if timestamp_match else 0
@@ -190,7 +190,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         user_id_2_match = re.compile(r"u2=(.*?)(&|$)").search(url)
         user_id_2 = None
         if user_id_2_match:
-            user_id_2 = user_id_2_match.group(1)
+            user_id_2 = int(user_id_2_match.group(1))
 
         mods2_match = re.compile(r"m2=(.*?)(&|$)").search(url)
         mods2 = None
