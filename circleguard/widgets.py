@@ -479,6 +479,9 @@ class UnselectedLoadable(LoadableBase):
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         self.setLayout(layout)
 
+    def disable(self):
+        pass
+
     def check_and_mark_required_fields(self):
         return True
 
