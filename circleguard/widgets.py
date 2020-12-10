@@ -1003,7 +1003,9 @@ class LoadableCreation(QFrame):
     def check_and_mark_required_fields(self):
         all_valid = True
         for loadable in self.loadables:
-            if not loadable.check_and_mark_required_fields():
+            # only check enabled loadables, disabled + empty loadables should
+            # not stop the run from succeeding
+            if loadable.enabled and not loadable.check_and_mark_required_fields():
                 all_valid = False
         return all_valid
 
