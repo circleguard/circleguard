@@ -402,14 +402,13 @@ class LoadableBase(QFrame):
         self.sim_combobox.activated.connect(self.sim_combobox_activated)
 
     def disable_button_clicked(self):
-        # toggle state
-        self.enabled = not self.enabled
-        if not self.enabled:
+        if self.enabled:
             self.disable()
         else:
             self.enable()
 
     def disable(self):
+        self.enabled = False
         self.disable_button.setIcon(QIcon(resource_path("disabled.png")))
         # https://stackoverflow.com/a/59022793/12164878
         effect = QGraphicsOpacityEffect(self)
@@ -417,6 +416,7 @@ class LoadableBase(QFrame):
         self.setGraphicsEffect(effect)
 
     def enable(self):
+        self.enabled = True
         self.disable_button.setIcon(QIcon(resource_path("enabled.png")))
         effect = QGraphicsOpacityEffect(self)
         effect.setOpacity(1)
