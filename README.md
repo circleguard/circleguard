@@ -22,6 +22,9 @@ The replay viewer supports seeking to any timestamp in the replay, slowing down 
 <img src="readme_resources/demo.gif" alt="Demo gif of main gui" width="728" height="538"/><br/>
 [*(click here to view a high quality version)*](https://streamable.com/0z0bw4)
 
+<img src="readme_resources/visualizer_demo.gif" alt="Demo gif of the visualizer" width="728" height="538"/><br/>
+[*(click here to view a high quality version)*](https://streamable.com/9bkq8z)
+
 Circleguard is developed and maintained by:
 
 * [tybug](https://github.com/tybug)
