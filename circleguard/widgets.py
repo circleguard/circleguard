@@ -412,7 +412,7 @@ class LoadableBase(QFrame):
         self.disable_button.setIcon(QIcon(resource_path("disabled.png")))
         # https://stackoverflow.com/a/59022793/12164878
         effect = QGraphicsOpacityEffect(self)
-        effect.setOpacity(0.3)
+        effect.setOpacity(0.35)
         self.setGraphicsEffect(effect)
 
     def enable(self):
