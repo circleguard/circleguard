@@ -384,6 +384,12 @@ class LoadableBase(QFrame):
         self.delete_button.setIcon(QIcon(resource_path("delete.png")))
         self.delete_button.setMaximumWidth(30)
 
+        self.disable_button = PushButton(self)
+        self.disable_button.setIcon(QIcon(resource_path("enabled.png")))
+        self.disable_button.setMaximumWidth(30)
+        self.disable_button.clicked.connect(self.disable_button_clicked)
+        self.enabled = True
+
         self.combobox = ComboBox()
         self.combobox.setInsertPolicy(QComboBox.NoInsert)
         for entry in ["Select a Loadable", "Map Replay", "Local Replay", "Map",
@@ -394,6 +400,28 @@ class LoadableBase(QFrame):
         self.sim_combobox.addItem("Sim Group 1", "Sim Group 1")
         self.sim_combobox.addItem("Sim Group 2", "Sim Group 2")
         self.sim_combobox.activated.connect(self.sim_combobox_activated)
+
+    def disable_button_clicked(self):
+        # toggle state
+        self.enabled = not self.enabled
+        if not self.enabled:
+            self.disable()
+        else:
+            self.enable()
+
+    def disable(self):
+        self.disable_button.setIcon(QIcon(resource_path("disabled.png")))
+        # https://stackoverflow.com/a/59022793/12164878
+        effect = QGraphicsOpacityEffect(self)
+        effect.setOpacity(0.3)
+        self.setGraphicsEffect(effect)
+
+    def enable(self):
+        self.disable_button.setIcon(QIcon(resource_path("enabled.png")))
+        effect = QGraphicsOpacityEffect(self)
+        effect.setOpacity(1)
+        self.setGraphicsEffect(effect)
+
 
     def check_and_mark_required_fields(self):
         all_filled = True
@@ -408,12 +436,12 @@ class LoadableBase(QFrame):
     def hide_sim_combobox(self):
         self.sim_combobox.hide()
         self.layout().removeWidget(self.combobox)
-        self.layout().addWidget(self.combobox, 0, 0, 1, 7)
+        self.layout().addWidget(self.combobox, 0, 0, 1, 6)
 
     def show_sim_combobox(self):
         self.sim_combobox.show()
         self.layout().removeWidget(self.combobox)
-        self.layout().addWidget(self.combobox, 0, 0, 1, 5)
+        self.layout().addWidget(self.combobox, 0, 0, 1, 4)
 
     def sim_combobox_activated(self):
         if self.sim_combobox.currentData() == "Sim Group 1":
@@ -427,6 +455,7 @@ class UnselectedLoadable(LoadableBase):
         super().__init__([])
 
         self.combobox.setCurrentIndex(0)
+        self.disable_button.hide()
 
         layout = QGridLayout()
         # AlignTop matches the height of the other loadables, as they have more
@@ -460,8 +489,9 @@ class ReplayMapLoadable(LoadableBase):
         self.combobox.setCurrentIndex(1)
 
         layout = QGridLayout()
-        layout.addWidget(self.combobox, 0, 0, 1, 5)
-        layout.addWidget(self.sim_combobox, 0, 5, 1, 2)
+        layout.addWidget(self.combobox, 0, 0, 1, 4)
+        layout.addWidget(self.sim_combobox, 0, 4, 1, 2)
+        layout.addWidget(self.disable_button, 0, 6, 1, 1)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         layout.addWidget(self.user_id_input, 2, 0, 1, 8)
@@ -497,8 +527,9 @@ class ReplayPathLoadable(LoadableBase):
         self.combobox.setCurrentIndex(2)
 
         layout = QGridLayout()
-        layout.addWidget(self.combobox, 0, 0, 1, 5)
-        layout.addWidget(self.sim_combobox, 0, 5, 1, 2)
+        layout.addWidget(self.combobox, 0, 0, 1, 4)
+        layout.addWidget(self.sim_combobox, 0, 4, 1, 2)
+        layout.addWidget(self.disable_button, 0, 6, 1, 1)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         layout.addWidget(self.path_input, 1, 0, 1, 8)
         self.setLayout(layout)
@@ -547,8 +578,9 @@ class MapLoadable(LoadableBase):
         self.combobox.setCurrentIndex(3)
 
         layout = QGridLayout()
-        layout.addWidget(self.combobox, 0, 0, 1, 5)
-        layout.addWidget(self.sim_combobox, 0, 5, 1, 2)
+        layout.addWidget(self.combobox, 0, 0, 1, 4)
+        layout.addWidget(self.sim_combobox, 0, 4, 1, 2)
+        layout.addWidget(self.disable_button, 0, 6, 1, 1)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         layout.addWidget(self.span_input, 2, 0, 1, 8)
@@ -591,8 +623,9 @@ class UserLoadable(LoadableBase):
         self.combobox.setCurrentIndex(4)
 
         layout = QGridLayout()
-        layout.addWidget(self.combobox, 0, 0, 1, 5)
-        layout.addWidget(self.sim_combobox, 0, 5, 1, 2)
+        layout.addWidget(self.combobox, 0, 0, 1, 4)
+        layout.addWidget(self.sim_combobox, 0, 4, 1, 2)
+        layout.addWidget(self.disable_button, 0, 6, 1, 1)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         layout.addWidget(self.user_id_input, 1, 0, 1, 8)
         layout.addWidget(self.span_input, 2, 0, 1, 8)
@@ -635,8 +668,9 @@ class MapUserLoadable(LoadableBase):
         self.combobox.setCurrentIndex(5)
 
         layout = QGridLayout()
-        layout.addWidget(self.combobox, 0, 0, 1, 5)
-        layout.addWidget(self.sim_combobox, 0, 5, 1, 2)
+        layout.addWidget(self.combobox, 0, 0, 1, 4)
+        layout.addWidget(self.sim_combobox, 0, 4, 1, 2)
+        layout.addWidget(self.disable_button, 0, 6, 1, 1)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         layout.addWidget(self.map_id_input, 1, 0, 1, 8)
         layout.addWidget(self.user_id_input, 2, 0, 1, 8)
@@ -742,6 +776,11 @@ class SelectableLoadable(QFrame):
 
         if not self.should_show_sim_combobox:
             self.stacked_layout.currentWidget().hide_sim_combobox()
+        self.stacked_layout.currentWidget().disable_button.show()
+
+    @property
+    def enabled(self):
+        return self.stacked_layout.currentWidget().enabled
 
     def show_delete(self):
         self.stacked_layout.currentWidget().delete_button.show()
@@ -902,6 +941,9 @@ class LoadableCreation(QFrame):
         """
         loadables = []
         for loadable in self.loadables:
+            # loadables can be selectively enabled or disabled
+            if not loadable.enabled:
+                continue
             previous = self.cg_loadables_to_selectable_loadables[loadable]
             cg_loadable = loadable.cg_loadable(previous)
             self.cg_loadables_to_selectable_loadables[loadable] = cg_loadable
