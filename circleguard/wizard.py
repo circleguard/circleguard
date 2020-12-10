@@ -95,7 +95,7 @@ class IntroPage(WizardPage):
                 "<li>InvisibleSymbol </li>"
                 "<li>samuelhklumpers </li>"
                 "</ul></p>"
-                "<p>Thanks to <a href=\"https://accalixgfx.com/index.php\">Accalix</a> for creating our logo.<p>"
+                "<p>Thanks to <a href=\"https://accalix.art\">Accalix</a> for creating our logo.<p>"
                 "<p>If at any point you want to replay this tutorial, go to the settings tab and click \"Read Tutorial\" "
                 "under the Dev section.")
         layout = QVBoxLayout()
