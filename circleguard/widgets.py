@@ -374,6 +374,9 @@ class InvestigationCheckboxes(QFrame):
 
 
 class LoadableBase(QFrame):
+
+    disable_button_shift_clicked = pyqtSignal()
+
     def __init__(self, required_input_widgets):
         super().__init__()
         self.required_input_widgets = required_input_widgets
@@ -388,6 +391,9 @@ class LoadableBase(QFrame):
         self.disable_button.setIcon(QIcon(resource_path("enabled.png")))
         self.disable_button.setMaximumWidth(30)
         self.disable_button.clicked.connect(self.disable_button_clicked)
+        # so we can detect a shift+click
+        self.disable_button.installEventFilter(self)
+
         self.enabled = True
 
         self.combobox = ComboBox()
@@ -400,6 +406,14 @@ class LoadableBase(QFrame):
         self.sim_combobox.addItem("Sim Group 1", "Sim Group 1")
         self.sim_combobox.addItem("Sim Group 2", "Sim Group 2")
         self.sim_combobox.activated.connect(self.sim_combobox_activated)
+
+    def eventFilter(self, obj, event):
+        if (obj == self.disable_button and
+            event.type() == QEvent.MouseButtonPress and
+            event.modifiers() == Qt.ShiftModifier):
+            self.disable_button_shift_clicked.emit()
+            return True
+        return super().eventFilter(obj, event)
 
     def disable_button_clicked(self):
         if self.enabled:
@@ -703,6 +717,7 @@ class MapUserLoadable(LoadableBase):
 class SelectableLoadable(QFrame):
     input_changed = pyqtSignal()
     deleted_pressed = pyqtSignal()
+    disable_button_shift_clicked = pyqtSignal()
 
     def __init__(self):
         super().__init__()
@@ -721,37 +736,42 @@ class SelectableLoadable(QFrame):
         unselected.combobox.activated.connect(lambda: self.select_loadable())
         unselected.combobox.activated.connect(self.input_changed)
         unselected.delete_button.clicked.connect(self.deleted_pressed)
+        unselected.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(unselected)
 
         replay_map = ReplayMapLoadable()
         replay_map.combobox.activated.connect(lambda: self.select_loadable())
         replay_map.delete_button.clicked.connect(self.deleted_pressed)
+        replay_map.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(replay_map)
 
         replay_path = ReplayPathLoadable()
         replay_path.combobox.activated.connect(lambda: self.select_loadable())
         replay_path.delete_button.clicked.connect(self.deleted_pressed)
+        replay_path.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(replay_path)
 
         map_ = MapLoadable()
         map_.combobox.activated.connect(lambda: self.select_loadable())
         map_.delete_button.clicked.connect(self.deleted_pressed)
+        map_.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(map_)
 
         user = UserLoadable()
         user.combobox.activated.connect(lambda: self.select_loadable())
         user.delete_button.clicked.connect(self.deleted_pressed)
+        user.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(user)
 
         map_user = MapUserLoadable()
         map_user.combobox.activated.connect(lambda: self.select_loadable())
         map_user.delete_button.clicked.connect(self.deleted_pressed)
+        map_user.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(map_user)
 
         layout = QVBoxLayout()
         layout.addLayout(self.stacked_layout)
         self.setLayout(layout)
-
 
     def select_loadable(self, override_type=None):
         if not override_type and self.stacked_layout.currentWidget().combobox.currentIndex() == 0:
@@ -782,6 +802,12 @@ class SelectableLoadable(QFrame):
     def enabled(self):
         return self.stacked_layout.currentWidget().enabled
 
+    def disable(self):
+        self.stacked_layout.currentWidget().disable()
+
+    def enable(self):
+        self.stacked_layout.currentWidget().enable()
+
     def show_delete(self):
         self.stacked_layout.currentWidget().delete_button.show()
 
@@ -799,6 +825,7 @@ class SelectableLoadable(QFrame):
 
     def show_sim_combobox(self):
         self.stacked_layout.currentWidget().show_sim_combobox()
+
 
 class LoadableCreation(QFrame):
     LOADABLE_SIZE = QSize(450, 150)
@@ -873,6 +900,7 @@ class LoadableCreation(QFrame):
 
         loadable.deleted_pressed.connect(lambda: self.remove_loadable(loadable))
         loadable.input_changed.connect(lambda: self.loadable_input_changed(loadable))
+        loadable.disable_button_shift_clicked.connect(lambda: self.disable_button_shift_clicked(loadable))
         # don't allow the bottommost loadable (which this new one will soon
         # become) to be deleted, users could accidentally remove all loadables
         loadable.hide_delete()
@@ -933,6 +961,20 @@ class LoadableCreation(QFrame):
         # necessary to reclaim this memory when we delete the associated
         # loadable
         self.cg_loadables_to_selectable_loadables[loadable] = None
+
+    def disable_button_shift_clicked(self, caller_loadable):
+        # a shift click on a loadable that is enabled means we want to disable
+        # every *other* loadable.
+        if caller_loadable.enabled:
+            for loadable in self.loadables:
+                if loadable != caller_loadable:
+                    loadable.disable()
+        # but a shift click on a disabled loadable means we want to enable *all*
+        # loadables.
+        else:
+            for loadable in self.loadables:
+                loadable.enable()
+
 
     def cg_loadables(self):
         """
