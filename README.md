@@ -19,9 +19,8 @@ Circleguard is a tool to help you catch cheaters. Features include:
 
 The replay viewer supports seeking to any timestamp in the replay, slowing down or speeding up time, frame-by-frame movement, and more.
 
-<img src="readme_resources/demo.gif" alt="Demo gif of main gui" width="728" height="538"/>
-
-[*(click here to view a higher quality version)*](https://streamable.com/0z0bw4)
+<img src="readme_resources/demo.gif" alt="Demo gif of main gui" width="728" height="538"/><br/>
+[*(click here to view a high quality version)*](https://streamable.com/0z0bw4)
 
 Circleguard is developed and maintained by:
 
