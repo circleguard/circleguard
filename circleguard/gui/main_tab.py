@@ -319,8 +319,12 @@ class MainTab(SingleLinkableSetting, QFrame):
             def _skip_replay_with_message(replay, message):
                 self.write_to_terminal_signal.emit(message)
                 # the replay very likely (perhaps certainly) didn't get
-                # loaded if the above exception fired. just skip it.
-                all_replays.remove(replay)
+                # loaded if the above exception fired. just remove it.
+                # If two different loadables both contain this problematic
+                # replay, we will attempt to remove it from the list twice.
+                # Guard against this by checking for membership first.
+                if replay in all_replays:
+                    all_replays.remove(replay)
                 # check has already been initialized with the replay,
                 # remove it here too or cg will try and load it again
                 # when the check is ran
