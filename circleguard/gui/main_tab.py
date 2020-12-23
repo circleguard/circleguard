@@ -339,7 +339,16 @@ class MainTab(SingleLinkableSetting, QFrame):
                 _check_event(event)
                 try:
                     cg.load(replay)
-                    if not replay.has_data():
+                    # circleparse sets replay_data to None if it's not a std
+                    # replay, which means replay.has_data() will be false, so
+                    # we need to do this check first to give a better error
+                    # message than "the replay is not available for download",
+                    # which is incorrect for local replays.
+                    if isinstance(replay, ReplayPath) and not replay.has_data():
+                        _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " is " +
+                        "not an osu!std replay.</div> We currently only support std replays. "
+                        "This replay has been skipped because of this.")
+                    elif not replay.has_data():
                         _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " is " +
                             "not available for download.</div> This is likely because it is not in the top 1k scores of "
                             "the beatmap. This replay has been skipped because of this.")
