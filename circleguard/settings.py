@@ -158,11 +158,9 @@ DEFAULTS = {
                                 "\n\n"
                                 "Profile: https://osu.ppy.sh/users/{r.later_replay.user_id}"
                                 "\n\n"
-                                "Map: https://osu.ppy.sh/b/{r.later_replay.map_id}"
+                                "{r.later_replay.username}'s replay (cheated): https://osu.ppy.sh/scores/osu/{r.later_replay.replay_id}"
                                 "\n\n"
-                                "{r.later_replay.username}'s replay (cheated): https://osu.ppy.sh/scores/osu/{r.later_replay.replay_id}/download"
-                                "\n\n"
-                                "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}/download"
+                                "{r.earlier_replay.username}'s replay (original): https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}"
                                 "\n\n"
                                 "open in circleguard: {circleguard_url}"
                                 "\n\n"
@@ -171,9 +169,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
                                 "\n\n"
-                                "Map: https://osu.ppy.sh/b/{r.replay.map_id}"
-                                "\n\n"
-                                "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
+                                "replay: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}"
                                 "\n\n"
                                 "open in circleguard: {circleguard_url}"
                                 "\n\n"
@@ -182,9 +178,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
                                 "\n\n"
-                                "Map: https://osu.ppy.sh/b/{r.replay.map_id}"
-                                "\n\n"
-                                "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
+                                "replay: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}"
                                 "\n\n"
                                 "open in circleguard: {circleguard_url}"
                                 "\n\n"
@@ -195,9 +189,7 @@ DEFAULTS = {
                                 "\n\n"
                                 "Profile: https://osu.ppy.sh/users/{r.replay.user_id}"
                                 "\n\n"
-                                "Map: https://osu.ppy.sh/b/{r.replay.map_id}"
-                                "\n\n"
-                                "replay download: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}/download"
+                                "replay: https://osu.ppy.sh/scores/osu/{r.replay.replay_id}"
                                 "\n\n"
                                 "open in circleguard: {circleguard_url}"
                                 "\n\n"
@@ -414,6 +406,12 @@ FORCE_UPDATE = {
     ],
     "2.12.0": [
         "message_loading_replays"
+    ],
+    "2.12.3": [
+        "template_steal",
+        "template_relax",
+        "template_correction",
+        "template_timewarp"
     ]
 }
 
