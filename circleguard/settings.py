@@ -106,7 +106,8 @@ COMMENTS = {
     },
     "Misc": {
         "section": "Settings that don't fit in neatly to other sections.",
-        "show_cv_frametimes_in_histogram": "If True, displays cv frametimes in the frametime histogram. Otherwise, displays ucv frametimes."
+        "show_cv_frametimes_in_histogram": "If True, displays cv frametimes in the frametime histogram. Otherwise, displays ucv frametimes.",
+        "ignore_snaps_off_hitobjs": "Whether to report snaps that do not occur on hitobjects (False) or not (True)"
     },
     "Experimental": {
         "section": "These settings are liable to be resource-intensive, behave in unexpected ways, or haven't been tested fully yet. Proceed at your own risk.",
@@ -282,7 +283,8 @@ DEFAULTS = {
             "Selection Menu": "selection",
             "Visualization": "visualization",
             "Investigation": "investigation"
-        }
+        },
+        "ignore_snaps_off_hitobjs": True
     },
     "Experimental": {
         "rainbow_accent": False

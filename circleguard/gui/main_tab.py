@@ -469,10 +469,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                 if investigation == "Snaps":
                     max_angle = get_setting("correction_max_angle")
                     min_distance = get_setting("correction_min_distance")
+                    only_on_hitobjs = get_setting("ignore_snaps_off_hitobjs")
 
                     for replay in all_replays:
                         _check_event(event)
-                        snaps = cg.snaps(replay, max_angle, min_distance)
+                        snaps = cg.snaps(replay, max_angle, min_distance, only_on_hitobjs)
                         result = CorrectionResult(snaps, replay)
                         self.q.put(result)
                 if investigation == "Frametime":
