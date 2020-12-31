@@ -3,7 +3,6 @@ circleparse==6.4.1
 # TODO this is a temporary workaround for https://github.com/numpy/numpy/issues/16744,
 # remove this line when the issue is resolved
 numpy==1.19.3
-circleguard==5.0.3
 packaging>=17.0
 slider==0.4.0
 circlevis==1.1.0
@@ -12,3 +11,5 @@ circlevis==1.1.0
 # I have not checked myself if updating matplotlib cuases the build to fail.
 matplotlib==3.0.3
 portalocker==1.7.1
+
+circleguard==5.0.3
