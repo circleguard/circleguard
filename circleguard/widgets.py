@@ -737,7 +737,7 @@ class SelectableLoadable(QFrame):
 
         unselected = UnselectedLoadable()
         unselected.combobox.activated.connect(lambda: self.select_loadable())
-        unselected.combobox.activated.connect(self.input_changed)
+        unselected.combobox.activated.connect(lambda: self._input_changed())
         unselected.delete_button.clicked.connect(self.deleted_pressed)
         unselected.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(unselected)
@@ -800,6 +800,11 @@ class SelectableLoadable(QFrame):
         if not self.should_show_sim_combobox:
             self.stacked_layout.currentWidget().hide_sim_combobox()
         self.stacked_layout.currentWidget().disable_button.show()
+
+    def _input_changed(self):
+        if self.stacked_layout.currentWidget().combobox.currentIndex() == 0:
+            return
+        self.input_changed.emit()
 
     @property
     def enabled(self):
