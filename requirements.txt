@@ -12,4 +12,4 @@ circlevis==1.1.0
 matplotlib==3.0.3
 portalocker==1.7.1
 
-circleguard==5.1.0
+circleguard==5.1.1
