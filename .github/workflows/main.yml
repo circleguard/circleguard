@@ -24,6 +24,10 @@ jobs:
       run: |
         pyinstaller gui_win_x64.spec --noconfirm
 
+    - name: Build x64_debug
+      run: |
+        pyinstaller gui_win_x64_debug.spec --noconfirm
+
     - name: Update Release
       uses: ncipollo/release-action@v1.6.1
       with:
