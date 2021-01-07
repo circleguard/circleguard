@@ -115,6 +115,10 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         logging.getLogger("circleguard").addHandler(self.file_handler)
         logging.getLogger("ossapi").addHandler(handler)
         logging.getLogger("ossapi").addHandler(self.file_handler)
+        # ossapi only logs one thing, a JSONDecodeError at the `exception`
+        # level. circlecore's loader already handles this error, so we don't
+        # want to show it to users.
+        logging.getLogger("ossapi").setLevel(51)
         logging.getLogger("circleguard_gui").addHandler(handler)
         logging.getLogger("circleguard_gui").addHandler(self.file_handler)
 
