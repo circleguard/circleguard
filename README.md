@@ -64,7 +64,7 @@ Circlecore does most of the heavy lifting for circleguard, such as calculating u
 
 ### Circlevis
 
-The replay viewer is powerful enough that it was split off into its own repository. If you would like to use the replay viewer in your own project, please see the develoer guidance over at its repository:
+The replay viewer is powerful enough that it was split off into its own repository. If you would like to use the replay viewer in your own project, please see the developer guidance over at its repository:
 
 <https://github.com/circleguard/circlevis>
 
