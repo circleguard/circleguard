@@ -1,5 +1,5 @@
 PyQt5==5.15.2
-circleparse==6.4.1
+osrparse==4.0.0
 # TODO this is a temporary workaround for https://github.com/numpy/numpy/issues/16744,
 # remove this line when the issue is resolved
 numpy==1.19.3
