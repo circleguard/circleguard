@@ -4,13 +4,13 @@ import abc
 import json
 import logging
 from functools import partial
-
-from PyQt5.QtCore import QSettings, QStandardPaths
-from packaging import version
 # it's tempting to use QSettings builtin ini file support instead of
 # configparser, but that doesn't let us write comments, which is rather
 # important for users.
 from configparser import ConfigParser
+
+from PyQt5.QtCore import QSettings, QStandardPaths
+from packaging import version
 
 from version import __version__
 
