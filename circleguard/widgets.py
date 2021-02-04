@@ -4,11 +4,11 @@ from functools import partial
 import urllib
 
 from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
-    QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
-    QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout, QHBoxLayout,
-    QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView,
-    QGraphicsOpacityEffect, QStyle, QListWidget, QListWidgetItem,
-    QStackedLayout, QApplication, QShortcut)
+    QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFileDialog,
+    QPushButton, QCheckBox, QComboBox, QVBoxLayout, QHBoxLayout, QMainWindow,
+    QTableWidget, QTableWidgetItem, QAbstractItemView, QGraphicsOpacityEffect,
+    QStyle, QListWidget, QListWidgetItem, QStackedLayout, QApplication,
+    QShortcut)
 from PyQt5.QtGui import (QRegExpValidator, QIcon, QPainter, QPen, QCursor,
     QKeySequence)
 from PyQt5.QtCore import (QRegExp, Qt, QCoreApplication, pyqtSignal, QEvent,
