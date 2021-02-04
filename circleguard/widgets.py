@@ -889,7 +889,7 @@ class LoadableCreation(QFrame):
         self.most_recent_loadable.select_loadable(type_)
         self.new_loadable()
 
-    def new_loadable(self, type_=None):
+    def new_loadable(self):
         loadable = SelectableLoadable()
         self.cg_loadables_to_selectable_loadables[loadable] = None
         loadable.should_show_sim_combobox = self.previous_combobox_state == Qt.Checked
@@ -1370,7 +1370,7 @@ class ResultW(QFrame):
 
     def action_combobox_activated(self):
         if self.actions_combobox.currentData() == "View Frametimes":
-            self.frametime_window = FrametimeWindow(self.result, self.replays[0])
+            self.frametime_window = FrametimeWindow(self.replays[0])
             self.frametime_window.show()
         if self.actions_combobox.currentData() == "View Replay Data":
             self.replay_data_window = ReplayDataWindow(self.replays[0])
@@ -1385,7 +1385,7 @@ class ResultW(QFrame):
         return template_button
 
 class FrametimeWindow(QMainWindow):
-    def __init__(self, result, replay):
+    def __init__(self, replay):
         super().__init__()
         # XXX make sure to import matplotlib after pyqt, so it knows to use that
         # and not re-import it.
@@ -1394,7 +1394,7 @@ class FrametimeWindow(QMainWindow):
         self.setWindowTitle("Replay Frametime")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
 
-        frametime_graph = FrametimeGraph(result, replay)
+        frametime_graph = FrametimeGraph(replay)
         self.addToolBar(NavigationToolbar2QT(frametime_graph.canvas, self))
         self.setCentralWidget(frametime_graph)
         self.resize(600, 500)
@@ -1402,7 +1402,7 @@ class FrametimeWindow(QMainWindow):
 
 class FrametimeGraph(QFrame):
 
-    def __init__(self, result, replay):
+    def __init__(self, replay):
         super().__init__()
         from circleguard import KeylessCircleguard
         from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
