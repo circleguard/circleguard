@@ -734,7 +734,7 @@ class SelectableLoadable(QFrame):
 
         unselected = UnselectedLoadable()
         unselected.combobox.activated.connect(lambda: self.select_loadable())
-        unselected.combobox.activated.connect(lambda: self._input_changed())
+        unselected.combobox.activated.connect(self._input_changed)
         unselected.delete_button.clicked.connect(self.deleted_pressed)
         unselected.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(unselected)
