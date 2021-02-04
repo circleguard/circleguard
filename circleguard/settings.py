@@ -720,7 +720,7 @@ SETTINGS.setFallbacksEnabled(False)
 # add setting if missing (occurs between updates if we add a new default
 # setting)
 for d in DEFAULTS.values():
-    for key,value in d.items():
+    for key, value in d.items():
         if not SETTINGS.contains(key):
             set_setting(key, value)
 
