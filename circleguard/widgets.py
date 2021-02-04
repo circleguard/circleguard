@@ -60,8 +60,6 @@ class Slider(QSlider):
 
 # TODO cmd + z doesn't undo operations here, figure out why
 class LineEdit(QLineEdit):
-    """
-    """
     def __init__(self, parent):
         super().__init__(parent)
         # save current stylesheet for resetting highlighted style. Don't
