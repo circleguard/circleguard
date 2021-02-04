@@ -274,8 +274,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         current_version = version.parse(__version__)
         if current_version < version.parse(get_setting("latest_version")):
             return "<a href=\'https://github.com/circleguard/circleguard/releases/latest'>Update available!</a>"
-        else:
-            return "Idle"
+        return "Idle"
 
     def increment_progressbar(self, increment):
         self.progressbar.setValue(self.progressbar.value() + increment)
