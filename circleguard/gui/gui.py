@@ -1,11 +1,10 @@
-import os
 from queue import Queue, Empty
 from functools import partial
 import logging
 import threading
 import time
 
-from PyQt5.QtCore import Qt, pyqtSignal, QUrl, QTimer
+from PyQt5.QtCore import Qt, pyqtSignal, QUrl
 from PyQt5.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
     QLabel, QGridLayout, QSpacerItem, QSizePolicy, QMainWindow,
     QTextEdit, QStackedWidget, QHBoxLayout, QMessageBox,)
@@ -18,10 +17,11 @@ from PyQt5.QtGui import QDesktopServices, QIcon, QCursor
 from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, Separator,
     ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
-    LineEditSetting, EntryWidget, RunWidget, ComboboxSetting, ReplayDropArea,
+    LineEditSetting, RunWidget, ComboboxSetting, ReplayDropArea,
     ReplayMapCreation, PushButton)
 
-from settings import get_setting, set_setting, overwrite_config, overwrite_with_config_settings
+from settings import (get_setting, overwrite_config,
+    overwrite_with_config_settings)
 from .visualizer import get_visualizer
 from .main_tab import MainTab
 from wizard import TutorialWizard

@@ -1,11 +1,8 @@
-from functools import partial
-
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPixmap, QIcon, QFont, QMovie
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
 
-from settings import get_setting, set_setting
-from widgets import OptionWidget, LineEditSetting, ComboboxSetting
+from widgets import LineEditSetting
 from utils import resource_path
 
 

@@ -4,6 +4,7 @@ import abc
 import json
 import logging
 from functools import partial
+import json
 
 from PyQt5.QtCore import QSettings, QStandardPaths
 from packaging import version

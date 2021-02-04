@@ -1,27 +1,24 @@
 import sys
-import ntpath
 from pathlib import Path
 from functools import partial
-import json
 import urllib
 
 from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFrame,
-    QDoubleSpinBox, QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout,
-    QHBoxLayout, QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView,
+    QFileDialog, QPushButton, QCheckBox, QComboBox, QVBoxLayout, QHBoxLayout,
+    QMainWindow, QTableWidget, QTableWidgetItem, QAbstractItemView,
     QGraphicsOpacityEffect, QStyle, QListWidget, QListWidgetItem,
     QStackedLayout, QApplication, QShortcut)
-from PyQt5.QtGui import (QRegExpValidator, QIcon, QDrag, QPainter, QPen,
-    QCursor, QKeySequence)
-from PyQt5.QtCore import (QRegExp, Qt, QDir, QCoreApplication, pyqtSignal,
-    QPoint, QMimeData, QEvent, QObject, QSize, QTimer)
+from PyQt5.QtGui import (QRegExpValidator, QIcon, QPainter, QPen, QCursor,
+    QKeySequence)
+from PyQt5.QtCore import (QRegExp, Qt, QCoreApplication, pyqtSignal, QEvent,
+    QSize, QTimer)
 # from circleguard import Circleguard, TimewarpResult, Mod, Key
 # import numpy as np
 
 from settings import (get_setting, reset_defaults, LinkableSetting,
-    SingleLinkableSetting, set_setting)
-from utils import (resource_path, delete_widget, AnalysisResult, ACCENT_COLOR,
-    TimewarpResult, spacer)
+    SingleLinkableSetting)
+from utils import resource_path, AnalysisResult, ACCENT_COLOR, spacer
 
 
 # we want most of our clickable widgets to have a pointing hand cursor on hover
@@ -695,7 +692,7 @@ class MapUserLoadable(LoadableBase):
         self.setLayout(layout)
 
     def cg_loadable(self, previous):
-        from circleguard import MapUser, Mod, Loader
+        from circleguard import MapUser
 
         # use placeholder text (eg 1-50) if the user inputted span is empty
         span = self.span_input.value() or self.span_input.field.placeholderText()

@@ -198,6 +198,7 @@ def import_expensive_modules():
     # probably not necessary to import every single class - we just want to
     # trigger import-time code by hitting every circleguard file and imports
     # to numpy/scipy therein - but better safe than sorry.
+    # pylint: disable=unused-import
     from circleguard import (Circleguard, KeylessCircleguard, LoadableContainer,
         Map, User, MapUser, Replay, ReplayMap, ReplayPath, Mod, Loader,
         Snap, Hit, Span, replay_pairs)
@@ -207,6 +208,7 @@ def import_expensive_modules():
     from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
     from matplotlib.figure import Figure
     import numpy as np
+    # pylint: enable=unused-import
 
 # everything would work fine if we didn't force import these modules now, but
 # the user would experience a potentially multi-second wait time whenever they

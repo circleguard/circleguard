@@ -5,16 +5,14 @@ import sys
 import math
 import time
 from functools import partial
-import itertools
 import logging
 import re
 from lzma import LZMAError
 import traceback
 
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
-from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout, QComboBox,
-    QTextEdit, QScrollArea, QApplication, QToolTip, QLabel,
-    QSizePolicy)
+from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout, QTextEdit,
+    QApplication, QToolTip, QLabel, QSizePolicy)
 from PyQt5.QtGui import QTextCursor
 import requests
 # from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
@@ -24,11 +22,11 @@ import requests
 # from slider import Library
 # from circlevis import BeatmapInfo
 
-from widgets import (ScrollableLoadablesWidget, ScrollableChecksWidget,
-    InvestigationCheckboxes, WidgetCombiner, PushButton, LoadableCreation)
-from settings import SingleLinkableSetting, get_setting, set_setting
-from utils import (delete_widget, AnalysisResult, StealResult, RelaxResult,
-    CorrectionResult, TimewarpResult)
+from widgets import (InvestigationCheckboxes, WidgetCombiner, PushButton,
+    LoadableCreation)
+from settings import SingleLinkableSetting, get_setting
+from utils import (AnalysisResult, StealResult, RelaxResult, CorrectionResult,
+    TimewarpResult)
 from .visualizer import get_visualizer
 
 
@@ -210,9 +208,8 @@ class MainTab(SingleLinkableSetting, QFrame):
 
 
     def run_circleguard(self, run):
-        from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
-            UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
-            MapUser, Loader, LoadableContainer, replay_pairs)
+        from circleguard import (Circleguard, UnknownAPIException, ReplayPath,
+            NoInfoAvailableException, Loader, LoadableContainer, replay_pairs)
         class TrackerLoader(Loader, QObject):
             """
             A circleguard.Loader subclass that emits a signal when the loader is
