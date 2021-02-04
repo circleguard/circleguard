@@ -644,9 +644,6 @@ class Run():
         self.event = event
 
 class RunButton(PushButton):
-    def __init__(self):
-        super().__init__()
-
     def enterEvent(self, event):
         if not self.isEnabled():
             QToolTip.showText(event.globalPos(), "You cannot run an investigation until you enter an api key in settings.")
