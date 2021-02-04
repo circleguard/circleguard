@@ -1153,7 +1153,7 @@ class PathWidget(QFrame):
 
     def __eq__(self, other):
         if not isinstance(other, PathWidget):
-            return
+            return False
         return self.path == other.path
 
     @property
