@@ -1687,7 +1687,6 @@ class FileChooserButton(PushButton):
         self.dialog.setFileMode(self.file_mode)
         if self.name_filters:
             self.dialog.setNameFilters(self.name_filters)
-        self.start_dir = self.dialog.directory().absolutePath()
 
         # recommended over #exec by qt https://doc.qt.io/qt-5/qdialog.html#exec
         self.dialog.open()
