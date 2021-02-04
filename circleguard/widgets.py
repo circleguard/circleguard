@@ -1323,7 +1323,7 @@ class ResultW(QFrame):
 
         self.visualize_button = PushButton(self)
         self.visualize_button.setText("Visualize")
-        self.visualize_button.clicked.connect(lambda: self.visualize_button_pressed_signal.emit())
+        self.visualize_button.clicked.connect(self.visualize_button_pressed_signal.emit)
 
         if len(replays) == 1:
             self.set_layout_single()
@@ -1383,7 +1383,7 @@ class ResultW(QFrame):
         template_button = PushButton(self)
         template_button.setText("Copy Template")
         template_button.setFixedWidth(120)
-        template_button.clicked.connect(lambda: self.template_button_pressed_signal.emit())
+        template_button.clicked.connect(self.template_button_pressed_signal.emit)
         return template_button
 
 class FrametimeWindow(QMainWindow):
