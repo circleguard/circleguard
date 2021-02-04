@@ -393,7 +393,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                 "Manual Analysis": "analysis"
             }
             for investigation in run.enabled_investigations:
-                setting = f"message_starting_" + setting_end_dict[investigation]
+                setting = "message_starting_" + setting_end_dict[investigation]
                 message_starting_investigation = get_setting(setting).format(ts=datetime.now())
                 self.write_to_terminal_signal.emit(message_starting_investigation)
                 if investigation == "Manual Analysis":
