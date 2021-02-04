@@ -1653,7 +1653,7 @@ class LineEditSetting(SingleLinkableSetting, QFrame):
 
 class WidgetCombiner(QFrame):
     def __init__(self, widget1, widget2, parent):
-        super(WidgetCombiner, self).__init__(parent)
+        super().__init__(parent)
         # these widgets get created outside of WidgetCombiner and might
         # have had a different parent - but they're our children now!
         widget1.setParent(self)
@@ -1763,7 +1763,7 @@ class ReplayChooser(QFrame):
 
 class ResetSettings(QFrame):
     def __init__(self):
-        super(ResetSettings, self).__init__()
+        super().__init__()
         self.label = QLabel(self)
         self.label.setText("Reset settings:")
 
