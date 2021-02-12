@@ -295,6 +295,30 @@ class ComboboxSetting(LinkableSetting, QFrame):
     def selection_changed(self):
         self.on_setting_changed_from_gui(self.setting, self.combobox.currentData())
 
+class FileChooserSetting(SingleLinkableSetting, QFrame):
+    def __init__(self, label_text, button_text, tooltip, file_chooser_type, setting, name_filters=None):
+        SingleLinkableSetting.__init__(self, setting)
+        QFrame.__init__(self)
+        self.setting_label = QLabel(label_text)
+        self.path_label = QLabel(self.setting_value)
+        self.file_chooser = FileChooserButton(button_text, file_chooser_type, name_filters)
+        self.file_chooser.path_chosen_signal.connect(self._on_setting_changed_from_gui)
+        self.file_chooser.setFixedWidth(120)
+
+        self.layout = QHBoxLayout()
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.setting_label)
+        self.layout.addWidget(self.path_label)
+        self.layout.addWidget(self.file_chooser)
+        self.setLayout(self.layout)
+
+    def _on_setting_changed_from_gui(self, new_value):
+        # FileChooserButton gives us a Path, we want our setting to be a str
+        super().on_setting_changed_from_gui(str(new_value))
+
+    def on_setting_changed(self, setting, new_value):
+        self.path_label.setText(new_value)
+
 
 class ScrollableLoadablesWidget(QFrame):
     def __init__(self):
@@ -1641,7 +1665,7 @@ class LineEditSetting(SingleLinkableSetting, QFrame):
         self.input_ = InputWidget(display, tooltip, type_=type_)
         self.input_.field.setText(self.setting_value)
         self.input_.field.textChanged.connect(self.on_setting_changed_from_gui)
-        self.layout = QVBoxLayout()
+        self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(self.input_)
         self.setLayout(self.layout)

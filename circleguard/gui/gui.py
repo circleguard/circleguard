@@ -7,7 +7,7 @@ import time
 from PyQt5.QtCore import Qt, pyqtSignal, QUrl
 from PyQt5.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
     QLabel, QGridLayout, QSpacerItem, QSizePolicy, QMainWindow,
-    QTextEdit, QStackedWidget, QHBoxLayout, QMessageBox,)
+    QTextEdit, QStackedWidget, QHBoxLayout, QMessageBox, QFileDialog)
 from PyQt5.QtGui import QDesktopServices, QIcon, QCursor
 
 # from circleguard import Circleguard, ReplayPath
@@ -18,7 +18,7 @@ from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, Separator,
     ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
     LineEditSetting, RunWidget, ComboboxSetting, ReplayDropArea,
-    ReplayMapCreation, PushButton)
+    ReplayMapCreation, PushButton, FileChooserSetting)
 
 from settings import (get_setting, overwrite_config,
     overwrite_with_config_settings)
@@ -345,6 +345,8 @@ class ScrollableSettingsWidget(QFrame):
         self.theme = ComboboxSetting("Theme", "Come join the dark side", "theme")
         self.show_cv_frametimes = ComboboxSetting("Frametime graph display type", "", "frametime_graph_display")
         self.default_page = ComboboxSetting("Show this screen when circleguard starts", "", "default_page")
+        self.whitelist_file = FileChooserSetting("Player Whitelist File", "Choose File", "",
+            QFileDialog.ExistingFile, "whitelist_file_location", ["plaintext file (*.txt)"])
 
         self.default_span_map = LineEditSetting("Map span defaults to", "", "normal", "default_span_map")
         self.default_span_user = LineEditSetting("User span defaults to", "", "normal", "default_span_user")
@@ -366,7 +368,7 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(self.theme)
         self.layout.addWidget(self.show_cv_frametimes)
         self.layout.addWidget(self.default_page)
-        self.layout.addItem(vert_spacer)
+        self.layout.addWidget(self.whitelist_file)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Loadables"))
         self.layout.addWidget(self.default_span_user)

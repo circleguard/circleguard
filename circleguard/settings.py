@@ -213,7 +213,8 @@ DEFAULTS = {
     "Locations": {
         "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
         "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
-        "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
+        "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation),
+        "whitelist_file_location": ""
     },
     "Loadables": {
         "default_span_map": "1-50",
