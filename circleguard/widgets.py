@@ -301,6 +301,7 @@ class FileChooserSetting(SingleLinkableSetting, QFrame):
         QFrame.__init__(self)
         self.setting_label = QLabel(label_text)
         self.path_label = QLabel(self.setting_value)
+        self.path_label.setWordWrap(True)
         self.file_chooser = FileChooserButton(button_text, file_chooser_type, name_filters)
         self.file_chooser.path_chosen_signal.connect(self._on_setting_changed_from_gui)
         self.file_chooser.setFixedWidth(120)
