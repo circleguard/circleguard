@@ -302,7 +302,7 @@ class SettingsTab(QFrame):
 
 
         self.info = QLabel(self)
-        # multiple spaces get shrinked to one space in rich text mode
+        # multiple spaces get shrunk to one space in rich text mode
         # https://groups.google.com/forum/#!topic/qtcontribs/VDOQFUj-eIA
         self.info.setText(f"circleguard v{__version__}&nbsp;&nbsp;|&nbsp;&nbsp;"
                           "<a href=\"https://discord.gg/wj35ehD\">Discord</a>"
@@ -314,9 +314,9 @@ class SettingsTab(QFrame):
         self.setting_buttons = WidgetCombiner(self.open_settings, self.sync_settings, self)
 
         layout = QGridLayout()
-        layout.addWidget(self.info, 0,0,1,1, alignment=Qt.AlignLeft)
-        layout.addWidget(self.setting_buttons, 0,1,1,1, alignment=Qt.AlignRight)
-        layout.addWidget(self.qscrollarea, 1,0,1,2)
+        layout.addWidget(self.info, 0, 0, 1, 1, alignment=Qt.AlignLeft)
+        layout.addWidget(self.setting_buttons, 0, 1, 1, 1, alignment=Qt.AlignRight)
+        layout.addWidget(self.qscrollarea, 1, 0, 1, 2)
 
         self.setLayout(layout)
 
