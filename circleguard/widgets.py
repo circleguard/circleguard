@@ -8,9 +8,9 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QPushButton, QCheckBox, QComboBox, QVBoxLayout, QHBoxLayout, QMainWindow,
     QTableWidget, QTableWidgetItem, QAbstractItemView, QGraphicsOpacityEffect,
     QStyle, QListWidget, QListWidgetItem, QStackedLayout, QApplication,
-    QShortcut)
+    QShortcut, QToolTip)
 from PyQt5.QtGui import (QRegExpValidator, QIcon, QPainter, QPen, QCursor,
-    QKeySequence)
+    QKeySequence, QPixmap)
 from PyQt5.QtCore import (QRegExp, Qt, QCoreApplication, pyqtSignal, QEvent,
     QSize, QTimer)
 # from circleguard import Circleguard, TimewarpResult, Mod, Key
@@ -146,6 +146,24 @@ class Separator(QFrame):
         self.layout.addWidget(label, 0, 2, 1, 1)
         self.layout.addWidget(QHLine(), 0, 3, 1, 2)
         self.setLayout(self.layout)
+
+
+class WhatsThis(QLabel):
+    """
+    Uses a label as a carrier for displaying a question mark image, which
+    displays a tooltip on hover immediately, with no delay. This is useful for
+    confusing aspects of circleguard which need explicit clarification beyond a
+    normal delayed tooltip on hover.
+    """
+    def __init__(self, text):
+        super().__init__()
+
+        self.text = text
+        pixmap = QPixmap(resource_path("question_mark.png"))
+        self.setPixmap(pixmap)
+
+    def enterEvent(self, event):
+        QToolTip.showText(event.globalPos(), self.text)
 
 
 class InputWidget(QFrame):
@@ -299,7 +317,16 @@ class FileChooserSetting(SingleLinkableSetting, QFrame):
     def __init__(self, label_text, button_text, tooltip, file_chooser_type, setting, name_filters=None):
         SingleLinkableSetting.__init__(self, setting)
         QFrame.__init__(self)
+
+        self.whats_this = WhatsThis("A plaintext (.txt) file, containing a user id (NOT a username) "
+            "on each line. If given, users listed in\nthis file will not show up in your investigation "
+            "results, even if their replay is under a set threshold.\n\n"
+            "You can leave comments on any line of the file with a pound sign (#) followed by "
+            "your comment.\nNo other text is allowed besides comments and user ids.")
+        self.whats_this.setFixedWidth(20)
+
         self.setting_label = QLabel(label_text)
+
         self.path_label = QLabel(self.setting_value)
         self.path_label.setWordWrap(True)
 
@@ -315,6 +342,7 @@ class FileChooserSetting(SingleLinkableSetting, QFrame):
 
         self.layout = QHBoxLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(self.whats_this)
         self.layout.addWidget(self.setting_label)
         self.layout.addWidget(self.path_label)
         self.layout.addWidget(self.file_chooser)
