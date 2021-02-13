@@ -345,7 +345,7 @@ class ScrollableSettingsWidget(QFrame):
         self.theme = ComboboxSetting("Theme", "Come join the dark side", "theme")
         self.show_cv_frametimes = ComboboxSetting("Frametime graph display type", "", "frametime_graph_display")
         self.default_page = ComboboxSetting("Show this screen when circleguard starts", "", "default_page")
-        self.whitelist_file = FileChooserSetting("Player Whitelist File", "Choose File", "",
+        self.whitelist_file = FileChooserSetting("Player Whitelist File:", "Choose File", "",
             QFileDialog.ExistingFile, "whitelist_file_location", ["plaintext file (*.txt)"])
 
         self.default_span_map = LineEditSetting("Map span defaults to", "", "normal", "default_span_map")

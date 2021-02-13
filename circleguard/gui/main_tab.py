@@ -9,6 +9,7 @@ import logging
 import re
 from lzma import LZMAError
 import traceback
+from pathlib import Path
 
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout, QTextEdit,
@@ -535,11 +536,39 @@ class MainTab(SingleLinkableSetting, QFrame):
         try:
             while True:
                 result = self.q.get_nowait()
+
+                whitelisted_ids = []
+                whitelist_file = get_setting("whitelist_file_location")
+                # whitelist_file is the empty strign if no file has been specified
+                if whitelist_file:
+                    whitelist_file = Path(whitelist_file)
+
+                    with open(whitelist_file) as f:
+                        lines = f.readlines()
+                        for line in lines:
+                            # remove comment if there is one
+                            line = line.rsplit("#")[0]
+                            # allow whitespace on either end of the id
+                            line = line.strip()
+                            # allow empty lines anywhere in the file
+                            if line == "":
+                                continue
+                            # TODO: nicer error if the line is an invalid id?
+                            try:
+                                line = int(line)
+                            except ValueError:
+                                self.write_to_terminal_signal.emit("<div style='color:#ff5252'>Invalid "
+                                    f"user id in whitelist file:</div> \"{line}\" is not a valid user id.")
+                                continue
+                            whitelisted_ids.append(line)
+
                 ts = datetime.now() # ts = timestamp
                 message = None
                 ischeat = False
                 if isinstance(result, StealResult):
-                    if result.similarity < get_setting("steal_max_sim"):
+                    if result.earlier_replay.user_id in whitelisted_ids:
+                        pass
+                    elif result.similarity < get_setting("steal_max_sim"):
                         ischeat = True
                         message = get_setting("message_steal_found").format(ts=ts, sim=result.similarity, r=result, replay1=result.replay1, replay2=result.replay2,
                                         earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
@@ -550,7 +579,9 @@ class MainTab(SingleLinkableSetting, QFrame):
                                         later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name())
 
                 if isinstance(result, RelaxResult):
-                    if result.ur < get_setting("relax_max_ur"):
+                    if result.replay.user_id in whitelisted_ids:
+                        pass
+                    elif result.ur < get_setting("relax_max_ur"):
                         ischeat = True
                         message = get_setting("message_relax_found").format(ts=ts, r=result, replay=result.replay, ur=result.ur,
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
@@ -559,7 +590,9 @@ class MainTab(SingleLinkableSetting, QFrame):
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
                 if isinstance(result, CorrectionResult):
-                    if len(result.snaps) > 0:
+                    if result.replay.user_id in whitelisted_ids:
+                        pass
+                    elif len(result.snaps) > 0:
                         ischeat = True
                         snap_message = get_setting("message_correction_snaps")
                         snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
@@ -567,7 +600,9 @@ class MainTab(SingleLinkableSetting, QFrame):
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
                 if isinstance(result, TimewarpResult):
-                    if result.frametime < get_setting("timewarp_max_frametime"):
+                    if result.replay.user_id in whitelisted_ids:
+                        pass
+                    elif result.frametime < get_setting("timewarp_max_frametime"):
                         ischeat = True
                         message = get_setting("message_timewarp_found").format(ts=ts, r=result, replay=result.replay, frametime=result.frametime,
                                                 mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
