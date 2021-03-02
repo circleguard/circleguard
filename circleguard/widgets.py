@@ -578,7 +578,7 @@ class ReplayMapLoadable(LoadableBase):
     def cg_loadable(self, previous):
         from circleguard import ReplayMap, Mod
 
-        if not previous:
+        if not previous or not isinstance(previous, ReplayMap):
             mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
             previous = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
 
@@ -615,7 +615,7 @@ class ReplayPathLoadable(LoadableBase):
         from circleguard import ReplayPath, ReplayDir
 
         path = self.path_input.path
-        if not previous:
+        if not previous or not isinstance(previous, (ReplayPath, ReplayDir)):
             if self.path_input.path.is_dir():
                 previous = ReplayDir(path)
             else:
@@ -672,7 +672,7 @@ class MapLoadable(LoadableBase):
         if span == "all":
             span = Loader.MAX_MAP_SPAN
 
-        if not previous:
+        if not previous or not isinstance(previous, Map):
             mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
             previous = Map(int(self.map_id_input.value()), span, mods=mods)
 
@@ -717,7 +717,7 @@ class UserLoadable(LoadableBase):
         if span == "all":
             span = Loader.MAX_USER_SPAN
 
-        if not previous:
+        if not previous or not isinstance(previous, User):
             mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
             previous = User(int(self.user_id_input.value()), span, mods=mods)
 
@@ -762,7 +762,7 @@ class MapUserLoadable(LoadableBase):
         if span == "all":
             span = "1-100"
 
-        if not previous:
+        if not previous or not isinstance(previous, MapUser):
             previous = MapUser(int(self.map_id_input.value()), int(self.user_id_input.value()), span)
 
         new_loadable = MapUser(int(self.map_id_input.value()), int(self.user_id_input.value()), span)
