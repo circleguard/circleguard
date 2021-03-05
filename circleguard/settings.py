@@ -621,7 +621,7 @@ def reset_defaults():
 def overwrite_config():
     config = ConfigParser(allow_no_value=True, interpolation=None)
     config.optionxform = str # preserve case in setting keys
-    for section in DEFAULTS.keys():
+    for section in DEFAULTS:
         config[section] = {}
 
     keys = SETTINGS.allKeys()

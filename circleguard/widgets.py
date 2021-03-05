@@ -796,38 +796,38 @@ class SelectableLoadable(QFrame):
         self.stacked_layout = QStackedLayout()
 
         unselected = UnselectedLoadable()
-        unselected.combobox.activated.connect(lambda: self.select_loadable())
+        unselected.combobox.activated.connect(lambda: self.select_loadable(None))
         unselected.combobox.activated.connect(self._input_changed)
         unselected.delete_button.clicked.connect(self.deleted_pressed)
         unselected.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(unselected)
 
         replay_map = ReplayMapLoadable()
-        replay_map.combobox.activated.connect(lambda: self.select_loadable())
+        replay_map.combobox.activated.connect(lambda: self.select_loadable(None))
         replay_map.delete_button.clicked.connect(self.deleted_pressed)
         replay_map.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(replay_map)
 
         replay_path = ReplayPathLoadable()
-        replay_path.combobox.activated.connect(lambda: self.select_loadable())
+        replay_path.combobox.activated.connect(lambda: self.select_loadable(None))
         replay_path.delete_button.clicked.connect(self.deleted_pressed)
         replay_path.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(replay_path)
 
         map_ = MapLoadable()
-        map_.combobox.activated.connect(lambda: self.select_loadable())
+        map_.combobox.activated.connect(lambda: self.select_loadable(None))
         map_.delete_button.clicked.connect(self.deleted_pressed)
         map_.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(map_)
 
         user = UserLoadable()
-        user.combobox.activated.connect(lambda: self.select_loadable())
+        user.combobox.activated.connect(lambda: self.select_loadable(None))
         user.delete_button.clicked.connect(self.deleted_pressed)
         user.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(user)
 
         map_user = MapUserLoadable()
-        map_user.combobox.activated.connect(lambda: self.select_loadable())
+        map_user.combobox.activated.connect(lambda: self.select_loadable(None))
         map_user.delete_button.clicked.connect(self.deleted_pressed)
         map_user.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(map_user)
@@ -836,7 +836,7 @@ class SelectableLoadable(QFrame):
         layout.addLayout(self.stacked_layout)
         self.setLayout(layout)
 
-    def select_loadable(self, override_type=None):
+    def select_loadable(self, override_type):
         if not override_type and self.stacked_layout.currentWidget().combobox.currentIndex() == 0:
             return
 
