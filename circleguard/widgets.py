@@ -579,10 +579,10 @@ class ReplayMapLoadable(LoadableBase):
         from circleguard import ReplayMap, Mod
 
         if not previous or not isinstance(previous, ReplayMap):
-            mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+            mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
             previous = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
 
-        mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+        mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
         new_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
 
         ret = previous
@@ -673,10 +673,10 @@ class MapLoadable(LoadableBase):
             span = Loader.MAX_MAP_SPAN
 
         if not previous or not isinstance(previous, Map):
-            mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+            mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
             previous = Map(int(self.map_id_input.value()), span, mods=mods)
 
-        mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+        mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
         new_loadable = Map(int(self.map_id_input.value()), span, mods=mods)
 
         ret = previous
@@ -718,10 +718,10 @@ class UserLoadable(LoadableBase):
             span = Loader.MAX_USER_SPAN
 
         if not previous or not isinstance(previous, User):
-            mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+            mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
             previous = User(int(self.user_id_input.value()), span, mods=mods)
 
-        mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+        mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
         new_loadable = User(int(self.user_id_input.value()), span, mods=mods)
 
         ret = previous
@@ -1341,7 +1341,7 @@ class ReplayMapVis(QFrame):
         if not self.validate():
             return None
         if not self._cg_loadable:
-            mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+            mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
             self._cg_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
         # if something is accessing the loadable we represent, but the value of
         # our input fields have changed (ie the replay we represent has changed)
@@ -1355,7 +1355,7 @@ class ReplayMapVis(QFrame):
         # don't know what its mods will end up being, so it could be equal or
         # could not be. To be certain, we recreate the loadable if the mods
         # change at all.
-        mods = Mod(self.mods_input.value()) if self.mods_input.value() else None
+        mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
         new_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
         if (new_loadable.map_id != self._cg_loadable.map_id or \
             new_loadable.user_id != self._cg_loadable.user_id or \
