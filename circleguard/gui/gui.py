@@ -342,7 +342,8 @@ class ScrollableSettingsWidget(QFrame):
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
         self.ignore_snaps_off_hitobjs = OptionWidget("Ignore Snaps not on hit objects", "", "ignore_snaps_off_hitobjs")
-        self.theme = ComboboxSetting("Theme", "Come join the dark side", "theme")
+        self.alert_on_result = OptionWidget("Play a sound when a result is found", "", "alert_on_result")
+        self.theme = ComboboxSetting("Theme", "", "theme")
         self.show_cv_frametimes = ComboboxSetting("Frametime graph display type", "", "frametime_graph_display")
         self.default_page = ComboboxSetting("Show this screen when circleguard starts", "", "default_page")
         self.whitelist_file = FileChooserSetting("Player Whitelist File:", "Choose File", "",
@@ -365,6 +366,7 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(self.apikey_widget)
         self.layout.addWidget(self.cache)
         self.layout.addWidget(self.ignore_snaps_off_hitobjs)
+        self.layout.addWidget(self.alert_on_result)
         self.layout.addWidget(self.theme)
         self.layout.addWidget(self.show_cv_frametimes)
         self.layout.addWidget(self.default_page)

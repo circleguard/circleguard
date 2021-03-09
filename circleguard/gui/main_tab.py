@@ -624,8 +624,9 @@ class MainTab(SingleLinkableSetting, QFrame):
                     self.add_result_signal.emit(result)
                 else:
                     if ischeat:
-                        QApplication.beep()
-                        QApplication.alert(self)
+                        if get_setting("alert_on_result"):
+                            QApplication.beep()
+                            QApplication.alert(self)
                         # add to Results Tab so it can be played back on demand
                         self.add_result_signal.emit(result)
 

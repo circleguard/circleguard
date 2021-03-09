@@ -287,7 +287,8 @@ DEFAULTS = {
             "Visualization": "visualization",
             "Investigation": "investigation"
         },
-        "ignore_snaps_off_hitobjs": True
+        "ignore_snaps_off_hitobjs": True,
+        "alert_on_result": True
     },
     "Experimental": {
         "rainbow_accent": False
