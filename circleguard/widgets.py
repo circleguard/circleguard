@@ -1600,7 +1600,7 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
     spinbox will affect the setting).
     """
 
-    def __init__(self, parent, display, tooltip, setting, max_):
+    def __init__(self, parent, display, tooltip, setting, max_, min_=0):
         SingleLinkableSetting.__init__(self, setting)
         QFrame.__init__(self, parent)
 
@@ -1614,14 +1614,14 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         slider = Slider(Qt.Horizontal)
         slider.setCursor(QCursor(Qt.PointingHandCursor))
         slider.setFocusPolicy(Qt.ClickFocus)
-        slider.setRange(0, max_)
+        slider.setRange(min_, max_)
         # max value of max_, avoid errors when the setting is 2147483647 aka inf
         val = min(self.setting_value, max_)
         slider.setValue(val)
         self.slider = slider
 
         spinbox = self.spin_box()
-        spinbox.setRange(0, max_)
+        spinbox.setRange(min_, max_)
         spinbox.setSingleStep(1)
         spinbox.setFixedWidth(120)
         spinbox.setValue(self.setting_value)
