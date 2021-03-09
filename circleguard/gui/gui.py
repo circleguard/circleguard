@@ -377,10 +377,10 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(Separator("Debug"))
         self.layout.addWidget(self.log_level)
         self.layout.addWidget(self.log_output)
-        self.layout.addWidget(ResetSettings())
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Dev"))
         self.layout.addWidget(self.run_wizard)
+        self.layout.addWidget(ResetSettings())
         self.setLayout(self.layout)
 
     def show_wizard(self):
