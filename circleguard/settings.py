@@ -145,7 +145,7 @@ DEFAULTS = {
         "message_relax_found_display":      "[{ts:%X}] {ur:.2f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
         "message_starting_correction":      "[{ts:%X}] Checking if the given replays contain any Snaps",
         "message_correction_found":         "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
-        "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
+        "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}\n(Not below threshold)",
         "message_starting_timewarp":        "[{ts:%X}] Determining frametime of the given replays",
         "message_timewarp_found":           "[{ts:%X}] {frametime:.1f} avg cv frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
         "message_timewarp_found_display":   "[{ts:%X}] {frametime:.1f} avg cv frametime. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
@@ -225,6 +225,8 @@ DEFAULTS = {
         "steal_max_sim_display": 18,
         "relax_max_ur": 50,
         "relax_max_ur_display": 90,
+        "correction_min_snaps": 1,
+        "correction_min_snaps_display": 1,
         "correction_max_angle": 10,
         "correction_max_angle_display": 10,
         "correction_min_distance": 8,
@@ -415,6 +417,9 @@ FORCE_UPDATE = {
         "template_relax",
         "template_correction",
         "template_timewarp"
+    ],
+    "2.13.3": [
+        "message_correction_found_display"
     ]
 }
 

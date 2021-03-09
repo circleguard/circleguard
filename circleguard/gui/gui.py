@@ -467,27 +467,33 @@ class ThresholdsTab(QFrame):
 class ScrollableThresholdsWidget(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
-        steal_max_sim = SliderBoxMaxInfSetting(self, "Max similarity", "ReplaySteal comparisons that score below this "
-                "will be stored so you can view them, and printed to the console", "steal_max_sim", 100)
-        steal_max_sim_display = SliderBoxMaxInfSetting(self, "Max similarity display", "ReplaySteal comparisons that "
-                "score below this will be printed to the console", "steal_max_sim_display", 100)
+        steal_max_sim = SliderBoxMaxInfSetting(self, "Max similarity", "Replays with a similarity below this value "
+                "will be stored in the results tab so you can view them, and will be printed to the console",
+                "steal_max_sim", 100)
+        steal_max_sim_display = SliderBoxMaxInfSetting(self, "Max similarity display", "Replays with a similarity "
+                "below this value will be printed to the console", "steal_max_sim_display", 100)
+
         relax_max_ur = SliderBoxMaxInfSetting(self, "Max ur", "Replays that have a ur lower than this will be stored "
-                "so you can view them, and printed to the console", "relax_max_ur", 300)
+                "in the results tab so you can view them, and will be printed to the console", "relax_max_ur", 300)
         relax_max_ur_display = SliderBoxMaxInfSetting(self, "Max ur display", "Replays with a ur lower than this "
                 "will be printed to the console", "relax_max_ur_display", 300)
-        # display options for correction are more confusing than they're worth,
-        # especially when we don't have a good mechanism for storing Snaps in
-        # the Result tab or visualizer support for the Snap timestamps. TODO
-        # potentially add back if we can provide good support for them.
+
+        correction_min_snaps = SliderBoxMaxInfSetting(self, "Min snaps", "Replays with at least this many snaps "
+                "will be stored in the results tab so you can view them, and will be printed to the console",
+                "correction_min_snaps", 20, min_=1)
+        correction_min_snaps_display = SliderBoxMaxInfSetting(self, "Min snaps display", "Replays with at least this many snaps "
+                "will be printed to the console", "correction_min_snaps_display", 20, min_=1)
         correction_max_angle = SliderBoxSetting(self, "Max angle", "Replays with a set of three points "
-                "making an angle less than this (*and* also satisfying correction_min_distance) will be stored so "
-                "you can view them, and printed to the console.", "correction_max_angle", 360)
+                "making an angle less than this (*and* also satisfying correction_min_distance) will be stored in the "
+                "results tab so you can view them, and will be printed to the console.", "correction_max_angle", 360)
         correction_min_distance = SliderBoxMaxInfSetting(self, "Min distance", "Replays with a set of three points "
                 "where either the distance from AB or BC is greater than this (*and* also satisfying correction_max_angle) "
-                "will be stored so you can view them, and printed to the console.", "correction_min_distance", 100)
+                "will be stored in the results tab so you can view them, and will be printed to the console.",
+                "correction_min_distance", 100)
 
         timewarp_max_frametime = SliderBoxMaxInfSetting(self, "Max frametime", "Replays with an average frametime "
-                "lower than this will be stored so you can view them, and printed to the console", "timewarp_max_frametime", 50)
+                "lower than this will be stored in the results tab so you can view them, and will printed to the console",
+                "timewarp_max_frametime", 50)
         timewarp_max_frametime_display = SliderBoxMaxInfSetting(self, "Max frametime display", "Replays with an average frametime "
                 "lower than this will be printed to the console", "timewarp_max_frametime_display", 50)
 
@@ -500,6 +506,8 @@ class ScrollableThresholdsWidget(QFrame):
         layout.addWidget(relax_max_ur)
         layout.addWidget(relax_max_ur_display)
         layout.addWidget(Separator("Snaps"))
+        layout.addWidget(correction_min_snaps)
+        layout.addWidget(correction_min_snaps_display)
         layout.addWidget(correction_max_angle)
         layout.addWidget(correction_min_distance)
         layout.addWidget(Separator("Frametime"))

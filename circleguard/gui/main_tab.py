@@ -585,20 +585,25 @@ class MainTab(SingleLinkableSetting, QFrame):
                     elif result.ur < get_setting("relax_max_ur"):
                         ischeat = True
                         message = get_setting("message_relax_found").format(ts=ts, r=result, replay=result.replay, ur=result.ur,
-                                                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
                     elif result.ur < get_setting("relax_max_ur_display"):
                         message = get_setting("message_relax_found_display").format(ts=ts, r=result, replay=result.replay, ur=result.ur,
-                                                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
                 if isinstance(result, CorrectionResult):
                     if result.replay.user_id in whitelisted_ids:
                         pass
-                    elif len(result.snaps) > 0:
+                    elif len(result.snaps) >= get_setting("correction_min_snaps"):
                         ischeat = True
                         snap_message = get_setting("message_correction_snaps")
                         snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
                         message = get_setting("message_correction_found").format(ts=ts, r=result, replay=result.replay, snaps=snap_text,
-                                                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                    elif len(result.snaps) >= get_setting("correction_min_snaps_display"):
+                        snap_message = get_setting("message_correction_snaps")
+                        snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
+                        message = get_setting("message_correction_found_display").format(ts=ts, r=result, replay=result.replay, snaps=snap_text,
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
                 if isinstance(result, TimewarpResult):
                     if result.replay.user_id in whitelisted_ids:
@@ -606,10 +611,10 @@ class MainTab(SingleLinkableSetting, QFrame):
                     elif result.frametime < get_setting("timewarp_max_frametime"):
                         ischeat = True
                         message = get_setting("message_timewarp_found").format(ts=ts, r=result, replay=result.replay, frametime=result.frametime,
-                                                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
                     elif result.frametime < get_setting("timewarp_max_frametime_display"):
                         message = get_setting("message_timewarp_found_display").format(ts=ts, r=result, replay=result.replay, frametime=result.frametime,
-                                                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
 
                 if message or isinstance(result, AnalysisResult):
                     self.show_no_cheat_found = False
