@@ -208,6 +208,8 @@ def import_expensive_modules():
     from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
     from matplotlib.figure import Figure
     import numpy as np
+    # requests isn't that expensive, but might as well load it here anyway
+    import requests
     # pylint: enable=unused-import
 
 # everything would work fine if we didn't force import these modules now, but

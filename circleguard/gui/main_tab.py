@@ -15,7 +15,7 @@ from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout, QTextEdit,
     QApplication, QToolTip, QLabel, QSizePolicy)
 from PyQt5.QtGui import QTextCursor
-import requests
+# import requests
 # from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
     # UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
     # MapUser, Detect, Check, TimewarpResult, RelaxResult, CorrectionResult,
@@ -447,6 +447,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                             # interacts with beatmaps it will attempt to call `next` on an empty generator if the
                             # beatmap is empty, which of course raises StopIteration.
                             except StopIteration:
+                                import requests
                                 if requests.get(f"https://osu.ppy.sh/osu/{replay.map_id}").content == b"":
                                     self.write_to_terminal_signal.emit("<div style='color:#ff5252'>The "
                                         "map " + str(replay.map_id) + "'s download is bugged</div>, so its ur cannot "
