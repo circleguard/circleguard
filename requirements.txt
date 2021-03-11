@@ -1,15 +1,10 @@
-PyQt5==5.15.2
-osrparse==4.0.0
-# TODO this is a temporary workaround for https://github.com/numpy/numpy/issues/16744,
-# remove this line when the issue is resolved
-numpy==1.19.3
-packaging>=17.0
-slider==0.4.0
-circlevis==1.2.2
+packaging
+slider
+circlevis
+circleguard
 # see https://github.com/pyinstaller/pyinstaller/blob/develop/tests/requirements-libraries.txt,
-# which pins matplotlib at 3.0.3 (claiming that updating causes the hooks to fail).
+# which pins matplotlib at 3.2.2 (claiming that updating causes the hooks to fail).
 # I have not checked myself if updating matplotlib cuases the build to fail.
-matplotlib==3.0.3
-portalocker==1.7.1
-
-circleguard==5.1.2
+matplotlib==3.2.2
+portalocker==2.2.1
+PyQt5==5.15.2
