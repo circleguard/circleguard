@@ -16,6 +16,7 @@ except ImportError:
     pass
 
 from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt
 import portalocker
 from portalocker.exceptions import LockException
 
@@ -147,6 +148,8 @@ def init(self, *args, **kwargs):
             sys.excepthook(*sys.exc_info())
     self.run = run_with_except_hook
 threading.Thread.__init__ = init
+
+QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 
 app = QApplication([])
 app.setStyle("Fusion")
