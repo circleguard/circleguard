@@ -18,7 +18,7 @@ from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, Separator,
     ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
     LineEditSetting, RunWidget, ComboboxSetting, ReplayDropArea,
-    ReplayMapCreation, PushButton, FileChooserSetting)
+    ReplayMapCreation, PushButton, FileChooserSetting, ResultW)
 
 from settings import (get_setting, overwrite_config,
     overwrite_with_config_settings)
@@ -395,13 +395,32 @@ class ResultsTab(QFrame):
     def __init__(self):
         super().__init__()
 
-        layout = QVBoxLayout()
         self.qscrollarea = QScrollArea(self)
         self.results = ResultsFrame()
         self.qscrollarea.setWidget(self.results)
         self.qscrollarea.setWidgetResizable(True)
-        layout.addWidget(self.qscrollarea)
+
+        clear_results_button = PushButton("Clear Results")
+        clear_results_button.clicked.connect(self.clear_results)
+
+        layout = QGridLayout()
+        layout.addWidget(clear_results_button, 0, 1, 1, 1, alignment=Qt.AlignRight)
+        layout.addWidget(self.qscrollarea, 1, 0, 1, 2)
+
         self.setLayout(layout)
+
+    def clear_results(self):
+        i = 0
+        to_delete = []
+        while i < self.results.layout.count():
+            item = self.results.layout.itemAt(i)
+            if isinstance(item.widget(), ResultW):
+                to_delete.append(item)
+            i += 1
+
+        for item in to_delete:
+            self.results.layout.removeItem(item)
+            item.widget().deleteLater()
 
 
 class ResultsFrame(QFrame):
