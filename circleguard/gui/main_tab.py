@@ -305,7 +305,10 @@ class MainTab(SingleLinkableSetting, QFrame):
             else:
                 cg.load_info(lc)
                 all_replays = lc.all_replays()
-                replays1 = all_replays
+                # we remove replays from both ``all_replays`` and ``replays1``
+                # below, so this needs to be a shallow copy to avoid modifying
+                # one array when removing from the other.
+                replays1 = all_replays.copy()
                 replays2 = []
 
             num_replays = len(all_replays)
@@ -316,8 +319,11 @@ class MainTab(SingleLinkableSetting, QFrame):
 
             def _skip_replay_with_message(replay, message):
                 self.write_to_terminal_signal.emit(message)
+                _remove_replay(replay)
+
+            def _remove_replay(replay):
                 # the replay very likely (perhaps certainly) didn't get
-                # loaded if the above exception fired. just remove it.
+                # loaded if an exception fired. Just remove it.
                 # If two different loadables both contain this problematic
                 # replay, we will attempt to remove it from the list twice.
                 # Guard against this by checking for membership first.
@@ -331,6 +337,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                 if replay in replays2:
                     replays2.remove(replay)
 
+            seen_replay_ids = []
             # `[:]` implicitly copies the list, so we don't run into trouble
             #  when removing elements from it while iterating
             for replay in all_replays[:]:
@@ -376,6 +383,18 @@ class MainTab(SingleLinkableSetting, QFrame):
                             "The replay " + str(replay) + " has been skipped because of this.")
                 finally:
                     self.increment_progressbar_signal.emit(1)
+
+                # now that it's loaded, check if we've already seen the replay
+                # before. If so, remove it to prevent duplicate replays from
+                # being investigated (and potentially resulting in 0 sim).
+                if replay.replay_id in seen_replay_ids:
+                    _remove_replay(replay)
+                # some replays have ``0`` for their replay id; we don't want to
+                # treat these as the same replay. Some replays might also have
+                # a null/None replay id? I don't think that should ever happen
+                # but just to be safe, also discount those here.
+                if replay.replay_id:
+                    seen_replay_ids.append(replay.replay_id)
 
             if "Similarity" in run.enabled_investigations:
                 lc1.loaded = True
