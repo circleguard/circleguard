@@ -30,26 +30,6 @@ def resource_path(path):
     return str(ROOT_PATH / "resources" / Path(path))
 
 
-# TODO figure out if ``delete_widget`` (and ``clear_layout``) are really
-# necessary instead of just using ``widget.deleteLater``
-def delete_widget(widget):
-    if widget.layout is not None:
-        clear_layout(widget.layout)
-        widget.layout = None
-    widget.deleteLater()
-
-
-def clear_layout(layout):
-    while layout.count():
-        child = layout.takeAt(0)
-        if child.layout() is not None:
-            clear_layout(child.layout())
-        if child.widget() is not None:
-            if isinstance(child.widget().layout, QLayout):
-                clear_layout(child.widget().layout)
-            child.widget().deleteLater()
-
-
 class DebugWidget(QFrame):
     """
     A class intended to be subclassed by widgets when debugging. This draws
