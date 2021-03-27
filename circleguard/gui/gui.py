@@ -20,8 +20,8 @@ from widgets import (ResetSettings, WidgetCombiner, Separator,
     LineEditSetting, RunWidget, ComboboxSetting, ReplayDropArea,
     ReplayMapCreation, PushButton, FileChooserSetting, ResultW)
 
-from settings import (get_setting, overwrite_config,
-    overwrite_with_config_settings)
+from settings import (get_setting, overwrite_config, set_setting,
+    overwrite_with_config_settings, DEFAULTS)
 from .visualizer import get_visualizer
 from .main_tab import MainTab
 from wizard import TutorialWizard
@@ -402,10 +402,12 @@ class ResultsTab(QFrame):
 
         clear_results_button = PushButton("Clear Results")
         clear_results_button.clicked.connect(self.clear_results)
+        clear_results_button.setMinimumHeight(27)
+        clear_results_button.setMinimumWidth(110)
 
         layout = QGridLayout()
-        layout.addWidget(clear_results_button, 0, 1, 1, 1, alignment=Qt.AlignRight)
-        layout.addWidget(self.qscrollarea, 1, 0, 1, 2)
+        layout.addWidget(self.qscrollarea, 0, 0, 1, 2)
+        layout.addWidget(clear_results_button, 1, 0, 1, 1, alignment=Qt.AlignLeft)
 
         self.setLayout(layout)
 
@@ -477,13 +479,26 @@ class QueueFrame(QFrame):
 class ThresholdsTab(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
-        self.qscrollarea = QScrollArea(self)
-        self.qscrollarea.setWidget(ScrollableThresholdsWidget(self))
-        self.qscrollarea.setWidgetResizable(True)
+        qscrollarea = QScrollArea(self)
+        qscrollarea.setWidget(ScrollableThresholdsWidget(self))
+        qscrollarea.setWidgetResizable(True)
 
-        self.layout = QVBoxLayout()
-        self.layout.addWidget(self.qscrollarea)
-        self.setLayout(self.layout)
+        clear_results_button = PushButton("Reset To Defaults")
+        clear_results_button.clicked.connect(self.reset_to_defaults)
+        clear_results_button.setMinimumHeight(27)
+        clear_results_button.setMinimumWidth(110)
+
+        layout = QVBoxLayout()
+        layout.addWidget(qscrollarea)
+        layout.addWidget(clear_results_button, alignment=Qt.AlignLeft)
+        self.setLayout(layout)
+
+
+    def reset_to_defaults(self):
+        for setting, value in DEFAULTS["Thresholds"].items():
+            set_setting(setting, value)
+
+
 
 class ScrollableThresholdsWidget(QFrame):
     def __init__(self, parent):
