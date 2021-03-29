@@ -418,9 +418,7 @@ FORCE_UPDATE = {
         "template_relax",
         "template_correction",
         "template_timewarp",
-        "message_correction_found_display",
-        "steal_max_sim",
-        "steal_max_sim_display"
+        "message_correction_found_display"
     ]
 }
 
