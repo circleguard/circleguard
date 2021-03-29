@@ -413,14 +413,14 @@ FORCE_UPDATE = {
     "2.12.0": [
         "message_loading_replays"
     ],
-    "2.12.3": [
+    "2.12.2": [
         "template_steal",
         "template_relax",
         "template_correction",
-        "template_timewarp"
-    ],
-    "2.13.3": [
-        "message_correction_found_display"
+        "template_timewarp",
+        "message_correction_found_display",
+        "steal_max_sim",
+        "steal_max_sim_display"
     ]
 }
 
