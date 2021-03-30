@@ -558,18 +558,6 @@ def set_setting(name, value):
             linkable_setting.on_setting_changed(name, value)
     SETTINGS.setValue(name, TYPES[name][0](value))
 
-def toggle_setting(name):
-    """
-    Toggles the given setting.
-
-    Notes
-    -----
-    This method is only valid for settings that hold boolean values.
-    """
-    old_val = get_setting(name)
-    new_val = not old_val
-    set_setting(name, new_val)
-
 def overwrite_outdated_settings():
     last_version = version.parse(get_setting("last_version"))
     last_version = version.parse(last_version.base_version) # remove dev stuff
