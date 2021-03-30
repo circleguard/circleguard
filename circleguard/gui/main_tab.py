@@ -559,7 +559,7 @@ class MainTab(SingleLinkableSetting, QFrame):
 
                 whitelisted_ids = []
                 whitelist_file = get_setting("whitelist_file_location")
-                # whitelist_file is the empty strign if no file has been specified
+                # whitelist_file is the empty string if no file has been specified
                 if whitelist_file:
                     whitelist_file = Path(whitelist_file)
 
@@ -680,7 +680,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         """
         map_id = result.replays[0].map_id
         if self.visualizer and self.visualizer.isVisible() and self.visualizer.replays and self.visualizer.replays[0].map_id == map_id:
-            # pause even if we're currently playing - it's important that this
+            # pause even if we're currently playing. It's important that this
             # happens before seeking, or else the new frame won't correctly
             # display
             self.visualizer.force_pause()
