@@ -131,7 +131,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         if geometry:
             self.restoreGeometry(geometry)
         else:
-            # if we don't know what size we were before, use 900x750
+            # if we don't know what size we were before, use 960x750
             self.resize(960, 750)
 
     def on_setting_changed(self, setting, new_value):
