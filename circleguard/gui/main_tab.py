@@ -586,7 +586,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                 message = None
                 ischeat = False
                 if isinstance(result, StealResult):
-                    if result.earlier_replay.user_id in whitelisted_ids:
+                    if result.later_replay.user_id in whitelisted_ids:
                         pass
                     elif result.similarity < get_setting("steal_max_sim"):
                         ischeat = True
