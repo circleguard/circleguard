@@ -1234,7 +1234,7 @@ class ReplayMapCreation(QFrame):
         super().__init__()
         self.loadables = []
 
-        label = QLabel("Select online replays here")
+        label = QLabel("Enter online replays here")
         font = label.font()
         font.setPointSize(17)
         label.setFont(font)
