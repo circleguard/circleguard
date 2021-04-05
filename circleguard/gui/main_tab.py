@@ -707,4 +707,4 @@ class Run():
 class RunButton(PushButton):
     def enterEvent(self, event):
         if not self.isEnabled():
-            QToolTip.showText(event.globalPos(), "You cannot run an investigation until you enter an api key in settings.")
+            QToolTip.showText(event.globalPos(), "You cannot run an investigation until you enter an api key in the settings.")
