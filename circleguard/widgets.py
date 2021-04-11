@@ -50,6 +50,10 @@ class CheckBox(QCheckBox):
 # A slider which moves directly to the clicked position when clicked
 # Implementation from https://stackoverflow.com/a/29639127/12164878
 class Slider(QSlider):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setCursor(QCursor(Qt.PointingHandCursor))
+
     def mousePressEvent(self, event):
         self.setValue(QStyle.sliderValueFromPosition(self.minimum(),
             self.maximum(), event.x(), self.width()))
@@ -1612,7 +1616,6 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         self.label = label
 
         slider = Slider(Qt.Horizontal)
-        slider.setCursor(QCursor(Qt.PointingHandCursor))
         slider.setFocusPolicy(Qt.ClickFocus)
         slider.setRange(min_, max_)
         # max value of max_, avoid errors when the setting is 2147483647 aka inf
