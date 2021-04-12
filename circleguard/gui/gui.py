@@ -128,6 +128,7 @@ class AnalysisSelection(QFrame):
     def __init__(self):
         super().__init__()
         self._cg = None
+        self.visualizer = None
         self.loadables_q = Queue()
         # this thread continually checks for new loadables to load
         self.cg_load_thread = threading.Thread(target=self._load_loadables)
@@ -338,6 +339,7 @@ class ScrollableSettingsWidget(QFrame):
     def __init__(self):
         super().__init__()
         self.visualizer = None
+        self.wizard = None
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
         self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
