@@ -1590,9 +1590,7 @@ class RunWidget(QFrame):
         self.status_label.setText("<b>Status: " + self.status + "</b>")
 
     def cancel(self):
-        self.status = "Canceled"
-        self.button.deleteLater()
-        self.status_label.setText("<b>Status: " + self.status + "</b>")
+        self.deleteLater()
 
 
 
