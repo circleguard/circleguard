@@ -1562,7 +1562,7 @@ class RunWidget(QFrame):
 
         self.status = "Queued"
         self.label = QLabel(self)
-        self.text = f"[Run {self.run_id}] Run with {len(run.loadables)} Loadables"
+        self.text = f"[Run {self.run_id + 1}] Run with {len(run.loadables)} Loadables"
         self.label.setText(self.text)
 
         self.status_label = QLabel(self)
