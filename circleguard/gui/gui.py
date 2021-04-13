@@ -498,6 +498,18 @@ class QueueTab(QFrame):
     def run_widgets_upated(self):
         layout = self.queue.layout()
 
+        # notify the main tab about the new priority of of our runs
+        run_priorities = {}
+        for i in range(layout.count()):
+            run_w = layout.itemAt(i).widget()
+            run_priorities[run_w.run_id] = i
+            # undo any hiding or disabling we did in previous updates
+            run_w.up_button.show()
+            run_w.down_button.show()
+            run_w.up_button.setEnabled(True)
+            run_w.down_button.setEnabled(True)
+        self.run_priorities_updated.emit(run_priorities)
+
         if layout.count() > 0:
             # first widget shouldn't be able to move at all, it's currently
             # being processed
@@ -511,18 +523,6 @@ class QueueTab(QFrame):
             # last widget shouldn't be able to move down
             run_w = layout.itemAt(layout.count() - 1).widget()
             run_w.down_button.setEnabled(False)
-
-        # notify the main tab about the new priority of of our runs
-        run_priorities = {}
-        for i in range(layout.count()):
-            run_w = layout.itemAt(i).widget()
-            run_priorities[run_w.run_id] = i
-            # undo any hiding or disabling we did in previous updates
-            run_w.up_button.show()
-            run_w.down_button.show()
-            run_w.up_button.setEnabled(True)
-            run_w.down_button.setEnabled(True)
-        self.run_priorities_updated.emit(run_priorities)
 
 
 
