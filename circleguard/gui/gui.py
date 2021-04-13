@@ -1,5 +1,4 @@
 from queue import Queue, Empty
-from functools import partial
 import logging
 import threading
 import time
@@ -443,11 +442,12 @@ class ResultsFrame(QFrame):
 
 class QueueTab(QFrame):
     cancel_run_signal = pyqtSignal(int) # run_id
+    run_priorities_updated = pyqtSignal(dict) # run_id to priority (int to int)
 
     def __init__(self):
         super().__init__()
 
-        self.run_widgets = []
+        self.run_widgets = {}
         layout = QVBoxLayout()
         self.qscrollarea = QScrollArea(self)
         self.queue = QueueFrame()
@@ -458,10 +458,17 @@ class QueueTab(QFrame):
 
     def add_run(self, run):
         run_w = RunWidget(run)
-        run_w.button.clicked.connect(partial(self.cancel_run, run.run_id))
-        self.run_widgets.append(run_w)
-        # most recent at the top
-        self.queue.layout.insertWidget(0, run_w)
+        run_w.cancel_button.clicked.connect(lambda: self.cancel_run(run.run_id))
+        run_w.up_button.clicked.connect(lambda: self.move_run(run.run_id, "up"))
+        run_w.down_button.clicked.connect(lambda: self.move_run(run.run_id, "down"))
+        run_w.widget_deleted.connect(self.prune_run)
+        self.run_widgets[run.run_id] = run_w
+        self.queue.layout().addWidget(run_w)
+        self.run_widgets_upated()
+
+    def prune_run(self, run_id):
+        del self.run_widgets[run_id]
+        self.run_widgets_upated()
 
     def update_status(self, run_id, status):
         self.run_widgets[run_id].update_status(status)
@@ -470,13 +477,61 @@ class QueueTab(QFrame):
         self.cancel_run_signal.emit(run_id)
         self.run_widgets[run_id].cancel()
 
-class QueueFrame(QFrame):
+    def move_run(self, run_id, direction):
+        run_w = self.run_widgets[run_id]
+        layout = self.queue.layout()
+        i = layout.indexOf(run_w)
+        if direction == "up":
+            if i == 0:
+                # already first in the list
+                return
+            i -= 1
+        else:
+            if i == layout.count() - 1:
+                # already last in the list
+                return
+            i += 1
+        layout.removeWidget(run_w)
+        layout.insertWidget(i, run_w)
+        self.run_widgets_upated()
 
+    def run_widgets_upated(self):
+        layout = self.queue.layout()
+
+        if layout.count() > 0:
+            # first widget shouldn't be able to move at all, it's currently
+            # being processed
+            run_w = layout.itemAt(0).widget()
+            run_w.up_button.hide()
+            run_w.down_button.hide()
+        if layout.count() > 1:
+            # second widget shouldn't be able to move up
+            run_w = layout.itemAt(1).widget()
+            run_w.up_button.setEnabled(False)
+            # last widget shouldn't be able to move down
+            run_w = layout.itemAt(layout.count() - 1).widget()
+            run_w.down_button.setEnabled(False)
+
+        # notify the main tab about the new priority of of our runs
+        run_priorities = {}
+        for i in range(layout.count()):
+            run_w = layout.itemAt(i).widget()
+            run_priorities[run_w.run_id] = i
+            # undo any hiding or disabling we did in previous updates
+            run_w.up_button.show()
+            run_w.down_button.show()
+            run_w.up_button.setEnabled(True)
+            run_w.down_button.setEnabled(True)
+        self.run_priorities_updated.emit(run_priorities)
+
+
+
+class QueueFrame(QFrame):
     def __init__(self):
         super().__init__()
-        self.layout = QVBoxLayout()
-        self.layout.setAlignment(Qt.AlignTop)
-        self.setLayout(self.layout)
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignTop)
+        self.setLayout(layout)
 
 class ThresholdsTab(QFrame):
     def __init__(self, parent):

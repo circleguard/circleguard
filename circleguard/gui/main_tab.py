@@ -66,9 +66,29 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.print_results_event = threading.Event()
         self.cg_q = Queue()
         self.helper_thread_running = False
-        self.runs = [] # Run objects for cancelling runs
+        # all run objects - finished, running, and queued. Kept for cancelling
+        # runs and maybe a few other things like reordering runs.
+        self.runs = []
         self.run_id = 0
         self.visualizer = None
+
+        # okay this is definitely a hack, let me explain. We pass runs to our
+        # helper thread via a queue, where we add items to the queue in the
+        # order the runs are added to the queue. However, we allow users to
+        # change the order of runs in the queue, which means their order in the
+        # queue need to change so they got processed in the right order.
+        # Queues don't offer any way to modify order of items in the queue, so
+        # instead we have this hack: the helper thread takes all runs out from
+        # the queue every time it checks the queue, and stores them in this
+        # list. Then it checks against the priorities dictionary
+        # ``run_priorities`` to see which run should be processed first. It
+        # processes that run and removes it from the list.
+        # A few notes: the runs list is ONLY for the helper thread and is never
+        # touched by the main thread. The  priorities dict is read-only from the
+        # helper thread - only the main thread writes to it.
+        self.helper_thread_runs = []
+        # mapping of run_id to run priority (int to int)
+        self.run_priorities = {}
 
         terminal = QTextEdit(self)
         terminal.setFocusPolicy(Qt.ClickFocus)
@@ -183,29 +203,43 @@ class MainTab(SingleLinkableSetting, QFrame):
             try:
                 while True:
                     run = self.cg_q.get_nowait()
-                    # occurs if run is canceled before being started, it will
-                    # still stop before actually loading anything but we don't
-                    # want the labels to flicker
-                    if run.event.wait(0):
-                        continue
-                    thread = threading.Thread(target=self.run_circleguard, args=[run])
-                    self.helper_thread_running = True
-                    thread.start()
-                    # run sequentially to not confuse user with terminal output
-                    thread.join()
+                    self.helper_thread_runs.append(run)
             except Empty:
+                if not self.helper_thread_runs:
+                    # no runs to process, return
+                    return
+                import numpy as np
+                # get run with the lowest priority (so most important)
+                priority = np.inf
+                run = None
+                # implicitly copy list with [:] so we can remove elements
+                for run_ in self.helper_thread_runs[:]:
+                    # this event is set if the user canceled the run, just get
+                    # rid of the run if so
+                    if run_.event.wait(0):
+                        self.helper_thread_runs.remove(run_)
+                    if self.run_priorities[run_.run_id] < priority:
+                        priority = self.run_priorities[run_.run_id]
+                        run = run_
+
+                thread = threading.Thread(target=self.run_circleguard, args=[run])
+                self.helper_thread_running = True
+                thread.start()
+                # deal with runs one at a time, so block until this one
+                # completes
+                thread.join()
                 self.helper_thread_running = False
-                return
+                self.helper_thread_runs.remove(run)
 
         # don't launch another thread running cg if one is already running,
         # or else multiple runs will occur at once (defeats the whole purpose
-        # of sequential runs)
+        # of sequential runs). TODO: store in self.helper_thread and
+        # use self.helper_thread.is_alive?
         if not self.helper_thread_running:
-            # have to do a double thread use if we start the threads in
-            # the main thread and .join, it will block the gui thread (very bad).
+            # have to do a double thread use if we start the threads
+            # the main thread and .join, it will block the main thread
             thread = threading.Thread(target=_check_circleguard_queue, args=[self])
             thread.start()
-
 
 
     def run_circleguard(self, run):

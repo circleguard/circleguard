@@ -88,6 +88,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.cg_classic.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
         self.cg_classic.main_tab.update_run_status_signal.connect(self.update_run_status)
         self.cg_classic.queue_tab.cancel_run_signal.connect(self.cancel_run)
+        self.cg_classic.queue_tab.run_priorities_updated.connect(self.update_run_priority)
 
 
         self.setCentralWidget(self.main_window)
@@ -376,6 +377,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
 
     def cancel_run(self, run_id):
         self.cg_classic.main_tab.runs[run_id].event.set()
+
+    def update_run_priority(self, run_priorities):
+        self.cg_classic.main_tab.run_priorities = run_priorities
 
     def cancel_all_runs(self):
         """called when lastWindowClosed signal emits. Cancel all our runs so
