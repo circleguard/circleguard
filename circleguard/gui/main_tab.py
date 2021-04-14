@@ -12,8 +12,8 @@ import traceback
 from pathlib import Path
 
 from PyQt5.QtCore import pyqtSignal, QObject, Qt
-from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout, QTextEdit,
-    QApplication, QToolTip, QLabel, QSizePolicy)
+from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout,
+    QApplication, QToolTip, QLabel, QSizePolicy, QTextBrowser)
 from PyQt5.QtGui import QTextCursor
 # import requests
 # from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
@@ -90,10 +90,11 @@ class MainTab(SingleLinkableSetting, QFrame):
         # mapping of run_id to run priority (int to int)
         self.run_priorities = {}
 
-        terminal = QTextEdit(self)
+        terminal = QTextBrowser(self)
         terminal.setFocusPolicy(Qt.ClickFocus)
         terminal.setReadOnly(True)
         terminal.ensureCursorVisible()
+        terminal.setOpenExternalLinks(True)
         self.terminal = terminal
 
         self.run_button = RunButton()

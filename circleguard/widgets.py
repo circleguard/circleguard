@@ -1387,6 +1387,9 @@ class ResultW(QFrame):
         self.label.setText(text)
         self.label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.label.setCursor(QCursor(Qt.IBeamCursor))
+        self.label.setTextFormat(Qt.RichText)
+        self.label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.label.setOpenExternalLinks(True)
 
         self.visualize_button = PushButton(self)
         self.visualize_button.setText("Visualize")

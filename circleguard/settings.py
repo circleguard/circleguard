@@ -124,9 +124,24 @@ COMMENTS = {
     }
 }
 
+later_replay_link = ("<a href=\"https://osu.ppy.sh/scores/osu/{r.later_replay.replay_id}\">"
+    "{r.later_replay.username} +{later_replay_mods_short_name}</a>")
+earlier_replay_link = ("<a href=\"https://osu.ppy.sh/scores/osu/{r.earlier_replay.replay_id}\">"
+    "{r.earlier_replay.username} +{earlier_replay_mods_short_name}</a>")
+sim_map_link = "<a href=\"https://osu.ppy.sh/b/{r.replay1.map_id}\">{r.replay1.map_id}</a>"
+replay_link = "<a href=\"https://osu.ppy.sh/scores/osu/{replay.replay_id}\">{replay.username} +{mods_short_name}</a>"
+map_link = "<a href=\"https://osu.ppy.sh/b/{replay.map_id}\">{replay.map_id}</a>"
 
+# replay.mods.short_name is a function, not an attribute, and we can't call
+# functions in format strings, so we need to pass them as explicit arguments to
+# the format string
+message_steal_found = ("[{ts:%X}] {sim:.1f} similarity. "
+    f"{later_replay_link} (set later) vs {earlier_replay_link} on map {sim_map_link}&nbsp")
+message_relax_found =  f"[{{ts:%X}}] {{ur:.2f}} cvUR. {replay_link} on map {map_link}&nbsp"
+message_correction_found = f"[{{ts:%X}}] {replay_link} on map {map_link}. Snaps:\n{{snaps}}"
+message_timewarp_found = f"[{{ts:%X}}] {{frametime:.1f}} avg cv frametime. {replay_link} on map {map_link}&nbsp"
 
-
+# TODO: add setting to disable timestamps
 DEFAULTS = {
     "Messages": {
         "message_loading_info":            "[{ts:%X}] Loading replay info",
@@ -136,19 +151,17 @@ DEFAULTS = {
         "message_finished_investigation":  "[{ts:%X}] Done",
         "message_no_cheat_found":          "[{ts:%X}] Found nothing below the set thresholds",
         "message_starting_steal":          "[{ts:%X}] Determining similarity of the given replays",
-        # it is possible though extremely unusual for the replays to have different map ids. This is good enough
-        # replay.mods.short_name is a function, not an attribute, and we can't call functions in format strings. We need to pass mods_short_name and mods_long_name in addition to replay1 and replay2
-        "message_steal_found":              "[{ts:%X}] {sim:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {replay1.map_id}",
-        "message_steal_found_display":      "[{ts:%X}] {sim:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {replay1.map_id}. Not below threshold",
+        "message_steal_found":              message_steal_found,
+        "message_steal_found_display":      message_steal_found + ". Not below threshold",
         "message_starting_relax":           "[{ts:%X}] Determining ur of the given replays",
-        "message_relax_found":              "[{ts:%X}] {ur:.2f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "message_relax_found_display":      "[{ts:%X}] {ur:.2f} cvUR. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
+        "message_relax_found":              message_relax_found,
+        "message_relax_found_display":      message_relax_found + ". Not below threshold",
         "message_starting_correction":      "[{ts:%X}] Checking if the given replays contain any Snaps",
-        "message_correction_found":         "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}",
-        "message_correction_found_display": "[{ts:%X}] {replay.username} +{mods_short_name} on map {replay.map_id}. Snaps:\n{snaps}\n(Not below threshold)",
+        "message_correction_found":         message_correction_found,
+        "message_correction_found_display": message_correction_found + "\n(Not below threshold)",
         "message_starting_timewarp":        "[{ts:%X}] Determining frametime of the given replays",
-        "message_timewarp_found":           "[{ts:%X}] {frametime:.1f} avg cv frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "message_timewarp_found_display":   "[{ts:%X}] {frametime:.1f} avg cv frametime. {replay.username} +{mods_short_name} on map {replay.map_id}. Not below threshold",
+        "message_timewarp_found":           message_timewarp_found,
+        "message_timewarp_found_display":   message_timewarp_found + ". Not below threshold",
         # have to use a separate message here because we can't loop in ``.format`` strings, can only loop in f strings which only work in a
         # local context and aren't usable for us. Passed as ``snaps=snaps`` in message_correction_found, once formatted. Each snap formats
         # this setting and does a ``"\n".join(snap_message)`` to create ``snaps``.
@@ -197,12 +210,12 @@ DEFAULTS = {
                                 "{frametime:.1f} cv average frametime according to https://github.com/circleguard/circleguard")
     },
     "Strings": {
-        "string_result_steal":         "[{ts:%x %H:%M}] {similarity:.1f} similarity. {r.later_replay.username} +{later_replay_mods_short_name} (set later) vs {r.earlier_replay.username} +{earlier_replay_mods_short_name} on map {r1.map_id}",
-        "string_result_relax":         "[{ts:%x %H:%M}] {ur:.2f} ur. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "string_result_correction":    "[{ts:%x %H:%M}] {num_snaps} snaps. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "string_result_timewarp":      "[{ts:%x %H:%M}] {frametime:.1f} avg frametime. {replay.username} +{mods_short_name} on map {replay.map_id}",
-        "string_result_visualization": "[{ts:%x %H:%M}] {replay_amount} Replays on map {map_id}",
-        "string_result_visualization_single": "[{ts:%x %H:%M}] {replay.username} +{mods_short_name} on map {replay.map_id}"
+        "string_result_steal":         f"[{{ts:%x %H:%M}}] {{similarity:.1f}} similarity. {later_replay_link} (set later) vs {earlier_replay_link} on map {sim_map_link}",
+        "string_result_relax":         f"[{{ts:%x %H:%M}}] {{ur:.2f}} ur. {replay_link} on map {map_link}",
+        "string_result_correction":    f"[{{ts:%x %H:%M}}] {{num_snaps}} snaps. {replay_link} on map {map_link}",
+        "string_result_timewarp":      f"[{{ts:%x %H:%M}}] {{frametime:.1f}} avg frametime. {replay_link} on map {map_link}",
+        "string_result_visualization": "[{ts:%x %H:%M}] {replay_amount} replays on map <a href=\"https://osu.ppy.sh/b/{map_id}\">{map_id}</a>",
+        "string_result_visualization_single": f"[{{ts:%x %H:%M}}] {replay_link} on map {replay_link}"
     },
     "Visualizer": {
         "visualizer_frametime": False,
@@ -419,6 +432,22 @@ FORCE_UPDATE = {
         "template_correction",
         "template_timewarp",
         "message_correction_found_display"
+    ],
+    "2.14.0": [
+        "message_steal_found",
+        "message_steal_found_display",
+        "message_relax_found",
+        "message_relax_found_display",
+        "message_correction_found",
+        "message_correction_found_display",
+        "message_timewarp_found",
+        "message_timewarp_found_display",
+        "string_result_steal",
+        "string_result_relax",
+        "string_result_correction",
+        "string_result_timewarp",
+        "string_result_visualization",
+        "string_result_visualization_single"
     ]
 }
 
