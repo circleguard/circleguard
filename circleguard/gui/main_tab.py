@@ -490,7 +490,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                     for replay in all_replays:
                         _check_event(event)
                         # skip replays which have no map info
-                        if cg.map_available(replay):
+                        if replay.map_info.available():
                             try:
                                 ur = cg.ur(replay)
                             # Sometimes, a beatmap will have a bugged download where it returns an empty response
