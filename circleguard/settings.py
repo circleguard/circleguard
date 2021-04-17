@@ -215,7 +215,7 @@ DEFAULTS = {
         "string_result_correction":    f"[{{ts:%x %H:%M}}] {{num_snaps}} snaps. {replay_link} on map {map_link}",
         "string_result_timewarp":      f"[{{ts:%x %H:%M}}] {{frametime:.1f}} avg frametime. {replay_link} on map {map_link}",
         "string_result_visualization": "[{ts:%x %H:%M}] {replay_amount} replays on map <a href=\"https://osu.ppy.sh/b/{map_id}\">{map_id}</a>",
-        "string_result_visualization_single": f"[{{ts:%x %H:%M}}] {replay_link} on map {replay_link}"
+        "string_result_visualization_single": f"[{{ts:%x %H:%M}}] {replay_link} on map {map_link}"
     },
     "Visualizer": {
         "visualizer_frametime": False,
