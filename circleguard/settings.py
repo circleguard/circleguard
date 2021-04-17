@@ -221,7 +221,7 @@ DEFAULTS = {
         "visualizer_frametime": False,
         # so type() returns float, since we want to allow float values, not just int
         "default_speed": float(1),
-        "speed_options": [0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 3.0, 5.0, 10.0]
+        "speed_options": [0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 3.0, 5.0, 10.0]
     },
     "Locations": {
         "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
@@ -447,7 +447,8 @@ FORCE_UPDATE = {
         "string_result_correction",
         "string_result_timewarp",
         "string_result_visualization",
-        "string_result_visualization_single"
+        "string_result_visualization_single",
+        "speed_options"
     ]
 }
 
