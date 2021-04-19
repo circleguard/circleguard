@@ -33,13 +33,13 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Circleguard win-x64
-        path: dist/Circleguard_win_x64.zip
+        path: dist/Circleguard_win_x64/
 
     - name: Upload win-x64-debug Artifact
       uses: actions/upload-artifact@v2
       with:
         name: Circleguard win-x64-debug
-        path: dist/Circleguard_win_x64_debug.zip
+        path: dist/Circleguard_win_x64_debug/
 
     - name: Update Release
       uses: ncipollo/release-action@v1.6.1
@@ -76,7 +76,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Circleguard win-x86
-        path: dist/Circleguard_win_x86.zip
+        path: dist/Circleguard_win_x86/
 
     - name: Update Release
       uses: ncipollo/release-action@v1.6.1
@@ -114,7 +114,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Circleguard osx
-        path: dist/Circleguard_osx.app.zip
+        path: dist/Circleguard.app
 
 
     - name: Update Release
