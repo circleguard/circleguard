@@ -134,7 +134,10 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.run_button.setEnabled(text != "")
 
     def write(self, message):
-        self.terminal.append(str(message).strip())
+        message = str(message).strip()
+        self.terminal.insertHtml(message)
+        # each ``message`` gets its own line, so insert a new paragraph here
+        self.terminal.textCursor().insertBlock()
         self.scroll_to_bottom()
 
     def scroll_to_bottom(self):
@@ -181,11 +184,8 @@ class MainTab(SingleLinkableSetting, QFrame):
         # similarly for investigations, but give a heads up since this mistake
         # is slightly subtler
         if not enabled_investigations:
-            # nbsp is necessary because apparently ending with a closing tag
-            # makes qt not recognize it and causes all text afterwards to be
-            # affected by the div's color
             self.write_to_terminal_signal.emit("<div style='color:#ff5252'>You must select "
-                "at least one investigation before running</div>&nbsp")
+                "at least one investigation before running</div>")
             return
 
         run = Run(loadables, enabled_investigations, self.run_id, threading.Event())
