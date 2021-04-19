@@ -28,11 +28,17 @@ jobs:
       run: |
         pyinstaller gui_win_x64_debug.spec --noconfirm
 
-    - name: Upload Artifacts
+    - name: Upload win-x64 Artifact
       uses: actions/upload-artifact@v2
       with:
         name: Circleguard win-x64
-        path: dist/*.zip
+        path: dist/Circleguard_win_x64.zip
+
+    - name: Upload win-x64-debug Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: Circleguard win-x64-debug
+        path: dist/Circleguard_win_x64_debug.zip
 
     - name: Update Release
       uses: ncipollo/release-action@v1.6.1
@@ -64,11 +70,11 @@ jobs:
       run: |
         pyinstaller gui_win_x86.spec --noconfirm
 
-    - name: Upload Artifacts
+    - name: Upload win-x86 Artifact
       uses: actions/upload-artifact@v2
       with:
         name: Circleguard win-x86
-        path: dist/*.zip
+        path: dist/Circleguard_win_x86.zip
 
     - name: Update Release
       uses: ncipollo/release-action@v1.6.1
@@ -101,11 +107,12 @@ jobs:
       run: |
         pyinstaller gui_mac.spec --noconfirm
 
-    - name: Upload Artifacts
+    - name: Upload mac Artifact
       uses: actions/upload-artifact@v2
       with:
         name: Circleguard osx
-        path: dist/*.zip
+        path: dist/Circleguard_osx.app.zip
+
 
     - name: Update Release
       uses: ncipollo/release-action@v1.6.1
