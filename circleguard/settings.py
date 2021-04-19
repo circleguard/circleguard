@@ -136,10 +136,10 @@ map_link = "<a href=\"https://osu.ppy.sh/b/{replay.map_id}\">{replay.map_id}</a>
 # functions in format strings, so we need to pass them as explicit arguments to
 # the format string
 message_steal_found = ("[{ts:%X}] {sim:.1f} similarity. "
-    f"{later_replay_link} (set later) vs {earlier_replay_link} on map {sim_map_link}&nbsp")
-message_relax_found =  f"[{{ts:%X}}] {{ur:.2f}} cvUR. {replay_link} on map {map_link}&nbsp"
+    f"{later_replay_link} (set later) vs {earlier_replay_link} on map {sim_map_link}")
+message_relax_found =  f"[{{ts:%X}}] {{ur:.2f}} cvUR. {replay_link} on map {map_link}"
 message_correction_found = f"[{{ts:%X}}] {replay_link} on map {map_link}. Snaps:\n{{snaps}}"
-message_timewarp_found = f"[{{ts:%X}}] {{frametime:.1f}} avg cv frametime. {replay_link} on map {map_link}&nbsp"
+message_timewarp_found = f"[{{ts:%X}}] {{frametime:.1f}} avg cv frametime. {replay_link} on map {map_link}"
 
 # TODO: add setting to disable timestamps
 DEFAULTS = {
@@ -449,6 +449,14 @@ FORCE_UPDATE = {
         "string_result_visualization",
         "string_result_visualization_single",
         "speed_options"
+    ],
+    "2.14.1": [
+        "message_steal_found",
+        "message_steal_found_display",
+        "message_relax_found",
+        "message_relax_found_display",
+        "message_timewarp_found",
+        "message_timewarp_found_display",
     ]
 }
 
