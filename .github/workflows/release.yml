@@ -5,6 +5,7 @@ on: repository_dispatch
 jobs:
   build_win_x64:
     runs-on: windows-latest
+    name: Windows x64 Build
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
@@ -51,6 +52,7 @@ jobs:
 
   build_win_x86:
     runs-on: windows-latest
+    name: Windows x86 Build
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
@@ -87,6 +89,7 @@ jobs:
 
   build_mac:
     runs-on: macos-10.15
+    name: Mac Build
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.7.7
