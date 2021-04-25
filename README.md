@@ -17,7 +17,7 @@ Circleguard is a tool to help you analyze replays. Either your own, or of someon
 * Frametime analysis, for timewarp cheats
 * Viewing the raw replay data (time, position, and keys pressed for each frame) in a formatted table, for very fine-grained analysis
 
-If you're only interested in using circleguard to analyze your own replays to figure out why you missed a note or to be able to quickly jump to any point in time in a replay, don't be scared off by the talk of cheat detection above. When you open circleguard, [simply click the "Visualization" panel](https://i.imgur.com/Gg9ohbP.png) to easily visualize one of your replays. Circleguard is fully fledged as a replay analysis tool as well as a cheat detection tool.
+If you're only interested in using circleguard to analyze your own replays, to (eg) figure out why you missed a note or to be able to quickly jump to any point in time in a replay, don't be scared off by the talk of cheat detection above. When you open circleguard, [simply click the "Visualization" panel](https://i.imgur.com/Gg9ohbP.png) to easily visualize one of your replays. Circleguard is fully fledged as a replay analysis tool as well as a cheat detection tool.
 
 The replay viewer supports seeking to any timestamp in the replay, slowing down or speeding up time, frame-by-frame movement, and more.
 
