@@ -143,7 +143,13 @@ class MainTab(SingleLinkableSetting, QFrame):
         # to the bottom of the terminal so users can see the newest text.
         self.scroll_to_bottom()
         message = str(message).strip()
-        self.terminal.insertHtml(message)
+        # print tracebacks as plain text since they have newlines and
+        # indentation that's not easily replicable in html (newlines are just
+        # ``<br>``, but indentation is much trickier)
+        if "Traceback (most recent call last)" in message:
+            self.terminal.insertPlainText(message)
+        else:
+            self.terminal.insertHtml(message)
         # each ``message`` gets its own line, so insert a new paragraph here
         self.terminal.textCursor().insertBlock()
         # TODO only scroll to the bottom automatically if the user had scrolled
