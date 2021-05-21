@@ -351,6 +351,12 @@ class MainTab(SingleLinkableSetting, QFrame):
             self.write_to_terminal_signal.emit(message_loading_info)
 
             if "Similarity" in run.enabled_investigations:
+                # TODO this will cause traceback errors (ie not nice looking
+                # errors) if core throws a ``NoInfoAvailableException``, eg
+                # when a Map or User doesn't exist, or if the map or user on a
+                # MapUser doesn't exist.
+                # Example of a MapUser which throws this:
+                # ``map_id=977787, user_id=3792472``
                 cg.load_info(lc1)
                 cg.load_info(lc2)
                 replays1 = lc1.all_replays()
