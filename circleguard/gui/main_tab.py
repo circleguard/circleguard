@@ -84,7 +84,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         # ``run_priorities`` to see which run should be processed first. It
         # processes that run and removes it from the list.
         # A few notes: the runs list is ONLY for the helper thread and is never
-        # touched by the main thread. The  priorities dict is read-only from the
+        # touched by the main thread. The priorities dict is read-only from the
         # helper thread - only the main thread writes to it.
         self.helper_thread_runs = []
         # mapping of run_id to run priority (int to int)
@@ -134,10 +134,23 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.run_button.setEnabled(text != "")
 
     def write(self, message):
+        # for reasons I don't fully understand, our current position in the
+        # terminal could have moved since we last inserted text. Even though
+        # we scroll to the bottom after every write, if our position has changed
+        # since the last write, we will write text to the wrong position. So
+        # always scroll to the bottom just before writing.
+        # The final ``scroll_to_bottom`` call is still necessary to force-scroll
+        # to the bottom of the terminal so users can see the newest text.
+        self.scroll_to_bottom()
         message = str(message).strip()
         self.terminal.insertHtml(message)
         # each ``message`` gets its own line, so insert a new paragraph here
         self.terminal.textCursor().insertBlock()
+        # TODO only scroll to the bottom automatically if the user had scrolled
+        # the terminal all the way down manually (or left it alone). Reasoning
+        # being, we don't want the terminal to auto-scroll if the user scrolls
+        # slightly up, say to copy some block of text or look at old results.
+        # They shouldn't be interrupted in the middle of that by auto-scroll.
         self.scroll_to_bottom()
 
     def scroll_to_bottom(self):
