@@ -356,8 +356,20 @@ class ScrollableSettingsWidget(QFrame):
         self.log_level = ComboboxSetting("Log Level", "", "log_level")
         self.log_output = ComboboxSetting("Log Output", "", "_log_output")
 
-        self.run_wizard = ButtonWidget("Tutorial", "Read Tutorial", "")
-        self.run_wizard.button.clicked.connect(self.show_wizard)
+        self.tutorial = ButtonWidget("Intro Tutorial", "Read Tutorial", "")
+        self.tutorial.button.clicked.connect(self.show_wizard)
+
+        self.advanced_usage_tutorial = ButtonWidget("Advanced Usage", "Advanced Usage", "")
+        advanced_url = QUrl("https://github.com/circleguard/circleguard/wiki/Advanced-Usage")
+        self.advanced_usage_tutorial.button.clicked.connect(lambda: QDesktopServices.openUrl(advanced_url))
+
+        self.frametime_tutorial = ButtonWidget("Frametime Tutorial", "Frametime Tutorial", "")
+        frametime_url = QUrl("https://github.com/circleguard/circleguard/wiki/Frametime-Tutorial")
+        self.frametime_tutorial.button.clicked.connect(lambda: QDesktopServices.openUrl(frametime_url))
+
+        self.similarity_groups_tutorial = ButtonWidget("Similarity Groups", "Similarity Groups", "")
+        sim_url = QUrl("https://github.com/circleguard/circleguard/wiki/Similarity-Groups")
+        self.similarity_groups_tutorial.button.clicked.connect(lambda: QDesktopServices.openUrl(sim_url))
 
         vert_spacer = QSpacerItem(0, 10, QSizePolicy.Maximum, QSizePolicy.Minimum)
         self.layout = QVBoxLayout()
@@ -377,12 +389,17 @@ class ScrollableSettingsWidget(QFrame):
         self.layout.addWidget(self.default_span_user)
         self.layout.addWidget(self.default_span_map)
         self.layout.addItem(vert_spacer)
+        self.layout.addWidget(Separator("Tutorials"))
+        self.layout.addWidget(self.tutorial)
+        self.layout.addWidget(self.advanced_usage_tutorial)
+        self.layout.addWidget(self.frametime_tutorial)
+        self.layout.addWidget(self.similarity_groups_tutorial)
+        self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Debug"))
         self.layout.addWidget(self.log_level)
         self.layout.addWidget(self.log_output)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("Dev"))
-        self.layout.addWidget(self.run_wizard)
         self.layout.addWidget(ResetSettings())
         self.setLayout(self.layout)
 
