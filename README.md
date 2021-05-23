@@ -30,10 +30,10 @@ The replay viewer supports seeking to any timestamp in the replay, slowing down 
 Circleguard is developed and maintained by:
 
 * [tybug](https://github.com/tybug)
-* [samuelhklumpers](https://github.com/samuelhklumpers)
 
 With contributions from:
 
+* [samuelhklumpers](https://github.com/samuelhklumpers)
 * [InvisibleSymbol](https://github.com/InvisibleSymbol)
 
 ## Download
