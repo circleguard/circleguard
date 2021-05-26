@@ -314,7 +314,7 @@ class ConclusionPage(WizardPage):
         super().__init__()
         self.setTitle("<3")
         label = WizardLabel("<p>If you run into any problems with circleguard, have suggestions, or want to contribute, join "
-                " our discord or file an issue on our github repository! We don't bite, we promise :)</p>"
+                " our discord or file an issue on our github repository! We don't bite, I promise :)</p>"
                 "<ul>"
                 "<li><a href=\"https://discord.gg/e84qxkQ\">Discord</a></li>"
                 "<li><a href=\"https://github.com/circleguard/circleguard\">circleguard repository</a></li>"
