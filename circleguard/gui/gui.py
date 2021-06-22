@@ -9,10 +9,6 @@ from PyQt5.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
     QTextEdit, QStackedWidget, QHBoxLayout, QMessageBox, QFileDialog)
 from PyQt5.QtGui import QDesktopServices, QIcon, QCursor
 
-# from circleguard import Circleguard, ReplayPath
-# from circleguard import __version__ as cg_version
-# from circlevis import BeatmapInfo
-
 from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, Separator,
     ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
@@ -123,11 +119,13 @@ class AnalysisSelection(QFrame):
     # used for cross-thread communication between loading the loadables (work
     # thread) and showing the visualizer (main thread)
     show_visualizer_window = pyqtSignal()
+    show_exception_signal = pyqtSignal(str)
 
     def __init__(self):
         super().__init__()
         self._cg = None
         self.visualizer = None
+        self.old_api_key = get_setting("api_key")
         self.loadables_q = Queue()
         # this thread continually checks for new loadables to load
         self.cg_load_thread = threading.Thread(target=self._load_loadables)
@@ -137,6 +135,7 @@ class AnalysisSelection(QFrame):
         self.cg_load_thread.start()
         self.loadable_loaded = threading.Event()
         self.show_visualizer_window.connect(self.show_visualizer)
+        self.show_exception_signal.connect(self.show_exception)
 
         expanding = QSizePolicy()
         expanding.setHorizontalPolicy(QSizePolicy.Expanding)
@@ -175,10 +174,14 @@ class AnalysisSelection(QFrame):
 
     @property
     def cg(self):
-        if not self._cg:
+        # if the user has changed their api key since we last retrieved our
+        # circleguard instance, recreate circleguard with the new key.
+        new_api_key = get_setting('api_key')
+        if new_api_key != self.old_api_key or not self._cg:
             from circleguard import Circleguard
             cache_path = get_setting("cache_dir") + "circleguard.db"
-            self._cg = Circleguard(get_setting("api_key"), cache_path)
+            self._cg = Circleguard(new_api_key, cache_path)
+            self.old_api_key = new_api_key
         return self._cg
 
     def _load_loadables(self):
@@ -195,39 +198,70 @@ class AnalysisSelection(QFrame):
             except Empty:
                 # just so we aren't running this thread crazy fast
                 time.sleep(0.1)
+            except Exception as e:
+                self.show_exception_signal.emit(str(e))
 
-    def all_loadables(self):
-        return self.replay_map_creation.all_loadables() + self.drop_area.all_loadables()
+
+    def all_loadables(self, flush=False):
+        # I'm so, so sorry future me. This ``flush`` argument is a monstrosity
+        # and you're going to have hell to pay for it at some point I'm sure.
+        # The reason this exists is complicated. Our drop area caches loadables
+        # after creating them. When we load said loadables with a loader with
+        # an invalid key, the loadables are perfectly happy to capture the
+        # map_id and user_id functions of the loadable for later use. Then, if
+        # the user changes their api key to an actual key and tries to run
+        # the visualization again, it will still fail because the loadables
+        # are using the cached, invalid loader functions. The solution is to
+        # flush the loadables cache every time we run.
+        return self.replay_map_creation.all_loadables() + self.drop_area.all_loadables(flush)
 
     def visualize(self):
-        # `#loadLoadables` will emit a signal to `show_visualizer_window` which
+        # `load_loadables` will emit a signal to `show_visualizer_window` which
         # will call `show_visualizer`, so this call does eventually show the
         # visualizer, despite appearences otherwise
         thread = threading.Thread(target=self.load_loadables)
         thread.start()
 
+    def show_exception(self, message):
+        # keep all exceptions in message boxes instead of sending them to the
+        # main investigations screen. Doing the latter is confusing as heck to
+        # users and not telegraphed anywhere. Showing popups is a little dirty
+        # but does the trick for now (and gets the user's attention
+        # immediately).
+        message_box = QMessageBox()
+        message_box.setText(message)
+        message_box.exec()
+
     def show_visualizer(self):
         from circlevis import BeatmapInfo
+        from circleguard import InvalidKeyException
+
         loadables = self.all_loadables()
-        map_ids = [loadable.map_id for loadable in loadables]
+        try:
+            map_ids = [loadable.map_id for loadable in loadables]
 
-        # if there are any duplicate maps, warn the user and don't proceed
-        if len(set(map_ids)) > 1:
-            message_box = QMessageBox()
-            message_box.setText(f"You can only visualize replays from the same "
-                f"map. The map ids present are {', '.join(str(map_id) for map_id in map_ids)}.")
-            message_box.exec()
-            return
+            # if there are any duplicate maps, warn the user and don't proceed
+            if len(set(map_ids)) > 1:
+                message = ("You can only visualize replays from the same map. "
+                    f"The map ids present are {', '.join(str(map_id) for map_id in map_ids)}.")
+                self.show_exception_signal.emit(message)
+                return
 
-        beatmap_info = BeatmapInfo(map_id=loadables[0].map_id)
-        CGVisualizer = get_visualizer()
+            beatmap_info = BeatmapInfo(map_id=loadables[0].map_id)
+            CGVisualizer = get_visualizer()
 
-        # TODO reuse global library here
-        self.visualizer = CGVisualizer(beatmap_info, loadables)
-        self.visualizer.show()
+            # TODO reuse global library here
+            self.visualizer = CGVisualizer(beatmap_info, loadables)
+            self.visualizer.show()
+        except InvalidKeyException as e:
+            message = ("Please enter a valid api key in the settings before "
+                "visualizing replays")
+            self.show_exception_signal.emit(message)
+        except Exception as e:
+            self.show_exception_signal.emit(str(e))
 
     def load_loadables(self):
-        loadables = self.all_loadables()
+        loadables = self.all_loadables(flush=True)
         # no loadables, user has clicked "visualize" without filling anything
         # out
         if not loadables:

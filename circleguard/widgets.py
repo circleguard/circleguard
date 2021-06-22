@@ -1184,7 +1184,13 @@ class ReplayDropArea(QFrame):
             self.layout().setAlignment(Qt.Alignment())
             self.info_label.show()
 
-    def all_loadables(self):
+    def all_loadables(self, flush):
+        # if ``flush`` is true, flush our cache in a hacky way by setting the
+        # backing attribute to null so the next time it's accessed it's
+        # recreated.
+        for path_widget in self.path_widgets:
+            if flush:
+                path_widget._cg_loadable = None
         return [path_widget.cg_loadable for path_widget in self.path_widgets]
 
     def paintEvent(self, event):
