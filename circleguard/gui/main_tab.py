@@ -146,7 +146,8 @@ class MainTab(SingleLinkableSetting, QFrame):
         # print tracebacks as plain text since they have newlines and
         # indentation that's not easily replicable in html (newlines are just
         # ``<br>``, but indentation is much trickier)
-        if "Traceback (most recent call last)" in message:
+        if ("Traceback (most recent call last)" in message or
+            "sys.excepthook error" in message):
             self.terminal.insertPlainText(message)
         else:
             self.terminal.insertHtml(message)
