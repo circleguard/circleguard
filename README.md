@@ -50,9 +50,9 @@ There is an introduction / tutorial to using circleguard when you first open it.
 
 ## Building From Source
 
-The gui is bundled into a single program using [pyinstaller](https://pyinstaller.readthedocs.io/en/stable/). You will need to download the source code of this repository and read the pyinstaller [documentation for your specific platform](https://pyinstaller.readthedocs.io/en/stable/requirements.html). You may find that further tweaking is required depending on your platform. If you run into trouble, I'll do my best to assist you if you ask in [the discord](https://discord.gg/VNnkTjm).
+The gui is bundled into a single program using [pyinstaller](https://pyinstaller.readthedocs.io/en/stable/). You'll need to install pyinstaller, download the source code of this repository, and read the pyinstaller [documentation for your specific platform](https://pyinstaller.readthedocs.io/en/stable/requirements.html). You may find that further tweaking is required depending on your platform. If you run into trouble, I'll do my best to assist you if you ask in [the discord](https://discord.gg/VNnkTjm).
 
-If you are building for windows or mac, we provide premade specfiles for easy building. Run `pyinstaller path-to-specfile` to generate an app for your platform as an alternative to using pyinstaller options.
+If you are building for windows or mac, there are premade specfiles in the root directory for easy building. Run `pyinstaller path-to-specfile` to generate an app for your platform as an alternative to using pyinstaller options. For instance, `pyinstaller gui_win_x64.spec` for 64-bit windows.
 
 ## Running Locally
 
@@ -85,8 +85,6 @@ Circlecore does most of the heavy lifting for circleguard, such as calculating u
 The replay viewer is powerful enough that it was split off into its own repository. If you would like to use the replay viewer in your own project, please see the developer guidance over at its repository:
 
 <https://github.com/circleguard/circlevis>
-
-Note that the replay viewer is a [Qt](https://doc.qt.io/) widget, and will only work if you are using the Qt (or [pyqt](https://pypi.org/project/PyQt5/), as we are) GUI framwork.
 
 ## Credits
 
