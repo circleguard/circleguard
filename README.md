@@ -8,14 +8,19 @@
 
 # Circleguard
 
-Circleguard is a tool to help you analyze replays. Either your own, or of someone you suspect is cheating. Features include:
+Circleguard is a tool to help you analyze osu! replays. Either your own, or replays from someone you suspect is cheating. Features:
 
-* An replay viewer to look at any replay in depth
-* Replay stealing / remodding detection
-* Unstable Rate (ur) calculation, for relax cheats
-* Finding suspicious movements in replays (called Snaps), for aim correction cheats
-* Frametime analysis, for timewarp cheats
-* Viewing the raw replay data (time, position, and keys pressed for each frame) in a formatted table, for very fine-grained analysis
+* A replay viewer, with
+  * A ur bar
+  * Judgment indicators (green dots for 100s, blue dots for 50s, red dots for misses)
+  * Ability to speed up and slow down playback speed
+  * Ability to jump to any point in the replay
+* Cheat detection 
+  * Similarity (for replay stealing)
+  * Unstable rate (for relax)
+  * Suspicious movements called snaps (for aim correction)
+  * Frametime (for timewarp)
+* Raw replay data (time, position, and keys pressed for each frame) in a nicely formatted table
 
 If you're only interested in using circleguard to analyze your own replays, to (eg) figure out why you missed a note or to be able to quickly jump to any point in time in a replay, don't be scared off by the talk of cheat detection above. When you open circleguard, [simply click the "Visualization" panel](https://i.imgur.com/Gg9ohbP.png) to easily visualize one of your replays. Circleguard is fully fledged as a replay analysis tool as well as a cheat detection tool.
 
