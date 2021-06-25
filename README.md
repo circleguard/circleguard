@@ -50,6 +50,18 @@ The gui is bundled into a single program using [pyinstaller](https://pyinstaller
 
 If you are building for windows or mac, we provide premade specfiles for easy building. Run `pyinstaller path-to-specfile` to generate an app for your platform as an alternative to using pyinstaller options.
 
+## Running Locally
+
+To run circleguard locally, you'll need to have [git](https://git-scm.com/downloads) and [python3.9](https://www.python.org/downloads/) installed. After installing them, run the following:
+
+```bash
+git clone https://github.com/circleguard/circleguard.git
+cd circleguard
+pip install -r requirements.txt
+python circleguard/main.py
+# you might have to use python3 instead, eg python3 circleguard/main.py
+```
+
 ## Contributing
 
 Join [our discord](https://discord.gg/VNnkTjm) and ask how you can help, or look around for open issues which interest you and tackle those. Pull requests are welcome!
