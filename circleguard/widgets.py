@@ -1126,12 +1126,12 @@ class ReplayDropArea(QFrame):
         for path in paths_unprocessed.split("\n"):
             # I might be misunderstanding mime URIs, but it seems to me that
             # files are always prepended with `file:///` on all platforms, but
-            # on macOS the leading slash is not included (there are only three
-            # slashes, not four), which confuses pathlib as it will interpret
-            # the path as relative and not absolute. To fix this we prepend a
-            # slash on macOS, but not windows, as their denotation for a root
-            # dir is different (they use `C:`).
-            if sys.platform == "darwin":
+            # on macOS and Linux the leading slash is not included (there are
+            # only three slashes, not four), which confuses pathlib as it will
+            # interpret the path as relative and not absolute. To fix this we
+            # prepend a slash on macOS and Linux, but not windows, as their
+            # denotation for a root dir is different (they use `C:`).
+            if sys.platform != "win32":
                 path = "/" + path
             # if the file path has a space (or I believe any character which
             # requires an encoding), qt will give it to us in its encoded form.
