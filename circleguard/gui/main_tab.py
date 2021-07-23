@@ -258,7 +258,8 @@ class MainTab(SingleLinkableSetting, QFrame):
 
     def run_circleguard(self, run):
         from circleguard import (Circleguard, UnknownAPIException, ReplayPath,
-            NoInfoAvailableException, Loader, LoadableContainer, replay_pairs)
+            NoInfoAvailableException, Loader, LoadableContainer, replay_pairs,
+            ReplayContainer)
         class TrackerLoader(Loader, QObject):
             """
             A circleguard.Loader subclass that emits a signal when the loader is
@@ -345,6 +346,17 @@ class MainTab(SingleLinkableSetting, QFrame):
             message_loading_info = get_setting("message_loading_info").format(ts=datetime.now())
             self.write_to_terminal_signal.emit(message_loading_info)
 
+            def _try_load_replay_container(replay_container):
+                try:
+                    cg.load_info(replay_container)
+                except NoInfoAvailableException:
+                    message = ("<div style='color:#ff5252'>The loadable " + str(replay_container) + " "
+                        "does not exist.</div>\nDouble check your map and/or user id and run again. "
+                        "The run has been canceled because of this.")
+                    self.write_to_terminal_signal.emit(message)
+                    run.loadables = None
+                    sys.exit()
+
             if "Similarity" in run.enabled_investigations:
                 # TODO this will cause traceback errors (ie not nice looking
                 # errors) if core throws a ``NoInfoAvailableException``, eg
@@ -352,13 +364,24 @@ class MainTab(SingleLinkableSetting, QFrame):
                 # MapUser doesn't exist.
                 # Example of a MapUser which throws this:
                 # ``map_id=977787, user_id=3792472``
-                cg.load_info(lc1)
-                cg.load_info(lc2)
+                for loadable in lc1.loadables + lc2.loadables:
+                    if isinstance(loadable, ReplayContainer):
+                        _try_load_replay_container(loadable)
+
+                lc1.info_loaded = True
+                lc2.info_loaded = True
+
                 replays1 = lc1.all_replays()
                 replays2 = lc2.all_replays()
                 all_replays = replays1 + replays2
+
             else:
-                cg.load_info(lc)
+                for loadable in lc.loadables:
+                    if isinstance(loadable, ReplayContainer):
+                        _try_load_replay_container(loadable)
+
+                lc.info_loaded = True
+
                 all_replays = lc.all_replays()
                 # we remove replays from both ``all_replays`` and ``replays1``
                 # below, so this needs to be a shallow copy to avoid modifying
