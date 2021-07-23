@@ -255,7 +255,7 @@ class AnalysisSelection(QFrame):
             self.visualizer.show()
         except InvalidKeyException as e:
             message = ("Please enter a valid api key in the settings before "
-                "visualizing replays")
+                "visualizing replays.")
             self.show_exception_signal.emit(message)
         except Exception as e:
             self.show_exception_signal.emit(str(e))
