@@ -15,13 +15,6 @@ from PyQt5.QtCore import pyqtSignal, QObject, Qt
 from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout,
     QApplication, QToolTip, QLabel, QSizePolicy, QTextBrowser)
 from PyQt5.QtGui import QTextCursor
-# import requests
-# from circleguard import (Circleguard, ReplayDir, ReplayPath, Mod,
-    # UnknownAPIException, NoInfoAvailableException, ReplayMap, Map, User,
-    # MapUser, Detect, Check, TimewarpResult, RelaxResult, CorrectionResult,
-    # StealResult, Loader, replay_pairs)
-# from slider import Library
-# from circlevis import BeatmapInfo
 
 from widgets import (InvestigationCheckboxes, WidgetCombiner, PushButton,
     LoadableCreation)

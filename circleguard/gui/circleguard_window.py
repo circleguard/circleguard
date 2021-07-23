@@ -10,10 +10,7 @@ from PyQt5.QtWidgets import (QMainWindow, QShortcut, QApplication,
     QProgressBar, QLabel, QTextEdit)
 from PyQt5.QtCore import Qt, QObject, pyqtSignal, QTimer
 from PyQt5.QtGui import QIcon, QPalette, QColor, QKeySequence
-# from circleguard import (ReplayMap, Circleguard)
 from packaging import version
-# import requests
-# from requests import RequestException
 
 from settings import (LinkableSetting, get_setting, set_setting,
     overwrite_config, get_setting_raw, set_setting_raw)

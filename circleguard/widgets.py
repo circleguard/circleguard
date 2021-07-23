@@ -13,13 +13,10 @@ from PyQt5.QtGui import (QRegExpValidator, QIcon, QPainter, QPen, QCursor,
     QKeySequence, QPixmap)
 from PyQt5.QtCore import (QRegExp, Qt, QCoreApplication, pyqtSignal, QEvent,
     QSize, QTimer)
-# from circleguard import Circleguard, TimewarpResult, Mod, Key
-# import numpy as np
 
 from settings import (get_setting, reset_defaults, LinkableSetting,
     SingleLinkableSetting)
 from utils import resource_path, AnalysisResult, ACCENT_COLOR, spacer
-
 
 # we want most of our clickable widgets to have a pointing hand cursor on hover
 
