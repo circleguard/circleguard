@@ -590,6 +590,10 @@ def set_setting(name, value):
     if name == "log_level":
         # set root logger's level
         logging.getLogger().setLevel(value)
+    if name == "api_key":
+        # people often copy their api keys and a stray space or newline might
+        # tag along for the ride when they do, so just get rid of it
+        value = value.strip()
 
     for linkable_setting in LinkableSetting.registered_classes:
         if linkable_setting.filter(name):
