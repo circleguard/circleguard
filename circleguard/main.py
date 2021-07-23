@@ -45,7 +45,7 @@ if sys.platform == "win32" and hasattr(sys, "_MEIPASS"):
     exe_location = str(Path(sys._MEIPASS) / "circleguard.exe") # pylint: disable=no-member
     # most sources I found said to modify HKEY_CLASSES_ROOT, but that requires
     # admin perms. Apparently that registry is just a merger of two other
-    # registries, which *don't* require admin persm to write to, so we write
+    # registries, which *don't* require admin perms to write to, so we write
     # there. See https://www.qtcentre.org/threads/7899-QSettings-HKEY_CLASSES_ROOT-access?s=3c32bd8f5e5300b83765040c2d100fe3&p=42379#post42379
     # and https://support.shotgunsoftware.com/hc/en-us/articles/219031308-Launching-applications-using-custom-browser-protocols
     key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard")
