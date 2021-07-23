@@ -611,6 +611,9 @@ def overwrite_outdated_settings():
 
 def overwrite_with_config_settings():
     config = ConfigParser(interpolation=None)
+    # uncomment to test config file errors
+    # from configparser import MissingSectionHeaderError
+    # raise MissingSectionHeaderError("aasdasdasd", 2, "asd")
     config.read(CFG_PATH)
     for section in config.sections():
         for k in config[section]:
@@ -759,21 +762,21 @@ for d in DEFAULTS.values():
 CFG_PATH = get_setting("config_location") + "/circleguard.cfg"
 
 
-# overwrite our settings with the config settings (if the user changed them
-# while the application was closed)
-overwrite_with_config_settings()
+def initialize_settings():
+    # overwrite setting key if they were changed in a release
+    # has to be called after overwrite_with_config_settings or the file will
+    # overwrite our changes here since it's not synced to the file
+    overwrite_outdated_settings()
 
-# overwrite setting key if they were changed in a release
-# has to be called after overwrite_with_config_settings or the file will
-# overwrite our changes here since it's not synced to the file
-overwrite_outdated_settings()
+    if not get_setting("ran"):
+        reset_defaults()
 
-# create folders if they don't exist
-initialize_dirs()
+def initialize_settings_file():
+    # create folders if they don't exist
+    initialize_dirs()
 
-# create cfg file if it doesn't exist
-if not os.path.exists(CFG_PATH):
-    overwrite_config()
+    # create cfg file if it doesn't exist
+    if not os.path.exists(CFG_PATH):
+        overwrite_config()
 
-if not get_setting("ran"):
-    reset_defaults()
+    overwrite_with_config_settings()

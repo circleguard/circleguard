@@ -9,6 +9,7 @@ import tempfile
 from pathlib import Path
 import socket
 import logging
+import configparser
 try:
     import winreg
 except ImportError:
@@ -21,7 +22,8 @@ import portalocker
 from portalocker.exceptions import LockException
 
 from gui.circleguard_window import CircleguardWindow
-from settings import get_setting, set_setting
+from settings import (get_setting, set_setting, initialize_settings,
+    initialize_settings_file, CFG_PATH)
 from wizard import CircleguardWizard
 
 
@@ -154,9 +156,29 @@ QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 app = QApplication([])
 app.setStyle("Fusion")
 app.setApplicationName("Circleguard")
+
+initialize_settings()
+
 # TODO find a way to not have to pass app here. We do it to be able to set
 # the theme from other widgets
 circleguard_gui = CircleguardWindow(app)
+
+# make sure we run after instantiating ``CircleguardWindow`` so that any errors
+# show in its console and are visible to the user
+try:
+    initialize_settings_file()
+except configparser.Error:
+    log.error("caught error while initializing settings file. This means "
+        f"something is wrong with your settings file (located at {CFG_PATH})."
+        "You can try deleting that file and restarting circleguard, or you can "
+        "ignore this error. It will not affect you unless you want to edit the "
+        "advanced settings file, which is something most users do not need to "
+        "do.\n\n"
+        "Regardless of your choice, please report this on the circleguard "
+        "discord; link is in the settings tab. This helps me (tybug) keep "
+        "track of how many people are affected by this and what the proper "
+        "resolution should be. Thanks!\n\n", exc_info=True)
+
 circleguard_gui.show()
 
 if not get_setting("ran"):
