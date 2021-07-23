@@ -276,8 +276,8 @@ class MainTab(SingleLinkableSetting, QFrame):
             # how often to emit check_stopped_signal when ratelimited, in seconds
             INTERVAL = 0.250
 
-            def __init__(self, key, cacher=None):
-                Loader.__init__(self, key, cacher)
+            def __init__(self, key, path, write_to_cache):
+                Loader.__init__(self, key, path, write_to_cache)
                 QObject.__init__(self)
 
             def _ratelimit(self, length):
@@ -306,7 +306,8 @@ class MainTab(SingleLinkableSetting, QFrame):
             core_cache = get_setting("cache_dir") + "circleguard.db"
             slider_cache = get_setting("cache_dir")
             should_cache = get_setting("caching")
-            cg = Circleguard(get_setting("api_key"), core_cache, slider_dir=slider_cache, cache=should_cache, loader=TrackerLoader)
+            loader = TrackerLoader(get_setting("api_key"), core_cache, write_to_cache=should_cache)
+            cg = Circleguard(get_setting("api_key"), core_cache, slider_dir=slider_cache, cache=should_cache, loader=loader)
             def _ratelimited(length):
                 message = get_setting("message_ratelimited")
                 ts = datetime.now()
