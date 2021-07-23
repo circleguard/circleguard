@@ -642,7 +642,7 @@ def overwrite_with_config_settings():
 def reset_defaults():
     SETTINGS.clear()
     for d in DEFAULTS.values():
-        for key,value in d.items():
+        for key, value in d.items():
             set_setting(key, value)
     SETTINGS.sync()
 
