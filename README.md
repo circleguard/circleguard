@@ -16,7 +16,7 @@ Circleguard is a tool to help you analyze osu! replays. Either your own, or repl
   * Ability to speed up and slow down playback speed
   * Ability to jump to any point in the replay
   * Frame by frame movement
-* Cheat detection 
+* Cheat detection
   * Similarity (for replay stealing)
   * Unstable rate (for relax)
   * Suspicious movements called snaps (for aim correction)
@@ -56,7 +56,7 @@ If you are building for windows or mac, there are premade specfiles in the root 
 
 ## Running Locally
 
-To run circleguard locally, you'll need to have [git](https://git-scm.com/downloads) and [python3.9](https://www.python.org/downloads/) installed. After installing them, run the following:
+To run circleguard locally, you'll need to have [git](https://git-scm.com/downloads) and [python3.7+](https://www.python.org/downloads/) installed. After installing them, run the following:
 
 ```bash
 git clone https://github.com/circleguard/circleguard.git
