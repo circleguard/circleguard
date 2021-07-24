@@ -761,7 +761,7 @@ class MainTab(SingleLinkableSetting, QFrame):
             # pause even if we're currently playing. It's important that this
             # happens before seeking, or else the new frame won't correctly
             # display
-            self.visualizer.force_pause()
+            self.visualizer.pause()
             # if we're visualizing the same replay that's in the url, just jump
             # to the new timestamp
             self.visualizer.seek_to(result.timestamp)
