@@ -354,8 +354,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                         "does not exist.</div>\nDouble check your map and/or user id and run again. "
                         "The run has been canceled because of this.")
                     self.write_to_terminal_signal.emit(message)
+                    self.update_label_signal.emit("Idle")
+                    self.update_run_status_signal.emit(run.run_id, "Finished")
+                    self.set_progressbar_signal.emit(-1)
                     run.loadables = None
-                    sys.exit()
+                    sys.exit(0)
 
             if "Similarity" in run.enabled_investigations:
                 # TODO this will cause traceback errors (ie not nice looking
@@ -501,8 +504,8 @@ class MainTab(SingleLinkableSetting, QFrame):
                             "Manual analysis expected replays from a single map</div>, "
                             f"but got replays from maps {set(map_ids)}. The run has been canceled "
                             "because of this")
-                        self.update_label_signal.emit("Analysis Error (Multiple maps)")
-                        self.update_run_status_signal.emit(run.run_id, "Analysis Error (Multiple maps)")
+                        self.update_label_signal.emit("Idle")
+                        self.update_run_status_signal.emit(run.run_id, "Finished")
                         self.set_progressbar_signal.emit(-1)
 
                         run.loadables = None
