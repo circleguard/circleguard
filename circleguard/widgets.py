@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QStyle, QListWidget, QListWidgetItem, QStackedLayout, QApplication,
     QShortcut, QToolTip)
 from PyQt5.QtGui import (QRegExpValidator, QIcon, QPainter, QPen, QCursor,
-    QKeySequence, QPixmap)
+    QPixmap)
 from PyQt5.QtCore import (QRegExp, Qt, QCoreApplication, pyqtSignal, QEvent,
     QSize, QTimer)
 
@@ -914,11 +914,11 @@ class LoadableCreation(QFrame):
 
         self.cg_loadables_to_selectable_loadables = {}
 
-        QShortcut(QKeySequence(Qt.Key_R), self, lambda: self.select_loadable("Map Replay"))
-        QShortcut(QKeySequence(Qt.Key_L), self, lambda: self.select_loadable("Local Replay"))
-        QShortcut(QKeySequence(Qt.Key_M), self, lambda: self.select_loadable("Map"))
-        QShortcut(QKeySequence(Qt.Key_U), self, lambda: self.select_loadable("User"))
-        QShortcut(QKeySequence(Qt.Key_A), self, lambda: self.select_loadable("All User Replays on Map"))
+        QShortcut(Qt.Key_R, self, lambda: self.select_loadable("Map Replay"))
+        QShortcut(Qt.Key_L, self, lambda: self.select_loadable("Local Replay"))
+        QShortcut(Qt.Key_M, self, lambda: self.select_loadable("Map"))
+        QShortcut(Qt.Key_U, self, lambda: self.select_loadable("User"))
+        QShortcut(Qt.Key_A, self, lambda: self.select_loadable("All User Replays on Map"))
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)

@@ -9,7 +9,7 @@ import re
 from PyQt5.QtWidgets import (QMainWindow, QShortcut, QApplication,
     QProgressBar, QLabel, QTextEdit)
 from PyQt5.QtCore import Qt, QObject, pyqtSignal, QTimer
-from PyQt5.QtGui import QIcon, QPalette, QColor, QKeySequence
+from PyQt5.QtGui import QIcon, QPalette, QColor
 from packaging import version
 
 from settings import (LinkableSetting, get_setting, set_setting,
@@ -89,9 +89,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
 
 
         self.setCentralWidget(self.main_window)
-        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Right), self, self.tab_right)
-        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Left), self, self.tab_left)
-        QShortcut(QKeySequence(Qt.CTRL + Qt.Key_Q), self, app.quit)
+        QShortcut(Qt.CTRL + Qt.Key_Right, self, self.tab_right)
+        QShortcut(Qt.CTRL + Qt.Key_Left, self, self.tab_left)
+        QShortcut(Qt.CTRL + Qt.Key_Q, self, app.quit)
 
         self.setWindowTitle(f"Circleguard v{__version__}")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
