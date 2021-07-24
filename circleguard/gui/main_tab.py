@@ -497,9 +497,10 @@ class MainTab(SingleLinkableSetting, QFrame):
                 if investigation == "Manual Analysis":
                     map_ids = [r.map_id for r in all_replays]
                     if len(set(map_ids)) > 1:
-                        self.write_to_terminal_signal.emit("Manual analysis expected replays from a single map, "
-                            f"but got replays from maps {set(map_ids)}. Please use a different Manual Analysis "
-                            "Check for each map.")
+                        self.write_to_terminal_signal.emit("<div style='color:#ff5252'>"
+                            "Manual analysis expected replays from a single map</div>, "
+                            f"but got replays from maps {set(map_ids)}. The run has been canceled "
+                            "because of this")
                         self.update_label_signal.emit("Analysis Error (Multiple maps)")
                         self.update_run_status_signal.emit(run.run_id, "Analysis Error (Multiple maps)")
                         self.set_progressbar_signal.emit(-1)
