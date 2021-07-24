@@ -265,7 +265,16 @@ class AnalysisSelection(QFrame):
             self.show_exception_signal.emit(str(e))
 
     def load_loadables(self):
-        loadables = self.all_loadables(flush=True)
+        # an error could get thrown here, eg
+        # ``ValueError: Invalid mod string (no matching mod found for SA)``
+        try:
+            loadables = self.all_loadables(flush=True)
+        except Exception as e:
+            self.set_progressbar_signal.emit(-1)
+            self.update_label_signal.emit("Idle")
+            self.show_exception_signal.emit(str(e))
+            return
+
         # no loadables, user has clicked "visualize" without filling anything
         # out
         if not loadables:
