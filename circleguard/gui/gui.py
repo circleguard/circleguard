@@ -199,6 +199,8 @@ class AnalysisSelection(QFrame):
                 # just so we aren't running this thread crazy fast
                 time.sleep(0.1)
             except Exception as e:
+                self.set_progressbar_signal.emit(-1)
+                self.update_label_signal.emit("Idle")
                 self.show_exception_signal.emit(str(e))
 
 
@@ -258,6 +260,8 @@ class AnalysisSelection(QFrame):
                 "visualizing replays.")
             self.show_exception_signal.emit(message)
         except Exception as e:
+            self.set_progressbar_signal.emit(-1)
+            self.update_label_signal.emit("Idle")
             self.show_exception_signal.emit(str(e))
 
     def load_loadables(self):
