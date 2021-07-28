@@ -104,6 +104,10 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         handler.new_message.connect(self.log)
 
         log_dir = get_setting("log_dir")
+        try:
+            os.makedirs(log_dir)
+        except FileExistsError:
+            pass
         log_file = os.path.join(log_dir, "circleguard.log")
         # 1 mb max file size, with 3 rotating files.
         self.file_handler = RotatingFileHandler(log_file, maxBytes=10**6, backupCount=3)
