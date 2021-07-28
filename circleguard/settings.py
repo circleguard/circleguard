@@ -767,6 +767,9 @@ CFG_PATH = get_setting("config_location") + "/circleguard.cfg"
 
 
 def initialize_settings():
+    # create folders if they don't exist
+    initialize_dirs()
+
     # overwrite setting key if they were changed in a release
     # has to be called after overwrite_with_config_settings or the file will
     # overwrite our changes here since it's not synced to the file
@@ -776,9 +779,6 @@ def initialize_settings():
         reset_defaults()
 
 def initialize_settings_file():
-    # create folders if they don't exist
-    initialize_dirs()
-
     # create cfg file if it doesn't exist
     if not os.path.exists(CFG_PATH):
         overwrite_config()
