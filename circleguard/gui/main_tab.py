@@ -257,9 +257,9 @@ class MainTab(SingleLinkableSetting, QFrame):
 
 
     def run_circleguard(self, run):
-        from circleguard import (Circleguard, UnknownAPIException, ReplayPath,
-            NoInfoAvailableException, Loader, LoadableContainer, replay_pairs,
-            ReplayContainer)
+        from circleguard import (Circleguard, ReplayUnavailableException,
+            ReplayPath, NoInfoAvailableException, Loader, LoadableContainer,
+            replay_pairs, ReplayContainer)
         class TrackerLoader(Loader, QObject):
             """
             A circleguard.Loader subclass that emits a signal when the loader is
@@ -442,7 +442,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                     _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " does "
                         "not exist.</div>\nDouble check your map and/or user id. This replay has "
                         "been skipped because of this.")
-                except UnknownAPIException as e:
+                except ReplayUnavailableException as e:
                     _skip_replay_with_message(replay, "<div style='color:#ff5252'>The osu! api provided an invalid "
                         "response:</div> " + str(e) + ". The replay " + str(replay) + " has been skipped because of this.")
                 except LZMAError as e:
