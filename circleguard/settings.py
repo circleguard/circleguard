@@ -615,9 +615,6 @@ def overwrite_outdated_settings():
 
 def overwrite_with_config_settings():
     config = ConfigParser(interpolation=None)
-    # uncomment to test config file errors
-    # from configparser import MissingSectionHeaderError
-    # raise MissingSectionHeaderError("aasdasdasd", 2, "asd")
     config.read(CFG_PATH)
     for section in config.sections():
         for k in config[section]:
