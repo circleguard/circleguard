@@ -260,36 +260,53 @@ class MainTab(SingleLinkableSetting, QFrame):
         from circleguard import (Circleguard, ReplayUnavailableException,
             ReplayPath, NoInfoAvailableException, Loader, LoadableContainer,
             replay_pairs, ReplayContainer)
+        from ossapi import Ossapi
+
+        class TrackerOssapi(Ossapi, QObject):
+            # length of the ratelimit in seconds
+            ratelimit_signal = pyqtSignal(int)
+            check_stopped_signal = pyqtSignal()
+            # how often to emit check_stopped_signal when ratelimited, in
+            # seconds
+            INTERVAL = 0.250
+
+            def __init__(self, key):
+                Ossapi.__init__(self, key)
+                QObject.__init__(self)
+
+            def _enforce_ratelimit(self):
+                difference = datetime.now() - self.start_time
+                sleep_seconds = self.RATELIMIT_REFRESH - difference.seconds
+                # sometimes the ratelimit length can get very close to zero or
+                # even negative due to network request time and rounding. As
+                # displaying a zero or negative wait time is confusing, don't
+                # wait for any less than 2 seconds.
+                sleep_seconds = max(sleep_seconds, 2)
+                self.ratelimit_signal.emit(sleep_seconds)
+                # how many times to wait for 1/4 second (rng standing for range)
+                # we do this loop in order to tell run_circleguard to check if
+                # the run was canceled, or the application quit, instead of
+                # hanging on a long time.sleep
+                rng = math.ceil(sleep_seconds / self.INTERVAL)
+                for _ in range(rng):
+                    time.sleep(self.INTERVAL)
+                    self.check_stopped_signal.emit()
+
         class TrackerLoader(Loader, QObject):
             """
             A circleguard.Loader subclass that emits a signal when the loader is
             ratelimited. It inherits from QObject to allow us to use qt signals.
             """
-            ratelimit_signal = pyqtSignal(int) # length of the ratelimit in seconds
+            ratelimit_signal = pyqtSignal(int)
             check_stopped_signal = pyqtSignal()
-            # how often to emit check_stopped_signal when ratelimited, in seconds
-            INTERVAL = 0.250
 
             def __init__(self, key, path, write_to_cache):
                 Loader.__init__(self, key, path, write_to_cache)
                 QObject.__init__(self)
 
-            def _ratelimit(self, length):
-                # sometimes the ratelimit length can get very close to zero or
-                # even negative due to network request time and rounding. As
-                # displaying a zero or negative wait time is confusing, don't
-                # wait for any less than 2 seconds.
-
-                length = max(length, 2)
-                self.ratelimit_signal.emit(length)
-                # how many times to wait for 1/4 second (rng standing for range)
-                # we do this loop in order to tell run_circleguard to check if
-                # the run was canceled, or the application quit, instead of
-                # hanging on a long time.sleep
-                rng = math.ceil(length / self.INTERVAL)
-                for _ in range(rng):
-                    time.sleep(self.INTERVAL)
-                    self.check_stopped_signal.emit()
+                self.api = TrackerOssapi(key)
+                self.api.ratelimit_signal.connect(self.ratelimit_signal)
+                self.api.check_stopped_signal.connect(self.check_stopped_signal)
 
         self.update_label_signal.emit("Loading Replays")
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
