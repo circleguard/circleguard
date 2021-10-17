@@ -23,7 +23,7 @@ from portalocker.exceptions import LockException
 
 from gui.circleguard_window import CircleguardWindow
 from settings import (get_setting, set_setting, initialize_settings,
-    initialize_settings_file, CFG_PATH)
+    initialize_settings_file, CFG_PATH, overwrite_outdated_settings)
 from wizard import CircleguardWizard
 
 
@@ -199,6 +199,11 @@ except configparser.Error:
         "discord; link is in the settings tab. This helps me (tybug) keep "
         "track of how many people are affected by this and what the proper "
         "resolution should be. Thanks!\n\n", exc_info=True)
+
+# overwrite setting key if they were changed in a release
+# has to be called after overwrite_with_config_settings or the file will
+# overwrite our changes here since it's not synced to the file
+overwrite_outdated_settings()
 
 circleguard_gui.show()
 
