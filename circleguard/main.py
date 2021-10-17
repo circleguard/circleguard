@@ -44,22 +44,43 @@ if sys.platform == "win32" and hasattr(sys, "_MEIPASS"):
     # I have no idea how other (professional) applications handle this, nor
     # what the proper way to update your url scheme registry is (should it
     # ever be done?).
-    exe_location = str(Path(sys._MEIPASS) / "circleguard.exe") # pylint: disable=no-member
-    # most sources I found said to modify HKEY_CLASSES_ROOT, but that requires
-    # admin perms. Apparently that registry is just a merger of two other
-    # registries, which *don't* require admin perms to write to, so we write
-    # there. See https://www.qtcentre.org/threads/7899-QSettings-HKEY_CLASSES_ROOT-access?s=3c32bd8f5e5300b83765040c2d100fe3&p=42379#post42379
-    # and https://support.shotgunsoftware.com/hc/en-us/articles/219031308-Launching-applications-using-custom-browser-protocols
-    key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard")
-    # empty string to set (default) value
-    winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "URL:circleguard Protocol",)
-    winreg.SetValueEx(key, "URL Protocol", 0, winreg.REG_SZ, "")
+    try:
+        exe_location = str(Path(sys._MEIPASS) / "circleguard.exe") # pylint: disable=no-member
+        # most sources I found said to modify HKEY_CLASSES_ROOT, but that requires
+        # admin perms. Apparently that registry is just a merger of two other
+        # registries, which *don't* require admin perms to write to, so we write
+        # there. See https://www.qtcentre.org/threads/7899-QSettings-HKEY_CLASSES_ROOT-access?s=3c32bd8f5e5300b83765040c2d100fe3&p=42379#post42379
+        # and https://support.shotgunsoftware.com/hc/en-us/articles/219031308-Launching-applications-using-custom-browser-protocols
+        key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard")
+        # empty string to set (default) value
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "URL:circleguard Protocol",)
+        winreg.SetValueEx(key, "URL Protocol", 0, winreg.REG_SZ, "")
 
-    key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\DefaultIcon")
-    winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location)
+        key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\DefaultIcon")
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location)
 
-    key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\shell\\open\\command")
-    winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location + " \"%1\"")
+        key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\shell\\open\\command")
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location + " \"%1\"")
+    except Exception as e:
+        # some users have reported errors ("failure to execute script main")
+        # when running circleguard for the first time. This error is a
+        # ``PermissionError: [WinError 5] Access denied`` on the following line:
+        # ``key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\DefaultIcon")``.
+        # so clearly we don't have permission to create this secondary key for
+        # whatever reason, even though the first create key seems to succeed.
+        # Oddly enough users who proceed to clone and run circleguard locally
+        # report the error disappearing, which I suspect means that windows is
+        # giving us different permissions when running through python than when
+        # running through pyinstaller / an exe. I don't know enough about
+        # windows or registry permissions to make a claim either way.
+        # Obviously we would ideally fix this issue at its source, but I don't
+        # really have time nor testing grounds to do so at the moment (I cannot
+        # reproduce this issue). So we ignore the issue at the cost of users
+        # who would have otherwise had circleguard crash for them having
+        # circleguard urls not work for them. I think this is an acceptable
+        # tradeoff.
+        print(f"caught exception {e} while trying to update or create the "
+            "circleguard url protocol location.")
 
 
 # if we're launching this with arguments, it's almost certainly because it
