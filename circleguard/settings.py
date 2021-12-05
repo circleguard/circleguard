@@ -150,18 +150,18 @@ DEFAULTS = {
         "message_starting_analysis":       "[{ts:%X}] Preparing replays for analysis, you can visualize (and more) from the Results tab when finished",
         "message_finished_investigation":  "[{ts:%X}] Done",
         "message_no_cheat_found":          "[{ts:%X}] Found nothing below the set thresholds",
-        "message_starting_steal":          "[{ts:%X}] Determining similarity of the given replays",
+        "message_starting_steal":          "[{ts:%X}] Determining similarity...",
         "message_steal_found":              message_steal_found,
-        "message_steal_found_display":      message_steal_found + ". Not below threshold",
-        "message_starting_relax":           "[{ts:%X}] Determining ur of the given replays",
+        "message_steal_found_display":      message_steal_found + " (not below threshold)",
+        "message_starting_relax":           "[{ts:%X}] Determining ur...",
         "message_relax_found":              message_relax_found,
-        "message_relax_found_display":      message_relax_found + ". Not below threshold",
+        "message_relax_found_display":      message_relax_found + " (not below threshold)",
         "message_starting_correction":      "[{ts:%X}] Checking if the given replays contain any Snaps",
         "message_correction_found":         message_correction_found,
-        "message_correction_found_display": message_correction_found + "\n(Not below threshold)",
-        "message_starting_timewarp":        "[{ts:%X}] Determining frametime of the given replays",
+        "message_correction_found_display": message_correction_found + "\n(not below threshold)",
+        "message_starting_timewarp":        "[{ts:%X}] Determining frametime...",
         "message_timewarp_found":           message_timewarp_found,
-        "message_timewarp_found_display":   message_timewarp_found + ". Not below threshold",
+        "message_timewarp_found_display":   message_timewarp_found + " (not below threshold)",
         # have to use a separate message here because we can't loop in ``.format`` strings, can only loop in f strings which only work in a
         # local context and aren't usable for us. Passed as ``snaps=snaps`` in message_correction_found, once formatted. Each snap formats
         # this setting and does a ``"\n".join(snap_message)`` to create ``snaps``.
@@ -457,6 +457,15 @@ FORCE_UPDATE = {
         "message_relax_found_display",
         "message_timewarp_found",
         "message_timewarp_found_display",
+    ],
+    "2.15.3": [
+        "message_starting_steal",
+        "message_starting_relax",
+        "message_starting_timewarp",
+        "message_steal_found_display",
+        "message_relax_found_display",
+        "message_correction_found_display",
+        "message_timewarp_found_display"
     ]
 }
 
