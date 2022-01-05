@@ -266,6 +266,7 @@ class MainTab(SingleLinkableSetting, QFrame):
             # length of the ratelimit in seconds
             ratelimit_signal = pyqtSignal(int)
             check_stopped_signal = pyqtSignal()
+            ratelimit_end_signal = pyqtSignal()
             # how often to emit check_stopped_signal when ratelimited, in
             # seconds
             INTERVAL = 0.250
@@ -291,6 +292,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                 for _ in range(rng):
                     time.sleep(self.INTERVAL)
                     self.check_stopped_signal.emit()
+                self.ratelimit_end_signal.emit()
 
         class TrackerLoader(Loader, QObject):
             """
@@ -299,6 +301,7 @@ class MainTab(SingleLinkableSetting, QFrame):
             """
             ratelimit_signal = pyqtSignal(int)
             check_stopped_signal = pyqtSignal()
+            ratelimit_end_signal = pyqtSignal()
 
             def __init__(self, key, path, write_to_cache):
                 Loader.__init__(self, key, path, write_to_cache)
@@ -307,6 +310,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.api = TrackerOssapi(key)
                 self.api.ratelimit_signal.connect(self.ratelimit_signal)
                 self.api.check_stopped_signal.connect(self.check_stopped_signal)
+                self.api.ratelimit_end_signal.connect(self.ratelimit_end_signal)
 
         self.update_label_signal.emit("Loading Replays")
         self.update_run_status_signal.emit(run.run_id, "Loading Replays")
@@ -325,6 +329,9 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.write_to_terminal_signal.emit(message.format(s=length, ts=ts))
                 self.update_label_signal.emit("Ratelimited")
                 self.update_run_status_signal.emit(run.run_id, "Ratelimited")
+            def _end_ratelimit():
+                self.update_label_signal.emit("Loading Replays")
+                self.update_run_status_signal.emit(run.run_id, "Loading Replays")
             def _check_event(event):
                 """
                 Checks the given event to see if it is set. If it is, the run has been canceled
@@ -346,6 +353,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                     sys.exit(0)
 
             cg.loader.ratelimit_signal.connect(_ratelimited)
+            cg.loader.ratelimit_end_signal.connect(_end_ratelimit)
             cg.loader.check_stopped_signal.connect(partial(_check_event, event))
 
             if "Similarity" in run.enabled_investigations:
