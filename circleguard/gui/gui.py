@@ -255,7 +255,7 @@ class AnalysisSelection(QFrame):
             # TODO reuse global library here
             self.visualizer = CGVisualizer(beatmap_info, loadables)
             self.visualizer.show()
-        except InvalidKeyException as e:
+        except InvalidKeyException:
             message = ("Please enter a valid api key in the settings before "
                 "visualizing replays.")
             self.show_exception_signal.emit(message)
