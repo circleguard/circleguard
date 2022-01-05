@@ -455,7 +455,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                         _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " is " +
                             "not available for download.</div> This is likely because it is not in the top 1k scores of "
                             "the beatmap. This replay has been skipped because of this.")
-                except NoInfoAvailableException as e:
+                except NoInfoAvailableException:
                     _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " does "
                         "not exist.</div>\nDouble check your map and/or user id. This replay has "
                         "been skipped because of this.")
