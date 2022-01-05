@@ -903,6 +903,7 @@ class LoadableCreation(QFrame):
         super().__init__()
         self.loadables = []
         self.previous_combobox_state = None
+        self.setAcceptDrops(True)
 
         self.list_widget = QListWidget()
         self.list_widget.setResizeMode(QListWidget.Adjust)
@@ -1083,6 +1084,45 @@ class LoadableCreation(QFrame):
             else:
                 loadable.show_sim_combobox()
             loadable.should_show_sim_combobox = state == Qt.Checked
+
+    def dragEnterEvent(self, event):
+        event.acceptProposedAction()
+
+    def dropEvent(self, event):
+        mimedata = event.mimeData()
+        # users can drop multiple files, in which case we need to consider each
+        # separately
+        paths_unprocessed = (
+            mimedata.data("text/uri-list").data().decode("utf-8").rstrip()
+            .replace("file:///", "").replace("\r", "")
+        )
+        paths = []
+
+        # TODO abstract osr drag-and-drop file handling, the code below
+        # is duplicated in ReplayDropArea below
+        for path in paths_unprocessed.split("\n"):
+            if sys.platform != "win32":
+                path = "/" + path
+            path = urllib.parse.unquote(path)
+            path = Path(path)
+            if not (path.suffix == ".osr" or path.is_dir()):
+                continue
+
+            paths.append(path)
+
+        # if none of the files were replays (or a folder), don't accept the drop
+        # event
+        if not paths:
+            return
+
+        event.acceptProposedAction()
+
+        for path in paths:
+            self.most_recent_loadable.select_loadable("Local Replay")
+            # `loadable` will be an instance of `ReplayPathLoadable`
+            loadable = self.most_recent_loadable.stacked_layout.currentWidget()
+            loadable.path_input.set_path(path)
+            self.new_loadable()
 
 # provided for our Analysis window. There's probably some shared code that
 # we could abstract out from this and `DropArea`, but it's not worth it atm
@@ -1833,6 +1873,13 @@ class ReplayChooser(QFrame):
         layout.addWidget(self.folder_chooser, 0, 1, 1, 1)
         layout.addWidget(self.path_label, 1, 0, 1, 2)
         self.setLayout(layout)
+
+    # exposed for external usage, identical to `handle_new_path` except always
+    # sets `selection_made` to `True`
+    def set_path(self, path):
+        self.path = path
+        self.path_label.setText(str(path))
+        self.selection_made = True
 
     def handle_new_path(self, path):
         self.path = path
