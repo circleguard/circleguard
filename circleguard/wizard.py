@@ -14,9 +14,6 @@ class WizardPage(QWizardPage):
         self.setSubTitle(" ")
         banner = QPixmap(resource_path("wizard/banner.png"))
         self.setPixmap(QWizard.BannerPixmap, banner)
-        # QSize requires integer height and width. Interestingly this doesn't
-        # seem to error on macos or windows, but might on linux
-        # (https://github.com/circleguard/circleguard/issues/183).
         height = int(banner.height() * 0.85)
         width = int(banner.height() * 0.85)
         image = QPixmap(resource_path("logo/logo.png")).scaled(
