@@ -16,7 +16,7 @@ from widgets import (ResetSettings, WidgetCombiner, Separator,
     ReplayMapCreation, PushButton, FileChooserSetting, ResultW)
 
 from settings import (get_setting, overwrite_config, set_setting,
-    overwrite_with_config_settings, DEFAULTS)
+    overwrite_with_config_settings, DEFAULTS, appdata_dir)
 from .visualizer import get_visualizer
 from .main_tab import MainTab
 from wizard import TutorialWizard
@@ -377,7 +377,7 @@ class SettingsTab(QFrame):
         overwrite_with_config_settings()
 
     def _open_circleguard_folder(self):
-        QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("appdata_location")))
+        QDesktopServices.openUrl(QUrl.fromLocalFile(appdata_dir))
 
 
 class ScrollableSettingsWidget(QFrame):
