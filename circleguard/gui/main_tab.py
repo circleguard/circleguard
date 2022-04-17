@@ -563,6 +563,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                         _check_event(event)
                         # skip replays which have no map info
                         if cg.map_available(replay):
+                            # TODO: cache hits so they don't need to be calculated multiple times for a UR investigation
+                            if len(cg.hits(replay)) < 2:
+                                self.write_to_terminal_signal.emit(f"<div style='color:#ff5252'>{str(replay)} has one "
+                                    "or less hit. The replay has been skipped because of this. </div>")
+                                continue
                             try:
                                 ur = cg.ur(replay)
                             # Sometimes, a beatmap will have a bugged download where it returns an empty response
