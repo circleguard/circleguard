@@ -16,7 +16,7 @@ from widgets import (ResetSettings, WidgetCombiner, Separator,
     ReplayMapCreation, PushButton, FileChooserSetting, ResultW)
 
 from settings import (get_setting, overwrite_config, set_setting,
-    overwrite_with_config_settings, DEFAULTS)
+    overwrite_with_config_settings, DEFAULTS, APPDATA_DIR)
 from .visualizer import get_visualizer
 from .main_tab import MainTab
 from wizard import TutorialWizard
@@ -346,7 +346,8 @@ class SettingsTab(QFrame):
         self.open_settings.clicked.connect(self._open_settings)
         self.sync_settings = PushButton("Sync Settings")
         self.sync_settings.clicked.connect(self._sync_settings)
-
+        self.open_circleguard_folder = PushButton("Open Circleguard Folder")
+        self.open_circleguard_folder.clicked.connect(self._open_circleguard_folder)
 
         self.info = QLabel(self)
         # multiple spaces get shrunk to one space in rich text mode
@@ -359,6 +360,7 @@ class SettingsTab(QFrame):
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignCenter)
         self.setting_buttons = WidgetCombiner(self.open_settings, self.sync_settings, self)
+        self.setting_buttons = WidgetCombiner(self.setting_buttons, self.open_circleguard_folder, self)
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1, alignment=Qt.AlignLeft)
@@ -373,6 +375,9 @@ class SettingsTab(QFrame):
 
     def _sync_settings(self):
         overwrite_with_config_settings()
+
+    def _open_circleguard_folder(self):
+        QDesktopServices.openUrl(QUrl.fromLocalFile(APPDATA_DIR))
 
 
 class ScrollableSettingsWidget(QFrame):
