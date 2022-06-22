@@ -1617,7 +1617,7 @@ class RunWidget(QFrame):
         self.cancel_button = PushButton(self)
         self.cancel_button.setText("Cancel")
         self.cancel_button.setFixedWidth(125)
-        self.label.setFixedHeight(self.cancel_button.size().height() * 0.75)
+        self.label.setFixedHeight(int(self.cancel_button.size().height() * 0.75))
 
         self.up_button = PushButton(self)
         self.up_button.setIcon(QIcon(resource_path("up_arrow.svg")))
