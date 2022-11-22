@@ -15,6 +15,8 @@ from packaging import version
 from version import __version__
 
 
+APPDATA_DIR = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
+
 COMMENTS = {
     "file": "Please read the following before editing this file.\n"
             "We do not validate or error check these settings, so if you put an incorrect value or syntax, Circleguard may crash on start.\n"
@@ -224,9 +226,9 @@ DEFAULTS = {
         "speed_options": [0.05, 0.1, 0.25, 0.5, 0.75, 1.0, 1.5, 3.0, 5.0, 10.0]
     },
     "Locations": {
-        "cache_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/cache/",
-        "log_dir": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation) + "/logs/",
-        "config_location": QStandardPaths.writableLocation(QStandardPaths.AppDataLocation),
+        "cache_dir": APPDATA_DIR + "/cache/",
+        "log_dir": APPDATA_DIR + "/logs/",
+        "config_location": APPDATA_DIR,
         "whitelist_file_location": ""
     },
     "Loadables": {
