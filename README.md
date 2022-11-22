@@ -87,4 +87,4 @@ The replay viewer is powerful enough that it was split off into its own reposito
 
 ## Credits
 
-Thanks to [Accalix](https://twitter.com/Accalix_) for creating circleguard's logo. You can check out more of his work [here](https://accalix.art).
+Thanks to [Accalix](https://twitter.com/Accalix_) for creating circleguard's logo.
