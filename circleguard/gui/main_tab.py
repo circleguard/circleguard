@@ -686,13 +686,14 @@ class MainTab(SingleLinkableSetting, QFrame):
                             # allow empty lines anywhere in the file
                             if line == "":
                                 continue
-                            # TODO: nicer error if the line is an invalid id?
+
                             try:
                                 line = int(line)
                             except ValueError:
                                 self.write_to_terminal_signal.emit("<div style='color:#ff5252'>Invalid "
                                     f"user id in whitelist file:</div> \"{line}\" is not a valid user id.")
                                 continue
+
                             whitelisted_ids.append(line)
 
                 ts = datetime.now() # ts = timestamp
