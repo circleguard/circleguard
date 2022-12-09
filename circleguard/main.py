@@ -16,8 +16,8 @@ except ImportError:
     # not on windows, ignore
     pass
 
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import Qt
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import Qt
 import portalocker
 from portalocker.exceptions import LockException
 
@@ -172,7 +172,8 @@ def init(self, *args, **kwargs):
     self.run = run_with_except_hook
 threading.Thread.__init__ = init
 
-QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+# supposedly set by default on qt 6
+# QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
 
 app = QApplication([])
 app.setStyle("Fusion")
@@ -271,4 +272,4 @@ def import_expensive_modules():
 thread = threading.Thread(target=import_expensive_modules)
 thread.start()
 
-app.exec_()
+app.exec()

@@ -6,10 +6,10 @@ import threading
 from datetime import datetime, timedelta
 import re
 
-from PyQt5.QtWidgets import (QMainWindow, QShortcut, QApplication,
-    QProgressBar, QLabel, QTextEdit)
-from PyQt5.QtCore import Qt, QObject, pyqtSignal, QTimer
-from PyQt5.QtGui import QIcon, QPalette, QColor
+from PyQt6.QtWidgets import (QMainWindow, QApplication, QProgressBar, QLabel,
+    QTextEdit)
+from PyQt6.QtCore import Qt, QObject, pyqtSignal, QTimer, QKeyCombination
+from PyQt6.QtGui import QIcon, QPalette, QColor, QShortcut, QKeySequence
 from packaging import version
 
 from settings import (LinkableSetting, get_setting, set_setting,
@@ -59,8 +59,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.progressbar = QProgressBar()
         self.progressbar.setFixedWidth(250)
         self.current_state_label = QLabel("Idle")
-        self.current_state_label.setTextFormat(Qt.RichText)
-        self.current_state_label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.current_state_label.setTextFormat(Qt.TextFormat.RichText)
+        self.current_state_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         self.current_state_label.setOpenExternalLinks(True)
         # statusBar() is a qt function that will create a status bar tied to the window
         # if it doesnt exist, and access the existing one if it does.
@@ -89,9 +89,27 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
 
 
         self.setCentralWidget(self.main_window)
-        QShortcut(Qt.CTRL + Qt.Key_Right, self, self.tab_right)
-        QShortcut(Qt.CTRL + Qt.Key_Left, self, self.tab_left)
-        QShortcut(Qt.CTRL + Qt.Key_Q, self, app.quit)
+        QShortcut(
+            QKeySequence(
+                QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_Right)
+            ),
+            self,
+            self.tab_right
+        )
+        QShortcut(
+            QKeySequence(
+                QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_Left)
+            ),
+            self,
+            self.tab_left
+        )
+        QShortcut(
+            QKeySequence(
+                QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_Q)
+            ),
+            self,
+            app.quit
+        )
 
         self.setWindowTitle(f"Circleguard v{__version__}")
         self.setWindowIcon(QIcon(resource_path("logo/logo.ico")))
@@ -391,32 +409,50 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         overwrite_config()
 
     def switch_theme(self, theme):
+        cg = QPalette.ColorGroup
+        cr = QPalette.ColorRole
+
         if theme == "dark":
             DARK_GREY = QColor(53, 53, 53)
 
-            dark_p = QPalette()
+            dark_p = self.app.style().standardPalette()
 
-            dark_p.setColor(QPalette.Window, DARK_GREY)
-            dark_p.setColor(QPalette.WindowText, Qt.white)
-            dark_p.setColor(QPalette.Base, QColor(25, 25, 25))
-            dark_p.setColor(QPalette.AlternateBase, DARK_GREY)
-            dark_p.setColor(QPalette.ToolTipBase, DARK_GREY)
-            dark_p.setColor(QPalette.ToolTipText, Qt.white)
-            dark_p.setColor(QPalette.Text, Qt.white)
-            dark_p.setColor(QPalette.Button, DARK_GREY)
-            dark_p.setColor(QPalette.ButtonText, Qt.white)
-            dark_p.setColor(QPalette.BrightText, Qt.red)
-            dark_p.setColor(QPalette.Highlight, ACCENT_COLOR)
-            # this coloring was found to be harmful as the "inactive" state was
-            # getting set and showing the wrong colors at the wrong times.
-            # dark_p.setColor(QPalette.Inactive, QPalette.Highlight, Qt.lightGray)
-            dark_p.setColor(QPalette.HighlightedText, Qt.black)
-            dark_p.setColor(QPalette.Disabled, QPalette.Text, Qt.darkGray)
-            dark_p.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
-            dark_p.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
-            dark_p.setColor(QPalette.Disabled, QPalette.Base, DARK_GREY)
-            dark_p.setColor(QPalette.Link, ACCENT_COLOR)
-            dark_p.setColor(QPalette.LinkVisited, ACCENT_COLOR)
+            dark_p.setColor(cg.Normal,   cr.Window, DARK_GREY)
+            dark_p.setColor(cg.Normal,   cr.WindowText, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Normal,   cr.Base, QColor(25, 25, 25))
+            dark_p.setColor(cg.Normal,   cr.AlternateBase, DARK_GREY)
+            dark_p.setColor(cg.Normal,   cr.ToolTipBase, DARK_GREY)
+            dark_p.setColor(cg.Normal,   cr.ToolTipText, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Normal,   cr.Text, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Normal,   cr.Button, DARK_GREY)
+            dark_p.setColor(cg.Normal,   cr.ButtonText, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Normal,   cr.BrightText, Qt.GlobalColor.red)
+            dark_p.setColor(cg.Normal,   cr.Highlight, ACCENT_COLOR)
+            dark_p.setColor(cg.Normal,   cr.PlaceholderText, Qt.GlobalColor.darkGray)
+
+            # also change for inactive (eg when app is in background)
+            dark_p.setColor(cg.Inactive, cr.Window, DARK_GREY)
+            dark_p.setColor(cg.Inactive, cr.WindowText, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Inactive, cr.Base, QColor(25, 25, 25))
+            dark_p.setColor(cg.Inactive, cr.AlternateBase, DARK_GREY)
+            dark_p.setColor(cg.Inactive, cr.ToolTipBase, DARK_GREY)
+            dark_p.setColor(cg.Inactive, cr.ToolTipText, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Inactive, cr.Text, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Inactive, cr.Button, DARK_GREY)
+            dark_p.setColor(cg.Inactive, cr.ButtonText, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Inactive, cr.BrightText, Qt.GlobalColor.red)
+            dark_p.setColor(cg.Inactive, cr.Highlight, ACCENT_COLOR)
+
+            dark_p.setColor(cg.Normal,   cr.HighlightedText, Qt.GlobalColor.black)
+            dark_p.setColor(cg.Disabled, cr.Text, Qt.GlobalColor.darkGray)
+            dark_p.setColor(cg.Disabled, cr.ButtonText, Qt.GlobalColor.darkGray)
+            dark_p.setColor(cg.Disabled, cr.Highlight, Qt.GlobalColor.darkGray)
+            dark_p.setColor(cg.Disabled, cr.Base, DARK_GREY)
+            dark_p.setColor(cg.Disabled, cr.Button, DARK_GREY)
+            dark_p.setColor(cg.Normal,   cr.Link, ACCENT_COLOR)
+            dark_p.setColor(cg.Normal,   cr.LinkVisited, ACCENT_COLOR)
+            dark_p.setColor(cg.Inactive, cr.Link, ACCENT_COLOR)
+            dark_p.setColor(cg.Inactive, cr.LinkVisited, ACCENT_COLOR)
 
             # the `bigButton` class is necessary because qt (or the fusion
             # style, not sure which) is putting a *gradient* on the buttons by
@@ -428,6 +464,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             # the QListWidget border removal is because it clashes with the
             # border we're drawing around our SelectableLoadables and the ui
             # looks too busy with that many borders
+
+            # QPushButton:disabled is because the default disabled style has a
+            # white border which looks terrible in dark mode
 
             self.app.setPalette(dark_p)
             self.app.setStyleSheet("""
@@ -468,17 +507,22 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                     background-color: rgb(53, 53, 53);
                     QListWidget
                 }
+                QPushButton:disabled {
+                    border: 1px solid rgb(47, 47, 47);
+                    border-radius: 3%;
+                }
                 """)
         else:
             self.app.setPalette(self.app.style().standardPalette())
             updated_palette = QPalette()
             # fixes inactive items not being greyed out
-            updated_palette.setColor(QPalette.Disabled, QPalette.ButtonText, Qt.darkGray)
-            updated_palette.setColor(QPalette.Highlight, ACCENT_COLOR)
-            updated_palette.setColor(QPalette.Disabled, QPalette.Highlight, Qt.darkGray)
-            updated_palette.setColor(QPalette.Inactive, QPalette.Highlight, Qt.darkGray)
-            updated_palette.setColor(QPalette.Link, ACCENT_COLOR)
-            updated_palette.setColor(QPalette.LinkVisited, ACCENT_COLOR)
+            updated_palette.setColor(cg.Disabled, cr.ButtonText, Qt.GlobalColor.darkGray)
+            updated_palette.setColor(cg.Normal,   cr.Highlight, ACCENT_COLOR)
+            updated_palette.setColor(cg.Disabled, cr.Highlight, Qt.GlobalColor.darkGray)
+            updated_palette.setColor(cg.Inactive, cr.Highlight, Qt.GlobalColor.darkGray)
+            updated_palette.setColor(cg.Normal, cr.Link, ACCENT_COLOR)
+            updated_palette.setColor(cg.Normal, cr.LinkVisited, ACCENT_COLOR)
+            updated_palette.setColor(cg.Normal, cr.PlaceholderText, Qt.GlobalColor.darkGray)
             self.app.setPalette(updated_palette)
             self.app.setStyleSheet("""
                 QToolTip {

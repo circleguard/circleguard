@@ -11,10 +11,10 @@ from lzma import LZMAError
 import traceback
 from pathlib import Path
 
-from PyQt5.QtCore import pyqtSignal, QObject, Qt
-from PyQt5.QtWidgets import (QMessageBox, QFrame, QGridLayout,
+from PyQt6.QtCore import pyqtSignal, QObject, Qt
+from PyQt6.QtWidgets import (QMessageBox, QFrame, QGridLayout,
     QApplication, QToolTip, QLabel, QSizePolicy, QTextBrowser)
-from PyQt5.QtGui import QTextCursor
+from PyQt6.QtGui import QTextCursor
 
 from widgets import (InvestigationCheckboxes, WidgetCombiner, PushButton,
     LoadableCreation)
@@ -84,7 +84,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.run_priorities = {}
 
         terminal = QTextBrowser(self)
-        terminal.setFocusPolicy(Qt.ClickFocus)
+        terminal.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         terminal.setReadOnly(True)
         terminal.ensureCursorVisible()
         terminal.setOpenExternalLinks(True)
@@ -102,7 +102,7 @@ class MainTab(SingleLinkableSetting, QFrame):
 
         investigate_label = QLabel("Investigate For:")
         investigate_label.setFixedWidth(130)
-        investigate_label.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        investigate_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
 
         self.investigation_checkboxes = InvestigationCheckboxes()
         investigations = WidgetCombiner(investigate_label, self.investigation_checkboxes, self)
@@ -155,7 +155,7 @@ class MainTab(SingleLinkableSetting, QFrame):
 
     def scroll_to_bottom(self):
         cursor = QTextCursor(self.terminal.document())
-        cursor.movePosition(QTextCursor.End)
+        cursor.movePosition(QTextCursor.MoveOperation.End)
         self.terminal.setTextCursor(cursor)
 
     @property
@@ -170,7 +170,7 @@ class MainTab(SingleLinkableSetting, QFrame):
         # includes characters after f, unlike v1's key which is in hex.
         if re.search("[g-z]", self.setting_value):
             message_box = QMessageBox()
-            message_box.setTextFormat(Qt.RichText)
+            message_box.setTextFormat(Qt.TextFormat.RichText)
             message_box.setText("Your api key is invalid. You are likely using "
                     "an api v2 key.\n"
                     "Please ensure your api key comes from "
@@ -819,5 +819,7 @@ class Run():
 
 class RunButton(PushButton):
     def enterEvent(self, event):
+        global_pos = self.mapToGlobal(event.position()).toPoint()
         if not self.isEnabled():
-            QToolTip.showText(event.globalPos(), "You cannot run an investigation until you enter an api key in the settings.")
+            QToolTip.showText(global_pos,
+                "You cannot run an investigation until you enter an api key in the settings.")

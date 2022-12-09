@@ -3,16 +3,16 @@ from pathlib import Path
 from functools import partial
 import urllib
 
-from PyQt5.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
+from PyQt6.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
     QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFileDialog,
     QPushButton, QCheckBox, QComboBox, QVBoxLayout, QHBoxLayout, QMainWindow,
     QTableWidget, QTableWidgetItem, QAbstractItemView, QGraphicsOpacityEffect,
     QStyle, QListWidget, QListWidgetItem, QStackedLayout, QApplication,
-    QShortcut, QToolTip)
-from PyQt5.QtGui import (QRegExpValidator, QIcon, QPainter, QPen, QCursor,
-    QPixmap)
-from PyQt5.QtCore import (QRegExp, Qt, QCoreApplication, pyqtSignal, QEvent,
-    QSize, QTimer)
+    QToolTip)
+from PyQt6.QtGui import (QRegularExpressionValidator, QIcon, QPainter, QPen,
+    QCursor, QPixmap, QShortcut)
+from PyQt6.QtCore import (QRegularExpression, Qt, QCoreApplication, pyqtSignal,
+    QEvent, QSize, QTimer)
 
 from settings import (get_setting, reset_defaults, LinkableSetting,
     SingleLinkableSetting)
@@ -23,17 +23,17 @@ from utils import resource_path, AnalysisResult, ACCENT_COLOR, spacer
 class PushButton(QPushButton):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
 # TODO set pointer cursor on combobox popup list as well, I tried
 # https://stackoverflow.com/a/44525625/12164878 but couldn't get it to work
 class ComboBox(QComboBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         # remove WheelFocus from the combobox's focus policy
         # https://stackoverflow.com/a/19382766/12164878
-        self.setFocusPolicy(Qt.StrongFocus)
+        self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
     def wheelEvent(self, event):
         # we never want wheel events to scroll the combobox
@@ -42,22 +42,22 @@ class ComboBox(QComboBox):
 class CheckBox(QCheckBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
 # A slider which moves directly to the clicked position when clicked
 # Implementation from https://stackoverflow.com/a/29639127/12164878
 class Slider(QSlider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
     def mousePressEvent(self, event):
         self.setValue(QStyle.sliderValueFromPosition(self.minimum(),
-            self.maximum(), event.x(), self.width()))
+            self.maximum(), event.position().toPoint().x(), self.width()))
 
     def mouseMoveEvent(self, event):
         self.setValue(QStyle.sliderValueFromPosition(self.minimum(),
-            self.maximum(), event.x(), self.width()))
+            self.maximum(), event.position().toPoint().x(), self.width()))
 
 # TODO cmd + z doesn't undo operations here, figure out why
 class LineEdit(QLineEdit):
@@ -88,14 +88,14 @@ class PasswordEdit(LineEdit):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.setEchoMode(QLineEdit.Password)
+        self.setEchoMode(QLineEdit.EchoMode.Password)
 
     def focusInEvent(self, event):
-        self.setEchoMode(QLineEdit.Normal)
+        self.setEchoMode(QLineEdit.EchoMode.Normal)
         return super().focusInEvent(event)
 
     def focusOutEvent(self, event):
-        self.setEchoMode(QLineEdit.Password)
+        self.setEchoMode(QLineEdit.EchoMode.Password)
         return super().focusOutEvent(event)
 
 
@@ -110,21 +110,21 @@ class IDLineEdit(LineEdit):
 
     def __init__(self, parent):
         super().__init__(parent)
-        validator = QRegExpValidator(QRegExp(r"\d*"))
+        validator = QRegularExpressionValidator(QRegularExpression(r"\d*"))
         self.setValidator(validator)
 
 
 class QHLine(QFrame):
-    def __init__(self, shadow=QFrame.Plain):
+    def __init__(self, shadow=QFrame.Shadow.Plain):
         super().__init__()
-        self.setFrameShape(QFrame.HLine)
+        self.setFrameShape(QFrame.Shape.HLine)
         self.setFrameShadow(shadow)
 
 
 class QVLine(QFrame):
-    def __init__(self, shadow=QFrame.Plain):
+    def __init__(self, shadow=QFrame.Shadow.Plain):
         super().__init__()
-        self.setFrameShape(QFrame.VLine)
+        self.setFrameShape(QFrame.Shape.VLine)
         self.setFrameShadow(shadow)
 
 
@@ -139,7 +139,7 @@ class Separator(QFrame):
 
         label = QLabel(self)
         label.setText(title)
-        label.setAlignment(Qt.AlignCenter)
+        label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -164,7 +164,8 @@ class WhatsThis(QLabel):
         self.setPixmap(pixmap)
 
     def enterEvent(self, event):
-        QToolTip.showText(event.globalPos(), self.text)
+        global_pos = self.mapToGlobal(event.position()).toPoint()
+        QToolTip.showText(global_pos, self.text)
 
 
 class InputWidget(QFrame):
@@ -232,7 +233,7 @@ class OptionWidget(SingleLinkableSetting, QFrame):
         self.layout = QGridLayout()
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(label, 0, 0, 1, 1)
-        self.layout.addWidget(item, 0, 1, 1, 1, Qt.AlignRight)
+        self.layout.addWidget(item, 0, 1, 1, 1, Qt.AlignmentFlag.AlignRight)
         self.setLayout(self.layout)
 
     def on_setting_changed(self, setting, new_value):
@@ -247,7 +248,7 @@ class CenteredWidget(QWidget):
     def __init__(self, widget):
         super().__init__()
         self.layout = QGridLayout()
-        self.layout.setAlignment(Qt.AlignCenter)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.setContentsMargins(0,0,0,0)
         self.setContentsMargins(0,0,0,0)
         self.layout.addWidget(widget)
@@ -289,7 +290,7 @@ class ComboboxSetting(LinkableSetting, QFrame):
         label.setToolTip(tooltip)
 
         combobox = ComboBox(self)
-        combobox.setInsertPolicy(QComboBox.NoInsert)
+        combobox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         combobox.setMinimumWidth(120)
         setting_options_dict = self.setting_values[setting_options]
         for text, value in setting_options_dict.items():
@@ -308,7 +309,7 @@ class ComboboxSetting(LinkableSetting, QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(label, 0, 0, 1, 1)
         layout.addItem(spacer(), 0, 1, 1, 1)
-        layout.addWidget(combobox, 0, 2, 1, 3, Qt.AlignRight)
+        layout.addWidget(combobox, 0, 2, 1, 3, Qt.AlignmentFlag.AlignRight)
         self.setLayout(layout)
 
     def selection_changed(self):
@@ -366,7 +367,7 @@ class ScrollableLoadablesWidget(QFrame):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
-        self.layout.setAlignment(Qt.AlignTop)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(self.layout)
 
 
@@ -374,7 +375,7 @@ class ScrollableChecksWidget(QFrame):
     def __init__(self):
         super().__init__()
         self.layout = QVBoxLayout()
-        self.layout.setAlignment(Qt.AlignTop)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(self.layout)
 
 class LabeledCheckbox(QFrame):
@@ -387,7 +388,7 @@ class LabeledCheckbox(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.checkbox)
         layout.addWidget(label)
-        self.setCursor(QCursor(Qt.PointingHandCursor))
+        self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.setLayout(layout)
 
     def checked(self):
@@ -411,7 +412,7 @@ class InvestigationCheckboxes(QFrame):
         layout = QHBoxLayout()
         layout.setSpacing(25)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setAlignment(Qt.AlignLeft)
+        layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         layout.addWidget(self.similarity_cb)
         layout.addWidget(self.ur_cb)
         layout.addWidget(self.frametime_cb)
@@ -458,7 +459,7 @@ class LoadableBase(QFrame):
         self.enabled = True
 
         self.combobox = ComboBox()
-        self.combobox.setInsertPolicy(QComboBox.NoInsert)
+        self.combobox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         for entry in ["Select a Loadable", "Map Replay", "Local Replay", "Map",
             "User", "All User Replays on Map"]:
             self.combobox.addItem(entry, entry)
@@ -469,9 +470,11 @@ class LoadableBase(QFrame):
         self.sim_combobox.activated.connect(self.sim_combobox_activated)
 
     def eventFilter(self, obj, event):
-        if (obj == self.disable_button and
-            event.type() == QEvent.MouseButtonPress and
-            event.modifiers() == Qt.ShiftModifier):
+        if (
+            obj == self.disable_button and
+            event.type() == QEvent.Type.MouseButtonPress and
+            event.modifiers() == Qt.KeyboardModifier.ShiftModifier
+        ):
             self.disable_button_shift_clicked.emit()
             return True
         return super().eventFilter(obj, event)
@@ -535,7 +538,7 @@ class UnselectedLoadable(LoadableBase):
         layout = QGridLayout()
         # AlignTop matches the height of the other loadables, as they have more
         # things to display below
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(self.combobox, 0, 0, 1, 7)
         layout.addWidget(self.delete_button, 0, 7, 1, 1)
         self.setLayout(layout)
@@ -906,24 +909,24 @@ class LoadableCreation(QFrame):
         self.setAcceptDrops(True)
 
         self.list_widget = QListWidget()
-        self.list_widget.setResizeMode(QListWidget.Adjust)
-        self.list_widget.setViewMode(QListWidget.IconMode)
+        self.list_widget.setResizeMode(QListWidget.ResizeMode.Adjust)
+        self.list_widget.setViewMode(QListWidget.ViewMode.IconMode)
         self.list_widget.setGridSize(self.LOADABLE_SIZE)
         # apparently list widgets allow you to move widgets around? We don't
         # want to allow that though.
-        self.list_widget.setMovement(QListWidget.Static)
+        self.list_widget.setMovement(QListWidget.Movement.Static)
 
         self.cg_loadables_to_selectable_loadables = {}
 
-        QShortcut(Qt.Key_R, self, lambda: self.select_loadable("Map Replay"))
-        QShortcut(Qt.Key_L, self, lambda: self.select_loadable("Local Replay"))
-        QShortcut(Qt.Key_M, self, lambda: self.select_loadable("Map"))
-        QShortcut(Qt.Key_U, self, lambda: self.select_loadable("User"))
-        QShortcut(Qt.Key_A, self, lambda: self.select_loadable("All User Replays on Map"))
+        QShortcut(Qt.Key.Key_R, self, lambda: self.select_loadable("Map Replay"))
+        QShortcut(Qt.Key.Key_L, self, lambda: self.select_loadable("Local Replay"))
+        QShortcut(Qt.Key.Key_M, self, lambda: self.select_loadable("Map"))
+        QShortcut(Qt.Key.Key_U, self, lambda: self.select_loadable("User"))
+        QShortcut(Qt.Key.Key_A, self, lambda: self.select_loadable("All User Replays on Map"))
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(self.list_widget)
         self.setLayout(layout)
 
@@ -959,7 +962,7 @@ class LoadableCreation(QFrame):
     def new_loadable(self):
         loadable = SelectableLoadable()
         self.cg_loadables_to_selectable_loadables[loadable] = None
-        loadable.should_show_sim_combobox = self.previous_combobox_state == Qt.Checked
+        loadable.should_show_sim_combobox = self.previous_combobox_state == Qt.CheckState.Checked.value
         # some loadables have input widgets which can become arbitrarily long,
         # for instance ReplayPathLoadable's ReplayChooser which displays the
         # chosen file's location. This would cause the loadable to increase in
@@ -990,7 +993,7 @@ class LoadableCreation(QFrame):
         item.setSizeHint(self.LOADABLE_SIZE)
         # list items get an annoying highlight in the middle of the widget if
         # we don't disable interaction.
-        item.setFlags(item.flags() & ~Qt.ItemIsEnabled)
+        item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEnabled)
         self.list_widget.setItemWidget(item, loadable)
         # without this call, list items will be added in the wrong spot
         # and will only correct themselves once the window is resized or another
@@ -1079,11 +1082,11 @@ class LoadableCreation(QFrame):
     def similarity_cb_state_changed(self, state):
         self.previous_combobox_state = state
         for loadable in self.loadables:
-            if state == Qt.Unchecked:
+            if state == Qt.CheckState.Unchecked.value:
                 loadable.hide_sim_combobox()
             else:
                 loadable.show_sim_combobox()
-            loadable.should_show_sim_combobox = state == Qt.Checked
+            loadable.should_show_sim_combobox = state == Qt.CheckState.Checked.value
 
     def dragEnterEvent(self, event):
         event.acceptProposedAction()
@@ -1137,7 +1140,7 @@ class ReplayDropArea(QFrame):
         font = self.info_label.font()
         font.setPointSize(20)
         self.info_label.setFont(font)
-        self.info_label.setAlignment(Qt.AlignCenter)
+        self.info_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # https://stackoverflow.com/a/59022793/12164878
         effect = QGraphicsOpacityEffect(self)
@@ -1200,7 +1203,7 @@ class ReplayDropArea(QFrame):
         event.acceptProposedAction()
         # hide the info label and fill top down now that we have things to show
         self.info_label.hide()
-        self.layout().setAlignment(Qt.AlignLeft | Qt.AlignTop)
+        self.layout().setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
 
         for path_widget in path_widgets:
             # `lambda` is late binding so we can't use it here or else all the
@@ -1218,7 +1221,7 @@ class ReplayDropArea(QFrame):
 
         # re-show the info label if the user deletes all their replays
         if len(self.path_widgets) == 0:
-            self.layout().setAlignment(Qt.Alignment())
+            self.layout().setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.info_label.show()
 
     def all_loadables(self, flush):
@@ -1291,7 +1294,7 @@ class ReplayMapCreation(QFrame):
         label.setAutoFillBackground(True)
 
         layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         layout.addWidget(label)
         self.setLayout(layout)
 
@@ -1428,15 +1431,16 @@ class ResultW(QFrame):
 
         self.label = QLabel(self)
         self.label.setText(text)
-        self.label.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.label.setCursor(QCursor(Qt.IBeamCursor))
-        self.label.setTextFormat(Qt.RichText)
-        self.label.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.label.setCursor(QCursor(Qt.CursorShape.IBeamCursor))
+        self.label.setTextFormat(Qt.TextFormat.RichText)
+        self.label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         self.label.setOpenExternalLinks(True)
 
         self.visualize_button = PushButton(self)
         self.visualize_button.setText("Visualize")
         self.visualize_button.clicked.connect(self.visualize_button_pressed_signal.emit)
+        self.visualize_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         if len(replays) == 1:
             self.set_layout_single()
@@ -1450,7 +1454,7 @@ class ResultW(QFrame):
         self.actions_combobox.addItem("More")
         self.actions_combobox.addItem("View Frametimes", "View Frametimes")
         self.actions_combobox.addItem("View Replay Data", "View Replay Data")
-        self.actions_combobox.setInsertPolicy(QComboBox.NoInsert)
+        self.actions_combobox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         self.actions_combobox.activated.connect(self.action_combobox_activated)
 
         layout = QGridLayout()
@@ -1555,7 +1559,7 @@ class ReplayDataTable(QFrame):
         table.setRowCount(len(replay.t))
         table.setHorizontalHeaderLabels(["Time (ms)", "x", "y", "keys pressed"])
         # https://forum.qt.io/topic/82749/how-to-make-qtablewidget-read-only
-        table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
         for i, data in enumerate(zip(replay.t, replay.xy, replay.k)):
             t, xy, k = data
@@ -1613,7 +1617,7 @@ class RunWidget(QFrame):
 
         self.status_label = QLabel(self)
         self.status_label.setText("<b>Status: " + self.status + "</b>")
-        self.status_label.setTextFormat(Qt.RichText) # so we can bold it
+        self.status_label.setTextFormat(Qt.TextFormat.RichText) # so we can bold it
         self.cancel_button = PushButton(self)
         self.cancel_button.setText("Cancel")
         self.cancel_button.setFixedWidth(125)
@@ -1639,7 +1643,7 @@ class RunWidget(QFrame):
         self.layout.addWidget(self.status_label, 0, 1, 1, 1)
         # needs to be redefined because RunWidget is being called from a
         # different thread or something? get weird errors when not redefined
-        SPACER = QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
+        SPACER = QSpacerItem(100, 0, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum)
         self.layout.addItem(SPACER, 0, 2, 1, 1)
         self.layout.addWidget(self.cancel_button, 0, 3, 1, 1)
         self.layout.addWidget(self.up_button, 0, 4, 1, 1)
@@ -1680,8 +1684,8 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         label.setToolTip(tooltip)
         self.label = label
 
-        slider = Slider(Qt.Horizontal)
-        slider.setFocusPolicy(Qt.ClickFocus)
+        slider = Slider(Qt.Orientation.Horizontal)
+        slider.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         slider.setRange(min_, max_)
         # max value of max_, avoid errors when the setting is 2147483647 aka inf
         val = min(self.setting_value, max_)
@@ -1693,7 +1697,7 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         spinbox.setSingleStep(1)
         spinbox.setFixedWidth(120)
         spinbox.setValue(self.setting_value)
-        spinbox.setAlignment(Qt.AlignCenter)
+        spinbox.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.spinbox = spinbox
         self.combined = WidgetCombiner(slider, spinbox, self)
 
@@ -1799,7 +1803,9 @@ class WidgetCombiner(QFrame):
 class FileChooserButton(PushButton):
     path_chosen_signal = pyqtSignal(Path) # emits the selected path
 
-    def __init__(self, text, file_mode=QFileDialog.AnyFile, name_filters=None):
+    def __init__(self, text, file_mode=QFileDialog.FileMode.AnyFile,
+        name_filters=None
+    ):
         super().__init__()
         self.file_mode = file_mode
         self.name_filters = name_filters
@@ -1855,8 +1861,8 @@ class ReplayChooser(QFrame):
 
         self.path_label = QLabel()
         self.path_label.setWordWrap(True)
-        self.file_chooser = FileChooserButton("Choose replay", QFileDialog.ExistingFile, ["osu! Replay File (*.osr)"])
-        self.folder_chooser = FileChooserButton("Choose folder", QFileDialog.Directory)
+        self.file_chooser = FileChooserButton("Choose replay", QFileDialog.FileMode.ExistingFile, ["osu! Replay File (*.osr)"])
+        self.folder_chooser = FileChooserButton("Choose folder", QFileDialog.FileMode.Directory)
 
         # the buttons will steal the mousePressEvent so connect them manually
         self.file_chooser.clicked.connect(self.reset_required)
@@ -1921,9 +1927,11 @@ class ResetSettings(QFrame):
                         "Are you sure?\n"
                         "This will reset all settings to their default value, "
                         "and the application will quit.",
-                        buttons=QMessageBox.No | QMessageBox.Yes,
-                        defaultButton=QMessageBox.No)
-        if prompt == QMessageBox.Yes:
+                        buttons=(
+                            QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes
+                        ),
+                        defaultButton=QMessageBox.StandardButton.No)
+        if prompt == QMessageBox.StandardButton.Yes:
             reset_defaults()
             QCoreApplication.quit()
 

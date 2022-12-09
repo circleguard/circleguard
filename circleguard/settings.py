@@ -9,13 +9,15 @@ from functools import partial
 # important for users.
 from configparser import ConfigParser
 
-from PyQt5.QtCore import QSettings, QStandardPaths
+from PyQt6.QtCore import QSettings, QStandardPaths
 from packaging import version
 
 from version import __version__
 
 
-APPDATA_DIR = QStandardPaths.writableLocation(QStandardPaths.AppDataLocation)
+APPDATA_DIR = QStandardPaths.writableLocation(
+    QStandardPaths.StandardLocation.AppDataLocation
+)
 
 COMMENTS = {
     "file": "Please read the following before editing this file.\n"

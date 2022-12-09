@@ -1,8 +1,8 @@
 from pathlib import Path
 import sys
 
-from PyQt5.QtWidgets import QLayout, QFrame, QSpacerItem, QSizePolicy
-from PyQt5.QtGui import QPainter, QColor
+from PyQt6.QtWidgets import QFrame, QSpacerItem, QSizePolicy
+from PyQt6.QtGui import QPainter, QColor
 
 # the blue accent color used throughout the application
 ACCENT_COLOR = QColor(71, 174, 247)
@@ -86,4 +86,4 @@ class URLAnalysisResult():
 # elsewhere). We use identical spacer items across the gui but don't want to
 # reuse the actual object, so this generates a new one for us.
 def spacer():
-    return QSpacerItem(100, 0, QSizePolicy.Maximum, QSizePolicy.Minimum)
+    return QSpacerItem(100, 0, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum)

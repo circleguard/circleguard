@@ -3,11 +3,11 @@ import logging
 import threading
 import time
 
-from PyQt5.QtCore import Qt, pyqtSignal, QUrl
-from PyQt5.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
+from PyQt6.QtCore import Qt, pyqtSignal, QUrl
+from PyQt6.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
     QLabel, QGridLayout, QSpacerItem, QSizePolicy, QMainWindow,
     QTextEdit, QStackedWidget, QHBoxLayout, QMessageBox, QFileDialog)
-from PyQt5.QtGui import QDesktopServices, QIcon, QCursor
+from PyQt6.QtGui import QDesktopServices, QIcon, QCursor
 
 from utils import resource_path
 from widgets import (ResetSettings, WidgetCombiner, Separator,
@@ -89,10 +89,12 @@ class WindowSelector(QFrame):
         visualize_button.clicked.connect(self.visualize_button_clicked)
         # to style it in our stylesheet
         visualize_button.setObjectName("bigButton")
+        visualize_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         bulk_investigation_button = PushButton("Investigation / Settings")
         bulk_investigation_button.clicked.connect(self.bulk_investigation_button_clicked)
         bulk_investigation_button.setObjectName("bigButton")
+        bulk_investigation_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         for button in [visualize_button, bulk_investigation_button]:
             font = button.font()
@@ -100,8 +102,8 @@ class WindowSelector(QFrame):
             button.setFont(font)
 
             expanding = QSizePolicy()
-            expanding.setHorizontalPolicy(QSizePolicy.Expanding)
-            expanding.setVerticalPolicy(QSizePolicy.Expanding)
+            expanding.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
+            expanding.setVerticalPolicy(QSizePolicy.Policy.Expanding)
             button.setSizePolicy(expanding)
 
         layout = QHBoxLayout()
@@ -138,32 +140,33 @@ class AnalysisSelection(QFrame):
         self.show_exception_signal.connect(self.show_exception)
 
         expanding = QSizePolicy()
-        expanding.setHorizontalPolicy(QSizePolicy.Expanding)
-        expanding.setVerticalPolicy(QSizePolicy.Expanding)
+        expanding.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
+        expanding.setVerticalPolicy(QSizePolicy.Policy.Expanding)
 
         self.drop_area = ReplayDropArea()
         self.drop_area.setSizePolicy(expanding)
         da_scroll_area = QScrollArea(self)
         da_scroll_area.setWidget(self.drop_area)
         da_scroll_area.setWidgetResizable(True)
-        da_scroll_area.setFrameShape(QFrame.NoFrame)
+        da_scroll_area.setFrameShape(QFrame.Shape.NoFrame)
 
         self.replay_map_creation = ReplayMapCreation()
         self.replay_map_creation.setSizePolicy(expanding)
         rmc_scroll_area = QScrollArea(self)
         rmc_scroll_area.setWidget(self.replay_map_creation)
         rmc_scroll_area.setWidgetResizable(True)
-        rmc_scroll_area.setFrameShape(QFrame.NoFrame)
+        rmc_scroll_area.setFrameShape(QFrame.Shape.NoFrame)
 
         visualize_button = PushButton("Visualize")
         visualize_button.setObjectName("bigButton")
         visualize_button.clicked.connect(self.visualize)
+        visualize_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         font = visualize_button.font()
         font.setPointSize(30)
         visualize_button.setFont(font)
         expanding = QSizePolicy()
-        expanding.setHorizontalPolicy(QSizePolicy.Expanding)
-        expanding.setVerticalPolicy(QSizePolicy.Expanding)
+        expanding.setHorizontalPolicy(QSizePolicy.Policy.Expanding)
+        expanding.setVerticalPolicy(QSizePolicy.Policy.Expanding)
         visualize_button.setSizePolicy(expanding)
 
         layout = QGridLayout()
@@ -310,7 +313,7 @@ class CircleguardClassic(QFrame):
         self.tabs.addTab(self.queue_tab, "Queue")
         self.tabs.addTab(self.thresholds_tab, "Thresholds")
         self.tabs.addTab(self.settings_tab, "Settings")
-        self.tabs.tabBar().setCursor(QCursor(Qt.PointingHandCursor))
+        self.tabs.tabBar().setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.tabs)
@@ -339,7 +342,7 @@ class SettingsTab(QFrame):
         super().__init__()
         self.qscrollarea = QScrollArea(self)
         self.qscrollarea.setWidget(ScrollableSettingsWidget())
-        self.qscrollarea.setAlignment(Qt.AlignCenter)
+        self.qscrollarea.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.qscrollarea.setWidgetResizable(True)
 
         self.open_settings = PushButton("Open Advanced Settings")
@@ -355,16 +358,16 @@ class SettingsTab(QFrame):
         self.info.setText(f"circleguard v{__version__}&nbsp;&nbsp;|&nbsp;&nbsp;"
                           "<a href=\"https://discord.gg/wj35ehD\">Discord</a>"
                           "&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"https://github.com/circleguard/circleguard/\">Github</a>")
-        self.info.setTextFormat(Qt.RichText)
-        self.info.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.info.setTextFormat(Qt.TextFormat.RichText)
+        self.info.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
-        self.info.setAlignment(Qt.AlignCenter)
+        self.info.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setting_buttons = WidgetCombiner(self.open_settings, self.sync_settings, self)
         self.setting_buttons = WidgetCombiner(self.setting_buttons, self.open_circleguard_folder, self)
 
         layout = QGridLayout()
-        layout.addWidget(self.info, 0, 0, 1, 1, alignment=Qt.AlignLeft)
-        layout.addWidget(self.setting_buttons, 0, 1, 1, 1, alignment=Qt.AlignRight)
+        layout.addWidget(self.info, 0, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(self.setting_buttons, 0, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignRight)
         layout.addWidget(self.qscrollarea, 1, 0, 1, 2)
 
         self.setLayout(layout)
@@ -400,7 +403,7 @@ class ScrollableSettingsWidget(QFrame):
         self.show_cv_frametimes = ComboboxSetting("Frametime graph display type", "", "frametime_graph_display")
         self.default_page = ComboboxSetting("Show this screen when circleguard starts", "", "default_page")
         self.whitelist_file = FileChooserSetting("Player Whitelist File:", "Choose File", "",
-            QFileDialog.ExistingFile, "whitelist_file_location", ["plaintext file (*.txt)"])
+            QFileDialog.FileMode.ExistingFile, "whitelist_file_location", ["plaintext file (*.txt)"])
 
         self.default_span_map = LineEditSetting("Map span defaults to", "", "normal", "default_span_map")
         self.default_span_user = LineEditSetting("User span defaults to", "", "normal", "default_span_user")
@@ -423,9 +426,9 @@ class ScrollableSettingsWidget(QFrame):
         sim_url = QUrl("https://github.com/circleguard/circleguard/wiki/Similarity-Groups")
         self.similarity_groups_tutorial.button.clicked.connect(lambda: QDesktopServices.openUrl(sim_url))
 
-        vert_spacer = QSpacerItem(0, 10, QSizePolicy.Maximum, QSizePolicy.Minimum)
+        vert_spacer = QSpacerItem(0, 10, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum)
         self.layout = QVBoxLayout()
-        self.layout.setAlignment(Qt.AlignTop)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.layout.addItem(vert_spacer)
         self.layout.addWidget(Separator("General"))
         self.layout.addWidget(self.apikey_widget)
@@ -477,7 +480,7 @@ class ResultsTab(QFrame):
 
         layout = QGridLayout()
         layout.addWidget(self.qscrollarea, 0, 0, 1, 2)
-        layout.addWidget(clear_results_button, 1, 0, 1, 1, alignment=Qt.AlignLeft)
+        layout.addWidget(clear_results_button, 1, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.setLayout(layout)
 
@@ -501,7 +504,7 @@ class ResultsFrame(QFrame):
         self.layout = QVBoxLayout()
         # we want widgets to fill from top down,
         # being vertically centered looks weird
-        self.layout.setAlignment(Qt.AlignTop)
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.info_label = QLabel("After running Investigations, this tab will "
             "fill up with replays that can be played back. Newest results "
             "appear at the top.")
@@ -599,7 +602,7 @@ class QueueFrame(QFrame):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(layout)
 
 class ThresholdsTab(QFrame):
@@ -616,7 +619,7 @@ class ThresholdsTab(QFrame):
 
         layout = QVBoxLayout()
         layout.addWidget(qscrollarea)
-        layout.addWidget(clear_results_button, alignment=Qt.AlignLeft)
+        layout.addWidget(clear_results_button, alignment=Qt.AlignmentFlag.AlignLeft)
         self.setLayout(layout)
 
 
@@ -676,5 +679,5 @@ class ScrollableThresholdsWidget(QFrame):
         layout.addWidget(timewarp_max_frametime)
         layout.addWidget(timewarp_max_frametime_display)
 
-        layout.setAlignment(Qt.AlignTop)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(layout)

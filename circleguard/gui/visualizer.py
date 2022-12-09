@@ -1,4 +1,4 @@
-from PyQt5.QtGui import QIcon
+from PyQt6.QtGui import QIcon
 
 from utils import resource_path
 from settings import get_setting

@@ -1,6 +1,6 @@
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
+from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtGui import QPixmap, QIcon
+from PyQt6.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
 
 from widgets import LineEditSetting
 from utils import resource_path
@@ -13,14 +13,14 @@ class WizardPage(QWizardPage):
         # https://doc.qt.io/qt-5/qwizardpage.html#subTitle-prop
         self.setSubTitle(" ")
         banner = QPixmap(resource_path("wizard/banner.png"))
-        self.setPixmap(QWizard.BannerPixmap, banner)
+        self.setPixmap(QWizard.WizardPixmap.BannerPixmap, banner)
         height = int(banner.height() * 0.85)
         width = int(banner.height() * 0.85)
         image = QPixmap(resource_path("logo/logo.png")).scaled(
             QSize(height, width),
-            transformMode=Qt.SmoothTransformation
+            transformMode=Qt.TransformationMode.SmoothTransformation
         )
-        self.setPixmap(QWizard.LogoPixmap, image)
+        self.setPixmap(QWizard.WizardPixmap.LogoPixmap, image)
 
 
 class CircleguardWizard(QWizard):
@@ -42,10 +42,16 @@ class CircleguardWizard(QWizard):
         self.addPage(ConclusionPage())
 
         # disable help button
-        self.setWindowFlags(self.windowFlags() | Qt.CustomizeWindowHint)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
-        self.setButtonText(QWizard.CancelButton, "Skip")
-        self.setWizardStyle(QWizard.ModernStyle)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.CustomizeWindowHint)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
+        self.setButtonText(QWizard.WizardButton.CancelButton, "Skip")
+        self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
+
+        # I don't know why, but the back button's style is messed up. Reset it
+        # to what it's supposed to look like.
+        button = self.button(QWizard.WizardButton.BackButton)
+        button.setStyleSheet("padding-left: 18px; padding-right: 18px;"
+            "padding-top: 3px; padding-bottom: 3px;")
 
         self.setFixedSize(750, 625) # 1.2 aspect ratio, same as gui
 
@@ -72,10 +78,10 @@ class TutorialWizard(QWizard):
         self.addPage(ConclusionPage())
 
         # disable help button
-        self.setWindowFlags(self.windowFlags() | Qt.CustomizeWindowHint)
-        self.setWindowFlags(self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
-        self.setButtonText(QWizard.CancelButton, "Skip")
-        self.setWizardStyle(QWizard.ModernStyle)
+        self.setWindowFlags(self.windowFlags() | Qt.WindowType.CustomizeWindowHint)
+        self.setWindowFlags(self.windowFlags() & ~Qt.WindowType.WindowContextHelpButtonHint)
+        self.setButtonText(QWizard.WizardButton.CancelButton, "Skip")
+        self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
 
         self.setFixedSize(750, 625) # 1.2 aspect ratio, same as gui
 
@@ -136,7 +142,7 @@ class TutorialPageScreens(WizardPage):
         label = WizardLabel("<p>When you launch Circleguard, you will have the option to choose from the "
             "\"Visualization\" screen, and the \"Investigation\" screen.</p>"
             "<p>If you only want to visualize a few replays, you should choose the former screen. If you want to "
-            "do a borader and more thorough investigation of a particular map, user, or set of replays, you should "
+            "do a broader and more thorough investigation of a particular map, user, or set of replays, you should "
             "choose the latter screen.</p>"
             "<p>The next pages will cover how to use the \"Investigation\" screen.</p>")
 
@@ -173,7 +179,9 @@ class TutorialPageLoadables(WizardPage):
             "<p>A Map Replay represents a replay by a single User on a Map.</p>")
         image = QLabel()
         # SmoothTransformation necessary for half decent image quality
-        image.setPixmap(QPixmap(resource_path("wizard/map_replay_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/map_replay_empty.png")).scaledToWidth(
+            500, Qt.TransformationMode.SmoothTransformation)
+        )
         label2 = WizardLabel("<p>If you wanted cookiezi's replay on Freedom Dive, you would enter 129891 "
             "as the Map id and 124493 as the User id.</p>"
             "<p>By default (when Mods is left empty), the highest scoring replay by that user will be used in a Map Replay. "
@@ -194,7 +202,9 @@ class TutorialPageLoadableLocal(WizardPage):
         self.setTitle("Local Replay")
         label = WizardLabel("<p>A Local Replay represents a replay stored in a .osr file on your computer.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(resource_path("wizard/local_replay_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/local_replay_empty.png")).scaledToWidth(
+            500, Qt.TransformationMode.SmoothTransformation)
+        )
         label2 = WizardLabel("<p>You can either select a single .osr, or a directory of .osr files.</p>")
 
         layout = QVBoxLayout()
@@ -210,7 +220,9 @@ class TutorialPageLoadableMap(WizardPage):
         self.setTitle("Tutorial (Loadables - Map)")
         label = WizardLabel("<p>A Map represents one or more replays on a map's leaderboard.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(resource_path("wizard/map_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/map_empty.png")).scaledToWidth(
+            500, Qt.TransformationMode.SmoothTransformation)
+        )
         label2 = WizardLabel("<p>If you wanted the top 50 replays on <a href=\"https://osu.ppy.sh/beatmapsets/79498#osu/221777\">"
             "https://osu.ppy.sh/beatmapsets/79498#osu/221777</a>, you would enter 221777 as the Map id and 1-50 "
             "as the Span (which happens to be the default).</p>"
@@ -238,7 +250,9 @@ class TutorialPageLoadableUser(WizardPage):
         self.setTitle("User")
         label = WizardLabel("<p>A User represents one or more of a User's top plays.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(resource_path("wizard/user_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/user_empty.png")).scaledToWidth(
+            500, Qt.TransformationMode.SmoothTransformation)
+        )
         label2 = WizardLabel("<p>All fields work the same as the previous Loadables. "
             "If you wanted Cookiezi's top 50 replays, you would enter 124493 as the User id and 1-50 as the Span. "
             "If you wanted his top 20 DT replays, you would enter DT in Mods and 1-20 in Span.</p>")
@@ -256,7 +270,9 @@ class TutorialPageLoadableUsersAll(WizardPage):
         self.setTitle("All Map Replays by User")
         label = WizardLabel("<p>This Loadable represents all the replays by a User on a Map, not just their top score on the map.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(resource_path("wizard/mapuser_empty.png")).scaledToWidth(500, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/mapuser_empty.png")).scaledToWidth(
+            500, Qt.TransformationMode.SmoothTransformation)
+        )
         label2 = WizardLabel("<p>All fields work the same as the previous loadables. \"all\" in Span is a shorthand way to say you want "
             "all possible replays available from the api by this user on this map. It can also be used in the Span of a Map and User, "
             "and is equivalent to a span of 1-100 in both of those Loadables.</p>"
@@ -280,7 +296,9 @@ class TutorialPageChecks(WizardPage):
             "Once you have added the Loadables you want to investigate, check the checkboxes at the top that "
             "you want to investigate them for.</p>")
         image = QLabel()
-        image.setPixmap(QPixmap(resource_path("wizard/investigation_checkboxes.png")).scaledToWidth(650, Qt.SmoothTransformation))
+        image.setPixmap(QPixmap(resource_path("wizard/investigation_checkboxes.png")).scaledToWidth(
+            650, Qt.TransformationMode.SmoothTransformation)
+        )
         label2 = WizardLabel("<p>For instance, if you think someone is timewarping, you might add a User loadable for them and "
             "check the Frametime checkbox (as seen above), and then hit Run.</p>")
 
@@ -340,7 +358,7 @@ class WizardLabel(QLabel):
     """
     def __init__(self, text):
         super().__init__(text)
-        self.setTextFormat(Qt.RichText)
-        self.setTextInteractionFlags(Qt.TextBrowserInteraction)
+        self.setTextFormat(Qt.TextFormat.RichText)
+        self.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         self.setOpenExternalLinks(True)
         self.setWordWrap(True)
