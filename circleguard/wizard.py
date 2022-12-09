@@ -83,6 +83,12 @@ class TutorialWizard(QWizard):
         self.setButtonText(QWizard.WizardButton.CancelButton, "Skip")
         self.setWizardStyle(QWizard.WizardStyle.ModernStyle)
 
+        # I don't know why, but the back button's style is messed up. Reset it
+        # to what it's supposed to look like.
+        button = self.button(QWizard.WizardButton.BackButton)
+        button.setStyleSheet("padding-left: 18px; padding-right: 18px;"
+            "padding-top: 3px; padding-bottom: 3px;")
+
         self.setFixedSize(750, 625) # 1.2 aspect ratio, same as gui
 
     def mousePressEvent(self, event):
