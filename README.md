@@ -55,7 +55,7 @@ If you are building for windows or mac, there are premade specfiles in the root 
 
 ## Running Locally
 
-To run circleguard locally, you'll need to have [git](https://git-scm.com/downloads) and [python3.7+](https://www.python.org/downloads/) installed. After installing them, run the following:
+To run circleguard locally, you'll need to have [git](https://git-scm.com/downloads) and [python3.10+](https://www.python.org/downloads/) installed. After installing them, run the following:
 
 ```bash
 git clone https://github.com/circleguard/circleguard.git
