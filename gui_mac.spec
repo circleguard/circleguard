@@ -33,7 +33,7 @@ a = Analysis(['circleguard/main.py'],
              runtime_hooks=[],
              # https://github.com/pyinstaller/pyinstaller/wiki/Recipe-remove-tkinter-tcl for
              # tkinter excludes, the others are added by us
-             excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'PIL', 'IPython'],
+             excludes=['FixTk', 'tcl', 'tk', '_tkinter', 'tkinter', 'Tkinter', 'IPython'],
              win_no_prefer_redirects=False,
              win_private_assemblies=False,
              cipher=block_cipher,
