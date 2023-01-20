@@ -1,6 +1,6 @@
 name: Create draft release
 
-on: repository_dispatch
+on: workflow_dispatch
 
 jobs:
   build_win_x64:
