@@ -1,6 +1,10 @@
 name: Create draft release
 
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version tag to upload this release under (eg v2.15.0)
 
 jobs:
   build_win_x64:
@@ -48,7 +52,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         draft: true
         allowUpdates: true
-        tag: ${{ github.event.client_payload.version }}
+        tag: ${{ github.event.inputs.version }}
 
   build_win_x86:
     runs-on: windows-latest
@@ -85,7 +89,7 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         draft: true
         allowUpdates: true
-        tag: ${{ github.event.client_payload.version }}
+        tag: ${{ github.event.inputs.version }}
 
   build_mac:
     runs-on: macos-10.15
@@ -124,4 +128,4 @@ jobs:
         token: ${{ secrets.GITHUB_TOKEN }}
         draft: true
         allowUpdates: true
-        tag: ${{ github.event.client_payload.version }}
+        tag: ${{ github.event.inputs.version }}
