@@ -92,7 +92,7 @@ jobs:
         tag: ${{ github.event.inputs.version }}
 
   build_mac:
-    runs-on: macos-10.15
+    runs-on: macos-11
     name: Mac Build
     steps:
     - uses: actions/checkout@v2
