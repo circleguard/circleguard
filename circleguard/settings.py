@@ -318,7 +318,16 @@ DEFAULTS = {
         "timestamp_format": "%Y/%m/%d %H:%M:%S",
         # aka datetime.min, but formatted
         "last_update_check": "1970/01/01 00:00:00",
-        "latest_version": __version__
+        "latest_version": __version__,
+        "use_postgres_db": False
+    },
+    "Postgres": {
+        "postgres_db_username": "",
+        "postgres_db_password": "",
+        "postgres_db_host": "",
+        "postgres_db_port": "",
+        "postgres_db_name": "",
+        "postgres_write_to_cache": True,
     }
 }
 

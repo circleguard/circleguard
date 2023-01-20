@@ -318,11 +318,44 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.show_no_cheat_found = True
         event = run.event
         try:
-            core_cache = get_setting("cache_dir") + "circleguard.db"
             slider_cache = get_setting("cache_dir")
             should_cache = get_setting("caching")
-            loader = TrackerLoader(get_setting("api_key"), core_cache, write_to_cache=should_cache)
-            cg = Circleguard(get_setting("api_key"), core_cache, slider_dir=slider_cache, cache=should_cache, loader=loader)
+            core_cache = get_setting("cache_dir") + "circleguard.db"
+            api_key = get_setting("api_key")
+
+            if get_setting("use_postgres_db"):
+                from circleguard.postgres import PostgresLoader
+                write_to_cache = get_setting("postgres_write_to_cache") and should_cache
+                db_username = get_setting("postgres_db_username")
+                db_password = get_setting("postgres_db_password")
+                db_host = get_setting("postgres_db_host")
+                db_port = int(get_setting("postgres_db_port"))
+                db_name = get_setting("postgres_db_name")
+
+                class TrackerLoaderPostgres(PostgresLoader, QObject):
+                    """
+                    A circleguard.Loader subclass that emits a signal when the loader is
+                    ratelimited. It inherits from QObject to allow us to use qt signals.
+                    """
+                    ratelimit_signal = pyqtSignal(int)
+                    check_stopped_signal = pyqtSignal()
+                    ratelimit_end_signal = pyqtSignal()
+
+                    def __init__(self, key, db_username, db_password, db_host, db_port, db_name, write_to_cache):
+                        PostgresLoader.__init__(self, key, db_username, db_password, db_host, db_port, db_name, write_to_cache)
+                        QObject.__init__(self)
+
+                        self.api = TrackerOssapi(key)
+                        self.api.ratelimit_signal.connect(self.ratelimit_signal)
+                        self.api.check_stopped_signal.connect(self.check_stopped_signal)
+                        self.api.ratelimit_end_signal.connect(self.ratelimit_end_signal)
+
+                loader = TrackerLoaderPostgres(api_key, db_username, db_password, db_host, db_port, db_name, write_to_cache)
+                cg = Circleguard(api_key, slider_dir=slider_cache, loader=loader)
+            else:
+                loader = TrackerLoader(api_key, core_cache, write_to_cache=should_cache)
+                cg = Circleguard(api_key, core_cache, slider_dir=slider_cache, cache=should_cache, loader=loader)
+
             def _ratelimited(length):
                 message = get_setting("message_ratelimited")
                 ts = datetime.now()

@@ -5,3 +5,4 @@ circleguard
 matplotlib==3.6.2
 portalocker==2.2.1
 PyQt6==6.3.0
+psycopg2-binary==2.9.5
