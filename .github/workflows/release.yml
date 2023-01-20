@@ -55,6 +55,11 @@ jobs:
         tag: ${{ github.event.inputs.version }}
 
   build_win_x86:
+    # qt 6 doesn't provide prebuilt 32 bit binaries anymore. I'm not dealing with building qt from source right
+    # now, so I'm dropping support for 32 bit for now. Will direct users to v2.15.5, the last version to support 
+    # 32 bit (and the last version to use PyQt5).
+    # https://forum.qt.io/topic/123609/why-is-there-no-32-bit-mingw-in-qt6-0-1/4
+    if: ${{ false }}
     runs-on: windows-latest
     name: Windows x86 Build
     steps:
