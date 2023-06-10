@@ -126,10 +126,11 @@ class ApiKeyPage(WizardPage):
         super().__init__()
         self.setTitle("API Key")
         label = WizardLabel("<p>Circleguard needs your api key to make requests and download replays. "
-            "<p>If you already have your api key, paste it into the box below. If you don't, go to "
-            "<a href=\"https://old.ppy.sh/p/api\">https://old.ppy.sh/p/api</a>, enter <b>Circleguard</b> "
-            "as your application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
-            "as your application url. Paste the api key you receive into the box below.</p>"
+            "<p>If you've created an api key before, paste it into the box below. If you don't have one yet, go to "
+            "<a href=\"https://osu.ppy.sh/home/account/edit#legacy-api\">https://osu.ppy.sh/home/account/edit</a> "
+            "and scroll to the \"Legacy API\" section. Click \"New Legacy API Key\". Enter <b>Circleguard</b> "
+            "for the application name, and <a href=\"https://github.com/circleguard/circleguard\">https://github.com/circleguard/circleguard</a> "
+            "for the application url. Click \"Show Key\" and paste the api key into the box below.</p>"
             "<p>Your api key will be stored locally, and is never sent anywhere but osu! servers.</p>"
             "<p>If you skip this step, you will not be able to use Circleguard.</p>")
 

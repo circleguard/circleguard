@@ -172,9 +172,13 @@ class MainTab(SingleLinkableSetting, QFrame):
             message_box = QMessageBox()
             message_box.setTextFormat(Qt.TextFormat.RichText)
             message_box.setText("Your api key is invalid. You are likely using "
-                    "an api v2 key.\n"
-                    "Please ensure your api key comes from "
-                    "<a href=\"https://osu.ppy.sh/p/api\">https://osu.ppy.sh/p/api</a>.")
+                    "an api v2 key, when you should be using an api v1 "
+                    "(legacy) key. "
+                    "Please ensure your api key comes from the \"Legacy API\" "
+                    "section of <a href=\"https://osu.ppy.sh/home/account/edit"
+                    "#legacy-api\">https://osu.ppy.sh/home/account/edit</a>, "
+                    "NOT the \"Oauth\" section. You can set your api key here "
+                    "in the settings tab.")
             message_box.exec()
             return
 
