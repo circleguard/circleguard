@@ -439,8 +439,12 @@ class LoadableBase(QFrame):
 
     disable_button_shift_clicked = pyqtSignal()
 
-    def __init__(self, required_input_widgets):
-        super().__init__()
+    def __init__(self, parent, required_input_widgets):
+        # if we don't pass along a parent correctly here then the loadables
+        # flicker as a separate window in the time between instantation and
+        # being added to a layout. We should really be setting parents
+        # everywhere, but this is the first time it's come back to bite me.
+        super().__init__(parent)
         self.required_input_widgets = required_input_widgets
         self._cg_loadable = None
         self.sim_group = 1
@@ -529,8 +533,8 @@ class LoadableBase(QFrame):
 
 
 class UnselectedLoadable(LoadableBase):
-    def __init__(self):
-        super().__init__([])
+    def __init__(self, parent):
+        super().__init__(parent, [])
 
         self.combobox.setCurrentIndex(0)
         self.disable_button.hide()
@@ -559,13 +563,13 @@ class UnselectedLoadable(LoadableBase):
         pass
 
 class ReplayMapLoadable(LoadableBase):
-    def __init__(self):
+    def __init__(self, parent):
         self.previous_mods = None
 
         self.map_id_input = InputWidget("Map id", "", "id")
         self.user_id_input = InputWidget("User id", "", "id")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
-        super().__init__([self.map_id_input, self.user_id_input])
+        super().__init__(parent, [self.map_id_input, self.user_id_input])
 
         self.combobox.setCurrentIndex(1)
 
@@ -601,9 +605,9 @@ class ReplayMapLoadable(LoadableBase):
 
 
 class ReplayPathLoadable(LoadableBase):
-    def __init__(self):
+    def __init__(self, parent):
         self.path_input = ReplayChooser()
-        super().__init__([self.path_input])
+        super().__init__(parent, [self.path_input])
 
         self.combobox.setCurrentIndex(2)
 
@@ -649,12 +653,12 @@ class ReplayPathLoadable(LoadableBase):
 
 
 class MapLoadable(LoadableBase):
-    def __init__(self):
+    def __init__(self, parent):
         self.map_id_input = InputWidget("Map id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
         self.span_input.field.setPlaceholderText(get_setting("default_span_map"))
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
-        super().__init__([self.map_id_input, self.span_input])
+        super().__init__(parent, [self.map_id_input, self.span_input])
 
         self.combobox.setCurrentIndex(3)
 
@@ -694,12 +698,12 @@ class MapLoadable(LoadableBase):
 
 
 class UserLoadable(LoadableBase):
-    def __init__(self):
+    def __init__(self, parent):
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
         self.mods_input = InputWidget("Mods (opt.)", "", "normal")
         self.span_input.field.setPlaceholderText(get_setting("default_span_user"))
-        super().__init__([self.user_id_input, self.span_input])
+        super().__init__(parent, [self.user_id_input, self.span_input])
 
         self.combobox.setCurrentIndex(4)
 
@@ -739,12 +743,15 @@ class UserLoadable(LoadableBase):
 
 
 class MapUserLoadable(LoadableBase):
-    def __init__(self):
+    def __init__(self, parent):
         self.map_id_input = InputWidget("Map id", "", "id")
         self.user_id_input = InputWidget("User id", "", "id")
         self.span_input = InputWidget("Span", "", "normal")
         self.span_input.field.setPlaceholderText("all")
-        super().__init__([self.map_id_input, self.user_id_input, self.span_input])
+        super().__init__(
+            parent,
+            [self.map_id_input, self.user_id_input, self.span_input]
+        )
 
         self.combobox.setCurrentIndex(5)
 
@@ -799,38 +806,38 @@ class SelectableLoadable(QFrame):
 
         self.stacked_layout = QStackedLayout()
 
-        unselected = UnselectedLoadable()
+        unselected = UnselectedLoadable(self)
         unselected.combobox.activated.connect(lambda: self.select_loadable(None))
         unselected.combobox.activated.connect(self._input_changed)
         unselected.delete_button.clicked.connect(self.deleted_pressed)
         unselected.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(unselected)
 
-        replay_map = ReplayMapLoadable()
+        replay_map = ReplayMapLoadable(self)
         replay_map.combobox.activated.connect(lambda: self.select_loadable(None))
         replay_map.delete_button.clicked.connect(self.deleted_pressed)
         replay_map.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(replay_map)
 
-        replay_path = ReplayPathLoadable()
+        replay_path = ReplayPathLoadable(self)
         replay_path.combobox.activated.connect(lambda: self.select_loadable(None))
         replay_path.delete_button.clicked.connect(self.deleted_pressed)
         replay_path.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(replay_path)
 
-        map_ = MapLoadable()
+        map_ = MapLoadable(self)
         map_.combobox.activated.connect(lambda: self.select_loadable(None))
         map_.delete_button.clicked.connect(self.deleted_pressed)
         map_.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(map_)
 
-        user = UserLoadable()
+        user = UserLoadable(self)
         user.combobox.activated.connect(lambda: self.select_loadable(None))
         user.delete_button.clicked.connect(self.deleted_pressed)
         user.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
         self.stacked_layout.addWidget(user)
 
-        map_user = MapUserLoadable()
+        map_user = MapUserLoadable(self)
         map_user.combobox.activated.connect(lambda: self.select_loadable(None))
         map_user.delete_button.clicked.connect(self.deleted_pressed)
         map_user.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
