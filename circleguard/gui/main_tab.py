@@ -264,9 +264,9 @@ class MainTab(SingleLinkableSetting, QFrame):
         from circleguard import (Circleguard, ReplayUnavailableException,
             ReplayPath, NoInfoAvailableException, Loader, LoadableContainer,
             replay_pairs, ReplayContainer)
-        from ossapi import Ossapi
+        from ossapi import OssapiV1
 
-        class TrackerOssapi(Ossapi, QObject):
+        class TrackerOssapi(OssapiV1, QObject):
             # length of the ratelimit in seconds
             ratelimit_signal = pyqtSignal(int)
             check_stopped_signal = pyqtSignal()
@@ -276,7 +276,7 @@ class MainTab(SingleLinkableSetting, QFrame):
             INTERVAL = 0.250
 
             def __init__(self, key):
-                Ossapi.__init__(self, key)
+                OssapiV1.__init__(self, key)
                 QObject.__init__(self)
 
             def _enforce_ratelimit(self):
