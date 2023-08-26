@@ -15,7 +15,6 @@ from PyQt6.QtCore import pyqtSignal, QObject, Qt
 from PyQt6.QtWidgets import (QMessageBox, QFrame, QGridLayout,
     QApplication, QToolTip, QLabel, QSizePolicy, QTextBrowser)
 from PyQt6.QtGui import QTextCursor
-from circleguard import Mod
 
 from widgets import (InvestigationCheckboxes, WidgetCombiner, PushButton,
     LoadableCreation)
@@ -264,7 +263,7 @@ class MainTab(SingleLinkableSetting, QFrame):
     def run_circleguard(self, run):
         from circleguard import (Circleguard, ReplayUnavailableException,
             ReplayPath, NoInfoAvailableException, Loader, LoadableContainer,
-            replay_pairs, ReplayContainer)
+            replay_pairs, ReplayContainer, Mod)
         from ossapi import OssapiV1
 
         class TrackerOssapi(OssapiV1, QObject):
