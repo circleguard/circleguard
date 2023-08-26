@@ -15,6 +15,7 @@ from PyQt6.QtCore import pyqtSignal, QObject, Qt
 from PyQt6.QtWidgets import (QMessageBox, QFrame, QGridLayout,
     QApplication, QToolTip, QLabel, QSizePolicy, QTextBrowser)
 from PyQt6.QtGui import QTextCursor
+from circleguard import Mod
 
 from widgets import (InvestigationCheckboxes, WidgetCombiner, PushButton,
     LoadableCreation)
@@ -592,6 +593,9 @@ class MainTab(SingleLinkableSetting, QFrame):
                     pairs = replay_pairs(replays1, replays2)
                     for (replay1, replay2) in pairs:
                         _check_event(event)
+                        # skip if both replays have autoplay
+                        if Mod.AP in replay1.mods and Mod.AP in replay2.mods:
+                            continue
                         sim = cg.similarity(replay1, replay2)
                         result = StealResult(sim, replay1, replay2)
                         self.q.put(result)
