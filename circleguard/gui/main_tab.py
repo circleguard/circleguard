@@ -592,7 +592,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                     pairs = replay_pairs(replays1, replays2)
                     for (replay1, replay2) in pairs:
                         _check_event(event)
-                        # skip if both replays have autoplay
+                        # sim will be 0 (or very low) if both have autoplay
                         if Mod.AP in replay1.mods and Mod.AP in replay2.mods:
                             continue
                         sim = cg.similarity(replay1, replay2)
