@@ -130,6 +130,7 @@ except LockException:
         # sockets listening on the same port and it would error.
         start_server_socket = False
 
+serversocket = None
 if start_server_socket:
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     serversocket.bind(("localhost", SOCKET_PORT))
@@ -214,6 +215,8 @@ if not get_setting("ran"):
     set_setting("ran", True)
 
 def close_server_socket():
+    if not serversocket:
+        return
     serversocket.close()
 
 app.aboutToQuit.connect(circleguard_gui.cancel_all_runs)
