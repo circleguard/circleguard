@@ -263,7 +263,7 @@ class MainTab(SingleLinkableSetting, QFrame):
     def run_circleguard(self, run):
         from circleguard import (Circleguard, ReplayUnavailableException,
             ReplayPath, NoInfoAvailableException, Loader, LoadableContainer,
-            replay_pairs, ReplayContainer)
+            replay_pairs, ReplayContainer, Mod)
         from ossapi import OssapiV1
 
         class TrackerOssapi(OssapiV1, QObject):
@@ -592,6 +592,9 @@ class MainTab(SingleLinkableSetting, QFrame):
                     pairs = replay_pairs(replays1, replays2)
                     for (replay1, replay2) in pairs:
                         _check_event(event)
+                        # sim will be 0 (or very low) if both have autoplay
+                        if Mod.AP in replay1.mods and Mod.AP in replay2.mods:
+                            continue
                         sim = cg.similarity(replay1, replay2)
                         result = StealResult(sim, replay1, replay2)
                         self.q.put(result)
