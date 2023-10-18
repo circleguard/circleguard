@@ -48,11 +48,7 @@ exe = EXE(pyz,
 
 # post-build script
 with open("./dist/Circleguard_win_x64_debug/Circleguard.vbs", "w+") as f:
-    f.write("""
-            Set WshShell = CreateObject("WScript.Shell")
-            WshShell.Run chr(34) & ".\Circleguard\Circleguard.exe" & Chr(34), 0
-            Set WshShell = Nothing
-            """)
+    f.write('CreateObject("WScript.Shell").Run ".\Circleguard\Circleguard.exe"')
 
 print("Creating zip")
 os.chdir("./dist/")
