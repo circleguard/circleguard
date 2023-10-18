@@ -52,7 +52,7 @@ coll = COLLECT(
 
 # post-build script
 with open("./dist/Circleguard_win_x64/Circleguard.vbs", "w+") as f:
-f.write('CreateObject("WScript.Shell").Run ".\Circleguard\Circleguard.exe"')
+    f.write('CreateObject("WScript.Shell").Run ".\Circleguard\Circleguard.exe"')
 
 print("Creating zip")
 os.chdir("./dist/")
