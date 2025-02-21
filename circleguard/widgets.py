@@ -100,7 +100,7 @@ class PasswordEdit(LineEdit):
 
 
 class IDLineEdit(LineEdit):
-    """
+    r"""
     A LineEdit that does not allow anything but digits to be entered.
 
     Notes
