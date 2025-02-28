@@ -2,6 +2,7 @@
 This file exists to provide a top-level entry point so local imports will work
 in other files.
 """
+import signal
 import sys
 import threading
 import traceback
@@ -266,6 +267,18 @@ def import_expensive_modules():
     # requests isn't that expensive, but might as well load it here anyway
     import requests
     # pylint: enable=unused-import
+
+# since the pyqt `app.exec()` (QApplication::exec()) function runs in a C++ binding,
+# python SIGINT signals are not handled due to python intercepting them and
+# throwing a `KeyboardInterrupt` so that it can cleanly exit. Only the next
+# python instruction will handle this exception, and since we are mainly
+# in C++ land it may take some time before the next python instruction runs
+# and the exception is thrown. So, lets handle the `SIGINT` signal globally,
+# instead of letting it be handled by the python runtime.
+# NOTE: This probably prevents `KeyboardInterrupt` exceptions from being thrown.
+# Fix and more details here:
+# https://stackoverflow.com/questions/5160577/ctrl-c-doesnt-work-with-pyqt
+signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 # everything would work fine if we didn't force import these modules now, but
 # the user would experience a potentially multi-second wait time whenever they
