@@ -24,7 +24,7 @@ from portalocker.exceptions import LockException
 from gui.circleguard_window import CircleguardWindow
 from settings import (get_setting, set_setting, initialize_settings,
     initialize_settings_file, CFG_PATH, overwrite_outdated_settings)
-from wizard.wizard import CircleguardWizard
+from wizard.welcome import WelcomeWizard
 
 
 # semi randomly chosen
@@ -210,7 +210,7 @@ overwrite_outdated_settings()
 circleguard_gui.show()
 
 if not get_setting("ran"):
-    welcome = CircleguardWizard()
+    welcome = WelcomeWizard()
     welcome.show()
     set_setting("ran", True)
 

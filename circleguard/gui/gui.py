@@ -19,7 +19,7 @@ from settings import (get_setting, overwrite_config, set_setting,
     overwrite_with_config_settings, DEFAULTS, APPDATA_DIR)
 from .visualizer import get_visualizer
 from .main_tab import MainTab
-from wizard.wizard import TutorialWizard
+from wizard.tutorial import TutorialWizard
 from version import __version__
 
 
