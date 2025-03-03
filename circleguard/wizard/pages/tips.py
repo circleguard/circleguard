@@ -1,6 +1,6 @@
-from wizard.page import WizardPage
+from wizard.components.page import WizardPage
 
-from wizard.label import WizardLabel
+from wizard.components.label import WizardLabel
 from PyQt6.QtWidgets import QVBoxLayout
 
 
