@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QGridLayout
 from PyQt6.QtCore import Qt
 from widgets.loadable_base import LoadableBase
 
+
 class UnselectedLoadable(LoadableBase):
     def __init__(self, parent):
         super().__init__(parent, [])

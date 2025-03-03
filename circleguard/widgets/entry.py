@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QFrame, QGridLayout, QLabel
 from PyQt6.QtCore import pyqtSignal
 from widgets.push_button import PushButton
 
+
 class EntryWidget(QFrame):
     """
     Represents a single entry of some kind of data, consisting of a title, a

@@ -4,6 +4,7 @@ from settings import SingleLinkableSetting
 from widgets.check_box import CheckBox
 from widgets.centered import CenteredWidget
 
+
 class OptionWidget(SingleLinkableSetting, QFrame):
     """
     A container class of widgets that represents an option with a boolean state.

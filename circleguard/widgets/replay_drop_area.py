@@ -8,6 +8,7 @@ from PyQt6.QtCore import Qt
 from utils import ACCENT_COLOR
 from widgets.path import PathWidget
 
+
 # provided for our Analysis window. There's probably some shared code that
 # we could abstract out from this and `DropArea`, but it's not worth it atm
 class ReplayDropArea(QFrame):

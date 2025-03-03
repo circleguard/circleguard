@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout
 from settings import SingleLinkableSetting
 from widgets.input import InputWidget
 
+
 class LineEditSetting(SingleLinkableSetting, QFrame):
     """
     A container class of a QLabel and InputWidget that links the input widget

@@ -1,6 +1,7 @@
 from widgets.slider_box_setting import SliderBoxSetting
 from widgets.spin_box_max_inf import SpinBoxMaxInf
 
+
 class SliderBoxMaxInfSetting(SliderBoxSetting):
     """
     a `SliderBoxSetting` which has special behavior when the slider or spinbox

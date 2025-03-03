@@ -3,6 +3,7 @@ from PyQt6.QtGui import QCursor
 from PyQt6.QtCore import Qt
 from widgets.check_box import CheckBox
 
+
 class LabeledCheckbox(QFrame):
     def __init__(self, label):
         super().__init__()

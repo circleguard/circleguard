@@ -1,6 +1,7 @@
 from PyQt6.QtWidgets import QFrame, QGridLayout, QLabel, QFileDialog
 from widgets.file_chooser_button import FileChooserButton
 
+
 class ReplayChooser(QFrame):
     """
     Two FileChoosers (one for files, one for folders), which can select

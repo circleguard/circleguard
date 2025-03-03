@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QLineEdit
 
 from settings import get_setting
 
+
 # TODO cmd + z doesn't undo operations here, figure out why
 class LineEdit(QLineEdit):
     def __init__(self, parent):

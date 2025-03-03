@@ -1,4 +1,6 @@
 from PyQt6.QtWidgets import QFrame, QGridLayout
+
+
 class WidgetCombiner(QFrame):
     def __init__(self, widget1, widget2, parent):
         super().__init__(parent)
@@ -11,4 +13,3 @@ class WidgetCombiner(QFrame):
         self.layout.addWidget(widget1, 0, 0, 1, 1)
         self.layout.addWidget(widget2, 0, 1, 1, 1)
         self.setLayout(self.layout)
-

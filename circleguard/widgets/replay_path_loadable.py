@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QGridLayout
 from widgets.loadable_base import LoadableBase
 from widgets.replay_chooser import ReplayChooser
 
+
 class ReplayPathLoadable(LoadableBase):
     def __init__(self, parent):
         self.path_input = ReplayChooser()

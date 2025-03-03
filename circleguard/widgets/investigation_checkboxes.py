@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QFrame, QHBoxLayout
 from PyQt6.QtCore import Qt
 from widgets.labeled_checkbox import LabeledCheckbox
 
+
 class InvestigationCheckboxes(QFrame):
     def __init__(self):
         super().__init__()

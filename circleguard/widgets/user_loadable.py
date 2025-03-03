@@ -3,6 +3,7 @@ from settings import get_setting
 from widgets.loadable_base import LoadableBase
 from widgets.input import InputWidget
 
+
 class UserLoadable(LoadableBase):
     def __init__(self, parent):
         self.user_id_input = InputWidget("User id", "", "id")

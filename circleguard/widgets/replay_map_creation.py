@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QFrame, QLabel, QVBoxLayout, QGraphicsOpacityEffect
 from PyQt6.QtCore import Qt
 from widgets.replay_map_vis import ReplayMapVis
 
+
 class ReplayMapCreation(QFrame):
     def __init__(self):
         super().__init__()

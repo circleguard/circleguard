@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QFrame, QGridLayout, QLabel
 from utils import spacer
 from widgets.push_button import PushButton
 
+
 class ButtonWidget(QFrame):
     """
     A container class of widgets that represents a clickable action with a label.

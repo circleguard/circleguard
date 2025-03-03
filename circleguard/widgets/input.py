@@ -5,6 +5,7 @@ from widgets.line_edit import LineEdit
 from widgets.password_edit import PasswordEdit
 from widgets.id_line_edit import IDLineEdit
 
+
 class InputWidget(QFrame):
     """
     A container class of widgets that represents user input for an id. This class

@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QSpinBox
 
-class SpinBoxMaxInf(QSpinBox):
 
+class SpinBoxMaxInf(QSpinBox):
     def textFromValue(self, value):
         if value == self.maximum():
             return "inf"

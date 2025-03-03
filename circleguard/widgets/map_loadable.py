@@ -3,6 +3,7 @@ from settings import get_setting
 from widgets.loadable_base import LoadableBase
 from widgets.input import InputWidget
 
+
 class MapLoadable(LoadableBase):
     def __init__(self, parent):
         self.map_id_input = InputWidget("Map id", "", "id")
@@ -32,16 +33,22 @@ class MapLoadable(LoadableBase):
             span = Loader.MAX_MAP_SPAN
 
         if not previous or not isinstance(previous, Map):
-            mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
+            mods = (
+                Mod(self.mods_input.value().upper())
+                if self.mods_input.value()
+                else None
+            )
             previous = Map(int(self.map_id_input.value()), span, mods=mods)
 
         mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
         new_loadable = Map(int(self.map_id_input.value()), span, mods=mods)
 
         ret = previous
-        if (new_loadable.map_id != previous.map_id or \
-            new_loadable.span != previous.span or \
-            new_loadable.mods != previous.mods):
+        if (
+            new_loadable.map_id != previous.map_id
+            or new_loadable.span != previous.span
+            or new_loadable.mods != previous.mods
+        ):
             ret = new_loadable
 
         ret.sim_group = self.sim_group

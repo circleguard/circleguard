@@ -3,6 +3,7 @@ from PyQt6.QtGui import QIcon
 from utils import resource_path
 from widgets.replay_data_table import ReplayDataTable
 
+
 class ReplayDataWindow(QMainWindow):
     def __init__(self, replay):
         super().__init__()

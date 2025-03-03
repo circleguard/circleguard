@@ -6,6 +6,7 @@ from widgets.push_button import PushButton
 from widgets.whats_this import WhatsThis
 from widgets.file_chooser_button import FileChooserButton
 
+
 class FileChooserSetting(SingleLinkableSetting, QFrame):
     def __init__(
         self,

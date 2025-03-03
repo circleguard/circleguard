@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QFileDialog
 from PyQt6.QtCore import pyqtSignal
 from widgets.push_button import PushButton
 
+
 class FileChooserButton(PushButton):
     path_chosen_signal = pyqtSignal(Path)  # emits the selected path
 

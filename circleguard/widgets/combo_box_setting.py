@@ -4,6 +4,7 @@ from settings import LinkableSetting
 from utils import spacer
 from widgets.combo_box import ComboBox
 
+
 class ComboboxSetting(LinkableSetting, QFrame):
     def __init__(self, label_text, tooltip, setting):
         setting_options = setting + "_options"
