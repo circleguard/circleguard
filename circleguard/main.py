@@ -24,7 +24,7 @@ from portalocker.exceptions import LockException
 from gui.circleguard_window import CircleguardWindow
 from settings import (get_setting, set_setting, initialize_settings,
     initialize_settings_file, CFG_PATH, overwrite_outdated_settings)
-from wizard import CircleguardWizard
+from wizard.wizard import CircleguardWizard
 
 
 # semi randomly chosen
