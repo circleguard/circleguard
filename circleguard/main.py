@@ -290,34 +290,13 @@ if len(sys.argv) > 1:
 
 
 def import_expensive_modules():
-    # probably not necessary to import every single class - we just want to
-    # trigger import-time code by hitting every circleguard file and imports
-    # to numpy/scipy therein - but better safe than sorry.
-    from circleguard import (
-        Circleguard,
-        KeylessCircleguard,
-        LoadableContainer,
-        Map,
-        User,
-        MapUser,
-        Replay,
-        ReplayMap,
-        ReplayPath,
-        Mod,
-        Loader,
-        Snap,
-        Hit,
-        Span,
-        replay_pairs,
-    )
-    from circlevis import BeatmapInfo, Visualizer, VisualizerApp
-    from slider import Library, Beatmap
-    from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-    from matplotlib.backends.backend_qt5agg import FigureCanvas
-    from matplotlib.figure import Figure
-    import numpy as np
-
-    # requests isn't that expensive, but might as well load it here anyway
+    import circleguard
+    import circlevis
+    import slider
+    import matplotlib.backends.backend_qt5agg
+    import matplotlib.figure
+    import numpy
+    import scipy
     import requests
 
 
