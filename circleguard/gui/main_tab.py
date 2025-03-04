@@ -823,20 +823,6 @@ class MainTab(SingleLinkableSetting, QFrame):
             self.write_to_terminal_signal.emit(
                 get_setting("message_finished_investigation").format(ts=datetime.now())
             )
-            # prevents an error when a user closes the application. Because
-            # we're running inside a new thread, if we don't do this, cg (and)
-            # the library) will get gc'd in another thread. Because library's
-            # ``__del__`` closes the sqlite connection, this causes:
-            # ```
-            # Traceback (most recent call last):
-            # File "/Users/tybug/Desktop/coding/osu/slider/slider/library.py", line 98, in __del__
-            #   self.close()
-            # File "/Users/tybug/Desktop/coding/osu/slider/slider/library.py", line 94, in close
-            #   self._db.close()
-            # sqlite3.ProgrammingError: SQLite objects created in a thread can only be used in that same thread.
-            # The object was created in thread id 123145483210752 and this is thread id 4479481280.
-            # ```
-            cg.library.close()
 
         except Exception:
             # if the error happens before we set the progressbar it stays at
