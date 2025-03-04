@@ -1,20 +1,18 @@
-import os
-from pathlib import Path
 import abc
 import json
 import logging
-from functools import partial
+import os
 
 # it's tempting to use QSettings builtin ini file support instead of
 # configparser, but that doesn't let us write comments, which is rather
 # important for users.
 from configparser import ConfigParser
+from functools import partial
+from pathlib import Path
 
-from PyQt6.QtCore import QSettings, QStandardPaths
 from packaging import version
-
+from PyQt6.QtCore import QSettings, QStandardPaths
 from version import __version__
-
 
 APPDATA_DIR = QStandardPaths.writableLocation(
     QStandardPaths.StandardLocation.AppDataLocation

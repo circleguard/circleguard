@@ -1,9 +1,8 @@
-from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QPixmap, QIcon
-from PyQt6.QtWidgets import QWizard, QWizardPage, QLabel, QVBoxLayout, QGridLayout
-
-from widgets import LineEditSetting
+from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtWidgets import QGridLayout, QLabel, QVBoxLayout, QWizard, QWizardPage
 from utils import resource_path
+from widgets import LineEditSetting
 
 
 class WizardPage(QWizardPage):

@@ -1,37 +1,37 @@
 import logging
-from logging.handlers import RotatingFileHandler
 import os
-from functools import partial
+import re
 import threading
 from datetime import datetime, timedelta
-import re
+from functools import partial
+from logging.handlers import RotatingFileHandler
 
-from PyQt6.QtWidgets import QMainWindow, QApplication, QProgressBar, QLabel, QTextEdit
-from PyQt6.QtCore import Qt, QObject, pyqtSignal, QTimer, QKeyCombination
-from PyQt6.QtGui import QIcon, QPalette, QColor, QShortcut, QKeySequence
 from packaging import version
-
+from PyQt6.QtCore import QKeyCombination, QObject, Qt, QTimer, pyqtSignal
+from PyQt6.QtGui import QColor, QIcon, QKeySequence, QPalette, QShortcut
+from PyQt6.QtWidgets import QApplication, QLabel, QMainWindow, QProgressBar, QTextEdit
 from settings import (
     LinkableSetting,
     get_setting,
-    set_setting,
-    overwrite_config,
     get_setting_raw,
+    overwrite_config,
+    set_setting,
     set_setting_raw,
 )
-from widgets import WidgetCombiner, ResultW
-from .gui import MainWidget, DebugWindow
 from utils import (
-    resource_path,
-    AnalysisResult,
-    URLAnalysisResult,
     ACCENT_COLOR,
-    StealResult,
-    RelaxResult,
+    AnalysisResult,
     CorrectionResult,
+    RelaxResult,
+    StealResult,
     TimewarpResult,
+    URLAnalysisResult,
+    resource_path,
 )
 from version import __version__
+from widgets import ResultW, WidgetCombiner
+
+from .gui import DebugWindow, MainWidget
 
 
 # logging methodology heavily adapted from https://stackoverflow.com/q/28655198/
@@ -203,7 +203,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         set_setting_raw("CircleguardWindow/geometry", self.saveGeometry())
 
     def url_scheme_called(self, url):
-        from circleguard import ReplayMap, Circleguard, Mod
+        from circleguard import Circleguard, Mod, ReplayMap
 
         # url is bytes, so decode back to str
         url = url.decode()
@@ -412,8 +412,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                 "| Time (ms) | Angle (°) | Distance (px) |\n" "| :-: | :-: | :-: |\n"
             )
             for snap in result.snaps:
-                snap_table += "| {:.0f} | {:.2f} | {:.2f} |\n".format(
-                    snap.time, snap.angle, snap.distance
+                snap_table += (
+                    f"| {snap.time:.0f} | {snap.angle:.2f} | {snap.distance:.2f} |\n"
                 )
             template_text = get_setting("template_correction").format(
                 ts=timestamp,

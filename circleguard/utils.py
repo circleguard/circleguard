@@ -1,8 +1,8 @@
-from pathlib import Path
 import sys
+from pathlib import Path
 
-from PyQt6.QtWidgets import QFrame, QSpacerItem, QSizePolicy
-from PyQt6.QtGui import QPainter, QColor
+from PyQt6.QtGui import QColor, QPainter
+from PyQt6.QtWidgets import QFrame, QSizePolicy, QSpacerItem
 
 # the blue accent color used throughout the application
 ACCENT_COLOR = QColor(71, 174, 247)

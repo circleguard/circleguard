@@ -3,14 +3,14 @@ This file exists to provide a top-level entry point so local imports will work
 in other files.
 """
 
+import configparser
+import logging
+import socket
 import sys
+import tempfile
 import threading
 import traceback
-import tempfile
 from pathlib import Path
-import socket
-import logging
-import configparser
 
 try:
     import winreg
@@ -18,22 +18,19 @@ except ImportError:
     # not on windows, ignore
     pass
 
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import Qt
 import portalocker
-from portalocker.exceptions import LockException
-
 from gui.circleguard_window import CircleguardWindow
+from portalocker.exceptions import LockException
+from PyQt6.QtWidgets import QApplication
 from settings import (
+    CFG_PATH,
     get_setting,
-    set_setting,
     initialize_settings,
     initialize_settings_file,
-    CFG_PATH,
     overwrite_outdated_settings,
+    set_setting,
 )
 from wizard import CircleguardWizard
-
 
 # semi randomly chosen
 SOCKET_PORT = 4183
@@ -133,7 +130,7 @@ start_server_socket = True
 # ensure it exists
 if not LOCK_FILE.exists():
     open(LOCK_FILE, "x").close()
-lock_file = open(LOCK_FILE, "r")
+lock_file = open(LOCK_FILE)
 
 try:
     portalocker.lock(lock_file, portalocker.LOCK_EX | portalocker.LOCK_NB)
@@ -290,14 +287,7 @@ if len(sys.argv) > 1:
 
 
 def import_expensive_modules():
-    import circleguard
-    import circlevis
-    import slider
-    import matplotlib.backends.backend_qt5agg
-    import matplotlib.figure
-    import numpy
-    import scipy
-    import requests
+    pass
 
 
 # everything would work fine if we didn't force import these modules now, but

@@ -1,45 +1,44 @@
-from queue import Queue, Empty
-import threading
-from datetime import datetime
-import sys
-import math
-import time
-from functools import partial
 import logging
+import math
 import re
-from lzma import LZMAError
+import sys
+import threading
+import time
 import traceback
+from datetime import datetime
+from functools import partial
+from lzma import LZMAError
 from pathlib import Path
+from queue import Empty, Queue
 
-from PyQt6.QtCore import pyqtSignal, QObject, Qt
+from PyQt6.QtCore import QObject, Qt, pyqtSignal
+from PyQt6.QtGui import QTextCursor
 from PyQt6.QtWidgets import (
-    QMessageBox,
+    QApplication,
     QFrame,
     QGridLayout,
-    QApplication,
-    QToolTip,
     QLabel,
+    QMessageBox,
     QSizePolicy,
     QTextBrowser,
-)
-from PyQt6.QtGui import QTextCursor
-
-from widgets import (
-    InvestigationCheckboxes,
-    WidgetCombiner,
-    PushButton,
-    LoadableCreation,
+    QToolTip,
 )
 from settings import SingleLinkableSetting, get_setting
 from utils import (
     AnalysisResult,
-    StealResult,
-    RelaxResult,
     CorrectionResult,
+    RelaxResult,
+    StealResult,
     TimewarpResult,
 )
-from .visualizer import get_visualizer
+from widgets import (
+    InvestigationCheckboxes,
+    LoadableCreation,
+    PushButton,
+    WidgetCombiner,
+)
 
+from .visualizer import get_visualizer
 
 log = logging.getLogger("circleguard_gui")
 
@@ -295,18 +294,19 @@ class MainTab(SingleLinkableSetting, QFrame):
             thread.start()
 
     def run_circleguard(self, run):
+        from ossapi import OssapiV1
+
         from circleguard import (
             Circleguard,
-            ReplayUnavailableException,
-            ReplayPath,
-            NoInfoAvailableException,
-            Loader,
             LoadableContainer,
-            replay_pairs,
-            ReplayContainer,
+            Loader,
             Mod,
+            NoInfoAvailableException,
+            ReplayContainer,
+            ReplayPath,
+            ReplayUnavailableException,
+            replay_pairs,
         )
-        from ossapi import OssapiV1
 
         class TrackerOssapi(OssapiV1, QObject):
             # length of the ratelimit in seconds

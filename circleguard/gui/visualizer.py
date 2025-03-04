@@ -1,7 +1,6 @@
 from PyQt6.QtGui import QIcon
-
-from utils import resource_path
 from settings import get_setting
+from utils import resource_path
 
 
 # necessary to avoid loading circlevis

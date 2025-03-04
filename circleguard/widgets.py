@@ -1,58 +1,57 @@
 import sys
-from pathlib import Path
-from functools import partial
 import urllib
+from functools import partial
+from pathlib import Path
 
-from PyQt6.QtWidgets import (
-    QWidget,
-    QFrame,
-    QGridLayout,
-    QLabel,
-    QLineEdit,
-    QMessageBox,
-    QSpacerItem,
-    QSizePolicy,
-    QSlider,
-    QSpinBox,
-    QFileDialog,
-    QPushButton,
-    QCheckBox,
-    QComboBox,
-    QVBoxLayout,
-    QHBoxLayout,
-    QMainWindow,
-    QTableWidget,
-    QTableWidgetItem,
-    QAbstractItemView,
-    QGraphicsOpacityEffect,
-    QStyle,
-    QListWidget,
-    QListWidgetItem,
-    QStackedLayout,
-    QApplication,
-    QToolTip,
+from PyQt6.QtCore import (
+    QCoreApplication,
+    QEvent,
+    QRegularExpression,
+    QSize,
+    Qt,
+    QTimer,
+    pyqtSignal,
 )
 from PyQt6.QtGui import (
-    QRegularExpressionValidator,
+    QCursor,
     QIcon,
     QPainter,
     QPen,
-    QCursor,
     QPixmap,
+    QRegularExpressionValidator,
     QShortcut,
 )
-from PyQt6.QtCore import (
-    QRegularExpression,
-    Qt,
-    QCoreApplication,
-    pyqtSignal,
-    QEvent,
-    QSize,
-    QTimer,
+from PyQt6.QtWidgets import (
+    QAbstractItemView,
+    QApplication,
+    QCheckBox,
+    QComboBox,
+    QFileDialog,
+    QFrame,
+    QGraphicsOpacityEffect,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QListWidget,
+    QListWidgetItem,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QSizePolicy,
+    QSlider,
+    QSpacerItem,
+    QSpinBox,
+    QStackedLayout,
+    QStyle,
+    QTableWidget,
+    QTableWidgetItem,
+    QToolTip,
+    QVBoxLayout,
+    QWidget,
 )
-
-from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting
-from utils import resource_path, AnalysisResult, ACCENT_COLOR, spacer
+from settings import LinkableSetting, SingleLinkableSetting, get_setting, reset_defaults
+from utils import ACCENT_COLOR, AnalysisResult, resource_path, spacer
 
 # we want most of our clickable widgets to have a pointing hand cursor on hover
 
@@ -661,7 +660,7 @@ class ReplayMapLoadable(LoadableBase):
         self.setLayout(layout)
 
     def cg_loadable(self, previous):
-        from circleguard import ReplayMap, Mod
+        from circleguard import Mod, ReplayMap
 
         if not previous or not isinstance(previous, ReplayMap):
             mods = (
@@ -709,7 +708,7 @@ class ReplayPathLoadable(LoadableBase):
         self.setLayout(layout)
 
     def cg_loadable(self, previous):
-        from circleguard import ReplayPath, ReplayDir
+        from circleguard import ReplayDir, ReplayPath
 
         path = self.path_input.path
         if not previous or not isinstance(previous, (ReplayPath, ReplayDir)):
@@ -764,7 +763,7 @@ class MapLoadable(LoadableBase):
         self.setLayout(layout)
 
     def cg_loadable(self, previous):
-        from circleguard import Map, Mod, Loader
+        from circleguard import Loader, Map, Mod
 
         # use placeholder text (eg 1-50) if the user inputted span is empty
         span = self.span_input.value() or self.span_input.field.placeholderText()
@@ -815,7 +814,7 @@ class UserLoadable(LoadableBase):
         self.setLayout(layout)
 
     def cg_loadable(self, previous):
-        from circleguard import User, Mod, Loader
+        from circleguard import Loader, Mod, User
 
         # use placeholder text (eg 1-50) if the user inputted span is empty
         span = self.span_input.value() or self.span_input.field.placeholderText()
@@ -1534,7 +1533,7 @@ class ReplayMapVis(QFrame):
         self.delete_button.hide()
 
     def cg_loadable(self):
-        from circleguard import ReplayMap, Mod
+        from circleguard import Mod, ReplayMap
 
         if not self.validate():
             return None
@@ -1686,9 +1685,10 @@ class FrametimeGraph(QFrame):
 
     def __init__(self, replay):
         super().__init__()
-        from circleguard import KeylessCircleguard
         from matplotlib.backends.backend_qt5agg import FigureCanvas
         from matplotlib.figure import Figure
+
+        from circleguard import KeylessCircleguard
 
         figure = Figure(figsize=(5, 5))
         cg = KeylessCircleguard()

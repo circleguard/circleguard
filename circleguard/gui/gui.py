@@ -1,59 +1,57 @@
-from queue import Queue, Empty
 import logging
 import threading
 import time
+from queue import Empty, Queue
 
-from PyQt6.QtCore import Qt, pyqtSignal, QUrl
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal
+from PyQt6.QtGui import QCursor, QDesktopServices, QIcon
 from PyQt6.QtWidgets import (
-    QTabWidget,
-    QVBoxLayout,
-    QFrame,
-    QScrollArea,
-    QLabel,
-    QGridLayout,
-    QSpacerItem,
-    QSizePolicy,
-    QMainWindow,
-    QTextEdit,
-    QStackedWidget,
-    QHBoxLayout,
-    QMessageBox,
     QFileDialog,
+    QFrame,
+    QGridLayout,
+    QHBoxLayout,
+    QLabel,
+    QMainWindow,
+    QMessageBox,
+    QScrollArea,
+    QSizePolicy,
+    QSpacerItem,
+    QStackedWidget,
+    QTabWidget,
+    QTextEdit,
+    QVBoxLayout,
 )
-from PyQt6.QtGui import QDesktopServices, QIcon, QCursor
-
-from utils import resource_path
-from widgets import (
-    ResetSettings,
-    WidgetCombiner,
-    Separator,
-    ButtonWidget,
-    OptionWidget,
-    SliderBoxMaxInfSetting,
-    SliderBoxSetting,
-    LineEditSetting,
-    RunWidget,
-    ComboboxSetting,
-    ReplayDropArea,
-    ReplayMapCreation,
-    PushButton,
-    FileChooserSetting,
-    ResultW,
-)
-
 from settings import (
+    APPDATA_DIR,
+    DEFAULTS,
     get_setting,
     overwrite_config,
-    set_setting,
     overwrite_with_config_settings,
-    DEFAULTS,
-    APPDATA_DIR,
+    set_setting,
 )
-from .visualizer import get_visualizer
-from .main_tab import MainTab
-from wizard import TutorialWizard
+from utils import resource_path
 from version import __version__
+from widgets import (
+    ButtonWidget,
+    ComboboxSetting,
+    FileChooserSetting,
+    LineEditSetting,
+    OptionWidget,
+    PushButton,
+    ReplayDropArea,
+    ReplayMapCreation,
+    ResetSettings,
+    ResultW,
+    RunWidget,
+    Separator,
+    SliderBoxMaxInfSetting,
+    SliderBoxSetting,
+    WidgetCombiner,
+)
+from wizard import TutorialWizard
 
+from .main_tab import MainTab
+from .visualizer import get_visualizer
 
 log = logging.getLogger("circleguard_gui")
 
@@ -270,6 +268,7 @@ class AnalysisSelection(QFrame):
 
     def show_visualizer(self):
         from circlevis import BeatmapInfo
+
         from circleguard import InvalidKeyException
 
         loadables = self.all_loadables()
