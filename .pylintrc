@@ -1,9 +1,0 @@
-[MASTER]
-# https://stackoverflow.com/a/56728368
-# pylint doesn't load c extensions by default for security reasons
-extension-pkg-whitelist=PyQt6
-# we have too many methods that look like `def mousePressEvent(self, event):`,
-# where we need the signature to match some event method signature we're
-# overriding, so we can't remove `event`. So this warning is (mostly) just noise
-# for us.
-disable=unused-argument

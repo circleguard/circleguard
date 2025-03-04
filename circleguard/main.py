@@ -2,6 +2,7 @@
 This file exists to provide a top-level entry point so local imports will work
 in other files.
 """
+
 import sys
 import threading
 import traceback
@@ -10,6 +11,7 @@ from pathlib import Path
 import socket
 import logging
 import configparser
+
 try:
     import winreg
 except ImportError:
@@ -22,8 +24,14 @@ import portalocker
 from portalocker.exceptions import LockException
 
 from gui.circleguard_window import CircleguardWindow
-from settings import (get_setting, set_setting, initialize_settings,
-    initialize_settings_file, CFG_PATH, overwrite_outdated_settings)
+from settings import (
+    get_setting,
+    set_setting,
+    initialize_settings,
+    initialize_settings_file,
+    CFG_PATH,
+    overwrite_outdated_settings,
+)
 from wizard import CircleguardWizard
 
 
@@ -45,22 +53,35 @@ if sys.platform == "win32" and hasattr(sys, "_MEIPASS"):
     # what the proper way to update your url scheme registry is (should it
     # ever be done?).
     try:
-        exe_location = str(Path(sys._MEIPASS) / "circleguard.exe") # pylint: disable=no-member
+        exe_location = str(Path(sys._MEIPASS) / "circleguard.exe")
         # most sources I found said to modify HKEY_CLASSES_ROOT, but that requires
         # admin perms. Apparently that registry is just a merger of two other
         # registries, which *don't* require admin perms to write to, so we write
         # there. See https://www.qtcentre.org/threads/7899-QSettings-HKEY_CLASSES_ROOT-access?s=3c32bd8f5e5300b83765040c2d100fe3&p=42379#post42379
         # and https://support.shotgunsoftware.com/hc/en-us/articles/219031308-Launching-applications-using-custom-browser-protocols
-        key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard")
+        key = winreg.CreateKey(
+            winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard"
+        )
         # empty string to set (default) value
-        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, "URL:circleguard Protocol",)
+        winreg.SetValueEx(
+            key,
+            "",
+            0,
+            winreg.REG_SZ,
+            "URL:circleguard Protocol",
+        )
         winreg.SetValueEx(key, "URL Protocol", 0, winreg.REG_SZ, "")
 
-        key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\DefaultIcon")
+        key = winreg.CreateKey(
+            winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\DefaultIcon"
+        )
         winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location)
 
-        key = winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Software\\Classes\\circleguard\\shell\\open\\command")
-        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location + " \"%1\"")
+        key = winreg.CreateKey(
+            winreg.HKEY_CURRENT_USER,
+            "Software\\Classes\\circleguard\\shell\\open\\command",
+        )
+        winreg.SetValueEx(key, "", 0, winreg.REG_SZ, exe_location + ' "%1"')
     except Exception as e:
         # some users have reported errors ("failure to execute script main")
         # when running circleguard for the first time. This error is a
@@ -79,8 +100,10 @@ if sys.platform == "win32" and hasattr(sys, "_MEIPASS"):
         # who would have otherwise had circleguard crash for them having
         # circleguard urls not work for them. I think this is an acceptable
         # tradeoff.
-        print(f"caught exception {e} while trying to update or create the "
-            "circleguard url protocol location.")
+        print(
+            f"caught exception {e} while trying to update or create the "
+            "circleguard url protocol location."
+        )
 
 
 # if we're launching this with arguments, it's almost certainly because it
@@ -144,15 +167,19 @@ log = logging.getLogger("circleguard_gui")
 # save old excepthook
 sys._excepthook = sys.excepthook
 
+
 # this allows us to log any and all exceptions thrown to a log file -
 # pyqt likes to eat exceptions and quit silently
 def my_excepthook(exctype, value, tb):
     # call original excepthook before ours
-    log.exception("sys.excepthook error\n"
-              "Type: " + str(exctype) + "\n"
-              "Value: " + str(value) + "\n"
-              "Traceback: " + "".join(traceback.format_tb(tb)) + '\n')
+    log.exception(
+        "sys.excepthook error\n"
+        "Type: " + str(exctype) + "\n"
+        "Value: " + str(value) + "\n"
+        "Traceback: " + "".join(traceback.format_tb(tb)) + "\n"
+    )
     sys._excepthook(exctype, value, tb)
+
 
 sys.excepthook = my_excepthook
 
@@ -161,6 +188,8 @@ sys.excepthook = my_excepthook
 # overrides the threading init method to use our excepthook.
 # https://stackoverflow.com/a/31622038
 threading_init = threading.Thread.__init__
+
+
 def init(self, *args, **kwargs):
     threading_init(self, *args, **kwargs)
     run_original = self.run
@@ -170,7 +199,10 @@ def init(self, *args, **kwargs):
             run_original(*args2, **kwargs2)
         except Exception:
             sys.excepthook(*sys.exc_info())
+
     self.run = run_with_except_hook
+
+
 threading.Thread.__init__ = init
 
 # supposedly set by default on qt 6
@@ -191,7 +223,8 @@ circleguard_gui = CircleguardWindow(app)
 try:
     initialize_settings_file()
 except configparser.Error:
-    log.error("caught error while initializing settings file. This means "
+    log.error(
+        "caught error while initializing settings file. This means "
         f"something is wrong with your settings file (located at {CFG_PATH})."
         "You can try deleting that file and restarting circleguard, or you can "
         "ignore this error. It will not affect you unless you want to edit the "
@@ -200,7 +233,9 @@ except configparser.Error:
         "Regardless of your choice, please report this on the circleguard "
         "discord; link is in the settings tab. This helps me (tybug) keep "
         "track of how many people are affected by this and what the proper "
-        "resolution should be. Thanks!\n\n", exc_info=True)
+        "resolution should be. Thanks!\n\n",
+        exc_info=True,
+    )
 
 # overwrite setting key if they were changed in a release
 # has to be called after overwrite_with_config_settings or the file will
@@ -214,15 +249,18 @@ if not get_setting("ran"):
     welcome.show()
     set_setting("ran", True)
 
+
 def close_server_socket():
     if not serversocket:
         return
     serversocket.close()
 
+
 app.aboutToQuit.connect(circleguard_gui.cancel_all_runs)
 app.aboutToQuit.connect(circleguard_gui.on_application_quit)
 # if we don't do this it hangs on cmd q
 app.aboutToQuit.connect(close_server_socket)
+
 
 def run_server_socket():
     while True:
@@ -235,6 +273,7 @@ def run_server_socket():
         # arbitrary "large enough" byte receive size
         data = connection.recv(4096)
         circleguard_gui.url_scheme_called(data)
+
 
 if start_server_socket:
     thread = threading.Thread(target=run_server_socket)
@@ -249,23 +288,38 @@ if len(sys.argv) > 1:
     clientsocket.send(sys.argv[1].encode())
     clientsocket.close()
 
+
 def import_expensive_modules():
     # probably not necessary to import every single class - we just want to
     # trigger import-time code by hitting every circleguard file and imports
     # to numpy/scipy therein - but better safe than sorry.
-    # pylint: disable=unused-import
-    from circleguard import (Circleguard, KeylessCircleguard, LoadableContainer,
-        Map, User, MapUser, Replay, ReplayMap, ReplayPath, Mod, Loader,
-        Snap, Hit, Span, replay_pairs)
+    from circleguard import (
+        Circleguard,
+        KeylessCircleguard,
+        LoadableContainer,
+        Map,
+        User,
+        MapUser,
+        Replay,
+        ReplayMap,
+        ReplayPath,
+        Mod,
+        Loader,
+        Snap,
+        Hit,
+        Span,
+        replay_pairs,
+    )
     from circlevis import BeatmapInfo, Visualizer, VisualizerApp
     from slider import Library, Beatmap
     from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-    from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
+    from matplotlib.backends.backend_qt5agg import FigureCanvas
     from matplotlib.figure import Figure
     import numpy as np
+
     # requests isn't that expensive, but might as well load it here anyway
     import requests
-    # pylint: enable=unused-import
+
 
 # everything would work fine if we didn't force import these modules now, but
 # the user would experience a potentially multi-second wait time whenever they

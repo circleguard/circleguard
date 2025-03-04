@@ -4,19 +4,51 @@ import threading
 import time
 
 from PyQt6.QtCore import Qt, pyqtSignal, QUrl
-from PyQt6.QtWidgets import (QTabWidget, QVBoxLayout, QFrame, QScrollArea,
-    QLabel, QGridLayout, QSpacerItem, QSizePolicy, QMainWindow,
-    QTextEdit, QStackedWidget, QHBoxLayout, QMessageBox, QFileDialog)
+from PyQt6.QtWidgets import (
+    QTabWidget,
+    QVBoxLayout,
+    QFrame,
+    QScrollArea,
+    QLabel,
+    QGridLayout,
+    QSpacerItem,
+    QSizePolicy,
+    QMainWindow,
+    QTextEdit,
+    QStackedWidget,
+    QHBoxLayout,
+    QMessageBox,
+    QFileDialog,
+)
 from PyQt6.QtGui import QDesktopServices, QIcon, QCursor
 
 from utils import resource_path
-from widgets import (ResetSettings, WidgetCombiner, Separator,
-    ButtonWidget, OptionWidget, SliderBoxMaxInfSetting, SliderBoxSetting,
-    LineEditSetting, RunWidget, ComboboxSetting, ReplayDropArea,
-    ReplayMapCreation, PushButton, FileChooserSetting, ResultW)
+from widgets import (
+    ResetSettings,
+    WidgetCombiner,
+    Separator,
+    ButtonWidget,
+    OptionWidget,
+    SliderBoxMaxInfSetting,
+    SliderBoxSetting,
+    LineEditSetting,
+    RunWidget,
+    ComboboxSetting,
+    ReplayDropArea,
+    ReplayMapCreation,
+    PushButton,
+    FileChooserSetting,
+    ResultW,
+)
 
-from settings import (get_setting, overwrite_config, set_setting,
-    overwrite_with_config_settings, DEFAULTS, APPDATA_DIR)
+from settings import (
+    get_setting,
+    overwrite_config,
+    set_setting,
+    overwrite_with_config_settings,
+    DEFAULTS,
+    APPDATA_DIR,
+)
 from .visualizer import get_visualizer
 from .main_tab import MainTab
 from wizard import TutorialWizard
@@ -46,8 +78,9 @@ class MainWidget(QFrame):
 
         window_selector = WindowSelector()
         window_selector.visualize_button_clicked.connect(lambda: self.set_index(1))
-        window_selector.bulk_investigation_button_clicked.connect(lambda: self.set_index(2))
-
+        window_selector.bulk_investigation_button_clicked.connect(
+            lambda: self.set_index(2)
+        )
 
         self.analysis_selection = AnalysisSelection()
         self.cg_classic = CircleguardClassic()
@@ -56,11 +89,7 @@ class MainWidget(QFrame):
         self.stacked_widget.addWidget(self.analysis_selection)
         self.stacked_widget.addWidget(self.cg_classic)
 
-        index_map = {
-            "selection": 0,
-            "visualization": 1,
-            "investigation": 2
-        }
+        index_map = {"selection": 0, "visualization": 1, "investigation": 2}
         index = index_map[get_setting("default_page")]
         self.set_index(index)
 
@@ -77,7 +106,6 @@ class MainWidget(QFrame):
         self.stacked_widget.setCurrentIndex(index)
 
 
-
 class WindowSelector(QFrame):
     visualize_button_clicked = pyqtSignal()
     bulk_investigation_button_clicked = pyqtSignal()
@@ -92,7 +120,9 @@ class WindowSelector(QFrame):
         visualize_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         bulk_investigation_button = PushButton("Investigation / Settings")
-        bulk_investigation_button.clicked.connect(self.bulk_investigation_button_clicked)
+        bulk_investigation_button.clicked.connect(
+            self.bulk_investigation_button_clicked
+        )
         bulk_investigation_button.setObjectName("bigButton")
         bulk_investigation_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
@@ -111,7 +141,6 @@ class WindowSelector(QFrame):
         layout.addWidget(bulk_investigation_button)
         layout.setContentsMargins(15, 15, 15, 10)
         self.setLayout(layout)
-
 
 
 class AnalysisSelection(QFrame):
@@ -179,9 +208,10 @@ class AnalysisSelection(QFrame):
     def cg(self):
         # if the user has changed their api key since we last retrieved our
         # circleguard instance, recreate circleguard with the new key.
-        new_api_key = get_setting('api_key')
+        new_api_key = get_setting("api_key")
         if new_api_key != self.old_api_key or not self._cg:
             from circleguard import Circleguard
+
             cache_path = get_setting("cache_dir") + "circleguard.db"
             self._cg = Circleguard(new_api_key, cache_path)
             self.old_api_key = new_api_key
@@ -206,7 +236,6 @@ class AnalysisSelection(QFrame):
                 self.update_label_signal.emit("Idle")
                 self.show_exception_signal.emit(str(e))
 
-
     def all_loadables(self, flush=False):
         # I'm so, so sorry future me. This ``flush`` argument is a monstrosity
         # and you're going to have hell to pay for it at some point I'm sure.
@@ -218,7 +247,9 @@ class AnalysisSelection(QFrame):
         # the visualization again, it will still fail because the loadables
         # are using the cached, invalid loader functions. The solution is to
         # flush the loadables cache every time we run.
-        return self.replay_map_creation.all_loadables() + self.drop_area.all_loadables(flush)
+        return self.replay_map_creation.all_loadables() + self.drop_area.all_loadables(
+            flush
+        )
 
     def visualize(self):
         # `load_loadables` will emit a signal to `show_visualizer_window` which
@@ -247,8 +278,10 @@ class AnalysisSelection(QFrame):
 
             # if there are any duplicate maps, warn the user and don't proceed
             if len(set(map_ids)) > 1:
-                message = ("You can only visualize replays from the same map. "
-                    f"The map ids present are {', '.join(str(map_id) for map_id in map_ids)}.")
+                message = (
+                    "You can only visualize replays from the same map. "
+                    f"The map ids present are {', '.join(str(map_id) for map_id in map_ids)}."
+                )
                 self.show_exception_signal.emit(message)
                 return
 
@@ -259,8 +292,10 @@ class AnalysisSelection(QFrame):
             self.visualizer = CGVisualizer(beatmap_info, loadables)
             self.visualizer.show()
         except InvalidKeyException:
-            message = ("Please enter a valid api key in the settings before "
-                "visualizing replays.")
+            message = (
+                "Please enter a valid api key in the settings before "
+                "visualizing replays."
+            )
             self.show_exception_signal.emit(message)
         except Exception as e:
             self.set_progressbar_signal.emit(-1)
@@ -355,26 +390,36 @@ class SettingsTab(QFrame):
         self.info = QLabel(self)
         # multiple spaces get shrunk to one space in rich text mode
         # https://groups.google.com/forum/#!topic/qtcontribs/VDOQFUj-eIA
-        self.info.setText(f"circleguard v{__version__}&nbsp;&nbsp;|&nbsp;&nbsp;"
-                          "<a href=\"https://discord.gg/wj35ehD\">Discord</a>"
-                          "&nbsp;&nbsp;|&nbsp;&nbsp;<a href=\"https://github.com/circleguard/circleguard/\">Github</a>")
+        self.info.setText(
+            f"circleguard v{__version__}&nbsp;&nbsp;|&nbsp;&nbsp;"
+            '<a href="https://discord.gg/wj35ehD">Discord</a>'
+            '&nbsp;&nbsp;|&nbsp;&nbsp;<a href="https://github.com/circleguard/circleguard/">Github</a>'
+        )
         self.info.setTextFormat(Qt.TextFormat.RichText)
         self.info.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
         self.info.setOpenExternalLinks(True)
         self.info.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.setting_buttons = WidgetCombiner(self.open_settings, self.sync_settings, self)
-        self.setting_buttons = WidgetCombiner(self.setting_buttons, self.open_circleguard_folder, self)
+        self.setting_buttons = WidgetCombiner(
+            self.open_settings, self.sync_settings, self
+        )
+        self.setting_buttons = WidgetCombiner(
+            self.setting_buttons, self.open_circleguard_folder, self
+        )
 
         layout = QGridLayout()
         layout.addWidget(self.info, 0, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
-        layout.addWidget(self.setting_buttons, 0, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        layout.addWidget(
+            self.setting_buttons, 0, 1, 1, 1, alignment=Qt.AlignmentFlag.AlignRight
+        )
         layout.addWidget(self.qscrollarea, 1, 0, 1, 2)
 
         self.setLayout(layout)
 
     def _open_settings(self):
-        overwrite_config() # generate file with latest changes
-        QDesktopServices.openUrl(QUrl.fromLocalFile(get_setting("config_location") + "/circleguard.cfg"))
+        overwrite_config()  # generate file with latest changes
+        QDesktopServices.openUrl(
+            QUrl.fromLocalFile(get_setting("config_location") + "/circleguard.cfg")
+        )
 
     def _sync_settings(self):
         overwrite_with_config_settings()
@@ -390,23 +435,44 @@ class ScrollableSettingsWidget(QFrame):
     down.
 
     """
+
     def __init__(self):
         super().__init__()
         self.visualizer = None
         self.wizard = None
 
         self.apikey_widget = LineEditSetting("Api Key", "", "password", "api_key")
-        self.cache = OptionWidget("Caching", "Downloaded replays will be cached locally", "caching")
-        self.ignore_snaps_off_hitobjs = OptionWidget("Ignore Snaps not on hit objects", "", "ignore_snaps_off_hitobjs")
-        self.alert_on_result = OptionWidget("Play a sound when a result is found", "", "alert_on_result")
+        self.cache = OptionWidget(
+            "Caching", "Downloaded replays will be cached locally", "caching"
+        )
+        self.ignore_snaps_off_hitobjs = OptionWidget(
+            "Ignore Snaps not on hit objects", "", "ignore_snaps_off_hitobjs"
+        )
+        self.alert_on_result = OptionWidget(
+            "Play a sound when a result is found", "", "alert_on_result"
+        )
         self.theme = ComboboxSetting("Theme", "", "theme")
-        self.show_cv_frametimes = ComboboxSetting("Frametime graph display type", "", "frametime_graph_display")
-        self.default_page = ComboboxSetting("Show this screen when circleguard starts", "", "default_page")
-        self.whitelist_file = FileChooserSetting("Player Whitelist File:", "Choose File", "",
-            QFileDialog.FileMode.ExistingFile, "whitelist_file_location", ["plaintext file (*.txt)"])
+        self.show_cv_frametimes = ComboboxSetting(
+            "Frametime graph display type", "", "frametime_graph_display"
+        )
+        self.default_page = ComboboxSetting(
+            "Show this screen when circleguard starts", "", "default_page"
+        )
+        self.whitelist_file = FileChooserSetting(
+            "Player Whitelist File:",
+            "Choose File",
+            "",
+            QFileDialog.FileMode.ExistingFile,
+            "whitelist_file_location",
+            ["plaintext file (*.txt)"],
+        )
 
-        self.default_span_map = LineEditSetting("Map span defaults to", "", "normal", "default_span_map")
-        self.default_span_user = LineEditSetting("User span defaults to", "", "normal", "default_span_user")
+        self.default_span_map = LineEditSetting(
+            "Map span defaults to", "", "normal", "default_span_map"
+        )
+        self.default_span_user = LineEditSetting(
+            "User span defaults to", "", "normal", "default_span_user"
+        )
 
         self.log_level = ComboboxSetting("Log Level", "", "log_level")
         self.log_output = ComboboxSetting("Log Output", "", "_log_output")
@@ -414,19 +480,39 @@ class ScrollableSettingsWidget(QFrame):
         self.tutorial = ButtonWidget("Intro Tutorial", "Read Tutorial", "")
         self.tutorial.button.clicked.connect(self.show_wizard)
 
-        self.advanced_usage_tutorial = ButtonWidget("Advanced Usage", "Advanced Usage", "")
-        advanced_url = QUrl("https://github.com/circleguard/circleguard/wiki/Advanced-Usage")
-        self.advanced_usage_tutorial.button.clicked.connect(lambda: QDesktopServices.openUrl(advanced_url))
+        self.advanced_usage_tutorial = ButtonWidget(
+            "Advanced Usage", "Advanced Usage", ""
+        )
+        advanced_url = QUrl(
+            "https://github.com/circleguard/circleguard/wiki/Advanced-Usage"
+        )
+        self.advanced_usage_tutorial.button.clicked.connect(
+            lambda: QDesktopServices.openUrl(advanced_url)
+        )
 
-        self.frametime_tutorial = ButtonWidget("Frametime Tutorial", "Frametime Tutorial", "")
-        frametime_url = QUrl("https://github.com/circleguard/circleguard/wiki/Frametime-Tutorial")
-        self.frametime_tutorial.button.clicked.connect(lambda: QDesktopServices.openUrl(frametime_url))
+        self.frametime_tutorial = ButtonWidget(
+            "Frametime Tutorial", "Frametime Tutorial", ""
+        )
+        frametime_url = QUrl(
+            "https://github.com/circleguard/circleguard/wiki/Frametime-Tutorial"
+        )
+        self.frametime_tutorial.button.clicked.connect(
+            lambda: QDesktopServices.openUrl(frametime_url)
+        )
 
-        self.similarity_groups_tutorial = ButtonWidget("Similarity Groups", "Similarity Groups", "")
-        sim_url = QUrl("https://github.com/circleguard/circleguard/wiki/Similarity-Groups")
-        self.similarity_groups_tutorial.button.clicked.connect(lambda: QDesktopServices.openUrl(sim_url))
+        self.similarity_groups_tutorial = ButtonWidget(
+            "Similarity Groups", "Similarity Groups", ""
+        )
+        sim_url = QUrl(
+            "https://github.com/circleguard/circleguard/wiki/Similarity-Groups"
+        )
+        self.similarity_groups_tutorial.button.clicked.connect(
+            lambda: QDesktopServices.openUrl(sim_url)
+        )
 
-        vert_spacer = QSpacerItem(0, 10, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum)
+        vert_spacer = QSpacerItem(
+            0, 10, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum
+        )
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.layout.addItem(vert_spacer)
@@ -480,7 +566,9 @@ class ResultsTab(QFrame):
 
         layout = QGridLayout()
         layout.addWidget(self.qscrollarea, 0, 0, 1, 2)
-        layout.addWidget(clear_results_button, 1, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        layout.addWidget(
+            clear_results_button, 1, 0, 1, 1, alignment=Qt.AlignmentFlag.AlignLeft
+        )
 
         self.setLayout(layout)
 
@@ -505,16 +593,18 @@ class ResultsFrame(QFrame):
         # we want widgets to fill from top down,
         # being vertically centered looks weird
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.info_label = QLabel("After running Investigations, this tab will "
+        self.info_label = QLabel(
+            "After running Investigations, this tab will "
             "fill up with replays that can be played back. Newest results "
-            "appear at the top.")
+            "appear at the top."
+        )
         self.layout.addWidget(self.info_label)
         self.setLayout(self.layout)
 
 
 class QueueTab(QFrame):
-    cancel_run_signal = pyqtSignal(int) # run_id
-    run_priorities_updated = pyqtSignal(dict) # run_id to priority (int to int)
+    cancel_run_signal = pyqtSignal(int)  # run_id
+    run_priorities_updated = pyqtSignal(dict)  # run_id to priority (int to int)
 
     def __init__(self):
         super().__init__()
@@ -597,13 +687,13 @@ class QueueTab(QFrame):
             run_w.down_button.setEnabled(False)
 
 
-
 class QueueFrame(QFrame):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
         layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(layout)
+
 
 class ThresholdsTab(QFrame):
     def __init__(self, parent):
@@ -622,46 +712,99 @@ class ThresholdsTab(QFrame):
         layout.addWidget(clear_results_button, alignment=Qt.AlignmentFlag.AlignLeft)
         self.setLayout(layout)
 
-
     def reset_to_defaults(self):
         for setting, value in DEFAULTS["Thresholds"].items():
             set_setting(setting, value)
 
 
-
 class ScrollableThresholdsWidget(QFrame):
     def __init__(self, parent):
         super().__init__(parent)
-        steal_max_sim = SliderBoxMaxInfSetting(self, "Max similarity", "Replays with a similarity below this value "
-                "will be stored in the results tab so you can view them, and will be printed to the console",
-                "steal_max_sim", 100)
-        steal_max_sim_display = SliderBoxMaxInfSetting(self, "Max similarity display", "Replays with a similarity "
-                "below this value will be printed to the console", "steal_max_sim_display", 100)
+        steal_max_sim = SliderBoxMaxInfSetting(
+            self,
+            "Max similarity",
+            "Replays with a similarity below this value "
+            "will be stored in the results tab so you can view them, and will be printed to the console",
+            "steal_max_sim",
+            100,
+        )
+        steal_max_sim_display = SliderBoxMaxInfSetting(
+            self,
+            "Max similarity display",
+            "Replays with a similarity "
+            "below this value will be printed to the console",
+            "steal_max_sim_display",
+            100,
+        )
 
-        relax_max_ur = SliderBoxMaxInfSetting(self, "Max ur", "Replays that have a ur lower than this will be stored "
-                "in the results tab so you can view them, and will be printed to the console", "relax_max_ur", 300)
-        relax_max_ur_display = SliderBoxMaxInfSetting(self, "Max ur display", "Replays with a ur lower than this "
-                "will be printed to the console", "relax_max_ur_display", 300)
+        relax_max_ur = SliderBoxMaxInfSetting(
+            self,
+            "Max ur",
+            "Replays that have a ur lower than this will be stored "
+            "in the results tab so you can view them, and will be printed to the console",
+            "relax_max_ur",
+            300,
+        )
+        relax_max_ur_display = SliderBoxMaxInfSetting(
+            self,
+            "Max ur display",
+            "Replays with a ur lower than this " "will be printed to the console",
+            "relax_max_ur_display",
+            300,
+        )
 
-        correction_min_snaps = SliderBoxMaxInfSetting(self, "Min snaps", "Replays with at least this many snaps "
-                "will be stored in the results tab so you can view them, and will be printed to the console",
-                "correction_min_snaps", 20, min_=1)
-        correction_min_snaps_display = SliderBoxMaxInfSetting(self, "Min snaps display", "Replays with at least this many snaps "
-                "will be printed to the console", "correction_min_snaps_display", 20, min_=1)
-        correction_max_angle = SliderBoxSetting(self, "Max angle", "Replays with a set of three points "
-                "making an angle less than this (*and* also satisfying correction_min_distance) will be stored in the "
-                "results tab so you can view them, and will be printed to the console.", "correction_max_angle", 360)
-        correction_min_distance = SliderBoxMaxInfSetting(self, "Min distance", "Replays with a set of three points "
-                "where either the distance from AB or BC is greater than this (*and* also satisfying correction_max_angle) "
-                "will be stored in the results tab so you can view them, and will be printed to the console.",
-                "correction_min_distance", 100)
+        correction_min_snaps = SliderBoxMaxInfSetting(
+            self,
+            "Min snaps",
+            "Replays with at least this many snaps "
+            "will be stored in the results tab so you can view them, and will be printed to the console",
+            "correction_min_snaps",
+            20,
+            min_=1,
+        )
+        correction_min_snaps_display = SliderBoxMaxInfSetting(
+            self,
+            "Min snaps display",
+            "Replays with at least this many snaps " "will be printed to the console",
+            "correction_min_snaps_display",
+            20,
+            min_=1,
+        )
+        correction_max_angle = SliderBoxSetting(
+            self,
+            "Max angle",
+            "Replays with a set of three points "
+            "making an angle less than this (*and* also satisfying correction_min_distance) will be stored in the "
+            "results tab so you can view them, and will be printed to the console.",
+            "correction_max_angle",
+            360,
+        )
+        correction_min_distance = SliderBoxMaxInfSetting(
+            self,
+            "Min distance",
+            "Replays with a set of three points "
+            "where either the distance from AB or BC is greater than this (*and* also satisfying correction_max_angle) "
+            "will be stored in the results tab so you can view them, and will be printed to the console.",
+            "correction_min_distance",
+            100,
+        )
 
-        timewarp_max_frametime = SliderBoxMaxInfSetting(self, "Max frametime", "Replays with an average frametime "
-                "lower than this will be stored in the results tab so you can view them, and will printed to the console",
-                "timewarp_max_frametime", 50)
-        timewarp_max_frametime_display = SliderBoxMaxInfSetting(self, "Max frametime display", "Replays with an average frametime "
-                "lower than this will be printed to the console", "timewarp_max_frametime_display", 50)
-
+        timewarp_max_frametime = SliderBoxMaxInfSetting(
+            self,
+            "Max frametime",
+            "Replays with an average frametime "
+            "lower than this will be stored in the results tab so you can view them, and will printed to the console",
+            "timewarp_max_frametime",
+            50,
+        )
+        timewarp_max_frametime_display = SliderBoxMaxInfSetting(
+            self,
+            "Max frametime display",
+            "Replays with an average frametime "
+            "lower than this will be printed to the console",
+            "timewarp_max_frametime_display",
+            50,
+        )
 
         layout = QVBoxLayout()
         layout.addWidget(Separator("Similarity"))

@@ -9,6 +9,8 @@ ACCENT_COLOR = QColor(71, 174, 247)
 
 # placed above local imports to avoid circular import errors
 ROOT_PATH = Path(__file__).parent.parent.absolute()
+
+
 def resource_path(path):
     """
     Get the resource path for a given file.
@@ -25,8 +27,8 @@ def resource_path(path):
         context, which does not accept a ``Path``.
     """
 
-    if hasattr(sys, '_MEIPASS'): # being run from a pyinstall'd app
-        return str(Path(sys._MEIPASS) / "resources" / Path(path)) # pylint: disable=no-member
+    if hasattr(sys, "_MEIPASS"):  # being run from a pyinstall'd app
+        return str(Path(sys._MEIPASS) / "resources" / Path(path))
     return str(ROOT_PATH / "resources" / Path(path))
 
 
@@ -48,38 +50,46 @@ class DebugWidget(QFrame):
                 self.paintLayout(painter, layout.itemAt(i))
         painter.drawRect(item.geometry())
 
-class StealResult():
+
+class StealResult:
     def __init__(self, similarity, replay1, replay2):
         from circleguard import order
+
         self.similarity = similarity
         self.replay1 = replay1
         self.replay2 = replay2
         (self.earlier_replay, self.later_replay) = order(replay1, replay2)
 
-class RelaxResult():
+
+class RelaxResult:
     def __init__(self, ur, replay):
         self.ur = ur
         self.replay = replay
 
-class CorrectionResult():
+
+class CorrectionResult:
     def __init__(self, snaps, replay):
         self.snaps = snaps
         self.replay = replay
 
-class TimewarpResult():
+
+class TimewarpResult:
     def __init__(self, frametime, frametimes, replay):
         self.frametime = frametime
         self.frametimes = frametimes
         self.replay = replay
 
-class AnalysisResult():
+
+class AnalysisResult:
     def __init__(self, replays):
         self.replays = replays
 
-class URLAnalysisResult():
+
+class URLAnalysisResult:
     def __init__(self, replays, timestamp):
         self.replays = replays
         self.timestamp = timestamp
+
 
 # reusing qt widgets is a BIG mistake (leads to, for example, segfaults when
 # deleting an item because it's trying to remove something that's being used

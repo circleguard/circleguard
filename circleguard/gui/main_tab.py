@@ -12,30 +12,50 @@ import traceback
 from pathlib import Path
 
 from PyQt6.QtCore import pyqtSignal, QObject, Qt
-from PyQt6.QtWidgets import (QMessageBox, QFrame, QGridLayout,
-    QApplication, QToolTip, QLabel, QSizePolicy, QTextBrowser)
+from PyQt6.QtWidgets import (
+    QMessageBox,
+    QFrame,
+    QGridLayout,
+    QApplication,
+    QToolTip,
+    QLabel,
+    QSizePolicy,
+    QTextBrowser,
+)
 from PyQt6.QtGui import QTextCursor
 
-from widgets import (InvestigationCheckboxes, WidgetCombiner, PushButton,
-    LoadableCreation)
+from widgets import (
+    InvestigationCheckboxes,
+    WidgetCombiner,
+    PushButton,
+    LoadableCreation,
+)
 from settings import SingleLinkableSetting, get_setting
-from utils import (AnalysisResult, StealResult, RelaxResult, CorrectionResult,
-    TimewarpResult)
+from utils import (
+    AnalysisResult,
+    StealResult,
+    RelaxResult,
+    CorrectionResult,
+    TimewarpResult,
+)
 from .visualizer import get_visualizer
 
 
 log = logging.getLogger("circleguard_gui")
 
+
 class MainTab(SingleLinkableSetting, QFrame):
-    set_progressbar_signal = pyqtSignal(int) # max progress
-    increment_progressbar_signal = pyqtSignal(int) # increment value
+    set_progressbar_signal = pyqtSignal(int)  # max progress
+    increment_progressbar_signal = pyqtSignal(int)  # increment value
     update_label_signal = pyqtSignal(str)
     write_to_terminal_signal = pyqtSignal(str)
-    add_result_signal = pyqtSignal(object) # Result
-    add_url_analysis_result_signal = pyqtSignal(object) # URLAnalysisResult
-    add_run_to_queue_signal = pyqtSignal(object) # Run object (or a subclass)
-    update_run_status_signal = pyqtSignal(int, str) # run_id, status_str
-    print_results_signal = pyqtSignal() # called after a run finishes to flush the results queue before printing "Done"
+    add_result_signal = pyqtSignal(object)  # Result
+    add_url_analysis_result_signal = pyqtSignal(object)  # URLAnalysisResult
+    add_run_to_queue_signal = pyqtSignal(object)  # Run object (or a subclass)
+    update_run_status_signal = pyqtSignal(int, str)  # run_id, status_str
+    print_results_signal = (
+        pyqtSignal()
+    )  # called after a run finishes to flush the results queue before printing "Done"
 
     def __init__(self):
         QFrame.__init__(self)
@@ -102,15 +122,21 @@ class MainTab(SingleLinkableSetting, QFrame):
 
         investigate_label = QLabel("Investigate For:")
         investigate_label.setFixedWidth(130)
-        investigate_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        investigate_label.setSizePolicy(
+            QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed
+        )
 
         self.investigation_checkboxes = InvestigationCheckboxes()
-        investigations = WidgetCombiner(investigate_label, self.investigation_checkboxes, self)
+        investigations = WidgetCombiner(
+            investigate_label, self.investigation_checkboxes, self
+        )
         investigations.setFixedHeight(25)
 
         self.loadable_creation = LoadableCreation()
 
-        self.investigation_checkboxes.similarity_cb.checkbox.stateChanged.connect(self.loadable_creation.similarity_cb_state_changed)
+        self.investigation_checkboxes.similarity_cb.checkbox.stateChanged.connect(
+            self.loadable_creation.similarity_cb_state_changed
+        )
 
         layout = QGridLayout()
         layout.addWidget(investigations, 0, 0, 1, 16)
@@ -139,8 +165,10 @@ class MainTab(SingleLinkableSetting, QFrame):
         # print tracebacks as plain text since they have newlines and
         # indentation that's not easily replicable in html (newlines are just
         # ``<br>``, but indentation is much trickier)
-        if ("Traceback (most recent call last)" in message or
-            "sys.excepthook error" in message):
+        if (
+            "Traceback (most recent call last)" in message
+            or "sys.excepthook error" in message
+        ):
             self.terminal.insertPlainText(message)
         else:
             self.terminal.insertHtml(message)
@@ -162,6 +190,7 @@ class MainTab(SingleLinkableSetting, QFrame):
     def library(self):
         if not self._library:
             from slider import Library
+
             self._library = Library(get_setting("cache_dir"))
         return self._library
 
@@ -171,14 +200,16 @@ class MainTab(SingleLinkableSetting, QFrame):
         if re.search("[g-z]", self.setting_value):
             message_box = QMessageBox()
             message_box.setTextFormat(Qt.TextFormat.RichText)
-            message_box.setText("Your api key is invalid. You are likely using "
-                    "an api v2 key, when you should be using an api v1 "
-                    "(legacy) key. "
-                    "Please ensure your api key comes from the \"Legacy API\" "
-                    "section of <a href=\"https://osu.ppy.sh/home/account/edit"
-                    "#legacy-api\">https://osu.ppy.sh/home/account/edit</a>, "
-                    "NOT the \"Oauth\" section. You can set your api key here "
-                    "in the settings tab.")
+            message_box.setText(
+                "Your api key is invalid. You are likely using "
+                "an api v2 key, when you should be using an api v1 "
+                "(legacy) key. "
+                'Please ensure your api key comes from the "Legacy API" '
+                'section of <a href="https://osu.ppy.sh/home/account/edit'
+                '#legacy-api">https://osu.ppy.sh/home/account/edit</a>, '
+                'NOT the "Oauth" section. You can set your api key here '
+                "in the settings tab."
+            )
             message_box.exec()
             return
 
@@ -191,7 +222,9 @@ class MainTab(SingleLinkableSetting, QFrame):
         try:
             loadables = self.loadable_creation.cg_loadables()
         except ValueError as e:
-            self.write_to_terminal_signal.emit(f"<div style='color:#ff5252'>Invalid arguments:</div> {str(e)}")
+            self.write_to_terminal_signal.emit(
+                f"<div style='color:#ff5252'>Invalid arguments:</div> {str(e)}"
+            )
             return
 
         enabled_investigations = self.investigation_checkboxes.enabled_investigations()
@@ -201,8 +234,10 @@ class MainTab(SingleLinkableSetting, QFrame):
         # similarly for investigations, but give a heads up since this mistake
         # is slightly subtler
         if not enabled_investigations:
-            self.write_to_terminal_signal.emit("<div style='color:#ff5252'>You must select "
-                "at least one investigation before running</div>")
+            self.write_to_terminal_signal.emit(
+                "<div style='color:#ff5252'>You must select "
+                "at least one investigation before running</div>"
+            )
             return
 
         run = Run(loadables, enabled_investigations, self.run_id, threading.Event())
@@ -215,7 +250,6 @@ class MainTab(SingleLinkableSetting, QFrame):
         # wait for that delay
         self.check_circleguard_queue()
 
-
     def check_circleguard_queue(self):
         def _check_circleguard_queue(self):
             try:
@@ -227,6 +261,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                     # no runs to process, return
                     return
                 import numpy as np
+
                 # get run with the lowest priority (so most important)
                 priority = np.inf
                 run = None
@@ -259,11 +294,18 @@ class MainTab(SingleLinkableSetting, QFrame):
             thread = threading.Thread(target=_check_circleguard_queue, args=[self])
             thread.start()
 
-
     def run_circleguard(self, run):
-        from circleguard import (Circleguard, ReplayUnavailableException,
-            ReplayPath, NoInfoAvailableException, Loader, LoadableContainer,
-            replay_pairs, ReplayContainer, Mod)
+        from circleguard import (
+            Circleguard,
+            ReplayUnavailableException,
+            ReplayPath,
+            NoInfoAvailableException,
+            Loader,
+            LoadableContainer,
+            replay_pairs,
+            ReplayContainer,
+            Mod,
+        )
         from ossapi import OssapiV1
 
         class TrackerOssapi(OssapiV1, QObject):
@@ -303,6 +345,7 @@ class MainTab(SingleLinkableSetting, QFrame):
             A circleguard.Loader subclass that emits a signal when the loader is
             ratelimited. It inherits from QObject to allow us to use qt signals.
             """
+
             ratelimit_signal = pyqtSignal(int)
             check_stopped_signal = pyqtSignal()
             ratelimit_end_signal = pyqtSignal()
@@ -329,6 +372,7 @@ class MainTab(SingleLinkableSetting, QFrame):
 
             if get_setting("use_postgres_db"):
                 from circleguard.postgres import PostgresLoader
+
                 write_to_cache = get_setting("postgres_write_to_cache") and should_cache
                 db_username = get_setting("postgres_db_username")
                 db_password = get_setting("postgres_db_password")
@@ -341,12 +385,31 @@ class MainTab(SingleLinkableSetting, QFrame):
                     A circleguard.Loader subclass that emits a signal when the loader is
                     ratelimited. It inherits from QObject to allow us to use qt signals.
                     """
+
                     ratelimit_signal = pyqtSignal(int)
                     check_stopped_signal = pyqtSignal()
                     ratelimit_end_signal = pyqtSignal()
 
-                    def __init__(self, key, db_username, db_password, db_host, db_port, db_name, write_to_cache):
-                        PostgresLoader.__init__(self, key, db_username, db_password, db_host, db_port, db_name, write_to_cache)
+                    def __init__(
+                        self,
+                        key,
+                        db_username,
+                        db_password,
+                        db_host,
+                        db_port,
+                        db_name,
+                        write_to_cache,
+                    ):
+                        PostgresLoader.__init__(
+                            self,
+                            key,
+                            db_username,
+                            db_password,
+                            db_host,
+                            db_port,
+                            db_name,
+                            write_to_cache,
+                        )
                         QObject.__init__(self)
 
                         self.api = TrackerOssapi(key)
@@ -354,11 +417,25 @@ class MainTab(SingleLinkableSetting, QFrame):
                         self.api.check_stopped_signal.connect(self.check_stopped_signal)
                         self.api.ratelimit_end_signal.connect(self.ratelimit_end_signal)
 
-                loader = TrackerLoaderPostgres(api_key, db_username, db_password, db_host, db_port, db_name, write_to_cache)
+                loader = TrackerLoaderPostgres(
+                    api_key,
+                    db_username,
+                    db_password,
+                    db_host,
+                    db_port,
+                    db_name,
+                    write_to_cache,
+                )
                 cg = Circleguard(api_key, slider_dir=slider_cache, loader=loader)
             else:
                 loader = TrackerLoader(api_key, core_cache, write_to_cache=should_cache)
-                cg = Circleguard(api_key, core_cache, slider_dir=slider_cache, cache=should_cache, loader=loader)
+                cg = Circleguard(
+                    api_key,
+                    core_cache,
+                    slider_dir=slider_cache,
+                    cache=should_cache,
+                    loader=loader,
+                )
 
             def _ratelimited(length):
                 message = get_setting("message_ratelimited")
@@ -366,9 +443,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.write_to_terminal_signal.emit(message.format(s=length, ts=ts))
                 self.update_label_signal.emit("Ratelimited")
                 self.update_run_status_signal.emit(run.run_id, "Ratelimited")
+
             def _end_ratelimit():
                 self.update_label_signal.emit("Loading Replays")
                 self.update_run_status_signal.emit(run.run_id, "Loading Replays")
+
             def _check_event(event):
                 """
                 Checks the given event to see if it is set. If it is, the run has been canceled
@@ -405,16 +484,22 @@ class MainTab(SingleLinkableSetting, QFrame):
                 lc2 = LoadableContainer(loadables2)
             else:
                 lc = LoadableContainer(run.loadables)
-            message_loading_info = get_setting("message_loading_info").format(ts=datetime.now())
+            message_loading_info = get_setting("message_loading_info").format(
+                ts=datetime.now()
+            )
             self.write_to_terminal_signal.emit(message_loading_info)
 
             def _try_load_replay_container(replay_container):
                 try:
                     cg.load_info(replay_container)
                 except NoInfoAvailableException:
-                    message = ("<div style='color:#ff5252'>The loadable " + str(replay_container) + " "
+                    message = (
+                        "<div style='color:#ff5252'>The loadable "
+                        + str(replay_container)
+                        + " "
                         "does not exist.</div>\nDouble check your map and/or user id and run again. "
-                        "The run has been canceled because of this.")
+                        "The run has been canceled because of this."
+                    )
                     self.write_to_terminal_signal.emit(message)
                     self.update_label_signal.emit("Idle")
                     self.update_run_status_signal.emit(run.run_id, "Finished")
@@ -456,8 +541,9 @@ class MainTab(SingleLinkableSetting, QFrame):
 
             num_replays = len(all_replays)
             self.set_progressbar_signal.emit(num_replays)
-            message_loading_replays = get_setting("message_loading_replays").format(ts=datetime.now(),
-                            num_replays=num_replays)
+            message_loading_replays = get_setting("message_loading_replays").format(
+                ts=datetime.now(), num_replays=num_replays
+            )
             self.write_to_terminal_signal.emit(message_loading_replays)
 
             def _skip_replay_with_message(replay, message):
@@ -493,24 +579,51 @@ class MainTab(SingleLinkableSetting, QFrame):
                     # message than "the replay is not available for download",
                     # which is incorrect for local replays.
                     if isinstance(replay, ReplayPath) and not replay.has_data():
-                        _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " is " +
-                        "not an osu!std replay.</div> We currently only support std replays. "
-                        "This replay has been skipped because of this.")
+                        _skip_replay_with_message(
+                            replay,
+                            "<div style='color:#ff5252'>The replay "
+                            + str(replay)
+                            + " is "
+                            + "not an osu!std replay.</div> We currently only support std replays. "
+                            "This replay has been skipped because of this.",
+                        )
                     elif not replay.has_data():
-                        _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " is " +
-                            "not available for download.</div> This is likely because it is not in the top 1k scores of "
-                            "the beatmap. This replay has been skipped because of this.")
+                        _skip_replay_with_message(
+                            replay,
+                            "<div style='color:#ff5252'>The replay "
+                            + str(replay)
+                            + " is "
+                            + "not available for download.</div> This is likely because it is not in the top 1k scores of "
+                            "the beatmap. This replay has been skipped because of this.",
+                        )
                 except NoInfoAvailableException:
-                    _skip_replay_with_message(replay, "<div style='color:#ff5252'>The replay " + str(replay) + " does "
+                    _skip_replay_with_message(
+                        replay,
+                        "<div style='color:#ff5252'>The replay "
+                        + str(replay)
+                        + " does "
                         "not exist.</div>\nDouble check your map and/or user id. This replay has "
-                        "been skipped because of this.")
+                        "been skipped because of this.",
+                    )
                 except ReplayUnavailableException as e:
-                    _skip_replay_with_message(replay, "<div style='color:#ff5252'>The osu! api provided an invalid "
-                        "response:</div> " + str(e) + ". The replay " + str(replay) + " has been skipped because of this.")
+                    _skip_replay_with_message(
+                        replay,
+                        "<div style='color:#ff5252'>The osu! api provided an invalid "
+                        "response:</div> "
+                        + str(e)
+                        + ". The replay "
+                        + str(replay)
+                        + " has been skipped because of this.",
+                    )
                 except LZMAError as e:
-                    _skip_replay_with_message(replay, "<div style='color:#ff5252'>lzma error while parsing a replay:</div> " + str(e) +
-                        ". The replay is either corrupted or has no replay data. The replay " + str(replay) +
-                        " has been skipped because of this.")
+                    _skip_replay_with_message(
+                        replay,
+                        "<div style='color:#ff5252'>lzma error while parsing a replay:</div> "
+                        + str(e)
+                        + ". The replay is either corrupted or has no replay data. The replay "
+                        + str(replay)
+                        + " has been skipped because of this.",
+                    )
                 except Exception as e:
                     # print full traceback here for more debugging info.
                     # Don't do it for the previous exceptions because the
@@ -521,9 +634,16 @@ class MainTab(SingleLinkableSetting, QFrame):
                     # of this string made the traceback collapse down into
                     # one line with none of the usual linebreaks, I'm not
                     # sure why. So you win qt, no red color for this error.
-                    _skip_replay_with_message(replay, "error while loading a replay: " + str(e) + "\n" +
-                            traceback.format_exc() +
-                            "The replay " + str(replay) + " has been skipped because of this.")
+                    _skip_replay_with_message(
+                        replay,
+                        "error while loading a replay: "
+                        + str(e)
+                        + "\n"
+                        + traceback.format_exc()
+                        + "The replay "
+                        + str(replay)
+                        + " has been skipped because of this.",
+                    )
                 finally:
                     self.increment_progressbar_signal.emit(1)
 
@@ -553,19 +673,23 @@ class MainTab(SingleLinkableSetting, QFrame):
                 "Unstable Rate": "relax",
                 "Snaps": "correction",
                 "Frametime": "timewarp",
-                "Manual Analysis": "analysis"
+                "Manual Analysis": "analysis",
             }
             for investigation in run.enabled_investigations:
                 setting = "message_starting_" + setting_end_dict[investigation]
-                message_starting_investigation = get_setting(setting).format(ts=datetime.now())
+                message_starting_investigation = get_setting(setting).format(
+                    ts=datetime.now()
+                )
                 self.write_to_terminal_signal.emit(message_starting_investigation)
                 if investigation == "Manual Analysis":
                     map_ids = [r.map_id for r in all_replays]
                     if len(set(map_ids)) > 1:
-                        self.write_to_terminal_signal.emit("<div style='color:#ff5252'>"
+                        self.write_to_terminal_signal.emit(
+                            "<div style='color:#ff5252'>"
                             "Manual analysis expected replays from a single map</div>, "
                             f"but got replays from maps {set(map_ids)}. The run has been canceled "
-                            "because of this")
+                            "because of this"
+                        )
                         self.update_label_signal.emit("Idle")
                         self.update_run_status_signal.emit(run.run_id, "Finished")
                         self.set_progressbar_signal.emit(-1)
@@ -590,7 +714,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                     if replays2 and not replays1:
                         replays1, replays2 = replays2, replays1
                     pairs = replay_pairs(replays1, replays2)
-                    for (replay1, replay2) in pairs:
+                    for replay1, replay2 in pairs:
                         _check_event(event)
                         # sim will be 0 (or very low) if both have autoplay
                         if Mod.AP in replay1.mods and Mod.AP in replay2.mods:
@@ -605,9 +729,11 @@ class MainTab(SingleLinkableSetting, QFrame):
                         if cg.map_available(replay):
                             # TODO: cache hits so they don't need to be calculated multiple times for a UR investigation
                             if len(cg.hits(replay)) < 3:
-                                self.write_to_terminal_signal.emit(f"<div style='color:#ff5252'>The replay {str(replay)} "
+                                self.write_to_terminal_signal.emit(
+                                    f"<div style='color:#ff5252'>The replay {str(replay)} "
                                     "hits less than 3 hit objects in the map, so its ur is unreliable. The replay has "
-                                    "been skipped because of this. </div>")
+                                    "been skipped because of this. </div>"
+                                )
                                 continue
                             try:
                                 ur = cg.ur(replay)
@@ -620,12 +746,24 @@ class MainTab(SingleLinkableSetting, QFrame):
                             # beatmap is empty, which of course raises StopIteration.
                             except StopIteration:
                                 import requests
-                                if requests.get(f"https://osu.ppy.sh/osu/{replay.map_id}").content == b"":
-                                    self.write_to_terminal_signal.emit("<div style='color:#ff5252'>The "
-                                        "map " + str(replay.map_id) + "'s download is bugged</div>, so its ur cannot "
-                                        "be calculated. The replay " + str(replay) + " has been skipped because of this, "
+
+                                if (
+                                    requests.get(
+                                        f"https://osu.ppy.sh/osu/{replay.map_id}"
+                                    ).content
+                                    == b""
+                                ):
+                                    self.write_to_terminal_signal.emit(
+                                        "<div style='color:#ff5252'>The "
+                                        "map "
+                                        + str(replay.map_id)
+                                        + "'s download is bugged</div>, so its ur cannot "
+                                        "be calculated. The replay "
+                                        + str(replay)
+                                        + " has been skipped because of this, "
                                         "but please report this to the developers through discord or github so it can be "
-                                        "tracked.")
+                                        "tracked."
+                                    )
                                     break
                                 # If we happen to catch an unrelated error with this `except`, we still want to
                                 # raise that so it can be tracked and fixed.
@@ -634,9 +772,13 @@ class MainTab(SingleLinkableSetting, QFrame):
                             result = RelaxResult(ur, replay)
                             self.q.put(result)
                         else:
-                            self.write_to_terminal_signal.emit("<div style='color:#ff5252'>The "
-                                "replay " + str(replay) + " has no map id</div>, so its ur cannot "
-                                "be calculated. This replay has been skipped because of this.")
+                            self.write_to_terminal_signal.emit(
+                                "<div style='color:#ff5252'>The "
+                                "replay "
+                                + str(replay)
+                                + " has no map id</div>, so its ur cannot "
+                                "be calculated. This replay has been skipped because of this."
+                            )
                 if investigation == "Snaps":
                     max_angle = get_setting("correction_max_angle")
                     min_distance = get_setting("correction_min_distance")
@@ -644,7 +786,9 @@ class MainTab(SingleLinkableSetting, QFrame):
 
                     for replay in all_replays:
                         _check_event(event)
-                        snaps = cg.snaps(replay, max_angle, min_distance, only_on_hitobjs)
+                        snaps = cg.snaps(
+                            replay, max_angle, min_distance, only_on_hitobjs
+                        )
                         result = CorrectionResult(snaps, replay)
                         self.q.put(result)
                 if investigation == "Frametime":
@@ -662,7 +806,7 @@ class MainTab(SingleLinkableSetting, QFrame):
                 self.print_results_signal.emit()
                 self.print_results_event.wait()
 
-            self.set_progressbar_signal.emit(-1) # empty progressbar
+            self.set_progressbar_signal.emit(-1)  # empty progressbar
             # this event is necessary because `print_results` will set
             # `show_no_cheat_found`, and since it happens asynchronously we need
             # to wait for it to finish before checking it. So we clear it here,
@@ -673,8 +817,12 @@ class MainTab(SingleLinkableSetting, QFrame):
             self.print_results_signal.emit()
             self.print_results_event.wait()
             if self.show_no_cheat_found:
-                self.write_to_terminal_signal.emit(get_setting("message_no_cheat_found").format(ts=datetime.now()))
-            self.write_to_terminal_signal.emit(get_setting("message_finished_investigation").format(ts=datetime.now()))
+                self.write_to_terminal_signal.emit(
+                    get_setting("message_no_cheat_found").format(ts=datetime.now())
+                )
+            self.write_to_terminal_signal.emit(
+                get_setting("message_finished_investigation").format(ts=datetime.now())
+            )
             # prevents an error when a user closes the application. Because
             # we're running inside a new thread, if we don't do this, cg (and)
             # the library) will get gc'd in another thread. Because library's
@@ -694,8 +842,10 @@ class MainTab(SingleLinkableSetting, QFrame):
             # if the error happens before we set the progressbar it stays at
             # 100%. make sure we reset it here
             self.set_progressbar_signal.emit(-1)
-            log.exception("Error while running circlecore. Please "
-                          "report this to the developers through discord or github.\n")
+            log.exception(
+                "Error while running circlecore. Please "
+                "report this to the developers through discord or github.\n"
+            )
 
         self.update_label_signal.emit("Idle")
         self.update_run_status_signal.emit(run.run_id, "Finished")
@@ -703,7 +853,6 @@ class MainTab(SingleLinkableSetting, QFrame):
         # necessary to prevent memory leaks, as we keep the run object around
         # after the run finishes, but don't need its loadables anymore.
         run.loadables = None
-
 
     def print_results(self):
         try:
@@ -730,13 +879,15 @@ class MainTab(SingleLinkableSetting, QFrame):
                             try:
                                 line = int(line)
                             except ValueError:
-                                self.write_to_terminal_signal.emit("<div style='color:#ff5252'>Invalid "
-                                    f"user id in whitelist file:</div> \"{line}\" is not a valid user id.")
+                                self.write_to_terminal_signal.emit(
+                                    "<div style='color:#ff5252'>Invalid "
+                                    f'user id in whitelist file:</div> "{line}" is not a valid user id.'
+                                )
                                 continue
 
                             whitelisted_ids.append(line)
 
-                ts = datetime.now() # ts = timestamp
+                ts = datetime.now()  # ts = timestamp
                 message = None
                 ischeat = False
                 if isinstance(result, StealResult):
@@ -744,24 +895,51 @@ class MainTab(SingleLinkableSetting, QFrame):
                         pass
                     elif result.similarity < get_setting("steal_max_sim"):
                         ischeat = True
-                        message = get_setting("message_steal_found").format(ts=ts, sim=result.similarity, r=result, replay1=result.replay1, replay2=result.replay2,
-                                        earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
-                                        later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name())
+                        message = get_setting("message_steal_found").format(
+                            ts=ts,
+                            sim=result.similarity,
+                            r=result,
+                            replay1=result.replay1,
+                            replay2=result.replay2,
+                            earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(),
+                            earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
+                            later_replay_mods_short_name=result.later_replay.mods.short_name(),
+                            later_replay_mods_long_name=result.later_replay.mods.long_name(),
+                        )
                     elif result.similarity < get_setting("steal_max_sim_display"):
-                        message = get_setting("message_steal_found_display").format(ts=ts, sim=result.similarity, r=result, replay1=result.replay1,
-                                        earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
-                                        later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name())
+                        message = get_setting("message_steal_found_display").format(
+                            ts=ts,
+                            sim=result.similarity,
+                            r=result,
+                            replay1=result.replay1,
+                            earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(),
+                            earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
+                            later_replay_mods_short_name=result.later_replay.mods.short_name(),
+                            later_replay_mods_long_name=result.later_replay.mods.long_name(),
+                        )
 
                 if isinstance(result, RelaxResult):
                     if result.replay.user_id in whitelisted_ids:
                         pass
                     elif result.ur < get_setting("relax_max_ur"):
                         ischeat = True
-                        message = get_setting("message_relax_found").format(ts=ts, r=result, replay=result.replay, ur=result.ur,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                        message = get_setting("message_relax_found").format(
+                            ts=ts,
+                            r=result,
+                            replay=result.replay,
+                            ur=result.ur,
+                            mods_short_name=result.replay.mods.short_name(),
+                            mods_long_name=result.replay.mods.long_name(),
+                        )
                     elif result.ur < get_setting("relax_max_ur_display"):
-                        message = get_setting("message_relax_found_display").format(ts=ts, r=result, replay=result.replay, ur=result.ur,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                        message = get_setting("message_relax_found_display").format(
+                            ts=ts,
+                            r=result,
+                            replay=result.replay,
+                            ur=result.ur,
+                            mods_short_name=result.replay.mods.short_name(),
+                            mods_long_name=result.replay.mods.long_name(),
+                        )
 
                 if isinstance(result, CorrectionResult):
                     if result.replay.user_id in whitelisted_ids:
@@ -769,25 +947,73 @@ class MainTab(SingleLinkableSetting, QFrame):
                     elif len(result.snaps) >= get_setting("correction_min_snaps"):
                         ischeat = True
                         snap_message = get_setting("message_correction_snaps")
-                        snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
-                        message = get_setting("message_correction_found").format(ts=ts, r=result, replay=result.replay, snaps=snap_text,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
-                    elif len(result.snaps) >= get_setting("correction_min_snaps_display"):
+                        snap_text = "\n".join(
+                            [
+                                snap_message.format(
+                                    time=snap.time,
+                                    angle=snap.angle,
+                                    distance=snap.distance,
+                                )
+                                for snap in result.snaps
+                            ]
+                        )
+                        message = get_setting("message_correction_found").format(
+                            ts=ts,
+                            r=result,
+                            replay=result.replay,
+                            snaps=snap_text,
+                            mods_short_name=result.replay.mods.short_name(),
+                            mods_long_name=result.replay.mods.long_name(),
+                        )
+                    elif len(result.snaps) >= get_setting(
+                        "correction_min_snaps_display"
+                    ):
                         snap_message = get_setting("message_correction_snaps")
-                        snap_text = "\n".join([snap_message.format(time=snap.time, angle=snap.angle, distance=snap.distance) for snap in result.snaps])
-                        message = get_setting("message_correction_found_display").format(ts=ts, r=result, replay=result.replay, snaps=snap_text,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                        snap_text = "\n".join(
+                            [
+                                snap_message.format(
+                                    time=snap.time,
+                                    angle=snap.angle,
+                                    distance=snap.distance,
+                                )
+                                for snap in result.snaps
+                            ]
+                        )
+                        message = get_setting(
+                            "message_correction_found_display"
+                        ).format(
+                            ts=ts,
+                            r=result,
+                            replay=result.replay,
+                            snaps=snap_text,
+                            mods_short_name=result.replay.mods.short_name(),
+                            mods_long_name=result.replay.mods.long_name(),
+                        )
 
                 if isinstance(result, TimewarpResult):
                     if result.replay.user_id in whitelisted_ids:
                         pass
                     elif result.frametime < get_setting("timewarp_max_frametime"):
                         ischeat = True
-                        message = get_setting("message_timewarp_found").format(ts=ts, r=result, replay=result.replay, frametime=result.frametime,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
-                    elif result.frametime < get_setting("timewarp_max_frametime_display"):
-                        message = get_setting("message_timewarp_found_display").format(ts=ts, r=result, replay=result.replay, frametime=result.frametime,
-                                        mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+                        message = get_setting("message_timewarp_found").format(
+                            ts=ts,
+                            r=result,
+                            replay=result.replay,
+                            frametime=result.frametime,
+                            mods_short_name=result.replay.mods.short_name(),
+                            mods_long_name=result.replay.mods.long_name(),
+                        )
+                    elif result.frametime < get_setting(
+                        "timewarp_max_frametime_display"
+                    ):
+                        message = get_setting("message_timewarp_found_display").format(
+                            ts=ts,
+                            r=result,
+                            replay=result.replay,
+                            frametime=result.frametime,
+                            mods_short_name=result.replay.mods.short_name(),
+                            mods_long_name=result.replay.mods.long_name(),
+                        )
 
                 if message or isinstance(result, AnalysisResult):
                     self.show_no_cheat_found = False
@@ -813,6 +1039,7 @@ class MainTab(SingleLinkableSetting, QFrame):
 
     def visualize(self, replays, beatmap_id, result, start_at=0):
         from circlevis import BeatmapInfo
+
         # only run one instance at a time
         if self.visualizer is not None:
             self.visualizer.close()
@@ -833,7 +1060,12 @@ class MainTab(SingleLinkableSetting, QFrame):
         us a replay to visualize
         """
         map_id = result.replays[0].map_id
-        if self.visualizer and self.visualizer.isVisible() and self.visualizer.replays and self.visualizer.replays[0].map_id == map_id:
+        if (
+            self.visualizer
+            and self.visualizer.isVisible()
+            and self.visualizer.replays
+            and self.visualizer.replays[0].map_id == map_id
+        ):
             # pause even if we're currently playing. It's important that this
             # happens before seeking, or else the new frame won't correctly
             # display
@@ -847,20 +1079,24 @@ class MainTab(SingleLinkableSetting, QFrame):
         self.visualize(result.replays, map_id, result, start_at=result.timestamp)
 
 
-class Run():
+class Run:
     """
     Represents a click of the Run button on the Main tab, which contains a set
     of loadables and a list of investigations enabled for those loadables.
     """
+
     def __init__(self, loadables, enabled_investigations, run_id, event):
         self.loadables = loadables
         self.enabled_investigations = enabled_investigations
         self.run_id = run_id
         self.event = event
 
+
 class RunButton(PushButton):
     def enterEvent(self, event):
         global_pos = self.mapToGlobal(event.position()).toPoint()
         if not self.isEnabled():
-            QToolTip.showText(global_pos,
-                "You cannot run an investigation until you enter an api key in the settings.")
+            QToolTip.showText(
+                global_pos,
+                "You cannot run an investigation until you enter an api key in the settings.",
+            )

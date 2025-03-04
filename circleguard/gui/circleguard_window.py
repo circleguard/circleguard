@@ -6,18 +6,31 @@ import threading
 from datetime import datetime, timedelta
 import re
 
-from PyQt6.QtWidgets import (QMainWindow, QApplication, QProgressBar, QLabel,
-    QTextEdit)
+from PyQt6.QtWidgets import QMainWindow, QApplication, QProgressBar, QLabel, QTextEdit
 from PyQt6.QtCore import Qt, QObject, pyqtSignal, QTimer, QKeyCombination
 from PyQt6.QtGui import QIcon, QPalette, QColor, QShortcut, QKeySequence
 from packaging import version
 
-from settings import (LinkableSetting, get_setting, set_setting,
-    overwrite_config, get_setting_raw, set_setting_raw)
+from settings import (
+    LinkableSetting,
+    get_setting,
+    set_setting,
+    overwrite_config,
+    get_setting_raw,
+    set_setting_raw,
+)
 from widgets import WidgetCombiner, ResultW
 from .gui import MainWidget, DebugWindow
-from utils import (resource_path, AnalysisResult, URLAnalysisResult,
-    ACCENT_COLOR, StealResult, RelaxResult, CorrectionResult, TimewarpResult)
+from utils import (
+    resource_path,
+    AnalysisResult,
+    URLAnalysisResult,
+    ACCENT_COLOR,
+    StealResult,
+    RelaxResult,
+    CorrectionResult,
+    TimewarpResult,
+)
 from version import __version__
 
 
@@ -36,8 +49,10 @@ class Handler(QObject, logging.Handler):
         message = message.replace(api_key, "*" * len(api_key))
         self.new_message.emit(message)
 
+
 class CircleguardWindow(LinkableSetting, QMainWindow):
     INSTANCE = None
+
     def __init__(self, app):
         if CircleguardWindow.INSTANCE is not None:
             raise Exception("CirclegaurdWindow may only be instantiated once!")
@@ -60,55 +75,66 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.progressbar.setFixedWidth(250)
         self.current_state_label = QLabel("Idle")
         self.current_state_label.setTextFormat(Qt.TextFormat.RichText)
-        self.current_state_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        self.current_state_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextBrowserInteraction
+        )
         self.current_state_label.setOpenExternalLinks(True)
         # statusBar() is a qt function that will create a status bar tied to the window
         # if it doesnt exist, and access the existing one if it does.
-        self.statusBar().addWidget(WidgetCombiner(self.progressbar, self.current_state_label, self))
+        self.statusBar().addWidget(
+            WidgetCombiner(self.progressbar, self.current_state_label, self)
+        )
         self.statusBar().setSizeGripEnabled(False)
         self.statusBar().setContentsMargins(8, 2, 10, 2)
 
         self.main_window = MainWidget()
-        self.main_window.analysis_selection.set_progressbar_signal.connect(self.set_progressbar)
-        self.main_window.analysis_selection.increment_progressbar_signal.connect(self.increment_progressbar)
-        self.main_window.analysis_selection.update_label_signal.connect(self.update_label)
+        self.main_window.analysis_selection.set_progressbar_signal.connect(
+            self.set_progressbar
+        )
+        self.main_window.analysis_selection.increment_progressbar_signal.connect(
+            self.increment_progressbar
+        )
+        self.main_window.analysis_selection.update_label_signal.connect(
+            self.update_label
+        )
 
         # we reference this widget a lot, so shorten its reference as a
         # convenience
         self.cg_classic = self.main_window.cg_classic
 
         self.cg_classic.main_tab.set_progressbar_signal.connect(self.set_progressbar)
-        self.cg_classic.main_tab.increment_progressbar_signal.connect(self.increment_progressbar)
+        self.cg_classic.main_tab.increment_progressbar_signal.connect(
+            self.increment_progressbar
+        )
         self.cg_classic.main_tab.update_label_signal.connect(self.update_label)
         self.cg_classic.main_tab.add_result_signal.connect(self.add_result)
-        self.cg_classic.main_tab.add_url_analysis_result_signal.connect(self.add_url_analysis_result)
+        self.cg_classic.main_tab.add_url_analysis_result_signal.connect(
+            self.add_url_analysis_result
+        )
         self.cg_classic.main_tab.add_run_to_queue_signal.connect(self.add_run_to_queue)
-        self.cg_classic.main_tab.update_run_status_signal.connect(self.update_run_status)
+        self.cg_classic.main_tab.update_run_status_signal.connect(
+            self.update_run_status
+        )
         self.cg_classic.queue_tab.cancel_run_signal.connect(self.cancel_run)
-        self.cg_classic.queue_tab.run_priorities_updated.connect(self.update_run_priority)
-
+        self.cg_classic.queue_tab.run_priorities_updated.connect(
+            self.update_run_priority
+        )
 
         self.setCentralWidget(self.main_window)
         QShortcut(
-            QKeySequence(
-                QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_Right)
-            ),
+            QKeySequence(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_Right)),
             self,
-            self.tab_right
+            self.tab_right,
         )
         QShortcut(
-            QKeySequence(
-                QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_Left)
-            ),
+            QKeySequence(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_Left)),
             self,
-            self.tab_left
+            self.tab_left,
         )
         QShortcut(
-            QKeySequence(
-                QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_Q)
-            ),
+            QKeySequence(QKeyCombination(Qt.Modifier.CTRL, Qt.Key.Key_Q)),
             self,
-            app.quit
+            app.quit,
         )
 
         self.setWindowTitle(f"Circleguard v{__version__}")
@@ -116,7 +142,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.start_timer()
         self.debug_window = None
 
-        formatter = logging.Formatter(get_setting("log_format"), datefmt=get_setting("timestamp_format"))
+        formatter = logging.Formatter(
+            get_setting("log_format"), datefmt=get_setting("timestamp_format")
+        )
         handler = Handler()
         handler.setFormatter(formatter)
         handler.new_message.connect(self.log)
@@ -176,6 +204,7 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
 
     def url_scheme_called(self, url):
         from circleguard import ReplayMap, Circleguard, Mod
+
         # url is bytes, so decode back to str
         url = url.decode()
         # windows appends an extra slash even if the original url didn't have
@@ -263,7 +292,9 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         self.current_state_label.setText(text)
 
     def run_update_check(self):
-        last_check = datetime.strptime(get_setting("last_update_check"), get_setting("timestamp_format"))
+        last_check = datetime.strptime(
+            get_setting("last_update_check"), get_setting("timestamp_format")
+        )
         next_check = last_check + timedelta(hours=1)
         if next_check > datetime.now():
             self.update_label(self.get_version_update_str())
@@ -271,21 +302,26 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
         try:
             import requests
             from requests import RequestException
+
             # check for new version
-            git_request = requests.get("https://api.github.com/repos/circleguard/circleguard/releases/latest").json()
+            git_request = requests.get(
+                "https://api.github.com/repos/circleguard/circleguard/releases/latest"
+            ).json()
             git_version = version.parse(git_request["name"])
             set_setting("latest_version", git_version)
-            set_setting("last_update_check", datetime.now().strftime(get_setting("timestamp_format")))
+            set_setting(
+                "last_update_check",
+                datetime.now().strftime(get_setting("timestamp_format")),
+            )
         except RequestException:
             # user is probably offline
             pass
         self.update_label(self.get_version_update_str())
 
-
     def get_version_update_str(self):
         current_version = version.parse(__version__)
         if current_version < version.parse(get_setting("latest_version")):
-            return "<a href=\'https://github.com/circleguard/circleguard/releases/latest'>Update available!</a>"
+            return "<a href='https://github.com/circleguard/circleguard/releases/latest'>Update available!</a>"
         return "Idle"
 
     def increment_progressbar(self, increment):
@@ -316,59 +352,129 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             r1 = result.replay1
             r2 = result.replay2
             circleguard_url = f"circleguard://m={r1.map_id}&u={r1.user_id}&m1={r1.mods.short_name()}&u2={r2.user_id}&m2={r2.mods.short_name()}"
-            label_text = get_setting("string_result_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=r1, r2=r2,
-                earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
-                 later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name())
-            template_text = get_setting("template_steal").format(ts=timestamp, similarity=result.similarity, r=result, r1=r1, r2=r2,
-                earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(), earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
-                later_replay_mods_short_name=result.later_replay.mods.short_name(), later_replay_mods_long_name=result.later_replay.mods.long_name(),
-                circleguard_url=circleguard_url)
+            label_text = get_setting("string_result_steal").format(
+                ts=timestamp,
+                similarity=result.similarity,
+                r=result,
+                r1=r1,
+                r2=r2,
+                earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(),
+                earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
+                later_replay_mods_short_name=result.later_replay.mods.short_name(),
+                later_replay_mods_long_name=result.later_replay.mods.long_name(),
+            )
+            template_text = get_setting("template_steal").format(
+                ts=timestamp,
+                similarity=result.similarity,
+                r=result,
+                r1=r1,
+                r2=r2,
+                earlier_replay_mods_short_name=result.earlier_replay.mods.short_name(),
+                earlier_replay_mods_long_name=result.earlier_replay.mods.long_name(),
+                later_replay_mods_short_name=result.later_replay.mods.short_name(),
+                later_replay_mods_long_name=result.later_replay.mods.long_name(),
+                circleguard_url=circleguard_url,
+            )
             replays = [r1, r2]
 
         elif isinstance(result, RelaxResult):
             circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}&m1={result.replay.mods.short_name()}"
-            label_text = get_setting("string_result_relax").format(ts=timestamp, ur=result.ur, r=result,
-                replay=result.replay, mods_short_name=result.replay.mods.short_name(),
-                mods_long_name=result.replay.mods.long_name())
-            template_text = get_setting("template_relax").format(ts=timestamp, ur=result.ur, r=result,
-                replay=result.replay, mods_short_name=result.replay.mods.short_name(),
-                mods_long_name=result.replay.mods.long_name(), circleguard_url=circleguard_url)
+            label_text = get_setting("string_result_relax").format(
+                ts=timestamp,
+                ur=result.ur,
+                r=result,
+                replay=result.replay,
+                mods_short_name=result.replay.mods.short_name(),
+                mods_long_name=result.replay.mods.long_name(),
+            )
+            template_text = get_setting("template_relax").format(
+                ts=timestamp,
+                ur=result.ur,
+                r=result,
+                replay=result.replay,
+                mods_short_name=result.replay.mods.short_name(),
+                mods_long_name=result.replay.mods.long_name(),
+                circleguard_url=circleguard_url,
+            )
             replays = [result.replay]
         elif isinstance(result, CorrectionResult):
             circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}&m1={result.replay.mods.short_name()}"
-            label_text = get_setting("string_result_correction").format(ts=timestamp, r=result, num_snaps=len(result.snaps), replay=result.replay,
-                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
+            label_text = get_setting("string_result_correction").format(
+                ts=timestamp,
+                r=result,
+                num_snaps=len(result.snaps),
+                replay=result.replay,
+                mods_short_name=result.replay.mods.short_name(),
+                mods_long_name=result.replay.mods.long_name(),
+            )
 
-            snap_table = ("| Time (ms) | Angle (°) | Distance (px) |\n"
-                            "| :-: | :-: | :-: |\n")
+            snap_table = (
+                "| Time (ms) | Angle (°) | Distance (px) |\n" "| :-: | :-: | :-: |\n"
+            )
             for snap in result.snaps:
-                snap_table += "| {:.0f} | {:.2f} | {:.2f} |\n".format(snap.time, snap.angle, snap.distance)
-            template_text = get_setting("template_correction").format(ts=timestamp, r=result, replay=result.replay, snap_table=snap_table,
-                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name(),
-                circleguard_url=circleguard_url)
+                snap_table += "| {:.0f} | {:.2f} | {:.2f} |\n".format(
+                    snap.time, snap.angle, snap.distance
+                )
+            template_text = get_setting("template_correction").format(
+                ts=timestamp,
+                r=result,
+                replay=result.replay,
+                snap_table=snap_table,
+                mods_short_name=result.replay.mods.short_name(),
+                mods_long_name=result.replay.mods.long_name(),
+                circleguard_url=circleguard_url,
+            )
             replays = [result.replay]
         elif isinstance(result, TimewarpResult):
             circleguard_url = f"circleguard://m={result.replay.map_id}&u={result.replay.user_id}&m1={result.replay.mods.short_name()}"
-            label_text = get_setting("string_result_timewarp").format(ts=timestamp, r=result, replay=result.replay, frametime=result.frametime,
-                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name())
-            template_text = get_setting("template_timewarp").format(ts=timestamp, r=result, frametime=result.frametime,
-                mods_short_name=result.replay.mods.short_name(), mods_long_name=result.replay.mods.long_name(),
-                circleguard_url=circleguard_url)
+            label_text = get_setting("string_result_timewarp").format(
+                ts=timestamp,
+                r=result,
+                replay=result.replay,
+                frametime=result.frametime,
+                mods_short_name=result.replay.mods.short_name(),
+                mods_long_name=result.replay.mods.long_name(),
+            )
+            template_text = get_setting("template_timewarp").format(
+                ts=timestamp,
+                r=result,
+                frametime=result.frametime,
+                mods_short_name=result.replay.mods.short_name(),
+                mods_long_name=result.replay.mods.long_name(),
+                circleguard_url=circleguard_url,
+            )
             replays = [result.replay]
         elif isinstance(result, AnalysisResult):
             replays = result.replays
             # special case that occurs often, we can show more info if there's only a single replay
             if len(replays) == 1:
                 r = replays[0]
-                label_text = get_setting("string_result_visualization_single").format(ts=timestamp, replay=r, mods_short_name=r.mods.short_name(),
-                    mods_long_name=r.mods.long_name())
+                label_text = get_setting("string_result_visualization_single").format(
+                    ts=timestamp,
+                    replay=r,
+                    mods_short_name=r.mods.short_name(),
+                    mods_long_name=r.mods.long_name(),
+                )
             else:
-                label_text = get_setting("string_result_visualization").format(ts=timestamp, replay_amount=len(result.replays), map_id=result.replays[0].map_id)
+                label_text = get_setting("string_result_visualization").format(
+                    ts=timestamp,
+                    replay_amount=len(result.replays),
+                    map_id=result.replays[0].map_id,
+                )
 
         result_widget = ResultW(label_text, result, replays)
         # set button signal connections (visualize and copy template to clipboard)
-        result_widget.visualize_button_pressed_signal.connect(partial(self.cg_classic.main_tab.visualize, result_widget.replays, result_widget.replays[0].map_id, result_widget.result))
-        result_widget.template_button_pressed_signal.connect(partial(self.copy_to_clipboard, template_text))
+        result_widget.visualize_button_pressed_signal.connect(
+            partial(
+                self.cg_classic.main_tab.visualize,
+                result_widget.replays,
+                result_widget.replays[0].map_id,
+                result_widget.result,
+            )
+        )
+        result_widget.template_button_pressed_signal.connect(
+            partial(self.copy_to_clipboard, template_text)
+        )
         # remove info text if shown
         if not self.cg_classic.results_tab.results.info_label.isHidden():
             self.cg_classic.results_tab.results.info_label.hide()
@@ -417,18 +523,18 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
 
             dark_p = self.app.style().standardPalette()
 
-            dark_p.setColor(cg.Normal,   cr.Window, DARK_GREY)
-            dark_p.setColor(cg.Normal,   cr.WindowText, Qt.GlobalColor.white)
-            dark_p.setColor(cg.Normal,   cr.Base, QColor(25, 25, 25))
-            dark_p.setColor(cg.Normal,   cr.AlternateBase, DARK_GREY)
-            dark_p.setColor(cg.Normal,   cr.ToolTipBase, DARK_GREY)
-            dark_p.setColor(cg.Normal,   cr.ToolTipText, Qt.GlobalColor.white)
-            dark_p.setColor(cg.Normal,   cr.Text, Qt.GlobalColor.white)
-            dark_p.setColor(cg.Normal,   cr.Button, DARK_GREY)
-            dark_p.setColor(cg.Normal,   cr.ButtonText, Qt.GlobalColor.white)
-            dark_p.setColor(cg.Normal,   cr.BrightText, Qt.GlobalColor.red)
-            dark_p.setColor(cg.Normal,   cr.Highlight, ACCENT_COLOR)
-            dark_p.setColor(cg.Normal,   cr.PlaceholderText, Qt.GlobalColor.darkGray)
+            dark_p.setColor(cg.Normal, cr.Window, DARK_GREY)
+            dark_p.setColor(cg.Normal, cr.WindowText, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Normal, cr.Base, QColor(25, 25, 25))
+            dark_p.setColor(cg.Normal, cr.AlternateBase, DARK_GREY)
+            dark_p.setColor(cg.Normal, cr.ToolTipBase, DARK_GREY)
+            dark_p.setColor(cg.Normal, cr.ToolTipText, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Normal, cr.Text, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Normal, cr.Button, DARK_GREY)
+            dark_p.setColor(cg.Normal, cr.ButtonText, Qt.GlobalColor.white)
+            dark_p.setColor(cg.Normal, cr.BrightText, Qt.GlobalColor.red)
+            dark_p.setColor(cg.Normal, cr.Highlight, ACCENT_COLOR)
+            dark_p.setColor(cg.Normal, cr.PlaceholderText, Qt.GlobalColor.darkGray)
 
             # also change for inactive (eg when app is in background)
             dark_p.setColor(cg.Inactive, cr.Window, DARK_GREY)
@@ -443,14 +549,14 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             dark_p.setColor(cg.Inactive, cr.BrightText, Qt.GlobalColor.red)
             dark_p.setColor(cg.Inactive, cr.Highlight, ACCENT_COLOR)
 
-            dark_p.setColor(cg.Normal,   cr.HighlightedText, Qt.GlobalColor.black)
+            dark_p.setColor(cg.Normal, cr.HighlightedText, Qt.GlobalColor.black)
             dark_p.setColor(cg.Disabled, cr.Text, Qt.GlobalColor.darkGray)
             dark_p.setColor(cg.Disabled, cr.ButtonText, Qt.GlobalColor.darkGray)
             dark_p.setColor(cg.Disabled, cr.Highlight, Qt.GlobalColor.darkGray)
             dark_p.setColor(cg.Disabled, cr.Base, DARK_GREY)
             dark_p.setColor(cg.Disabled, cr.Button, DARK_GREY)
-            dark_p.setColor(cg.Normal,   cr.Link, ACCENT_COLOR)
-            dark_p.setColor(cg.Normal,   cr.LinkVisited, ACCENT_COLOR)
+            dark_p.setColor(cg.Normal, cr.Link, ACCENT_COLOR)
+            dark_p.setColor(cg.Normal, cr.LinkVisited, ACCENT_COLOR)
             dark_p.setColor(cg.Inactive, cr.Link, ACCENT_COLOR)
             dark_p.setColor(cg.Inactive, cr.LinkVisited, ACCENT_COLOR)
 
@@ -469,7 +575,8 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
             # white border which looks terrible in dark mode
 
             self.app.setPalette(dark_p)
-            self.app.setStyleSheet("""
+            self.app.setStyleSheet(
+                """
                 QToolTip {
                     color: #ffffff;
                     background-color: #2a2a2a;
@@ -511,20 +618,26 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                     border: 1px solid rgb(47, 47, 47);
                     border-radius: 3%;
                 }
-                """)
+                """
+            )
         else:
             self.app.setPalette(self.app.style().standardPalette())
             updated_palette = QPalette()
             # fixes inactive items not being greyed out
-            updated_palette.setColor(cg.Disabled, cr.ButtonText, Qt.GlobalColor.darkGray)
-            updated_palette.setColor(cg.Normal,   cr.Highlight, ACCENT_COLOR)
+            updated_palette.setColor(
+                cg.Disabled, cr.ButtonText, Qt.GlobalColor.darkGray
+            )
+            updated_palette.setColor(cg.Normal, cr.Highlight, ACCENT_COLOR)
             updated_palette.setColor(cg.Disabled, cr.Highlight, Qt.GlobalColor.darkGray)
             updated_palette.setColor(cg.Inactive, cr.Highlight, Qt.GlobalColor.darkGray)
             updated_palette.setColor(cg.Normal, cr.Link, ACCENT_COLOR)
             updated_palette.setColor(cg.Normal, cr.LinkVisited, ACCENT_COLOR)
-            updated_palette.setColor(cg.Normal, cr.PlaceholderText, Qt.GlobalColor.darkGray)
+            updated_palette.setColor(
+                cg.Normal, cr.PlaceholderText, Qt.GlobalColor.darkGray
+            )
             self.app.setPalette(updated_palette)
-            self.app.setStyleSheet("""
+            self.app.setStyleSheet(
+                """
                 QToolTip {
                     color: #000000;
                     background-color: #D5D5D5;
@@ -540,4 +653,5 @@ class CircleguardWindow(LinkableSetting, QMainWindow):
                 LoadableW, CheckW, DragWidget {
                     border: 1.5px solid #bfbfbf;
                 }
-                """)
+                """
+            )

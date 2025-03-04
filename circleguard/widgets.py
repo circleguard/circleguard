@@ -3,27 +3,65 @@ from pathlib import Path
 from functools import partial
 import urllib
 
-from PyQt6.QtWidgets import (QWidget, QFrame, QGridLayout, QLabel, QLineEdit,
-    QMessageBox, QSpacerItem, QSizePolicy, QSlider, QSpinBox, QFileDialog,
-    QPushButton, QCheckBox, QComboBox, QVBoxLayout, QHBoxLayout, QMainWindow,
-    QTableWidget, QTableWidgetItem, QAbstractItemView, QGraphicsOpacityEffect,
-    QStyle, QListWidget, QListWidgetItem, QStackedLayout, QApplication,
-    QToolTip)
-from PyQt6.QtGui import (QRegularExpressionValidator, QIcon, QPainter, QPen,
-    QCursor, QPixmap, QShortcut)
-from PyQt6.QtCore import (QRegularExpression, Qt, QCoreApplication, pyqtSignal,
-    QEvent, QSize, QTimer)
+from PyQt6.QtWidgets import (
+    QWidget,
+    QFrame,
+    QGridLayout,
+    QLabel,
+    QLineEdit,
+    QMessageBox,
+    QSpacerItem,
+    QSizePolicy,
+    QSlider,
+    QSpinBox,
+    QFileDialog,
+    QPushButton,
+    QCheckBox,
+    QComboBox,
+    QVBoxLayout,
+    QHBoxLayout,
+    QMainWindow,
+    QTableWidget,
+    QTableWidgetItem,
+    QAbstractItemView,
+    QGraphicsOpacityEffect,
+    QStyle,
+    QListWidget,
+    QListWidgetItem,
+    QStackedLayout,
+    QApplication,
+    QToolTip,
+)
+from PyQt6.QtGui import (
+    QRegularExpressionValidator,
+    QIcon,
+    QPainter,
+    QPen,
+    QCursor,
+    QPixmap,
+    QShortcut,
+)
+from PyQt6.QtCore import (
+    QRegularExpression,
+    Qt,
+    QCoreApplication,
+    pyqtSignal,
+    QEvent,
+    QSize,
+    QTimer,
+)
 
-from settings import (get_setting, reset_defaults, LinkableSetting,
-    SingleLinkableSetting)
+from settings import get_setting, reset_defaults, LinkableSetting, SingleLinkableSetting
 from utils import resource_path, AnalysisResult, ACCENT_COLOR, spacer
 
 # we want most of our clickable widgets to have a pointing hand cursor on hover
+
 
 class PushButton(QPushButton):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
 
 # TODO set pointer cursor on combobox popup list as well, I tried
 # https://stackoverflow.com/a/44525625/12164878 but couldn't get it to work
@@ -39,10 +77,12 @@ class ComboBox(QComboBox):
         # we never want wheel events to scroll the combobox
         event.ignore()
 
+
 class CheckBox(QCheckBox):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
+
 
 # A slider which moves directly to the clicked position when clicked
 # Implementation from https://stackoverflow.com/a/29639127/12164878
@@ -52,12 +92,25 @@ class Slider(QSlider):
         self.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
 
     def mousePressEvent(self, event):
-        self.setValue(QStyle.sliderValueFromPosition(self.minimum(),
-            self.maximum(), event.position().toPoint().x(), self.width()))
+        self.setValue(
+            QStyle.sliderValueFromPosition(
+                self.minimum(),
+                self.maximum(),
+                event.position().toPoint().x(),
+                self.width(),
+            )
+        )
 
     def mouseMoveEvent(self, event):
-        self.setValue(QStyle.sliderValueFromPosition(self.minimum(),
-            self.maximum(), event.position().toPoint().x(), self.width()))
+        self.setValue(
+            QStyle.sliderValueFromPosition(
+                self.minimum(),
+                self.maximum(),
+                event.position().toPoint().x(),
+                self.width(),
+            )
+        )
+
 
 # TODO cmd + z doesn't undo operations here, figure out why
 class LineEdit(QLineEdit):
@@ -156,6 +209,7 @@ class WhatsThis(QLabel):
     confusing aspects of circleguard which need explicit clarification beyond a
     normal delayed tooltip on hover.
     """
+
     def __init__(self, text):
         super().__init__()
 
@@ -179,7 +233,7 @@ class InputWidget(QFrame):
         super().__init__()
 
         label = QLabel(self)
-        label.setText(title+":")
+        label.setText(title + ":")
         label.setToolTip(tooltip)
         if type_ == "password":
             self.field = PasswordEdit(self)
@@ -249,8 +303,8 @@ class CenteredWidget(QWidget):
         super().__init__()
         self.layout = QGridLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.layout.setContentsMargins(0,0,0,0)
-        self.setContentsMargins(0,0,0,0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setContentsMargins(0, 0, 0, 0)
         self.layout.addWidget(widget)
         self.setLayout(self.layout)
 
@@ -276,6 +330,7 @@ class ButtonWidget(QFrame):
         self.layout.addItem(spacer(), 0, 1, 1, 1)
         self.layout.addWidget(self.button, 0, 2, 1, 1)
         self.setLayout(self.layout)
+
 
 class ComboboxSetting(LinkableSetting, QFrame):
     def __init__(self, label_text, tooltip, setting):
@@ -315,16 +370,27 @@ class ComboboxSetting(LinkableSetting, QFrame):
     def selection_changed(self):
         self.on_setting_changed_from_gui(self.setting, self.combobox.currentData())
 
+
 class FileChooserSetting(SingleLinkableSetting, QFrame):
-    def __init__(self, label_text, button_text, tooltip, file_chooser_type, setting, name_filters=None):
+    def __init__(
+        self,
+        label_text,
+        button_text,
+        tooltip,
+        file_chooser_type,
+        setting,
+        name_filters=None,
+    ):
         SingleLinkableSetting.__init__(self, setting)
         QFrame.__init__(self)
 
-        self.whats_this = WhatsThis("A plaintext (.txt) file, containing a user id (NOT a username) "
+        self.whats_this = WhatsThis(
+            "A plaintext (.txt) file, containing a user id (NOT a username) "
             "on each line. If given, users listed in\nthis file will not show up in your investigation "
             "results, even if their replay is under a set threshold.\n\n"
             "You can leave comments on any line of the file with a pound sign (#) followed by "
-            "your comment.\nNo other text is allowed besides comments and user ids.")
+            "your comment.\nNo other text is allowed besides comments and user ids."
+        )
         self.whats_this.setFixedWidth(20)
 
         self.setting_label = QLabel(label_text)
@@ -332,7 +398,9 @@ class FileChooserSetting(SingleLinkableSetting, QFrame):
         self.path_label = QLabel(self.setting_value)
         self.path_label.setWordWrap(True)
 
-        self.file_chooser = FileChooserButton(button_text, file_chooser_type, name_filters)
+        self.file_chooser = FileChooserButton(
+            button_text, file_chooser_type, name_filters
+        )
         self.file_chooser.path_chosen_signal.connect(self._on_setting_changed_from_gui)
         self.file_chooser.setFixedWidth(90)
 
@@ -362,7 +430,6 @@ class FileChooserSetting(SingleLinkableSetting, QFrame):
         self.on_setting_changed_from_gui("")
 
 
-
 class ScrollableLoadablesWidget(QFrame):
     def __init__(self):
         super().__init__()
@@ -377,6 +444,7 @@ class ScrollableChecksWidget(QFrame):
         self.layout = QVBoxLayout()
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.setLayout(self.layout)
+
 
 class LabeledCheckbox(QFrame):
     def __init__(self, label):
@@ -398,6 +466,7 @@ class LabeledCheckbox(QFrame):
     # toggle as well
     def mousePressEvent(self, event):
         self.checkbox.toggle()
+
 
 class InvestigationCheckboxes(QFrame):
     def __init__(self):
@@ -464,8 +533,14 @@ class LoadableBase(QFrame):
 
         self.combobox = ComboBox()
         self.combobox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
-        for entry in ["Select a Loadable", "Map Replay", "Local Replay", "Map",
-            "User", "All User Replays on Map"]:
+        for entry in [
+            "Select a Loadable",
+            "Map Replay",
+            "Local Replay",
+            "Map",
+            "User",
+            "All User Replays on Map",
+        ]:
             self.combobox.addItem(entry, entry)
 
         self.sim_combobox = ComboBox()
@@ -475,9 +550,9 @@ class LoadableBase(QFrame):
 
     def eventFilter(self, obj, event):
         if (
-            obj == self.disable_button and
-            event.type() == QEvent.Type.MouseButtonPress and
-            event.modifiers() == Qt.KeyboardModifier.ShiftModifier
+            obj == self.disable_button
+            and event.type() == QEvent.Type.MouseButtonPress
+            and event.modifiers() == Qt.KeyboardModifier.ShiftModifier
         ):
             self.disable_button_shift_clicked.emit()
             return True
@@ -504,12 +579,13 @@ class LoadableBase(QFrame):
         effect.setOpacity(1)
         self.setGraphicsEffect(effect)
 
-
     def check_and_mark_required_fields(self):
         all_filled = True
         for input_widget in self.required_input_widgets:
             # don't count inputs with defaults as empty
-            filled = input_widget.value() != "" or input_widget.field.placeholderText() != ""
+            filled = (
+                input_widget.value() != "" or input_widget.field.placeholderText() != ""
+            )
             if not filled:
                 input_widget.show_required()
                 all_filled = False
@@ -562,6 +638,7 @@ class UnselectedLoadable(LoadableBase):
     def show_sim_combobox(self):
         pass
 
+
 class ReplayMapLoadable(LoadableBase):
     def __init__(self, parent):
         self.previous_mods = None
@@ -587,16 +664,28 @@ class ReplayMapLoadable(LoadableBase):
         from circleguard import ReplayMap, Mod
 
         if not previous or not isinstance(previous, ReplayMap):
-            mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
-            previous = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+            mods = (
+                Mod(self.mods_input.value().upper())
+                if self.mods_input.value()
+                else None
+            )
+            previous = ReplayMap(
+                int(self.map_id_input.value()),
+                int(self.user_id_input.value()),
+                mods=mods,
+            )
 
         mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
-        new_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+        new_loadable = ReplayMap(
+            int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods
+        )
 
         ret = previous
-        if (new_loadable.map_id != previous.map_id or \
-            new_loadable.user_id != previous.user_id or \
-            self.mods_input.value() != self.previous_mods):
+        if (
+            new_loadable.map_id != previous.map_id
+            or new_loadable.user_id != previous.user_id
+            or self.mods_input.value() != self.previous_mods
+        ):
             ret = new_loadable
 
         self.previous_mods = self.mods_input.value()
@@ -634,7 +723,9 @@ class ReplayPathLoadable(LoadableBase):
         else:
             new_loadable = ReplayPath(path)
 
-        previous_path = previous.dir_path if isinstance(previous, ReplayDir) else previous.path
+        previous_path = (
+            previous.dir_path if isinstance(previous, ReplayDir) else previous.path
+        )
         ret = previous
         if previous_path != path:
             ret = new_loadable
@@ -681,16 +772,22 @@ class MapLoadable(LoadableBase):
             span = Loader.MAX_MAP_SPAN
 
         if not previous or not isinstance(previous, Map):
-            mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
+            mods = (
+                Mod(self.mods_input.value().upper())
+                if self.mods_input.value()
+                else None
+            )
             previous = Map(int(self.map_id_input.value()), span, mods=mods)
 
         mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
         new_loadable = Map(int(self.map_id_input.value()), span, mods=mods)
 
         ret = previous
-        if (new_loadable.map_id != previous.map_id or \
-            new_loadable.span != previous.span or \
-            new_loadable.mods != previous.mods):
+        if (
+            new_loadable.map_id != previous.map_id
+            or new_loadable.span != previous.span
+            or new_loadable.mods != previous.mods
+        ):
             ret = new_loadable
 
         ret.sim_group = self.sim_group
@@ -726,16 +823,22 @@ class UserLoadable(LoadableBase):
             span = Loader.MAX_USER_SPAN
 
         if not previous or not isinstance(previous, User):
-            mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
+            mods = (
+                Mod(self.mods_input.value().upper())
+                if self.mods_input.value()
+                else None
+            )
             previous = User(int(self.user_id_input.value()), span, mods=mods)
 
         mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
         new_loadable = User(int(self.user_id_input.value()), span, mods=mods)
 
         ret = previous
-        if (new_loadable.user_id != previous.user_id or \
-            new_loadable.span != previous.span or \
-            new_loadable.mods != previous.mods):
+        if (
+            new_loadable.user_id != previous.user_id
+            or new_loadable.span != previous.span
+            or new_loadable.mods != previous.mods
+        ):
             ret = new_loadable
 
         ret.sim_group = self.sim_group
@@ -749,8 +852,7 @@ class MapUserLoadable(LoadableBase):
         self.span_input = InputWidget("Span", "", "normal")
         self.span_input.field.setPlaceholderText("all")
         super().__init__(
-            parent,
-            [self.map_id_input, self.user_id_input, self.span_input]
+            parent, [self.map_id_input, self.user_id_input, self.span_input]
         )
 
         self.combobox.setCurrentIndex(5)
@@ -774,14 +876,20 @@ class MapUserLoadable(LoadableBase):
             span = "1-100"
 
         if not previous or not isinstance(previous, MapUser):
-            previous = MapUser(int(self.map_id_input.value()), int(self.user_id_input.value()), span)
+            previous = MapUser(
+                int(self.map_id_input.value()), int(self.user_id_input.value()), span
+            )
 
-        new_loadable = MapUser(int(self.map_id_input.value()), int(self.user_id_input.value()), span)
+        new_loadable = MapUser(
+            int(self.map_id_input.value()), int(self.user_id_input.value()), span
+        )
 
         ret = previous
-        if (new_loadable.map_id != previous.map_id or \
-            new_loadable.user_id != previous.user_id or \
-            new_loadable.span != previous.span):
+        if (
+            new_loadable.map_id != previous.map_id
+            or new_loadable.user_id != previous.user_id
+            or new_loadable.span != previous.span
+        ):
             ret = new_loadable
 
         ret.sim_group = self.sim_group
@@ -810,19 +918,25 @@ class SelectableLoadable(QFrame):
         unselected.combobox.activated.connect(lambda: self.select_loadable(None))
         unselected.combobox.activated.connect(self._input_changed)
         unselected.delete_button.clicked.connect(self.deleted_pressed)
-        unselected.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
+        unselected.disable_button_shift_clicked.connect(
+            self.disable_button_shift_clicked
+        )
         self.stacked_layout.addWidget(unselected)
 
         replay_map = ReplayMapLoadable(self)
         replay_map.combobox.activated.connect(lambda: self.select_loadable(None))
         replay_map.delete_button.clicked.connect(self.deleted_pressed)
-        replay_map.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
+        replay_map.disable_button_shift_clicked.connect(
+            self.disable_button_shift_clicked
+        )
         self.stacked_layout.addWidget(replay_map)
 
         replay_path = ReplayPathLoadable(self)
         replay_path.combobox.activated.connect(lambda: self.select_loadable(None))
         replay_path.delete_button.clicked.connect(self.deleted_pressed)
-        replay_path.disable_button_shift_clicked.connect(self.disable_button_shift_clicked)
+        replay_path.disable_button_shift_clicked.connect(
+            self.disable_button_shift_clicked
+        )
         self.stacked_layout.addWidget(replay_path)
 
         map_ = MapLoadable(self)
@@ -848,10 +962,15 @@ class SelectableLoadable(QFrame):
         self.setLayout(layout)
 
     def select_loadable(self, override_type):
-        if not override_type and self.stacked_layout.currentWidget().combobox.currentIndex() == 0:
+        if (
+            not override_type
+            and self.stacked_layout.currentWidget().combobox.currentIndex() == 0
+        ):
             return
 
-        type_ = override_type or self.stacked_layout.currentWidget().combobox.currentData()
+        type_ = (
+            override_type or self.stacked_layout.currentWidget().combobox.currentData()
+        )
         if type_ == "Map Replay":
             self.stacked_layout.setCurrentIndex(1)
             self.stacked_layout.currentWidget().combobox.setCurrentIndex(1)
@@ -929,7 +1048,9 @@ class LoadableCreation(QFrame):
         QShortcut(Qt.Key.Key_L, self, lambda: self.select_loadable("Local Replay"))
         QShortcut(Qt.Key.Key_M, self, lambda: self.select_loadable("Map"))
         QShortcut(Qt.Key.Key_U, self, lambda: self.select_loadable("User"))
-        QShortcut(Qt.Key.Key_A, self, lambda: self.select_loadable("All User Replays on Map"))
+        QShortcut(
+            Qt.Key.Key_A, self, lambda: self.select_loadable("All User Replays on Map")
+        )
 
         layout = QVBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
@@ -945,6 +1066,7 @@ class LoadableCreation(QFrame):
         # exists.
         # imported locally here to avoid circular imports
         from gui.circleguard_window import CircleguardWindow
+
         QApplication.setActiveWindow(CircleguardWindow.INSTANCE)
 
     def loadable_input_changed(self, loadable):
@@ -969,7 +1091,9 @@ class LoadableCreation(QFrame):
     def new_loadable(self):
         loadable = SelectableLoadable()
         self.cg_loadables_to_selectable_loadables[loadable] = None
-        loadable.should_show_sim_combobox = self.previous_combobox_state == Qt.CheckState.Checked.value
+        loadable.should_show_sim_combobox = (
+            self.previous_combobox_state == Qt.CheckState.Checked.value
+        )
         # some loadables have input widgets which can become arbitrarily long,
         # for instance ReplayPathLoadable's ReplayChooser which displays the
         # chosen file's location. This would cause the loadable to increase in
@@ -980,7 +1104,9 @@ class LoadableCreation(QFrame):
 
         loadable.deleted_pressed.connect(lambda: self.remove_loadable(loadable))
         loadable.input_changed.connect(lambda: self.loadable_input_changed(loadable))
-        loadable.disable_button_shift_clicked.connect(lambda: self.disable_button_shift_clicked(loadable))
+        loadable.disable_button_shift_clicked.connect(
+            lambda: self.disable_button_shift_clicked(loadable)
+        )
         # don't allow the bottommost loadable (which this new one will soon
         # become) to be deleted, users could accidentally remove all loadables
         loadable.hide_delete()
@@ -1055,7 +1181,6 @@ class LoadableCreation(QFrame):
             for loadable in self.loadables:
                 loadable.enable()
 
-
     def cg_loadables(self):
         """
         Returns the loadables in this widget as (potentially) unloaded
@@ -1103,8 +1228,12 @@ class LoadableCreation(QFrame):
         # users can drop multiple files, in which case we need to consider each
         # separately
         paths_unprocessed = (
-            mimedata.data("text/uri-list").data().decode("utf-8").rstrip()
-            .replace("file:///", "").replace("\r", "")
+            mimedata.data("text/uri-list")
+            .data()
+            .decode("utf-8")
+            .rstrip()
+            .replace("file:///", "")
+            .replace("\r", "")
         )
         paths = []
 
@@ -1133,6 +1262,7 @@ class LoadableCreation(QFrame):
             loadable = self.most_recent_loadable.stacked_layout.currentWidget()
             loadable.path_input.set_path(path)
             self.new_loadable()
+
 
 # provided for our Analysis window. There's probably some shared code that
 # we could abstract out from this and `DropArea`, but it's not worth it atm
@@ -1167,7 +1297,14 @@ class ReplayDropArea(QFrame):
         mimedata = event.mimeData()
         # users can drop multiple files, in which case we need to consider each
         # separately
-        paths_unprocessed = mimedata.data("text/uri-list").data().decode("utf-8").rstrip().replace("file:///", "").replace("\r", "")
+        paths_unprocessed = (
+            mimedata.data("text/uri-list")
+            .data()
+            .decode("utf-8")
+            .rstrip()
+            .replace("file:///", "")
+            .replace("\r", "")
+        )
         path_widgets = []
 
         for path in paths_unprocessed.split("\n"):
@@ -1210,14 +1347,18 @@ class ReplayDropArea(QFrame):
         event.acceptProposedAction()
         # hide the info label and fill top down now that we have things to show
         self.info_label.hide()
-        self.layout().setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self.layout().setAlignment(
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop
+        )
 
         for path_widget in path_widgets:
             # `lambda` is late binding so we can't use it here or else all the
             # delete buttons will delete the last widget of the list.
             # workaround: use `partial` instead of `lambda`.
             # https://docs.python-guide.org/writing/gotchas/#late-binding-closures
-            path_widget.delete_button.clicked.connect(partial(self.delete_path_widget, path_widget))
+            path_widget.delete_button.clicked.connect(
+                partial(self.delete_path_widget, path_widget)
+            )
             self.layout().addWidget(path_widget)
 
         self.path_widgets.extend(path_widgets)
@@ -1282,6 +1423,7 @@ class PathWidget(QFrame):
     def cg_loadable(self):
         if not self._cg_loadable:
             from circleguard import ReplayPath
+
             self._cg_loadable = ReplayPath(self.path)
         return self._cg_loadable
 
@@ -1350,8 +1492,6 @@ class ReplayMapCreation(QFrame):
         return loadables
 
 
-
-
 class ReplayMapVis(QFrame):
     input_changed = pyqtSignal()
 
@@ -1395,11 +1535,20 @@ class ReplayMapVis(QFrame):
 
     def cg_loadable(self):
         from circleguard import ReplayMap, Mod
+
         if not self.validate():
             return None
         if not self._cg_loadable:
-            mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
-            self._cg_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
+            mods = (
+                Mod(self.mods_input.value().upper())
+                if self.mods_input.value()
+                else None
+            )
+            self._cg_loadable = ReplayMap(
+                int(self.map_id_input.value()),
+                int(self.user_id_input.value()),
+                mods=mods,
+            )
         # if something is accessing the loadable we represent, but the value of
         # our input fields have changed (ie the replay we represent has changed)
         # then we want to return that new loadable instead of always using the
@@ -1413,14 +1562,17 @@ class ReplayMapVis(QFrame):
         # could not be. To be certain, we recreate the loadable if the mods
         # change at all.
         mods = Mod(self.mods_input.value().upper()) if self.mods_input.value() else None
-        new_loadable = ReplayMap(int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods)
-        if (new_loadable.map_id != self._cg_loadable.map_id or \
-            new_loadable.user_id != self._cg_loadable.user_id or \
-            self.mods_input.value() != self.previous_mods):
+        new_loadable = ReplayMap(
+            int(self.map_id_input.value()), int(self.user_id_input.value()), mods=mods
+        )
+        if (
+            new_loadable.map_id != self._cg_loadable.map_id
+            or new_loadable.user_id != self._cg_loadable.user_id
+            or self.mods_input.value() != self.previous_mods
+        ):
             self._cg_loadable = new_loadable
         self.previous_mods = self.mods_input.value()
         return self._cg_loadable
-
 
 
 class ResultW(QFrame):
@@ -1428,6 +1580,7 @@ class ResultW(QFrame):
     Stores the result of a comparison that can be replayed at any time.
     Contains a QLabel, QPushButton (visualize) and QPushButton (copy to clipboard).
     """
+
     template_button_pressed_signal = pyqtSignal()
     visualize_button_pressed_signal = pyqtSignal()
 
@@ -1441,7 +1594,9 @@ class ResultW(QFrame):
         self.label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.label.setCursor(QCursor(Qt.CursorShape.IBeamCursor))
         self.label.setTextFormat(Qt.TextFormat.RichText)
-        self.label.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+        self.label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextBrowserInteraction
+        )
         self.label.setOpenExternalLinks(True)
 
         self.visualize_button = PushButton(self)
@@ -1510,6 +1665,7 @@ class ResultW(QFrame):
         template_button.clicked.connect(self.template_button_pressed_signal.emit)
         return template_button
 
+
 class FrametimeWindow(QMainWindow):
     def __init__(self, replay):
         super().__init__()
@@ -1531,10 +1687,10 @@ class FrametimeGraph(QFrame):
     def __init__(self, replay):
         super().__init__()
         from circleguard import KeylessCircleguard
-        from matplotlib.backends.backend_qt5agg import FigureCanvas # pylint: disable=no-name-in-module
+        from matplotlib.backends.backend_qt5agg import FigureCanvas
         from matplotlib.figure import Figure
 
-        figure = Figure(figsize=(5,5))
+        figure = Figure(figsize=(5, 5))
         cg = KeylessCircleguard()
         show_cv = get_setting("frametime_graph_display") == "cv"
         figure = cg.frametime_graph(replay, cv=show_cv, figure=figure)
@@ -1555,6 +1711,7 @@ class ReplayDataWindow(QMainWindow):
         replay_data_table = ReplayDataTable(replay)
         self.setCentralWidget(replay_data_table)
         self.resize(500, 700)
+
 
 class ReplayDataTable(QFrame):
     def __init__(self, replay):
@@ -1610,6 +1767,7 @@ class RunWidget(QFrame):
     loading replays, comparing, or canceled), and a cancel QPushButton
     if not already finished or canceled.
     """
+
     widget_deleted = pyqtSignal(int)
 
     def __init__(self, run):
@@ -1624,7 +1782,7 @@ class RunWidget(QFrame):
 
         self.status_label = QLabel(self)
         self.status_label.setText("<b>Status: " + self.status + "</b>")
-        self.status_label.setTextFormat(Qt.TextFormat.RichText) # so we can bold it
+        self.status_label.setTextFormat(Qt.TextFormat.RichText)  # so we can bold it
         self.cancel_button = PushButton(self)
         self.cancel_button.setText("Cancel")
         self.cancel_button.setFixedWidth(125)
@@ -1650,7 +1808,9 @@ class RunWidget(QFrame):
         self.layout.addWidget(self.status_label, 0, 1, 1, 1)
         # needs to be redefined because RunWidget is being called from a
         # different thread or something? get weird errors when not redefined
-        SPACER = QSpacerItem(100, 0, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum)
+        SPACER = QSpacerItem(
+            100, 0, QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Minimum
+        )
         self.layout.addItem(SPACER, 0, 2, 1, 1)
         self.layout.addWidget(self.cancel_button, 0, 3, 1, 1)
         self.layout.addWidget(self.up_button, 0, 4, 1, 1)
@@ -1669,7 +1829,6 @@ class RunWidget(QFrame):
     def cancel(self):
         self.widget_deleted.emit(self.run_id)
         self.deleteLater()
-
 
 
 class SliderBoxSetting(SingleLinkableSetting, QFrame):
@@ -1708,8 +1867,9 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         self.spinbox = spinbox
         self.combined = WidgetCombiner(slider, spinbox, self)
 
-        self.slider.valueChanged.connect(lambda val:
-            self.on_setting_changed_from_gui(val, set_spinbox=True))
+        self.slider.valueChanged.connect(
+            lambda val: self.on_setting_changed_from_gui(val, set_spinbox=True)
+        )
         self.spinbox.valueChanged.connect(self.on_setting_changed_from_gui)
 
         self.layout = QGridLayout()
@@ -1749,6 +1909,7 @@ class SliderBoxSetting(SingleLinkableSetting, QFrame):
         """
         return QSpinBox()
 
+
 class SliderBoxMaxInfSetting(SliderBoxSetting):
     """
     a `SliderBoxSetting` which has special behavior when the slider or spinbox
@@ -1758,6 +1919,7 @@ class SliderBoxMaxInfSetting(SliderBoxSetting):
 
     def spin_box(self):
         return SpinBoxMaxInf()
+
 
 class SpinBoxMaxInf(QSpinBox):
 
@@ -1779,6 +1941,7 @@ class LineEditSetting(SingleLinkableSetting, QFrame):
     to a setting (ie the default value of the widget will be the value of the
     setting, and changes made to the widget will affect the setting).
     """
+
     def __init__(self, display, tooltip, type_, setting):
         SingleLinkableSetting.__init__(self, setting)
         QFrame.__init__(self)
@@ -1792,6 +1955,7 @@ class LineEditSetting(SingleLinkableSetting, QFrame):
 
     def on_setting_changed(self, setting, new_value):
         self.input_.field.setText(new_value)
+
 
 class WidgetCombiner(QFrame):
     def __init__(self, widget1, widget2, parent):
@@ -1808,11 +1972,9 @@ class WidgetCombiner(QFrame):
 
 
 class FileChooserButton(PushButton):
-    path_chosen_signal = pyqtSignal(Path) # emits the selected path
+    path_chosen_signal = pyqtSignal(Path)  # emits the selected path
 
-    def __init__(self, text, file_mode=QFileDialog.FileMode.AnyFile,
-        name_filters=None
-    ):
+    def __init__(self, text, file_mode=QFileDialog.FileMode.AnyFile, name_filters=None):
         super().__init__()
         self.file_mode = file_mode
         self.name_filters = name_filters
@@ -1860,6 +2022,7 @@ class ReplayChooser(QFrame):
     .osr files and folders of osr files respectively. Only one can be
     in effect at a time, and the path label shows the latest chosen one.
     """
+
     def __init__(self):
         super().__init__()
         self.selection_made = False
@@ -1868,8 +2031,14 @@ class ReplayChooser(QFrame):
 
         self.path_label = QLabel()
         self.path_label.setWordWrap(True)
-        self.file_chooser = FileChooserButton("Choose replay", QFileDialog.FileMode.ExistingFile, ["osu! Replay File (*.osr)"])
-        self.folder_chooser = FileChooserButton("Choose folder", QFileDialog.FileMode.Directory)
+        self.file_chooser = FileChooserButton(
+            "Choose replay",
+            QFileDialog.FileMode.ExistingFile,
+            ["osu! Replay File (*.osr)"],
+        )
+        self.folder_chooser = FileChooserButton(
+            "Choose folder", QFileDialog.FileMode.Directory
+        )
 
         # the buttons will steal the mousePressEvent so connect them manually
         self.file_chooser.clicked.connect(self.reset_required)
@@ -1897,10 +2066,14 @@ class ReplayChooser(QFrame):
     def handle_new_path(self, path):
         self.path = path
         self.path_label.setText(str(path))
-        self.selection_made = self.file_chooser.selection_made or self.folder_chooser.selection_made
+        self.selection_made = (
+            self.file_chooser.selection_made or self.folder_chooser.selection_made
+        )
 
     def show_required(self):
-        self.setStyleSheet("ReplayChooser { border: 1px solid red; border-radius: 4px; padding: 2px }")
+        self.setStyleSheet(
+            "ReplayChooser { border: 1px solid red; border-radius: 4px; padding: 2px }"
+        )
 
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
@@ -1908,7 +2081,6 @@ class ReplayChooser(QFrame):
 
     def reset_required(self):
         self.setStyleSheet(self.old_stylesheet)
-
 
 
 class ResetSettings(QFrame):
@@ -1930,18 +2102,18 @@ class ResetSettings(QFrame):
         self.setLayout(self.layout)
 
     def reset_settings(self):
-        prompt = QMessageBox.question(self, "Reset settings",
-                        "Are you sure?\n"
-                        "This will reset all settings to their default value, "
-                        "and the application will quit.",
-                        buttons=(
-                            QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes
-                        ),
-                        defaultButton=QMessageBox.StandardButton.No)
+        prompt = QMessageBox.question(
+            self,
+            "Reset settings",
+            "Are you sure?\n"
+            "This will reset all settings to their default value, "
+            "and the application will quit.",
+            buttons=(QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes),
+            defaultButton=QMessageBox.StandardButton.No,
+        )
         if prompt == QMessageBox.StandardButton.Yes:
             reset_defaults()
             QCoreApplication.quit()
-
 
 
 class EntryWidget(QFrame):
@@ -1950,6 +2122,7 @@ class EntryWidget(QFrame):
     button and the data which is stored at self.data.
     When the button is pressed, pressed_signal is emitted with the data.
     """
+
     pressed_signal = pyqtSignal(object)
 
     def __init__(self, title, action_name, data):
