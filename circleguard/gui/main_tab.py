@@ -647,17 +647,24 @@ class MainTab(SingleLinkableSetting, QFrame):
                 finally:
                     self.increment_progressbar_signal.emit(1)
 
+                replay_id = replay.replay_id
+
+                # HACK: lazer replays will encode replay ID as -1 since they don't have legacy score IDs
+                # we don't want any 2 lazer replays to skip similarity checks due to being "the same"
+                if replay_id == -1:
+                    replay_id = 0
+
                 # now that it's loaded, check if we've already seen the replay
                 # before. If so, remove it to prevent duplicate replays from
                 # being investigated (and potentially resulting in 0 sim).
-                if replay.replay_id in seen_replay_ids:
+                if replay_id in seen_replay_ids:
                     _remove_replay(replay)
                 # some replays have ``0`` for their replay id; we don't want to
                 # treat these as the same replay. Some replays might also have
                 # a null/None replay id? I don't think that should ever happen
                 # but just to be safe, also discount those here.
-                if replay.replay_id:
-                    seen_replay_ids.append(replay.replay_id)
+                if replay_id:
+                    seen_replay_ids.append(replay_id)
 
             if "Similarity" in run.enabled_investigations:
                 lc1.loaded = True
