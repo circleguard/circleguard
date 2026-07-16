@@ -1,6 +1,6 @@
 name: Create draft release
 
-on: 
+on:
   workflow_dispatch:
     inputs:
       version:
@@ -11,8 +11,8 @@ jobs:
     runs-on: windows-latest
     name: Windows x64 Build
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v6
       with:
         python-version: "3.10.9"
         architecture: "x64"
@@ -34,13 +34,13 @@ jobs:
         pyinstaller gui_win_x64_debug.spec --noconfirm
 
     - name: Upload win-x64 Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v7
       with:
         name: Circleguard win-x64
         path: dist/Circleguard_win_x64/
 
     - name: Upload win-x64-debug Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v7
       with:
         name: Circleguard win-x64-debug
         path: dist/Circleguard_win_x64_debug/
@@ -56,15 +56,15 @@ jobs:
 
   build_win_x86:
     # qt 6 doesn't provide prebuilt 32 bit binaries anymore. I'm not dealing with building qt from source right
-    # now, so I'm dropping support for 32 bit for now. Will direct users to v2.15.5, the last version to support 
+    # now, so I'm dropping support for 32 bit for now. Will direct users to v2.15.5, the last version to support
     # 32 bit (and the last version to use PyQt5).
     # https://forum.qt.io/topic/123609/why-is-there-no-32-bit-mingw-in-qt6-0-1/4
     if: ${{ false }}
     runs-on: windows-latest
     name: Windows x86 Build
     steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
+    - uses: actions/checkout@v7
+    - uses: actions/setup-python@v6
       with:
         python-version: "3.10.9"
         architecture: "x86"
@@ -82,7 +82,7 @@ jobs:
         pyinstaller gui_win_x86.spec --noconfirm
 
     - name: Upload win-x86 Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v7
       with:
         name: Circleguard win-x86
         path: dist/Circleguard_win_x86/
@@ -97,12 +97,12 @@ jobs:
         tag: ${{ github.event.inputs.version }}
 
   build_mac:
-    runs-on: macos-11
+    runs-on: macos-latest
     name: Mac Build
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v7
     - name: Set up Python 3.10.9
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v6
       with:
         python-version: 3.10.9
         architecture: "x64"
@@ -120,7 +120,7 @@ jobs:
         pyinstaller gui_mac.spec --noconfirm
 
     - name: Upload mac Artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v7
       with:
         name: Circleguard osx
         path: dist/Circleguard.app
